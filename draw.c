@@ -120,7 +120,7 @@ dviunits SetChar(int32_t c)
 #ifdef HAVE_LIBT1
       case FONT_TYPE_T1:	LoadT1(c, ptr); break;
 #endif
-#define HAVE_FT2
+#ifdef HAVE_FT2
       case FONT_TYPE_FT:	LoadFT(c, ptr); break;
 #endif
       default:
