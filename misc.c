@@ -12,13 +12,15 @@ bool DecodeArgs(int argc, char ** argv)
   int     i;                 /* argument index for flags       */
   bool ppused=_FALSE;        /* Flag when -pp is used          */
   char *dviname=NULL;        /* Name of dvi file               */
-  char *outname=NULL;        /* Name of output file (concatenated
-				with the page number and .png) */
+  char *outname=NULL;        /* Name of output file            */
 
   programname=argv[0];
 
   if (argc == 2 && (strcmp (argv[1], "--version") == 0)) {
-    puts (PACKAGE_STRING);
+    if (strcmp(programname,PACKAGE_NAME)!=0)
+      printf("%s (%s) %s\n",programname,PACKAGE_NAME,PACKAGE_VERSION);
+    else
+      puts(PACKAGE_STRING);
 #ifdef HAVE_LIBKPATHSEA
     puts (KPSEVERSION);
 #endif
@@ -35,8 +37,8 @@ named COPYING and dvipng.c.");
       char *p=argv[i]+2 ;
       char c=argv[i][1] ;
       switch (c) {
-#ifdef DEBUG
       case 'd':       /* selects Debug output */
+#ifdef DEBUG
 	{ 
 	  int debug = 0;
 	  
@@ -51,8 +53,11 @@ named COPYING and dvipng.c.");
 #endif
 	  Message(PARSE_STDIN,"Debug output enabled\n");
 	}
-        break;
+#else
+	Warning("This instance of %s was compiled without the debug (-d) option",
+		programname);
 #endif
+        break;
       case 'o':       /* Output file is specified */
 	if (*p == 0 && argv[i+1])
 	  p = argv[++i] ;
@@ -290,7 +295,7 @@ named COPYING and dvipng.c.");
   }
 
   if (dvi==NULL) {
-    fprintf(stdout,"\nUsage: dvipng [OPTION]... FILENAME[.dvi]\n");
+    fprintf(stdout,"\nUsage: %s [OPTION]... FILENAME[.dvi]\n", programname);
     fprintf(stdout,"Options are chosen to be similar to dvips' options where possible:\n");
 #ifdef DEBUG
     fprintf(stdout,"  -d #       Debug (# is the debug bitmap, 1 if not given)\n");
@@ -408,11 +413,11 @@ void Fatal (char *fmt, ...)
   va_list args;
 
   va_start(args, fmt);
-  fprintf(ERR_STREAM, "\n");
-  fprintf(ERR_STREAM, "%s: Fatal error, ", programname);
-  vfprintf(ERR_STREAM, fmt, args);
+  fprintf(stderr, "\n");
+  fprintf(stderr, "%s: Fatal error, ", programname);
+  vfprintf(stderr, fmt, args);
 
-  fprintf(ERR_STREAM, "\n\n");
+  fprintf(stderr, "\n\n");
   va_end(args);
   exit(EXIT_FAILURE);
 }
@@ -430,9 +435,9 @@ void Warning(char *fmt, ...)
   va_start(args, fmt);
 
   if ( flags & BE_NONQUIET ) {
-    fprintf(ERR_STREAM, "%s warning: ", programname);
-    vfprintf(ERR_STREAM, fmt, args);
-    fprintf(ERR_STREAM, "\n");
+    fprintf(stderr, "%s warning: ", programname);
+    vfprintf(stderr, fmt, args);
+    fprintf(stderr, "\n");
     va_end(args);
   }
 }
@@ -449,7 +454,8 @@ void Message(int activeflags, char *fmt, ...)
   if ( flags & activeflags ) {
     vfprintf(stdout, fmt, args);
 #ifdef DEBUG
-    fflush(stdout);
+    if (flags & (LASTDEBUG-LASTFLAG)*2)
+      fflush(stdout);
 #endif
   }
   va_end(args);

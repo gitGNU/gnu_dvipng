@@ -364,7 +364,8 @@ void DrawPages(void)
       ++ndone;
 #endif
       Message(BE_NONQUIET,"] ");
-      fflush(stdout);
+      if (dvi_pos->count[0] % 10 == 0)
+	fflush(stdout);
       dvi_pos=NextPPage(dvi,dvi_pos);
     }
     Message(BE_NONQUIET,"\n");
