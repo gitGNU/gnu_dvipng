@@ -1,8 +1,8 @@
 #include "dvipng.h"
 
-/*char    *GetKeyStr AA((char *, KeyWord *));
-  bool    GetKeyVal AA((KeyWord *, KeyDesc[], int, int *));*/
-/*bool    IsSame AA((char *, char *));*/
+/*char    *GetKeyStr(char *, KeyWord *);
+  bool    GetKeyVal(KeyWord *, KeyDesc[], int, int *);*/
+/*bool    IsSame(char *, char *);*/
 
 
 /*-->DoSpecial*/
@@ -58,7 +58,7 @@ KeyDesc KeyTab[] = {
 /* Compare two strings, ignoring case;
    s1 pointer to null-terminated keyword, s2 pointer to parseline;
    returns (if successful) pointer to character following keyword in s2 */
-bool StrCompare P3C(char *,s1, char *,s2, char **,end)
+bool StrCompare(char *s1, char *s2, char **end)
 {
   char *a,*b;
   
@@ -76,7 +76,7 @@ bool StrCompare P3C(char *,s1, char *,s2, char **,end)
 /* Read <number> integer values from string and store results in
    <result>. Returns number + of arguments actually read, end =
    pointer to char following last number */
-int ParseNumbers P4C(char *,str, int *,result, int ,number, char **,end)
+int ParseNumbers(char *str, int *result, int number, char **end)
 {
   char *s;
   int count = 0;
@@ -98,7 +98,7 @@ int ParseNumbers P4C(char *,str, int *,result, int ,number, char **,end)
 #if 0
 /* Diagram commands are parsed separately since the format varies from the one
 +    used by the other special commands */
-bool ParseDiagram P1C(char *,str)
+bool ParseDiagram(char *str)
 {
   diagtrafo dt;
   char *s,*sh;
@@ -171,7 +171,7 @@ bool ParseDiagram P1C(char *,str)
 #endif /* __riscos */
 
 
-void DoSpecial P2C(char *,str, int, n)
+void DoSpecial(char * str, int n)
 /* interpret a \special command, made up of keyword=value pairs */
 /* Color specials only for now. Warn otherwise. */
 {
@@ -434,7 +434,7 @@ void DoSpecial P2C(char *,str, int, n)
  */
 char    KeyStr[STRSIZE];
 char    ValStr[STRSIZE];
-char *GetKeyStr P2C(char *,str, KeyWord *,kw )
+char *GetKeyStr(char *str, KeyWord *kw )
 {
   char    *s, *k, *v, t;
   if ( !str )
@@ -496,7 +496,7 @@ bool IsSame(char *,a, char *,b)
 /*****************************  GetKeyVal  ****************************/
 /**********************************************************************/
 /* get next keyword-value pair decode value according to table entry  */
-bool GetKeyVal P4C(KeyWord *,kw, KeyDesc ,tab[], int ,nt, int *,tno)
+bool GetKeyVal(KeyWord *kw, KeyDesc tab[], int nt, int *tno)
 {
   int     i;
   char    c = '\0';

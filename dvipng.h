@@ -68,68 +68,6 @@ typedef  int     bool;
 /*************************  protos.h  ************************/
 /*************************************************************/
 
-#ifdef __STDC__
-#define NeedFunctionPrototypes 1
-#include <stdarg.h>
-#else
-#define NeedFunctionPrototypes 0
-#include <varargs.h>
-#endif
-
-#if NeedFunctionPrototypes
-#define NeedVarargsPrototypes 1
-#endif
-
-#ifdef NeedFunctionPrototypes
-
-#define AA(args) args /* For an arbitrary number; ARGS must be in parens.  */
-#if NeedVarargsPrototypes
-# define VA() (char *fmt, ...)
-#else
-# define VA() ()
-#endif
-
-#define P1H(p1) (p1)
-#define P2H(p1,p2) (p1, p2)
-#define P3H(p1,p2,p3) (p1, p2, p3)
-#define P4H(p1,p2,p3,p4) (p1, p2, p3, p4)
-#define P5H(p1,p2,p3,p4,p5) (p1, p2, p3, p4, p5)
-#define P6H(p1,p2,p3,p4,p5,p6) (p1, p2, p3, p4, p5, p6)
-
-#define P1C(t1,n1)(t1 n1)
-#define P2C(t1,n1, t2,n2)(t1 n1, t2 n2)
-#define P3C(t1,n1, t2,n2, t3,n3)(t1 n1, t2 n2, t3 n3)
-#define P4C(t1,n1, t2,n2, t3,n3, t4,n4)(t1 n1, t2 n2, t3 n3, t4 n4)
-#define P5C(t1,n1, t2,n2, t3,n3, t4,n4, t5,n5) \
-  (t1 n1, t2 n2, t3 n3, t4 n4, t5 n5)
-#define P6C(t1,n1, t2,n2, t3,n3, t4,n4, t5,n5, t6,n6) \
-  (t1 n1, t2 n2, t3 n3, t4 n4, t5 n5, t6 n6)
-
-#else /* no function prototypes */
-
-#define AA(args) ()
-#define VA() ()
-
-#define P1H(p1) ()
-#define P2H(p1, p2) ()
-#define P3H(p1, p2, p3) ()
-#define P4H(p1, p2, p3, p4) ()
-#define P5H(p1, p2, p3, p4, p5) ()
-#define P6H(p1, p2, p3, p4, p5, p6) ()
-
-#define P1C(t1,n1) (n1) t1 n1;
-#define P2C(t1,n1, t2,n2) (n1,n2) t1 n1; t2 n2;
-#define P3C(t1,n1, t2,n2, t3,n3) (n1,n2,n3) t1 n1; t2 n2; t3 n3;
-#define P4C(t1,n1, t2,n2, t3,n3, t4,n4) (n1,n2,n3,n4) \
-  t1 n1; t2 n2; t3 n3; t4 n4;
-#define P5C(t1,n1, t2,n2, t3,n3, t4,n4, t5,n5) (n1,n2,n3,n4,n5) \
-  t1 n1; t2 n2; t3 n3; t4 n4; t5 n5;
-#define P6C(t1,n1, t2,n2, t3,n3, t4,n4, t5,n5, t6,n6) (n1,n2,n3,n4,n5,n6) \
-  t1 n1; t2 n2; t3 n3; t4 n4; t5 n5; t6 n6;
-
-#endif /* function prototypes */
-
-
 #define  NFNTCHARS       LASTFNTCHAR+1
 #define  STACK_SIZE      100     /* DVI-stack size                     */
 #define  NONEXISTANT     -1      /* offset for PXL files not found     */
@@ -176,7 +114,7 @@ typedef struct {
   ValTyp  Typ;
 } KeyDesc;
 
-void    DoSpecial AA((char *, int));
+void    DoSpecial(char *, int);
 
 /********************************************************/
 /***********************  font.h  ***********************/
@@ -229,9 +167,9 @@ struct font_num {    /* Font number. Different for VF/DVI, and several
   struct font_entry *fontp;
 };
 
-void    CheckChecksum AA((unsigned, unsigned, const char*));
-void    InitPK  AA((struct font_entry *));
-void    InitVF  AA((struct font_entry *));
+void    CheckChecksum(unsigned, unsigned, const char*);
+void    InitPK (struct font_entry *);
+void    InitVF (struct font_entry *);
 
 /********************************************************/
 /***********************  dvi.h  ************************/
@@ -269,55 +207,55 @@ struct page_list {
   int32_t count[11];        /* 10 dvi counters + absolute pagenum in file */
 };
 
-uint32_t         CommandLength AA((unsigned char*)); 
-struct dvi_data* DVIOpen AA((char*));
-unsigned char*   DVIGetCommand AA((struct dvi_data*));
-void             DVIClose AA((struct dvi_data*));
+uint32_t         CommandLength(unsigned char*); 
+struct dvi_data* DVIOpen(char*);
+unsigned char*   DVIGetCommand(struct dvi_data*);
+void             DVIClose(struct dvi_data*);
 
 
 /***************** general crap ******************/
 
-void    CloseFiles AA((void));
-void    DecodeArgs AA((int, char *[]));
+void    CloseFiles(void);
+void    DecodeArgs(int, char *[]);
 /*#ifdef __riscos
-void    diagram AA((char *, diagtrafo *));
-void   *xosfile_set_type AA((char *, int));
-void    MakeMetafontFile AA((char *, char *, int));
+void    diagram(char *, diagtrafo *);
+void   *xosfile_set_type(char *, int);
+void    MakeMetafontFile(char *, char *, int);
 #endif*/
-void    DoBop AA((void));
-void    DrawCommand AA((unsigned char*, int, struct dvi_vf_entry*));
-void    DoPages AA((void));
-void    Fatal VA();
-struct page_list *FindPage AA((int32_t));
-void    FormFeed AA((struct dvi_data*,int));
-void    FontDef AA((unsigned char*, struct dvi_vf_entry*));
-struct page_list *InitPage AA((void));
-void    LoadAChar AA((int32_t, register struct pk_char *));
-uint32_t   NoSignExtend AA((FILE*, int));
-void       OpenFont AA((struct font_entry *));
-bool       QueueParse AA((char*,bool));
-bool       QueueEmpty AA((void));
-void       QueuePage AA((int,int,bool));
-int32_t    SetChar AA((int32_t, int));
-int32_t    SetPK AA((int32_t, int));
-int32_t    SetVF AA((int32_t, int));
-void    SetFntNum AA((int32_t, struct dvi_vf_entry*));
-int32_t   SetRule AA((int32_t, int32_t, int));
-int32_t   SignExtend AA((FILE*, int));
-void    SkipPage AA((void));
-int32_t   SNumRead AA((unsigned char*, register int));
-int32_t   TodoPage AA((void));
-uint32_t   UNumRead AA((unsigned char*, register int));
-void    Warning VA();
-/*unsigned char   skip_specials AA((void));*/
+void    DoBop(void);
+void    DrawCommand(unsigned char*, int, struct dvi_vf_entry*);
+void    DoPages(void);
+void    Fatal(char *fmt, ...);
+struct page_list *FindPage(int32_t);
+void    FormFeed(struct dvi_data*,int);
+void    FontDef(unsigned char*, struct dvi_vf_entry*);
+struct page_list *InitPage(void);
+void    LoadAChar(int32_t, register struct pk_char *);
+uint32_t   NoSignExtend(FILE*, int);
+void       OpenFont(struct font_entry *);
+bool       QueueParse(char*,bool);
+bool       QueueEmpty(void);
+void       QueuePage(int,int,bool);
+int32_t    SetChar(int32_t, int);
+int32_t    SetPK(int32_t, int);
+int32_t    SetVF(int32_t, int);
+void    SetFntNum(int32_t, struct dvi_vf_entry*);
+int32_t   SetRule(int32_t, int32_t, int);
+int32_t   SignExtend(FILE*, int);
+void    SkipPage(void);
+int32_t   SNumRead(unsigned char*, register int);
+int32_t   TodoPage(void);
+uint32_t   UNumRead(unsigned char*, register int);
+void    Warning(char *fmt, ...);
+/*unsigned char   skip_specials(void);*/
 
-void handlepapersize AA((char*,int*,int*));
+void handlepapersize(char*,int*,int*);
 
-void background AA((char *));
-void initcolor AA((void));
-void popcolor AA((void));
-void pushcolor AA((char *));
-void resetcolorstack AA((char *));
+void background(char *);
+void initcolor(void);
+void popcolor(void);
+void pushcolor(char *);
+void resetcolorstack(char *);
 
 /**********************************************************************/
 /*************************  Global Variables  *************************/

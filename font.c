@@ -5,7 +5,7 @@
 /**********************************************************************/
 /**************************** OpenFont  *******************************/
 /**********************************************************************/
-void OpenFont P1C(struct font_entry*, tfontp)
+void OpenFont(struct font_entry* tfontp)
 {
   if (tfontp->filep != NULL)
     return;         /* we need not have been called */
@@ -17,7 +17,7 @@ void OpenFont P1C(struct font_entry*, tfontp)
 #endif
 
 
-void CheckChecksum P3C(uint32_t, c1, uint32_t, c2, const char*, name)
+void CheckChecksum(uint32_t c1, uint32_t c2, const char* name)
 {
   /* Report a warning if both checksums are nonzero, they don't match,
      and the user hasn't turned it off.  */
@@ -31,7 +31,7 @@ void CheckChecksum P3C(uint32_t, c1, uint32_t, c2, const char*, name)
 }
 
 
-double ActualFactor P1C(uint32_t, unmodsize)
+double ActualFactor(uint32_t unmodsize)
 /* compute the actual size factor given the approximation */
 /* actually factor * 1000 */
 {
@@ -57,8 +57,7 @@ double ActualFactor P1C(uint32_t, unmodsize)
 }
 
 
-void FontDef P2C(unsigned char*, command, 
-		 struct dvi_vf_entry*, parent)
+void FontDef(unsigned char* command, struct dvi_vf_entry* parent)
 {
   int32_t k;
   uint32_t   c, s, d;
@@ -73,7 +72,7 @@ void FontDef P2C(unsigned char*, command,
   DEBUG_PRINTF(DEBUG_DVI," %d",k)
   current += (int)*command - FNT_DEF1 + 1;
   c = UNumRead(current, 4); /* checksum */
-  DEBUG_PRINTF(DEBUG_DVI," %d %d",c)
+  DEBUG_PRINTF(DEBUG_DVI," %d",c)
   s = UNumRead(current+4, 4); /* space size */
   DEBUG_PRINTF(DEBUG_DVI," %d",s)
   if (parent->type==FONT_TYPE_VF) {
@@ -173,7 +172,7 @@ void FontDef P2C(unsigned char*, command,
 	     * ActualFactor(dvi->mag) * resolution * 5.0) + 0.5);
 }
 
-void FontFind P1C(struct font_entry *,tfontptr)
+void FontFind(struct font_entry * tfontptr)
 {
 #ifdef KPATHSEA
   kpse_glyph_file_type font_ret;
@@ -241,7 +240,7 @@ void FontFind P1C(struct font_entry *,tfontptr)
 /**********************************************************************/
 /****************************  SetFntNum  *****************************/
 /**********************************************************************/
-void SetFntNum P2C(int32_t, k, struct dvi_vf_entry*, parent)
+void SetFntNum(int32_t k, struct dvi_vf_entry* parent)
 /*  this routine is used to specify the font to be used in printing future
     characters */
 {

@@ -5,7 +5,7 @@
 
 
 
-struct dvi_data* DVIOpen P1C(char*, dviname)
+struct dvi_data* DVIOpen(char* dviname)
 {
   int     k;
   unsigned char* pre;
@@ -70,7 +70,7 @@ struct dvi_data* DVIOpen P1C(char*, dviname)
   return(dvi);
 }
 
-unsigned char* DVIGetCommand P1C(struct dvi_data*, dvi)
+unsigned char* DVIGetCommand(struct dvi_data* dvi)
      /* This function reads in and stores the next dvi command. */
      /* Perhaps mmap would be appropriate here */
 { 
@@ -104,6 +104,7 @@ unsigned char* DVIGetCommand P1C(struct dvi_data*, dvi)
     strlength = *(command + length - 1);
     break;
   default:
+    break;
   }
   if (lcommand!=command) {
     free(lcommand);
@@ -123,7 +124,7 @@ unsigned char* DVIGetCommand P1C(struct dvi_data*, dvi)
 }
 
 
-uint32_t CommandLength P1C(unsigned char*, command)
+uint32_t CommandLength(unsigned char* command)
 { 
   /* generally 2^32+5 bytes max, but in practice 32 bit numbers suffice */
   unsigned char*   current;           
@@ -142,11 +143,12 @@ uint32_t CommandLength P1C(unsigned char*, command)
     length += *(command + length - 1);
     break;
   default:
+    break;
   }
   return(length);
 }
 
-void SkipPage P1H(void)
+void SkipPage(void)
 { 
   /* Skip present page */
   unsigned char* command;           
@@ -169,7 +171,7 @@ void SkipPage P1H(void)
   DEBUG_PRINTF(DEBUG_DVI,"SKIP CMD:\t%s", dvi_commands[*command]);
 }
 
-struct page_list* InitPage P1H(void)
+struct page_list* InitPage(void)
 {
   /* Find page start, return pointer to page_list entry if found */
   struct page_list* tpagelistp=NULL;
@@ -212,7 +214,7 @@ struct page_list* InitPage P1H(void)
   return(tpagelistp);
 }
 
-struct page_list* FindPage P1C(int32_t,pagenum)
+struct page_list* FindPage(int32_t pagenum)
      /* Find page of certain number, absolute number if Abspage is set */
 {
   struct page_list* tpagelistp;
@@ -273,7 +275,7 @@ struct page_list* FindPage P1C(int32_t,pagenum)
   return(tpagelistp);
 }
 
-void DVIClose P1C(struct dvi_data*, dvi)
+void DVIClose(struct dvi_data* dvi)
 {
   struct page_list* temp;
   

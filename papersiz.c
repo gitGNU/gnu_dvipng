@@ -19,7 +19,7 @@
 
 #include "dvipng.h"
 
-static long scale P4C(long, whole, long, num, long, den, long, sf)
+static long scale(long whole, long num, long den, long sf)
 {
    long v ;
 
@@ -34,7 +34,7 @@ static long scale P4C(long, whole, long, num, long, den, long, sf)
  *   Convert a sequence of digits into a long; return -1 if no digits.
  *   Advance the passed pointer as well.
  */
-static long myatol P1C(char **, s)
+static long myatol(char ** s)
 {
    register char *p ;
    register long result ;
@@ -61,7 +61,7 @@ static long myatol P1C(char **, s)
 static long scalevals[] = { 1864680L, 65536L, 786432L, 186468L,
   1L, 65782L, 70124L, 841489L, 4736286L } ;
 static char *scalenames = "cmptpcmmspbpddccin" ;
-long myatodim P1C(char **, s)
+long myatodim(char ** s)
 {
    register long w, num, den, sc ;
    register char *q ;
@@ -114,7 +114,7 @@ long myatodim P1C(char **, s)
  *   The routine where we handle the paper size special.  We need to pass in
  *   the string after the `papersize=' specification.
  */
-void handlepapersize P3C(char *, p, int *, x, int *, y)
+void handlepapersize(char * p, int * x, int * y)
 { 
    while (*p == ' ')
       p++ ;

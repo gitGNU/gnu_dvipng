@@ -1,6 +1,6 @@
 #include "dvipng.h"
 
-void DoBop P1H(void)
+void DoBop(void)
 {
   int Background;
 
@@ -33,7 +33,7 @@ void DoBop P1H(void)
 /**********************************************************************/
 /*****************************  FormFeed ******************************/
 /**********************************************************************/
-void FormFeed P2C(struct dvi_data*, dvi, int, pagenum)
+void FormFeed(struct dvi_data* dvi, int pagenum)
 {
   char  pngname[STRSIZE];       
   FILE* outfp=NULL;
@@ -53,7 +53,7 @@ void FormFeed P2C(struct dvi_data*, dvi, int, pagenum)
 /**********************************************************************/
 /*****************************  SetChar  ******************************/
 /**********************************************************************/
-int32_t SetChar P2C(int32_t, c, int, PassNo)
+int32_t SetChar(int32_t c, int PassNo)
 {
   switch(currentfont->type) {
   case FONT_TYPE_PK:
@@ -63,6 +63,7 @@ int32_t SetChar P2C(int32_t, c, int, PassNo)
     return(SetVF(c, PassNo));
     break;
   default:
+    break;
   }
   return(0);
 }
@@ -73,7 +74,7 @@ int32_t SetChar P2C(int32_t, c, int, PassNo)
 /*****************************  SetRule  ******************************/
 /**********************************************************************/
 /*   this routine will draw a rule */
-int32_t SetRule P3C(int32_t, a, int32_t, b, int, PassNo)
+int32_t SetRule(int32_t a, int32_t b, int PassNo)
 {
   int32_t    xx=0, yy=0;
   int Color;

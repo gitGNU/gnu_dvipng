@@ -8,8 +8,8 @@ int       sp = 0;              /* stack pointer                         */
 #define DO_VFCONV(a) (parent->type==DVI_TYPE)?a:\
     (int32_t)((int64_t) a * parent->d / 65535l)
 
-void DrawCommand P3C(unsigned char*, command, int, PassNo, 
-		     struct dvi_vf_entry*, parent)
+void DrawCommand(unsigned char* command, int PassNo, 
+		 struct dvi_vf_entry* parent)
      /* To be used both in plain DVI drawing and VF drawing */
 {
   int32_t   val, val2;       /* temporarys to hold command information  */
@@ -134,7 +134,7 @@ void DrawCommand P3C(unsigned char*, command, int, PassNo,
   }
 }
 
-void DrawPage P1C(int, PassNo) 
+void DrawPage(int PassNo) 
      /* To be used after having read BOP and will exit cleanly when
       * encountering EOP.
       */
@@ -153,7 +153,7 @@ void DrawPage P1C(int, PassNo)
   } 
 }
 
-void DoPages P1H(void)
+void DoPages(void)
 {
   struct page_list *tpagelistp=NULL;
 

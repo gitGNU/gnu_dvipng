@@ -18,7 +18,7 @@ struct pagequeue {
 /**********************************************************************/
 /* Return the page in turn on our queue */
 
-int32_t TodoPage P1H(void)
+int32_t TodoPage(void)
 {
   int val;
 
@@ -36,7 +36,7 @@ int32_t TodoPage P1H(void)
 }
 
 
-void QueuePage P3C(int, first, int, last, bool, abspage)
+void QueuePage(int first, int last, bool abspage)
 {
   struct pagequeue *new;
 
@@ -62,7 +62,7 @@ void QueuePage P3C(int, first, int, last, bool, abspage)
 }
 
 
-bool QueueEmpty P1H(void)
+bool QueueEmpty(void)
 {
   return(hpagequeuep==NULL);
 }
@@ -70,7 +70,7 @@ bool QueueEmpty P1H(void)
 /* Parse a string representing a list of pages.  Return 0 iff ok.  As a
    side effect, the page(s) is (are) ap- or pre-pended to the queue. */
 /* THIS is adapted from dvips */
-bool QueueParse P2C(register char  *, s, bool, abspage)
+bool QueueParse(register char * s, bool abspage)
 {
     register int    c ;		/* current character */
     register int  n = 0,	/* current numeric value */

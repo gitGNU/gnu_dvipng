@@ -1,6 +1,6 @@
 #include "dvipng.h"
 /* This function closes all open files */
-void CloseFiles P1H(void)
+void CloseFiles(void)
 {
   struct font_entry *fe;
 
@@ -25,7 +25,7 @@ void CloseFiles P1H(void)
   }
 }
 
-uint32_t UNumRead P2C(unsigned char*, current, register int, n)
+uint32_t UNumRead(unsigned char* current, register int n)
 {
   uint32_t x = (unsigned char) *(current)++;  /* number being constructed */
 
@@ -35,7 +35,7 @@ uint32_t UNumRead P2C(unsigned char*, current, register int, n)
   return(x);
 }
 
-int32_t SNumRead P2C(unsigned char*, current, register int, n)
+int32_t SNumRead(unsigned char* current, register int n)
 {
   int32_t	x;
   

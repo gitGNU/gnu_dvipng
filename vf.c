@@ -9,7 +9,7 @@
 unsigned char push=PUSH;
 unsigned char pop=POP;
 
-int32_t SetVF P2C(int32_t, c, int, PassNo) 
+int32_t SetVF(int32_t c, int PassNo) 
 {
   struct font_entry* currentvf;
   unsigned char *command,*end;
@@ -32,7 +32,7 @@ int32_t SetVF P2C(int32_t, c, int, PassNo)
 
 
 
-void InitVF  P1C(struct font_entry *,tfontp)
+void InitVF(struct font_entry * tfontp)
 {
   struct stat stat;
   unsigned char* position;

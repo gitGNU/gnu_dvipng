@@ -10,7 +10,7 @@ unsigned char   dyn_f;
 int             repeatcount;
 int             poshalf;
 
-int32_t SetPK P2C(int32_t, c, int, PassNo)
+int32_t SetPK(int32_t c, int PassNo)
 {
   register struct pk_char *ptr;  /* temporary pk_char pointer */
   int red,green,blue;
@@ -65,7 +65,7 @@ int32_t SetPK P2C(int32_t, c, int, PassNo)
 }
 
 
-unsigned char getnyb P1C(unsigned char**, pos)
+unsigned char getnyb(unsigned char** pos)
 {
   if (poshalf == 0) {
     poshalf=1;
@@ -76,7 +76,7 @@ unsigned char getnyb P1C(unsigned char**, pos)
   }
 }
 
-uint32_t pk_packed_num P1C(unsigned char**, pos)
+uint32_t pk_packed_num(unsigned char** pos)
 {
   register int    i;
   uint32_t        j;
@@ -108,7 +108,7 @@ uint32_t pk_packed_num P1C(unsigned char**, pos)
   }
 }
 
-unsigned char* skip_specials P1C(unsigned char*,pos)
+unsigned char* skip_specials(unsigned char* pos)
 {
   uint32_t    i;
 
@@ -154,7 +154,7 @@ unsigned char* skip_specials P1C(unsigned char*,pos)
 /**********************************************************************/
 /***************************** LoadAChar ******************************/
 /**********************************************************************/
-void LoadAChar P2C(int32_t, c, register struct pk_char *, ptr)
+void LoadAChar(int32_t c, register struct pk_char * ptr)
 {
   unsigned short   shrunk_width,shrunk_height;
   unsigned short   width,height;
@@ -365,7 +365,7 @@ void LoadAChar P2C(int32_t, c, register struct pk_char *, ptr)
   }	
 }
 
-void InitPK  P1C(struct font_entry *,tfontp)
+void InitPK(struct font_entry * tfontp)
 {
   struct stat stat;
   unsigned char* position;

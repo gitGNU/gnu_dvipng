@@ -5,7 +5,7 @@
 /*********************************************************************/
 /***************************** DecodeArgs ****************************/
 /*********************************************************************/
-void DecodeArgs P2C(int, argc, char **, argv)
+void DecodeArgs(int argc, char ** argv)
 {
   int     i;                 /* argument index for flags      */
 
@@ -326,7 +326,7 @@ named COPYING and dvipng.c.");
 }
 
 /*
-char * xmalloc P1C(unsigned, size)
+char * xmalloc(unsigned size)
 {
   char *mem;
   
@@ -340,25 +340,11 @@ char * xmalloc P1C(unsigned, size)
 /**********************************************************************/
 /******************************  Fatal  *******************************/
 /**********************************************************************/
-void
-#if NeedVarargsPrototypes
-Fatal (char *fmt, ...)
-#else
-Fatal(va_alist)      /* issue a fatal error message */
-     va_dcl
-#endif
+void Fatal (char *fmt, ...)
 {
-#if !NeedVarargsPrototypes
-  const char *fmt;
-#endif
   va_list args;
 
-#if NeedVarargsPrototypes
   va_start(args, fmt);
-#else
-  va_start(args);
-  fmt = va_arg(args, const char *);
-#endif
   fprintf(ERR_STREAM, "\n");
   fprintf(ERR_STREAM, "%s: Fatal error, ", G_progname);
   vfprintf(ERR_STREAM, fmt, args);
@@ -379,25 +365,11 @@ Fatal(va_alist)      /* issue a fatal error message */
 /**********************************************************************/
 /*****************************  Warning  ******************************/
 /**********************************************************************/
-void                           /* issue a warning */
-#if NeedVarargsPrototypes
-Warning(char *fmt, ...)
-#else
-Warning(va_alist)
-     va_dcl
-#endif
+void Warning(char *fmt, ...)
 {
-#if !NeedVarargsPrototypes
-  const char *fmt;
-#endif
   va_list args;
 
-#if NeedVarargsPrototypes
   va_start(args, fmt);
-#else
-  va_start(args);
-  fmt = va_arg(args, const char *);
-#endif
 
 #ifndef vms
   G_errenc = 1;
