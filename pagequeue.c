@@ -24,18 +24,25 @@ struct page_list* FindQdPage(void)
   if (hpagequeuep==NULL) 
     return(NULL);
 
-  page=FindPage(Reverse ? hpagequeuep->last-- : hpagequeuep->first++,
-		  hpagequeuep->abspage);
+  page=FindPage(hpagequeuep->first, hpagequeuep->abspage);
   
-  if (hpagequeuep->last<hpagequeuep->first) {
+  if (hpagequeuep->first==PAGE_LASTPAGE) {
+    hpagequeuep->first=page->count[hpagequeuep->abspage ? 10 : 0];
+  }
+
+  if (hpagequeuep->first==hpagequeuep->last) {
     struct pagequeue *temp = hpagequeuep;
     hpagequeuep = hpagequeuep->next;
     free(temp);
+  } else if (hpagequeuep->first<hpagequeuep->last) {
+    hpagequeuep->first++;
+  } else {
+    hpagequeuep->first--;
   }
   return(page);
 }
 
-void QueuePage(int first, int last, bool abspage)
+void QueuePage(int first, int last, bool abspage, bool reverse)
 {
   struct pagequeue *new;
 
@@ -43,11 +50,16 @@ void QueuePage(int first, int last, bool abspage)
       ==NULL)
     Fatal("cannot allocate memory for page queue");
 
-  new->first=first;
-  new->last=last;
+  if (!reverse) {
+    new->first=first;
+    new->last=last;
+  } else {
+    new->first=last;
+    new->last=first;
+  }
   new->abspage=abspage;
 
-  if (Reverse || hpagequeuep==NULL) {
+  if (reverse || hpagequeuep==NULL) {
     new->next=hpagequeuep;
     hpagequeuep=new;
   } else {
@@ -69,7 +81,7 @@ bool QueueEmpty(void)
 /* Parse a string representing a list of pages.  Return 0 iff ok.  As a
    side effect, the page(s) is (are) ap- or pre-pended to the queue. */
 /* THIS is adapted from dvips */
-bool QueueParse(register char * s, bool abspage)
+bool QueueParse(register char * s, bool abspage, bool reverse)
 {
     register int    c ;		/* current character */
     register int  n = 0,	/* current numeric value */
@@ -131,7 +143,7 @@ bool QueueParse(register char * s, bool abspage)
 		    ps_low = ps_high;
 		}
 	    }
-	    QueuePage(ps_low, ps_high,abspage);
+	    QueuePage(ps_low, ps_high,abspage,reverse);
 	    if (c == 0)
 		return(_FALSE);
 	    range = 0;
