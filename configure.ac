@@ -67,6 +67,7 @@ fi
 AC_SUBST(PSFONTS_O)
 
 # Checks for header files. 
+AC_HEADER_STDC
 AC_CHECK_HEADERS([gd.h png.h kpathsea/kpathsea.h],,
 		 [AC_MSG_ERROR([cannot find/use $ac_header])])
 AC_CHECK_HEADERS([t1lib.h])
@@ -80,22 +81,39 @@ if test -n "$PSFONTS_O"; then
   PSFONTS_O="$PSFONTS_O enc.o fontmap.o tfm.o"
 fi
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([fcntl.h sys/time.h inttypes.h])
+AC_HEADER_TIME
+AC_HEADER_STDBOOL
+AC_CHECK_HEADERS([fcntl.h sys/time.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
-AC_HEADER_TIME
-AC_HEADER_STDBOOL
+if test "$ac_cv_header_inttypes_h" == yes; then
+  # Sometimes we want to use gcc -ansi -pedantic as a portability test
+  # The typedef of int64_t is not in the system header file in that
+  # case. Then, #define int64_t as "long long", which is non-ansi, but
+  # is present in most modern compilers. Using a #define rather than a
+  # typedef can be a problem, but in dvipng int64_t is only used as
+  # typecast, and there are no problems. autoconf 2.13 equivalent:
+  # AC_CHECK_TYPE(int64_t, long long)
+  # AC_CHECK_TYPE(uint64_t, unsigned long long)
+  AC_CHECK_TYPE([int64_t],,
+                [AC_DEFINE_UNQUOTED([int64_t], [long long],
+                                    [Define to `long long' if
+                                     <inttypes.h> does not define it.])])
+  AC_CHECK_TYPE([uint64_t],,
+                [AC_DEFINE_UNQUOTED([uint64_t], [unsigned long long],
+                                    [Define to `unsigned long long' if
+                                     <inttypes.h> does not define it.])])
+fi
 AC_HAS_KPSE_ENC_FORMATS
-AC_CHECK_TYPES([int64_t, long long])
+
 
 # Checks for library functions.
 AC_FUNC_ALLOCA
 AC_FUNC_FORK
 AC_FUNC_MALLOC
-AC_HEADER_STDC
 AC_FUNC_MMAP
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
