@@ -71,38 +71,62 @@ int PassNo;
 
 int32_t SetChar(int32_t c)
 {
-#ifdef DEBUG
-  if (currentfont->type==FONT_TYPE_VF)
+  switch (currentfont->type) {
+  case FONT_TYPE_VF:
     DEBUG_PRINT((DEBUG_DVI,"\n  VF CHAR:\t"));
-  else
-    DEBUG_PRINT((DEBUG_DVI,"\n  PK CHAR:\t"));
-  if (isprint(c))
-    DEBUG_PRINT((DEBUG_DVI,"'%c' ",c));
-  DEBUG_PRINT((DEBUG_DVI,"%d ", (int)c));
-  DEBUG_PRINT((DEBUG_DVI,"at (%d,%d) ", hh,vv));
-#endif
-
-  if (currentfont->type==FONT_TYPE_VF) { 
-    DEBUG_PRINT((DEBUG_DVI," tfmw %d", 
+    if (isprint(c))
+      DEBUG_PRINT((DEBUG_DVI,"'%c' ",c));
+    DEBUG_PRINT((DEBUG_DVI,"%d at (%d,%d) tfmw %d", c,hh,vv,
 		 ((struct vf_char*)currentfont->chr[c])->tfmw));
     return(SetVF(c));
-  } else {
+    break;
+  case FONT_TYPE_PK: {
     struct pk_char* ptr = currentfont->chr[c];
     if (ptr) {
-      if (ptr->glyph.data == NULL) 
-	LoadAChar(c, ptr);
-      DEBUG_PRINT((DEBUG_DVI," tfmw %d", ptr->tfmw));
+      if (ptr->data == NULL) 
+	LoadPK(c, ptr);
+      DEBUG_PRINT((DEBUG_DVI,"\n  PK CHAR:\t"));
+      if (isprint(c))
+	DEBUG_PRINT((DEBUG_DVI,"'%c' ",c));
+      DEBUG_PRINT((DEBUG_DVI,"%d at (%d,%d) tfmw %d", c,hh,vv,
+		   ptr->tfmw));
       if (PassNo==PASS_DRAW)
 	return(SetPK(c, hh, vv));
       else {
 	/* Expand bounding box if necessary */
 	min(x_min,hh - ptr->xOffset/shrinkfactor);
 	min(y_min,vv - ptr->yOffset/shrinkfactor);
-	max(x_max,hh - ptr->xOffset/shrinkfactor + ptr->glyph.w);
-	max(y_max,vv - ptr->yOffset/shrinkfactor + ptr->glyph.h);
+	max(x_max,hh - ptr->xOffset/shrinkfactor + ptr->w);
+	max(y_max,vv - ptr->yOffset/shrinkfactor + ptr->h);
 	return(ptr->tfmw);
       }
     }
+  }
+    break;
+#ifdef HAVE_FT2
+  case FONT_TYPE_FT: {
+    struct ft_char* ptr = currentfont->chr[c];
+    if (ptr->data == NULL) 
+      LoadFT(c, ptr);
+    DEBUG_PRINT((DEBUG_DVI,"\n  FT CHAR:\t"));
+    if (isprint(c))
+      DEBUG_PRINT((DEBUG_DVI,"'%c' ",c));
+    DEBUG_PRINT((DEBUG_DVI,"%d at (%d,%d) tfmw %d", c,hh,vv,ptr->tfmw));
+    if (PassNo==PASS_DRAW)
+      return(SetFT(c, hh, vv));
+    else {
+      /* Expand bounding box if necessary */
+      min(x_min,hh - ptr->xOffset);
+      min(y_min,vv - ptr->yOffset);
+      max(x_max,hh - ptr->xOffset + ptr->w);
+      max(y_max,vv - ptr->yOffset + ptr->h);
+    }
+    return(ptr->tfmw);
+  }
+    break;
+#endif
+  default:
+    break;
   }
   return(0);
 }
@@ -358,7 +382,8 @@ void DrawPages(void)
       CreateImage();
       Message(BE_NONQUIET,"[%d", dvi_pos->count[0]);
       PassNo=PASS_DRAW;
-      DrawPage(x_offset*dvi->conv*shrinkfactor,y_offset*dvi->conv*shrinkfactor);
+      DrawPage(x_offset*dvi->conv*shrinkfactor,
+	       y_offset*dvi->conv*shrinkfactor);
       WriteImage(dvi->outname,dvi_pos->count[0]);
 #ifdef TIMING
       ++ndone;
