@@ -1,10 +1,11 @@
-Release notes for version 0.2 of the dvipng package:
+Release notes for version 0.3 of the dvipng package:
 
 This program makes PNG graphics from DVI files as obtained from TeX
 and its relatives.
 
-In this release, a few features are added. It will now do simple
-PostScript inclusion, and can in addition do PostScript type1 fonts.
+This is mainly a bugfix release: reposition rules, and fix crash on
+empty page. In addition, the -o switch is now enabled, so that one can
+choose the output filename.
 
 It has been tested but will probably need further testing. Report any
 bugs you find. I expect that most difficulties will be in building the

@@ -8,12 +8,12 @@ and its relatives.
 file COPYING.
 
    I am aware that there are quite a few tools capable of doing this,
-most notably dvips->"gs -sDEVICE=png16m", but for many speed is not as
-good as it could be. This is especially true when making many png's.
-Even more so in an environment where this goes on all the time, as is
-the case in preview-latex, a package to preview formulas from within
-(x)emacs. Yes, you get to see your formulas in the (x)emacs buffer.
-See http://preview-latex.sf.net
+most notably dvips->"gs -sDEVICE=png16m", but for most tools speed is
+not as good as it could be. This is especially true when making many
+png's. Even more so in an environment where this goes on all the time,
+as is the case in preview-latex, a package to preview formulas from
+within (x)emacs. Yes, you get to see your formulas in the (x)emacs
+buffer. See http://preview-latex.sf.net
 
 
 Benefits of dvipng
@@ -54,7 +54,7 @@ Options are chosen to be similar to dvips' options where possible:
   -M*       Don't make fonts
   -l #      Last page to be output
   -mode s   MetaFont mode (default cx)
-  -o f      Output file (currently disabled)
+  -o f      Output file, '%d' is pagenumber
   -O c      Image offset
   -p #      First page to be output
   -pp #,#.. Page list to be output
@@ -73,8 +73,8 @@ These do not correspond to dvips options:
   -follow   Follow mode
   -Q #      Quality (~xdvi's shrinkfactor)
 
-     # = number   f = file   s = string  * = suffix, '0' to turn off
-         c = comma-separated dimension pair (e.g., 3.2in,-32.1cm)
+   # = number   f = file   s = string  * = suffix, '0' to turn off
+       c = comma-separated dimension pair (e.g., 3.2in,-32.1cm)
 
 
 Availability
