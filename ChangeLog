@@ -1,3 +1,10 @@
+2004-06-29  Jan-Åke Larsson  <jalar@mai.liu.se>
+
+	* configure.ac:
+	* dvipng.h: inttypes.h not available on all platforms
+
+	* special.c: Remove snprintf, not available on certain platforms
+
 2004-06-27  Jan-Åke Larsson  <jalar@mai.liu.se>
 
 	* dvipng.c: Fix case of missing font libs
