@@ -125,6 +125,7 @@ void handlepapersize(char * p, int32_t * x, int32_t * y)
    *y = myatodim(&p) ;
 }
 
+#if 0
 const char *lengthnames[]={ "sp", "pt", "bp", 
 			    "dd", "mm", "pc", 
 			    "cc", "cm", "in" };
@@ -152,3 +153,4 @@ int32_t myatodim2(char ** p)
   tmp*=lengthsp[i];
   return((int32_t) tmp);
 }
+#endif
