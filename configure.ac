@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT([dvipng], [1.2], [dvipng-devel@lists.sf.net])
+AC_INIT([dvipng], [1.3], [dvipng-devel@lists.sf.net])
 AC_CONFIG_SRCDIR([dvipng.c])
 
 AC_ARG_ENABLE(debug, 
@@ -25,6 +25,7 @@ AC_DEFINE_UNQUOTED(GS_PATH, "$GS", [Define as the path to GhostScript.])
 
 # Checks for libraries.
 AC_CHECK_LIB(m, pow)
+AC_CHECK_LIB(z, deflate)
 AC_CHECK_LIB(gen, basename)
 AC_CHECK_LIB([png], [png_read_image],,
              [AC_MSG_ERROR([cannot find/use libpng])])
