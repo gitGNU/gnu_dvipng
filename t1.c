@@ -54,7 +54,7 @@ dviunits SetT1(int32_t c, subpixels hh, subpixels vv)
   return(ptr->tfmw);
 }
 
-void LoadT1(int32_t c, struct t1_char * ptr, unsigned dpi)
+void LoadT1(int32_t c, struct t1_char * ptr)
 {
   GLYPH *glyph;
   int original_width,original_height;
@@ -65,7 +65,7 @@ void LoadT1(int32_t c, struct t1_char * ptr, unsigned dpi)
 
   DEBUG_PRINT(DEBUG_T1,("\n  LOAD T1 CHAR\t%d",c));
   if ((glyph=
-       T1_SetChar( currentfont->T1id, c, (float)dpi*10/72 ,
+       T1_SetChar( currentfont->T1id, c, (float)currentfont->dpi*currentfont->d/65536/72 ,
 		   currentfont->psfontmap==NULL ? NULL : currentfont->psfontmap->t1_transformp))
       ==NULL)
       Fatal("can't load t1_char %d",c);
