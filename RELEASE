@@ -1,13 +1,15 @@
-Release notes for version 0.10 of the dvipng package:
+Release notes for version 1.0 of the dvipng package:
 
 This program makes PNG graphics from DVI files as obtained from TeX
 and its relatives.
 
 Dvipng has undergone a number of improvements and bugfixes since being
-first released in the 0.x number series a year ago. 
+first released in the 0.x number series a year ago. The 1.0 release
+changes the behaviour of the -D switch and simplifies choice of
+resolution greatly (see below for details).
 
-It has been tested but will probably need further testing. Report any
-bugs you find, see README for instructions.
+It has been tested to a fair degree. Note the disclaimer in the
+COPYING file. Report any bugs you find, see README for instructions.
 
 --------------------
 
@@ -15,34 +17,30 @@ People who are upgrading from version 0.9 or earlier should read the
 following:
 
 This release changes the -D (resolution) option to specify the
-_output_resolution_ rather than the previous base resolution (which
-was divided by the shrinkfacktor (3) to the output resolution). This
-makes the behaviour more similar to that of dvips and more transparent
-to new users.
+_output_resolution_ rather than the previous base resolution, which
+was divided by the shrinkfactor (default 3) to give the output
+resolution. This makes the behaviour more similar to that of dvips and
+more transparent to new users.
 
-At the same time, new code is added so that it is not necessary to
-give a metafont mode to make the fonts render. For those who want to
-select the metafont mode there is a --bdpi switch so that this can be
-done without errors.
+At the same time, new code is added to make it simpler to choose
+output resolution. To make the PK fonts render, the old-style call
+needed a choice of a base resolution, a "shrinkfactor", a metafont
+mode that fit the base resolution, and sometimes a magnification,
+making the call to dvipng complicated. For example, choosing 96 dpi
+would have needed, say,
 
-This means that the old-style dvipng call should change from e.g.
+    dvipng -D 400 -Q 5 --mfmode nexthi -x 1200 test.dvi 
 
-     dvipng -D 600 -Q 6 -mode ljfour test.dvi
+That is, the base resolution 400, shrinkfactor 5 and magnification 1.2
+(400/5*1.2=96). With this version of dvipng you simply say
 
-to
- 
-     dvipng -D 100 -bdpi 600 -Q 6 -mode ljfour test.dvi
+    dvipng -D 96 test.dvi
 
-or, if the metafont mode is not really important to you:
+The base resolution is no longer a "shrinkfactor" times the output
+resolution, so for those who really want to select the metafont mode
+there is a --bdpi switch so that this can be done without errors.
 
-     dvipng -D 100 test.dvi
-
-I understand that some users even have used the -x switch to adjust
-the output resolution. This is not necessary anymore, which means it
-is much simpler to choose output resolution.
-
-
-
+In short, choosing resolution simpler by far.
 
 
 
