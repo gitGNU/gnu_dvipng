@@ -1,3 +1,21 @@
+2004-07-01  Jan-Åke Larsson  <jalar@pcbjalar>
+
+	* miktex.mak: New, for MIKTeX 
+
+	* dvi.c:
+	* dvipng.c:
+	* dvipng.h:
+	* special.c: Adjust for MIKTeX 
+
+	* color.c:
+	* enc.c:
+	* font.c:
+	* fontmap.c:
+	* misc.c:
+	* pk.c:
+	* tfm.c:
+	* vf.c: Move file-mmapping to misc.c, adjust it for MIKTeX
+
 2004-06-29  Jan-Åke Larsson  <jalar@mai.liu.se>
 
 	* configure.ac:
