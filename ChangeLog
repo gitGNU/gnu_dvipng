@@ -1,3 +1,7 @@
+2004-06-27  Jan-Åke Larsson  <jalar@mai.liu.se>
+
+	* draw.c: Fix for case of absent font lib(s)
+
 2004-06-24  Jan-Åke Larsson  <jalar@mai.liu.se>
 
 	* fontmap.c: 
