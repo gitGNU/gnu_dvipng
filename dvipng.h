@@ -98,7 +98,7 @@ typedef struct {
   ValTyp  Typ;
 } KeyDesc;
 
-void    SetSpecial(char *, int, int32_t, int32_t,bool);
+void    SetSpecial(char *, int, int32_t, int32_t);
 
 /********************************************************/
 /***********************  dvi.h  ************************/
@@ -272,7 +272,7 @@ uint32_t   UNumRead(unsigned char*, register int);
 /********************************************************/
 #include "commands.h"
 
-void      CreateImage(void);
+void      CreateImage(pixels width, pixels height);
 void      DrawCommand(unsigned char*, void* /* dvi/vf */); 
 void      DrawPages(void);
 void      WriteImage(char*, int);
@@ -281,7 +281,7 @@ void      LoadPK(int32_t, register struct pk_char *);
 int32_t   SetChar(int32_t);
 int32_t   SetPK(int32_t,int32_t, int32_t);
 int32_t   SetVF(int32_t);
-int32_t   SetRule(int32_t, int32_t, int32_t, int32_t, int);
+int32_t   SetRule(int32_t, int32_t, int32_t, int32_t);
 void      BeginVFMacro(struct font_entry*);
 void      EndVFMacro(void);
 
@@ -311,32 +311,43 @@ EXTERN struct font_entry *hfontptr INIT(NULL); /* font list pointer        */
 
 EXTERN struct internal_state {
   struct font_entry* currentfont;
-  int                passno;
 } current_state;
 
-#define BE_NONQUIET     1
-#define BE_VERBOSE      2
-#define PARSE_STDIN     4
-#define REPORT_HEIGHT   8
-#define REPORT_DEPTH    16
-#define LASTFLAG        REPORT_DEPTH
+#define BE_NONQUIET      1
+#define BE_VERBOSE       2
+#define PARSE_STDIN      4
+#define EXPAND_BBOX      8
+#define TIGHT_BBOX       16
+#define REPORT_HEIGHT    32
+#define REPORT_DEPTH     64
+#define CACHE_IMAGES     128
+#define DVI_PAGENUM      256
+#ifdef  HAVE_GDIMAGECREATETRUECOLOR
+#define RENDER_TRUECOLOR 512
+#endif
+#ifdef HAVE_FT2
+#define USE_FREETYPE     1024
+EXTERN unsigned int flags INIT(BE_NONQUIET | USE_FREETYPE);
+#else
+EXTERN unsigned int flags INIT(BE_NONQUIET);
+#endif
 
 #ifdef DEBUG
-/*EXTERN unsigned int Debug INIT(0);*/
-#define DEBUG_PRINT(a) Message a
-#define DEBUG_DEFAULT LASTFLAG * 2
-#define DEBUG_DVI     DEBUG_DEFAULT
-#define DEBUG_VF      DEBUG_DEFAULT * 2
-#define DEBUG_PK      DEBUG_DEFAULT * 4
-#define DEBUG_TFM     DEBUG_DEFAULT * 8
-#define DEBUG_GLYPH   DEBUG_DEFAULT * 16
-#define DEBUG_FT      DEBUG_DEFAULT * 32
-#define DEBUG_ENC     DEBUG_DEFAULT * 64
-#define DEBUG_COLOR   DEBUG_DEFAULT * 128
-#define DEBUG_GS      DEBUG_DEFAULT * 256
+EXTERN unsigned int debug INIT(0);
+#define DEBUG_PRINT(a,b) if (debug & a) { printf b; fflush(stdout); }
+#define DEBUG_DVI     1
+#define DEBUG_VF      2
+#define DEBUG_PK      4
+#define DEBUG_TFM     8
+#define DEBUG_GLYPH   16
+#define DEBUG_FT      32
+#define DEBUG_ENC     64
+#define DEBUG_COLOR   128
+#define DEBUG_GS      256
 #define LASTDEBUG     DEBUG_GS
+#define DEBUG_DEFAULT DEBUG_DVI
 #else
-#define DEBUG_PRINT(a)
+#define DEBUG_PRINT(a,b)
 #endif
 
 /************************timing stuff*********************/
@@ -376,34 +387,23 @@ EXTERN struct timeb timebuffer;
 
 EXTERN int   resolution INIT(300);
 EXTERN char *MFMODE     INIT("cx");
-#ifdef HAVE_FT2
-EXTERN bool   freetype INIT(true);
-#endif
 #ifdef HAVE_GDIMAGEPNGEX
 EXTERN int   compression INIT(1);
 #endif
-#ifdef  HAVE_GDIMAGECREATETRUECOLOR
-EXTERN bool truecolor   INIT(FALSE);
-#endif
-EXTERN bool cacheimages INIT(FALSE);
-EXTERN bool dvipagenum INIT(FALSE);
 # define  max(x,y)       if ((y)>(x)) x = y
 # define  min(x,y)       if ((y)<(x)) x = y
 
 /* These are in pixels*/
-/* Used in PASS_BBOX: Include topleft corner of page */
 EXTERN  int x_min INIT(0); 
 EXTERN  int y_min INIT(0);
 EXTERN  int x_max INIT(0);
 EXTERN  int y_max INIT(0);
 
-/* Page size: set by -T _or_ in PASS_BBOX */
-EXTERN  int x_width INIT(0); 
-EXTERN  int y_width INIT(0);
+/* Page size: default set by -T */
+EXTERN  int x_width_def INIT(0); 
+EXTERN  int y_width_def INIT(0);
 
-/* Offset: default set by -O, or/and in PASS_BBOX */
-EXTERN  int x_offset INIT(0);
-EXTERN  int y_offset INIT(0);
+/* Offset: default set by -O and -T bbox */
 EXTERN  int x_offset_def INIT(0);
 EXTERN  int y_offset_def INIT(0);
 
@@ -427,10 +427,8 @@ EXTERN int bGreen INIT(255);
 EXTERN int bBlue  INIT(255);
 
 #define PASS_SKIP 0
-#define PASS_BBOX 1
-#define PASS_TIGHT_BBOX 2
-#define PASS_DRAW 4
-EXTERN int PassDefault INIT(PASS_BBOX);
+#define PASS_SCAN 1
+#define PASS_DRAW 2
 
 EXTERN struct font_entry* currentfont;
 EXTERN struct dvi_data* dvi INIT(NULL);
