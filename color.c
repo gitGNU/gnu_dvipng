@@ -159,7 +159,7 @@ void stringrgb(char* p,int *r,int *g,int *b)
     tmp=colornames;
     while(tmp!=NULL && tmp->name!=NULL && strcmp(tmp->name,token)) 
       tmp++;
-    if (tmp!=NULL) {
+    if (tmp->name!=NULL) {
       /* One-level recursion */
       char* colorspec=alloca(sizeof(char)*strlen(tmp->color+1));
       strcpy(colorspec,tmp->color);
