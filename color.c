@@ -24,9 +24,6 @@
 ************************************************************************/
 
 #include "dvipng.h"
-#include <fcntl.h> // open/close
-#include <sys/mman.h>
-#include <sys/stat.h>
 
 /*
  * Color. We delete and recreate the gdImage for each new page. This
@@ -53,10 +50,8 @@ void initcolor()
 void LoadDvipsNam (void)
 {
   char *pos,*max,*buf,*dvipsnam_file;
-  int fd;
   struct colorname *tmp=NULL;
-  struct stat stat;
-  unsigned char* dvipsnam_mmap;
+  struct filemmap fmmap;
 
   TEMPSTR(dvipsnam_file,kpse_find_file("dvipsnam.def",kpse_tex_format,false));
   if (dvipsnam_file == NULL) {
@@ -64,22 +59,13 @@ void LoadDvipsNam (void)
     return;
   }
   DEBUG_PRINT(DEBUG_COLOR,("\n  OPEN COLOR NAMES:\t'%s'", dvipsnam_file));
-  if ((fd = open(dvipsnam_file,O_RDONLY)) == -1) {
-    Warning("color name file %s could not be opened", dvipsnam_file);
-    return;
-  }
-  fstat(fd,&stat);
-  dvipsnam_mmap = mmap(NULL,stat.st_size, PROT_READ, MAP_SHARED,fd,0);
-  if (dvipsnam_mmap == (unsigned char *)-1) {
-    Warning("cannot mmap color name <%s> !\n",dvipsnam_file);
-    return;
-  }
-  if ((colornames = malloc(stat.st_size*2))==NULL) 
+  if (MmapFile(dvipsnam_file,&fmmap)) return;
+  if ((colornames = malloc(fmmap.size*2))==NULL) 
     Fatal("cannot alloc space for color names");
-  pos=dvipsnam_mmap;
-  max=dvipsnam_mmap+stat.st_size;
+  pos=fmmap.mmap;
+  max=fmmap.mmap+fmmap.size;
   tmp=colornames;
-  buf=(char*)colornames+stat.st_size;
+  buf=(char*)colornames+fmmap.size;
   while (pos<max && *pos!='\\') pos++;
   while(pos+9<max && strncmp(pos,"\\endinput",9)!=0) {
     while (pos+17<max && strncmp(pos,"\\DefineNamedColor",17)!=0) {
@@ -112,11 +98,7 @@ void LoadDvipsNam (void)
     tmp++;
   }
   tmp->name=NULL;
-  if (munmap(dvipsnam_mmap,stat.st_size))
-    Warning("cannot munmap color name file %s!?\n",dvipsnam_file);
-  if (close(fd))
-    Warning("cannot close color name file %s!?\n",dvipsnam_file);
-  //  free(dvipsnam_file);
+  UnMmapFile(&fmmap);
 }
 
 void ClearDvipsNam(void)

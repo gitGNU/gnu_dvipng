@@ -160,7 +160,11 @@ void FontDef(unsigned char* command, void* parent)
   tfontptr->next = hfontptr;
   hfontptr = tfontptr;
   tfontnump->fontp = tfontptr;
-  tfontptr->filedes = 0;
+#ifndef MIKTEX
+  tfontptr->fmmap.fd = 0;
+#else  /* MIKTEX */
+  tfontptr->fmmap.hFile = INVALID_HANDLE_VALUE;
+#endif
   tfontptr->c = c; /* checksum */
   tfontptr->s = s; /* space size */
   tfontptr->d = d; /* design size */
@@ -271,7 +275,11 @@ void FontFind(struct font_entry * tfontptr)
       Warning("font %s at %d dpi not found, characters will be left blank.\n",
 	      tfontptr->n, tfontptr->dpi);
       strcpy (tfontptr->name, "None");
-      tfontptr->filedes = 0;
+#ifndef MIKTEX
+      tfontptr->fmmap.fd = 0;
+#else  /* MIKTEX */
+      tfontptr->fmmap.hFile = INVALID_HANDLE_VALUE;
+#endif
       tfontptr->magnification = 0;
       tfontptr->designsize = 0;
     }
@@ -286,7 +294,11 @@ void FontFind(struct font_entry * tfontptr)
 		 false,
 		 0))) {
     Warning(tfontptr->name); /* contains error messsage */
-    tfontptr->filedes = 0;
+#ifndef MIKTEX
+    tfontptr->fmmap.fd = 0;
+#else  /* MIKTEX */
+    tfontptr->fmmap.hFile = INVALID_HANDLE_VALUE;
+#endif
 #ifdef __riscos
     MakeMetafontFile(PXLpath, tfontptr->n, tfontptr->dpi);
 #endif

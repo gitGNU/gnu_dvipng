@@ -24,9 +24,6 @@
 ************************************************************************/
 
 #include "dvipng.h"
-#include <fcntl.h> // open/close
-#include <sys/mman.h>
-#include <sys/stat.h>
 #if HAVE_ALLOCA_H
 # include <alloca.h>
 #endif
@@ -317,7 +314,6 @@ void LoadPK(int32_t c, register struct char_entry * ptr)
 
 void InitPK(struct font_entry * tfontp)
 {
-  struct stat stat;
   unsigned char* position;
   struct char_entry *tcharptr; /* temporary char_entry pointer  */
   uint32_t    hppp, vppp, packet_length;
@@ -325,16 +321,11 @@ void InitPK(struct font_entry * tfontp)
 
   DEBUG_PRINT((DEBUG_DVI|DEBUG_PK),("\n  OPEN FONT:\t'%s'", tfontp->name));
   Message(BE_VERBOSE,"<%s>", tfontp->name);
-  if ((tfontp->filedes = open(tfontp->name,O_RDONLY)) == -1) 
-    Fatal("font file %s could not be opened", tfontp->name);
-  fstat(tfontp->filedes,&stat);
-  tfontp->mmap = position = 
-    mmap(NULL,stat.st_size, PROT_READ, MAP_SHARED,tfontp->filedes,0);
-  if (tfontp->mmap == (unsigned char *)-1) 
-    Fatal("cannot mmap PK file <%s> !\n",currentfont->name);
-  if (stat.st_size < 2 || stat.st_size < 3+*(position+2)+16) 
+  if (MmapFile(tfontp->name,&(tfontp->fmmap)))
+    Fatal("font file %s unusable", tfontp->name);
+  position=tfontp->fmmap.mmap;
+  if (tfontp->fmmap.size < 2 || tfontp->fmmap.size < 3+*(position+2)+16) 
     Fatal("PK file %s ends prematurely",tfontp->name);
-  tfontp->end=tfontp->mmap+stat.st_size;
   if (*position++ != PK_PRE) 
     Fatal("unknown font format in file <%s> !\n",currentfont->name);
   if (*position++ != PK_ID) 
@@ -362,7 +353,7 @@ void InitPK(struct font_entry * tfontp)
   position = skip_specials(position);
   while (*position != PK_POST) {
     DEBUG_PRINT(DEBUG_PK,("\n  @%ld PK CHAR:\t%d",
-		  (long)(position - tfontp->mmap), *position));
+		  (long)((void*)position - tfontp->fmmap.mmap), *position));
     if ((tcharptr = malloc(sizeof(struct char_entry))) == NULL)
       Fatal("can't malloc space for char_entry");
     tcharptr->flag_byte = *position;
@@ -405,12 +396,7 @@ void DonePK(struct font_entry *tfontp)
 {
   int c=FIRSTFNTCHAR;
 
-  if (munmap(tfontp->mmap,tfontp->end-tfontp->mmap))
-    Warning("font file %s could not be munmapped", tfontp->name);
-  if (close(tfontp->filedes)) 
-    Warning("font file %s could not be closed", tfontp->name);
-  tfontp->mmap=NULL;
-  tfontp->filedes=-1;
+  UnMmapFile(&(tfontp->fmmap));
   while(c<=LASTFNTCHAR) {
     if (tfontp->chr[c]!=NULL) {
       UnLoadPK((struct char_entry*)tfontp->chr[c]);

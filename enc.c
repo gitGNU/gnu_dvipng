@@ -24,19 +24,15 @@
 ************************************************************************/
 
 #include "dvipng.h"
-#include <fcntl.h> // open/close
-#include <sys/mman.h>
-#include <sys/stat.h>
 
 struct encoding* encodingp=NULL;
 
 struct encoding* InitEncoding(char* encoding) 
 {
   char *pos,*max,*buf,*enc_file;
-  int encfd,i;
+  int i;
   struct encoding* encp=NULL;
-  struct stat stat;
-  unsigned char* encmmap;
+  struct filemmap fmmap;
   
 #ifdef HAVE_KPSE_ENC_FORMATS
   TEMPSTR(enc_file,kpse_find_file(encoding,kpse_enc_format,false));
@@ -48,34 +44,17 @@ struct encoding* InitEncoding(char* encoding)
     return(NULL);
   }
   DEBUG_PRINT((DEBUG_FT|DEBUG_ENC),("\n  OPEN ENCODING:\t'%s'", enc_file));
-  if ((encfd = open(enc_file,O_RDONLY)) == -1) {
-    Warning("encoding file %s could not be opened", enc_file);
-    //    free(enc_file);
-    return(NULL);
-  }
-  fstat(encfd,&stat);
-  encmmap = mmap(NULL,stat.st_size, PROT_READ, MAP_SHARED,encfd,0);
-  if (encmmap == (unsigned char *)-1) {
-    Warning("cannot mmap encoding <%s> !\n",enc_file);
-    if (close(encfd))
-      Warning("cannot close encoding file %s!?\n",enc_file);
-    //free(enc_file);
-    return(NULL);
-  }
+  if (MmapFile(enc_file,&fmmap)) return(NULL);
   if ((encp = calloc(sizeof(struct encoding)+strlen(encoding)+1
-		     +stat.st_size,1))==NULL) {
+		     +fmmap.size,1))==NULL) {
     Warning("cannot alloc space for encoding",enc_file);
-    if (munmap(encmmap,stat.st_size))
-      Warning("cannot munmap encoding %s!?\n",enc_file);
-    if (close(encfd))
-      Warning("cannot close encoding file %s!?\n",enc_file);
-    //free(enc_file);
+    UnMmapFile(&fmmap);
     return(NULL);
   }
   encp->name=(char*)encp+sizeof(struct encoding);
   strcpy(encp->name,encoding);
-  pos=encmmap;
-  max=encmmap+stat.st_size;
+  pos=fmmap.mmap;
+  max=fmmap.mmap+fmmap.size;
   buf=encp->name+strlen(encoding)+1;
 #define SKIPCOMMENT(x) if (*x=='%') while (x<max && *x!='\n') x++;
   while(pos<max && *pos!='/') {
@@ -112,11 +91,7 @@ struct encoding* InitEncoding(char* encoding)
       pos++;
     }
   }
-  if (munmap(encmmap,stat.st_size))
-    Warning("cannot munmap encoding %s!?\n",enc_file);
-  if (close(encfd))
-    Warning("cannot close encoding file %s!?\n",enc_file);
-  //  free(enc_file);
+  UnMmapFile(&fmmap);
   return(encp);
 }
 

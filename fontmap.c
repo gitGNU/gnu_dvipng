@@ -24,14 +24,9 @@
 ************************************************************************/
 
 #include "dvipng.h"
-#include <fcntl.h> // open/close
-#include <sys/mman.h>
-#include <sys/stat.h>
 
 static char* psfont_name=NULL;
-static unsigned char* psfont_mmap = NULL;
-static int psfont_filedes = -1;
-static struct stat psfont_stat;
+static struct filemmap psfont_mmap;
 static struct psfontmap *psfontmap=NULL;
 
 inline char* newword(char** buffer, char* end) 
@@ -73,50 +68,42 @@ void InitPSFontMap(void)
     return;
   }
   DEBUG_PRINT(DEBUG_FT,("\n  OPEN PSFONT MAP:\t'%s'", psfont_name));  
-  if ((psfont_filedes = open(psfont_name,O_RDONLY)) == -1) { 
+  if (MmapFile(psfont_name,&psfont_mmap)) {
     Warning("psfonts map %s could not be opened", psfont_name);
     return;
   }
-  fstat(psfont_filedes,&psfont_stat);
-  psfont_mmap = mmap(NULL,psfont_stat.st_size,
-		     PROT_READ, MAP_SHARED,psfont_filedes,0);
-  if (psfont_mmap == (unsigned char *)-1) 
-    Warning("cannot mmap psfonts map %s !\n",psfont_name);
-  else {
-    pos = psfont_mmap;
-    end = psfont_mmap+psfont_stat.st_size;
-    while(pos<end) {
-      while(pos < end && (*pos=='\n' || *pos==' ' || *pos=='\t' 
-			  || *pos=='%' || *pos=='*' || *pos==';' || *pos=='#')) {
-	while(pos < end && *pos!='\n') pos++; /* skip comments/empty rows */
-	pos++;
-      }
-      if (pos < end) {
-	if ((entry=malloc(sizeof(struct psfontmap)))==NULL)
-	  Fatal("cannot malloc psfontmap space");
-	entry->line = pos;
-	/* skip <something and quoted entries */
-	while(pos < end && (*pos=='<' || *pos=='"')) {
-	  if (*pos=='<') 
-	    while(pos < end && *pos!=' ' && *pos!='\t') pos++;
-	  else 
-	    while(pos < end && *pos!='"') pos++;
-	  while(pos < end && (*pos==' ' || *pos=='\t')) pos++;
-	}
-	/* first word is font name */
- 	entry->tfmname = newword(&pos,end);
-	entry->psfile = NULL;
-	entry->encname = NULL;
-	entry->encoding = NULL;
-	while(pos < end && *pos!='\n') pos++;
-	entry->end = pos;
-	entry->next=psfontmap;
-	psfontmap=entry;
-      }
+  pos = psfont_mmap.mmap;
+  end = psfont_mmap.mmap+psfont_mmap.size;
+  while(pos<end) {
+    while(pos < end && (*pos=='\n' || *pos==' ' || *pos=='\t' 
+			|| *pos=='%' || *pos=='*' || *pos==';' || *pos=='#')) {
+      while(pos < end && *pos!='\n') pos++; /* skip comments/empty rows */
       pos++;
     }
+    if (pos < end) {
+      if ((entry=malloc(sizeof(struct psfontmap)))==NULL)
+	Fatal("cannot malloc psfontmap space");
+      entry->line = pos;
+      /* skip <something and quoted entries */
+      while(pos < end && (*pos=='<' || *pos=='"')) {
+	if (*pos=='<') 
+	  while(pos < end && *pos!=' ' && *pos!='\t') pos++;
+	else 
+	  while(pos < end && *pos!='"') pos++;
+	while(pos < end && (*pos==' ' || *pos=='\t')) pos++;
+      }
+      /* first word is font name */
+      entry->tfmname = newword(&pos,end);
+      entry->psfile = NULL;
+      entry->encname = NULL;
+      entry->encoding = NULL;
+      while(pos < end && *pos!='\n') pos++;
+      entry->end = pos;
+      entry->next=psfontmap;
+      psfontmap=entry;
+    }
+    pos++;
   }
-  //free(psfont_name);
 }
 
 void ClearPSFontMap(void)
@@ -133,12 +120,7 @@ void ClearPSFontMap(void)
       free(entry->encname);
     free(entry);
   }
-  if (psfont_mmap!=NULL && munmap(psfont_mmap,psfont_stat.st_size))
-    Warning("fontmap file %s could not be munmapped", psfont_name);
-  psfont_mmap=NULL;
-  if (psfont_filedes!=-1 && close(psfont_filedes)) 
-    Warning("font file %s could not be closed", psfont_name);
-  psfont_filedes=-1;
+  UnMmapFile(&psfont_mmap);
   if (psfont_name != NULL)
     free(psfont_name);
   psfont_name=NULL;

@@ -25,6 +25,10 @@
 
 #include "dvipng.h"
 #include <libgen.h>
+#include <fcntl.h> // open/close
+#include <sys/mman.h>
+#include <sys/stat.h>
+
 
 static char *programname;
 
@@ -597,3 +601,67 @@ void Message(int activeflags, char *fmt, ...)
   va_end(args);
 }
 
+
+bool MmapFile (char *filename,struct filemmap *fmmap)
+{
+#ifndef MIKTEX
+  struct stat stat;
+#endif
+
+  DEBUG_PRINT(DEBUG_DVI,("\n  OPEN FILE:\t'%s'", filename));
+  fmmap->mmap=NULL;
+#ifndef MIKTEX
+  if ((fmmap->fd = open(filename,O_RDONLY)) == -1) {
+    Warning("cannot open file <%s>", filename);
+    return(true);
+  }
+  fstat(fmmap->fd,&stat);
+  fmmap->size=stat.st_size;
+  fmmap->mmap = mmap(NULL,fmmap->size, PROT_READ, MAP_SHARED,fmmap->fd,0);
+  if (fmmap->mmap == (unsigned char *)-1) {
+    Warning("cannot mmap file <%s>",filename);
+    fmmap->mmap=NULL;
+    close(fmmap->fd);
+    return(true);
+  }
+#else /* MIKTEX */
+  fmmap->hFile = CreateFile(filename, GENERIC_READ, 0, 0, OPEN_EXISTING,
+			    FILE_FLAG_RANDOM_ACCESS, 0);
+  if (fmmap->hFile == INVALID_HANDLE_VALUE) {
+    Warning("cannot open file <%s>", filename);
+    return(true);
+  }
+  fmmap->size = GetFileSize(hFile, 0);
+  fmmap->hMap = CreateFileMapping(hFile, 0, PAGE_READONLY, 0, 0, 0);
+  if (fmmap->hMap == 0) {
+    CloseHandle (fmmap->hFile);
+    Warning("cannot CreateFileMapping() file <%s>", filename);
+    return(true);
+  }
+  fmmap->mmap = MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0);
+  if (fmmap->mmap == NULL) {
+    Warning("cannot MapViewOfFile() file <%s>", filename);
+    CloseHandle (fmmap->hMap);
+    CloseHandle (fmmap->hFile);
+    return(true);
+  }
+#endif  /* MIKTEX */
+  return(false);
+}
+
+void UnMmapFile(struct filemmap* fmmap)
+{
+  if (fmmap->mmap!=NULL) {
+#ifndef MIKTEX
+    if (munmap(fmmap->mmap,fmmap->size))
+      Warning("cannot munmap file at 0x%X",fmmap->mmap);
+    if (close(fmmap->fd))
+      Warning("cannot close file descriptor %d",fmmap->fd);
+#else  /* MIKTEX */
+    UnmapViewOfFile (fmmap->mmap);
+    CloseHandle (fmmap->hMap);
+    CloseHandle (fmmap->hFile);
+#endif	/* MIKTEX */
+  }
+  fmmap->mmap=NULL;
+}
