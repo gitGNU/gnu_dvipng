@@ -204,6 +204,7 @@ struct page_list*FindPage(int32_t, bool);
 
 void    CloseFiles(void);
 bool    DecodeArgs(int, char *[]);
+void    DecodeString(char *);
 /*#ifdef __riscos
 void    diagram(char *, diagtrafo *);
 void   *xosfile_set_type(char *, int);
