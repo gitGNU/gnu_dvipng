@@ -80,7 +80,7 @@ unsigned char* DVIGetCommand P1C(struct dvi_data*, dvi)
      /* This function reads in and stores the next dvi command. */
 { 
   static unsigned char command[STRSIZE];
-  static unsigned char* longcommand = NULL;
+  static unsigned char* lcommand = command;
   int length;
   uint32_t strlength=0;
 
@@ -114,28 +114,21 @@ unsigned char* DVIGetCommand P1C(struct dvi_data*, dvi)
     break;
   default:
   }
-  if (longcommand!=NULL) {
-    free(longcommand);
-    longcommand=NULL;
+  if (lcommand!=command) {
+    free(lcommand);
+    lcommand=command;
   }
   if (strlength > 0) { /* Read string */
     if (strlength + (uint32_t)length >  (uint32_t)STRSIZE) {
       /* string + command length exceeds that of buffer */
-      if ((longcommand=malloc(strlength))==NULL) 
+      if ((lcommand=malloc(length+strlength))==NULL) 
 	Fatal("cannot allocate memory for dvi command");
-      strncpy(longcommand,command,length);
-      if (fread(longcommand+length,1,strlength,dvi->filep) < strlength) 
-	Fatal("%s command shorter than expected",dvi_commands[*command]);
-    } else {
-      if (fread(command+length,1,strlength,dvi->filep) < strlength) 
-	Fatal("%s command shorter than expected",dvi_commands[*command]);
+      memcpy(lcommand,command,length);
     }
+    if (fread(lcommand+length,1,strlength,dvi->filep) < strlength) 
+      Fatal("%s command shorter than expected",dvi_commands[*command]);
   }
-  if (longcommand!=NULL) {
-    return(longcommand);
-  } else {
-    return(command);
-  }
+  return(lcommand);
 }
 
 
@@ -298,11 +291,11 @@ struct page_list* FindPage P1C(int32_t,pagenum)
   return(tpagelistp);
 }
 
-
-void DelPageList P1H(void)
-     /* Delete the page list (only done on open/reopen) */
+void DVIClose P1C(struct dvi_data*, dvi)
 {
   struct page_list* temp;
+  
+  /* Delete the page list */
 
   temp=hpagelistp;
   while(hpagelistp!=NULL) {
@@ -311,5 +304,8 @@ void DelPageList P1H(void)
     temp=hpagelistp;
   }
   abspagenumber=0;
+
+  fclose(dvi->filep);
+  free(dvi);
 }
 
