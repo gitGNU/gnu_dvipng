@@ -39,7 +39,8 @@ void LoadT1(int32_t c, struct char_entry * ptr)
 
   DEBUG_PRINT(DEBUG_T1,("\n  LOAD T1 CHAR\t%d",c));
   if ((glyph=
-       T1_SetChar(currentfont->T1id, c, (float)currentfont->dpi*currentfont->d/65536/72 ,
+       T1_SetChar(currentfont->T1id, c,
+		  (float)currentfont->dpi*currentfont->d/65536/72.27,
 		  currentfont->psfontmap==NULL ? NULL : currentfont->psfontmap->t1_transformp))
       ==NULL)
       Fatal("cannot load T1 char %d",c);
