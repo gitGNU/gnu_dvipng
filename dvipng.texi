@@ -26,7 +26,7 @@ dvipng [options] [filename] -
 @dircategory TeX
 @direntry
 * DVI-to-PNG: (dvipng).              Translating TeX DVI files to Portable Network Graphics (PNG).
-* dvipng: (dvipng)Invoking dvipng.   A DVI-to-PNG translator.
+* dvipng: (dvipng).                  A DVI-to-PNG translator.
 @end direntry
 
 @finalout
@@ -68,7 +68,7 @@ approved by the Free Software Foundation.
 @c @summarycontents
 @contents
 
-@node Top
+@node Top, Introduction, (dir), (dir)
 @ifnottex
 @top dvipng
 
@@ -96,14 +96,14 @@ Jan-@AA{}ke Larsson
 
 
 
-@node Introduction
+@node Introduction, Installation, Top, Top
 @chapter Introduction
 
 @c man begin DESCRIPTION
 @include readme.texi
 @c man end
 
-@node Installation
+@node Installation, Basic usage, Introduction, Top
 @chapter Installation
 
 @cindex configuration, of dvipng
@@ -112,7 +112,7 @@ Jan-@AA{}ke Larsson
 
 @include install.texi
 
-@node Basic usage
+@node Basic usage, Command-line options, Installation, Top
 @chapter Basic usage of dvipng
 
 @cindex invoking dvipng
@@ -145,7 +145,7 @@ of available options, just type
 dvipng --help
 @end example
 
-@node Command-line options
+@node Command-line options, Diagnosing problems, Basic usage, Top
 @chapter Command-line options
 
 @cindex command-line options
@@ -160,7 +160,7 @@ section will give a good idea of the capabilities of the driver.
 @end menu
 
 
-@node Option summary
+@node Option summary, Option details, Command-line options, Command-line options
 @section Option summary
 
 @cindex options, summary
@@ -172,7 +172,7 @@ dvipng with no arguments or with the standard @samp{--help} option.
 @end example
 
 
-@node Option details
+@node Option details,  , Option summary, Command-line options
 @section Option details
 
 @cindex option, details of
@@ -467,8 +467,10 @@ output; report no warnings (only errors) to standard error.
 @cindex shrinkfactor
 @cindex quality
 Set the quality to @var{num}. That is, choose the number of antialiasing
-levels for PK fonts to be @var{num}*@var{num}. The default value is 3
-which gives 9 levels of antialiasing for antialiased PK fonts.
+levels for PK and T1lib rendering to be @var{num}*@var{num}. The default
+value is 3 which gives 9 levels of antialiasing for antialiased fonts
+from these two. If FreeType is available, its rendering is unaffected by
+this option.
 
 @item -r*
 @cindex reverse pagination
@@ -581,7 +583,7 @@ correspond directly to the zlib compression levels.''
 @c man end
 
 @ignore
-@c @node Environment variables, papersize special, Command-line options, Top
+@c @node Environment variables
 @chapter Environment variables
 
 @cindex environment variables
@@ -1335,7 +1337,7 @@ when header files are included.
 
 @end ignore
 
-@node Diagnosing problems
+@node Diagnosing problems, Color, Command-line options, Top
 @chapter Diagnosing problems
 
 @cindex problems
@@ -1366,11 +1368,11 @@ problems, @pxref{Common problems,,, kpathsea, Kpathsea}.
 
 @menu
 * Debug options::               Getting diagnostics.
-* Including graphics fails::    Figures don't work.
+* Included graphics problems::  Figures are wrongly rendered.
 @end menu
 
 
-@node Debug options
+@node Debug options, Included graphics problems, Diagnosing problems, Diagnosing problems
 @section Debug options
 
 @cindex debugging options
@@ -1422,7 +1424,7 @@ Kpathsea path searches
 
 @end table
 
-@node Included graphics problems
+@node Included graphics problems,  , Debug options, Diagnosing problems
 @section Included graphics problems
 
 @cindex graphics inclusion problems
@@ -1455,7 +1457,7 @@ some applications read the PostScript file from the input stream,
 looking for a particular comment.
 @end ignore
 
-@node Color
+@node Color, Copying, Diagnosing problems, Top
 @chapter Color
 
 To support color, dvipng recognizes a certain set of specials. These
@@ -1468,7 +1470,7 @@ specials start with the keyword @samp{color} or the keyword
 @end menu
 
 
-@node Color specifications
+@node Color specifications, Color specials, Color, Color
 @section Color specifications
 
 @cindex color specifications
@@ -1479,7 +1481,7 @@ followed by the appropriate number of parameters. Thus, the color
 specification @samp{rgb 0.3 0.4 0.5} would correspond to the color that
 is @samp{0.3 0.4 0.5} in its red, blue and green values. 
 
-@node Color specials
+@node Color specials,  , Color specifications, Color
 @section Color specials
 
 We will describe @samp{background} first, since it is the simplest. The
@@ -1517,7 +1519,7 @@ info dvipng
 @c man end
 @end ifset
 
-@node Copying
+@node Copying, Index, Color, Top
 @chapter Copying
 
 
