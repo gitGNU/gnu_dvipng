@@ -225,7 +225,9 @@ int  n;
     } 
     break ;
   default:
-    Warning("Currently unimplemented \\special{%s}.",str);
+    Warning("at (%ld,%ld) unimplemented \\special{%s}.",
+	    PIXROUND(h,hconv*shrinkfactor),
+	    PIXROUND(v,vconv*shrinkfactor),str);
   }
 }
 
