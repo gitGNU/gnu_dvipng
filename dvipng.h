@@ -59,6 +59,14 @@ typedef  int     bool;
 # endif
 #endif
 
+/* Autoconf may define malloc to rpl_malloc, if the system does not
+ * have a GNU Libc-compatible malloc (for which malloc(0) gives a
+ * valid pointer). We don't need that (yet) */
+#ifdef malloc
+# undef malloc
+#endif
+
+
 /*************************************************************/
 /*************************  protos.h  ************************/
 /*************************************************************/
