@@ -17,31 +17,20 @@ People who are upgrading from version 0.9 or earlier should read the
 following:
 
 This release changes the -D (resolution) option to specify the
-_output_resolution_ rather than the previous base resolution, which
-was divided by the shrinkfactor (default 3) to give the output
-resolution. This makes the behaviour more similar to that of dvips and
-more transparent to new users.
+_output_resolution_ rather than the previous _base_resolution_.
+Changing output resolution from the default 100 dpi will now only need
+the -D option, as dvipng now calculates the required magnification and
+thus can render PK fonts suitable for any output resolution. There is
+no need anymore to specify by hand the base resolution, the Metafont
+mode, the quality, and the magnification.
 
-At the same time, new code is added to make it simpler to choose
-output resolution. To make the PK fonts render, the old-style call
-needed a choice of a base resolution, a "shrinkfactor", a metafont
-mode that fit the base resolution, and sometimes a magnification,
-making the call to dvipng complicated. For example, choosing 96 dpi
-would have needed, say,
+If you really want to use a Metafont mode different from the default
+`cx' mode, the separate --bdpi option is used for specifying the
+corresponding base resolution.
 
-    dvipng -D 400 -Q 5 --mfmode nexthi -x 1200 test.dvi 
-
-That is, the base resolution 400, shrinkfactor 5 and magnification 1.2
-(400/5*1.2=96). With this version of dvipng you simply say
-
-    dvipng -D 96 test.dvi
-
-The base resolution is no longer a "shrinkfactor" times the output
-resolution, so for those who really want to select the metafont mode
-there is a --bdpi switch so that this can be done without errors.
-
-In short, choosing resolution simpler by far.
-
+In short, choosing the output resolution has become simple even when
+using PK fonts (but remember, the created PK fonts are normally cached
+on disk).
 
 
 
