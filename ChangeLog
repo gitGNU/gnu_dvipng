@@ -1,5 +1,7 @@
 2004-05-24  Jan-Åke Larsson  <jalar@mai.liu.se>
 
+	* misc.c: Remove -t, it is not implemented yet
+
 	* dvipng.h: Undef malloc, if defined
 
 2004-05-18  Jan-Åke Larsson  <jalar@mai.liu.se>
