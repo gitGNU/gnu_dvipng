@@ -52,6 +52,12 @@ ps2png(const char *psfile, int hresolution, int vresolution,
 		urx - llx, ury - lly,llx,lly));
 	fprintf(psstream, "<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice\n",
 		urx - llx, ury - lly,llx,lly);
+	if ( bRed < 255 || bGreen < 255 || bBlue < 255 ) {
+	  DEBUG_PRINT((DEBUG_GS,"\n  PS CODE:\tgsave %f %f %f setrgbcolor clippath fill grestore",
+		       bRed/256.0, bGreen/256.0, bBlue/256.0));
+	  fprintf(psstream, "gsave %f %f %f setrgbcolor clippath fill grestore",
+		  bRed/256.0, bGreen/256.0, bBlue/256.0);
+	}
 	DEBUG_PRINT((DEBUG_GS,"\n  PS CODE:\t(%s) run", psfile));
 	fprintf(psstream, "(%s) run\n", psfile);
 	DEBUG_PRINT((DEBUG_GS,"\n  PS CODE:\tquit"));
@@ -213,13 +219,13 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv,
       } 
       if (psimage!=NULL) {
 	DEBUG_PRINT((DEBUG_DVI,
-		     "\n  PS-PNG INCLUDE \t%s (%d,%d) res %dx%d at (%d,%d) offset (%d,%d)",
+		     "\n  PS-PNG INCLUDE \t%s (%d,%d) res %dx%d at (%d,%d)",
 		     psfile,
 		     gdImageSX(psimage),gdImageSY(psimage),
 		     hresolution,vresolution,
-		     hh, vv, x_offset, y_offset));
+		     hh, vv));
 	gdImageCopy(page_imagep, psimage, 
-		    hh+x_offset, vv-gdImageSY(psimage)+y_offset,
+		    hh, vv-gdImageSY(psimage),
 		    0,0,
 		    gdImageSX(psimage),gdImageSY(psimage));
 	gdImageDestroy(psimage);
@@ -274,12 +280,12 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv,
       psimage = gdImageCreateFromPng(pngf);
       fclose(pngf);
       DEBUG_PRINT((DEBUG_DVI,
-		   "\n  PS-PNG INCLUDE \t(%d,%d) dpi %dx%d at (%d,%d) offset (%d,%d)",   
+		   "\n  PS-PNG INCLUDE \t(%d,%d) dpi %dx%d at (%d,%d)",   
 		   gdImageSX(psimage),gdImageSY(psimage),
 		   hresolution,vresolution,
-		   hh, vv, x_offset, y_offset));
+		   hh, vv));
       gdImageCopy(page_imagep, psimage,
-		  hh+x_offset, vv-gdImageSY(psimage)+y_offset,
+		  hh, vv-gdImageSY(psimage),
 		  0,0,
 		  gdImageSX(psimage),gdImageSY(psimage));
       gdImageDestroy(psimage);
