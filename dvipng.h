@@ -187,10 +187,9 @@ struct dvi_vf_entry {
   };
 };
 
-#define PAGE_NOPAGE   INT32_MAX
-#define PAGE_POST     INT32_MAX-1
-#define PAGE_LASTPAGE INT32_MAX-2
-#define PAGE_MAXPAGE  INT32_MAX-3    /* assume no pages out of this range */
+#define PAGE_POST     INT32_MAX
+#define PAGE_LASTPAGE INT32_MAX-1
+#define PAGE_MAXPAGE  INT32_MAX-2    /* assume no pages out of this range */
 #define PAGE_MINPAGE  INT32_MIN      /* assume no pages out of this range */
 
 struct page_list {
@@ -209,7 +208,7 @@ struct page_list*FindPage(int32_t, bool);
 /***************** general crap ******************/
 
 void    CloseFiles(void);
-void    DecodeArgs(int, char *[]);
+bool    DecodeArgs(int, char *[]);
 /*#ifdef __riscos
 void    diagram(char *, diagtrafo *);
 void   *xosfile_set_type(char *, int);
@@ -226,9 +225,9 @@ struct page_list *InitPage(void);
 void    LoadAChar(int32_t, register struct pk_char *);
 uint32_t   NoSignExtend(FILE*, int);
 void       OpenFont(struct font_entry *);
-bool       QueueParse(char*,bool);
+bool       QueueParse(char*,bool,bool);
 bool       QueueEmpty(void);
-void       QueuePage(int,int,bool);
+void       QueuePage(int,int,bool,bool);
 int32_t    SetChar(int32_t, int);
 int32_t    SetPK(int32_t, int);
 int32_t    SetVF(int32_t, int);
@@ -265,8 +264,6 @@ void resetcolorstack(char *);
 #ifndef KPATHSEA
 EXTERN char   *PXLpath INIT(FONTAREA);
 #endif
-EXTERN char    G_progname[STRSIZE];     /* program name                     */
-EXTERN bool    Reverse INIT(_FALSE);    /* process DVI in reverse order?    */
 EXTERN bool    Landscape INIT(_FALSE);  /* print document in ladscape mode  */
 #ifdef MAKETEXPK
 #ifdef KPATHSEA
