@@ -1,3 +1,28 @@
+/* font.c */
+
+/************************************************************************
+
+  Part of the dvipng distribution
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+  02111-1307, USA.
+
+  Copyright © 2002-2004 Jan-Åke Larsson
+
+************************************************************************/
+
 #include "dvipng.h"
 
 void CheckChecksum(uint32_t c1, uint32_t c2, const char* name)
@@ -153,6 +178,9 @@ void FontDef(unsigned char* command, void* parent)
     (uint32_t)((ActualFactor((uint32_t)(1000.0*tfontptr->s
 				  /(double)tfontptr->d+0.5))
 	     * ActualFactor(dvi->mag) * dpi*shrinkfactor) + 0.5);
+#ifdef HAVE_FT2_OR_LIBT1
+  tfontptr->psfontmap=NULL;
+#endif
 }
 
 #ifdef HAVE_FT2_OR_LIBT1
@@ -176,27 +204,27 @@ void FontFind(struct font_entry * tfontptr)
   //tfontptr->dpi = kpse_magstep_fix (tfontptr->dpi, resolution, NULL);
   DEBUG_PRINT(DEBUG_DVI,("\n  FIND FONT:\t%s %d",tfontptr->n,tfontptr->dpi));
 
-  name = kpse_find_vf (tfontptr->n);
+  TEMPSTR(name,kpse_find_vf (tfontptr->n));
   if (name!=NULL) {
     strcpy (tfontptr->name, name);
-    free (name);
+    //    free (name);
     InitVF(tfontptr);
   }
 #ifdef HAVE_FT2_OR_LIBT1
   if ((flags & (USE_FREETYPE | USE_LIBT1)) && name==NULL) {
     tfontptr->psfontmap = FindPSFontMap(tfontptr->n);
     if (tfontptr->psfontmap!=NULL) {
-      name = kpse_find_t1_or_tt(tfontptr->psfontmap->psfile);
+      TEMPSTR(name,kpse_find_t1_or_tt(tfontptr->psfontmap->psfile));
     } else
-      name = kpse_find_t1_or_tt(tfontptr->n);
+      TEMPSTR(name,kpse_find_t1_or_tt(tfontptr->n));
     if (name!=NULL) {
       strcpy (tfontptr->name, name);
-      free (name);
-      name = kpse_find_file(tfontptr->n, kpse_tfm_format, false);
+      //free (name);
+      TEMPSTR(name,kpse_find_file(tfontptr->n, kpse_tfm_format, false));
       if (name!=NULL) {
 	if (!ReadTFM(tfontptr,name)) {
 	  Warning("unable to read tfm file %s", name);
-	  free(name);
+	  //free(name);
 	  name=NULL;
 	} else 
 #ifdef HAVE_FT2
@@ -207,14 +235,14 @@ void FontFind(struct font_entry * tfontptr)
 #endif
 	      /* if Freetype or T1 loading fails for some reason, fall
 		 back to PK font */
-	      free(name);
+	      //free(name);
 	      name=NULL; 
-	    } else
-	      free(name);
+	    }// else
+	    //free(name);
 #ifdef HAVE_FT2
 #ifdef HAVE_LIBT1
-	  } else
-	    free(name);
+	  }// else
+	   // free(name);
 #endif
 #endif
       }
@@ -222,10 +250,10 @@ void FontFind(struct font_entry * tfontptr)
   }
 #endif /* HAVE_FT2_OR_LIBT1 */
   if (name==NULL) {
-    name = kpse_find_pk (tfontptr->n, tfontptr->dpi, &font_ret);
+    TEMPSTR(name,kpse_find_pk (tfontptr->n, tfontptr->dpi, &font_ret));
     if (name!=NULL) {
       strcpy (tfontptr->name, name);
-      free (name);
+      //free (name);
       
       if (!FILESTRCASEEQ (tfontptr->n, font_ret.name)) {
 	flags |= PAGE_GAVE_WARN;
@@ -255,7 +283,7 @@ void FontFind(struct font_entry * tfontptr)
 		 tfontptr->n,
 		 tfontptr->dpi,
 		 tfontptr->name,
-		 _FALSE,
+		 false,
 		 0))) {
     Warning(tfontptr->name); /* contains error messsage */
     tfontptr->filedes = 0;
