@@ -81,7 +81,8 @@ void WriteImage(char *pngname, int pagenum)
   if ((pos=strchr(pngname,'%')) != NULL) {
     if (strchr(++pos,'%'))
       Fatal("too many %%'s in output file name");
-    if (*pos == 'd' || strncmp(pos,"03d",3)==0) {
+    if (*pos == 'd' 
+	|| (*pos=='0' && pos[1]>='1' && pos[1]<='9' && pos[2]=='d')) {
       /* %d -> pagenumber, so add 9 string positions 
 	 since pagenumber max +-2^31 or +-2*10^9 */
       char* tempname = alloca(strlen(pngname)+9);
