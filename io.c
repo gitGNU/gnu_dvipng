@@ -12,9 +12,6 @@ CloseFiles()
 
   /* First input/output files */
   /*  if (outfp != FPNULL) {
-#ifdef RISC_BUFFER
-    b_oflush(outfp);
-#endif
     BCLOSE(outfp);
   }
   if (dvifp != FPNULL) {
