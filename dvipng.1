@@ -129,7 +129,7 @@
 .\" ========================================================================
 .\"
 .IX Title "DVIPNG 1"
-.TH DVIPNG 1 "2005-02-04" "dvipng 1.5" "User commands"
+.TH DVIPNG 1 "2005-04-04" "dvipng 1.6" "User commands"
 .SH "NAME"
 dvipng \- A DVI\-to\-PNG translator
 .SH "SYNOPSIS"
@@ -207,8 +207,14 @@ selecting Metafont mode with the \-\-mode option (see below).
 Choose background color for the images. This option will be ignored if
 there is a background color \especial in the \s-1DVI\s0. The color spec should
 be in TeX color \especial syntax, e.g., 'rgb 1.0 0.0 0.0'. You can
-also specify 'Transparent' which will give you a transparent background
-with the normal background as a fallback color. 
+also specify 'Transparent' or 'transparent' which will give you a
+transparent background with the normal background as a fallback color. A
+capitalized 'Transparent' will give a full-alpha transparency, while an
+all-lowercase 'transparent' will give a simple fully transparent
+background with non-transparent antialiased pixels. The latter would be
+suitable for viewers who cannot cope with a true alpha channel.  \s-1GIF\s0
+images do not support full alpha transparency, so in case of \s-1GIF\s0 output,
+both variants will use the latter behaviour.  
 .IP "\fB\-d\fR \fInum\fR" 4
 .IX Item "-d num"
 Set the debug flags, showing what dvipng (thinks it) is doing. This will
@@ -249,7 +255,7 @@ image in, e.g., web documents, where one would use (Cascading
 StyleSheets 1)
 .Sp
 .Vb 1
-\&  <IMG SRC="<filename.png>" STYLE="vertical-align: -<depth>px">
+\&  <IMG SRC="<filename.png>" STYLE="vertical\-align: \-<depth>px">
 .Ve
 .Sp
 The depth is a negative offset in this case, so the minus sign is
