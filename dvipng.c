@@ -144,8 +144,10 @@ int main(int argc, char ** argv)
   ClearFonts();
   DVIClose(dvi);
   ClearDvipsNam();
+#ifdef HAVE_FT2_OR_LIBT1
   ClearPSFontMap();
   ClearEncoding();
+#endif
 #ifdef HAVE_FT2
   if (libfreetype!=NULL && FT_Done_FreeType(libfreetype)) 
     Fatal("an error occured during freetype destruction"); 
