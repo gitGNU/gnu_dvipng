@@ -16,22 +16,24 @@ void GetFontDef P1H(void)
 
     switch (byte) {
     case FNT_DEF1:
-      ReadFontDef( NoSignExtend(dvifp, 1));
-      break;
+      /*  ReadFontDef( NoSignExtend(dvifp, 1));
+	  break;*/
     case FNT_DEF2:
-      ReadFontDef( NoSignExtend(dvifp, 2));
-      break;
+      /*      ReadFontDef( NoSignExtend(dvifp, 2));
+	      break;*/
     case FNT_DEF3:
-      ReadFontDef( NoSignExtend(dvifp, 3));
-      break;
+      /*      ReadFontDef( NoSignExtend(dvifp, 3));
+	      break;*/
     case FNT_DEF4:
-      ReadFontDef( NoSignExtend(dvifp, 4));
+      /*      ReadFontDef( NoSignExtend(dvifp, 4));
+	      break;*/
+      (void)NoSignExtend(dvifp, (int)byte - FNT_DEF1 + 1);
+      SkipFontDef();    /* SkipFontDef(k); */
       break;
     default:
       Fatal("Bad byte value in font defs");
       break;
-    }
-
+      }
   }
   if (byte != POST_POST)
     Fatal("POST_POST missing after fontdefs");
@@ -246,56 +248,76 @@ check_checksum P3C(unsigned, c1, unsigned, c2, const char*, name)
    }
 }
 
-
-
 void ReadFontDef P1C(long4, k)
+{
+  struct font_entry *tfontptr; /* temporary font_entry pointer   */
+  long4   c, s, d;
+  int     a, l;
+  char n[STRSIZE];          /* FNT_DEF command parameters                */
+
+  c = NoSignExtend(dvifp, 4); /* checksum */
+  s = NoSignExtend(dvifp, 4); /* space size */
+  d = NoSignExtend(dvifp, 4); /* design size */
+  a = (int)NoSignExtend(dvifp, 1); /* length for font name */
+  l = (int)NoSignExtend(dvifp, 1); /* device length */
+
+  GetBytes(dvifp,n,a+l);
+  n[a+l] = '\0';
+
+  tfontptr = hfontptr;
+  while ((tfontptr != NULL) && (tfontptr->k != k))
+    tfontptr = tfontptr->next;
+
+  if ( tfontptr != NULL 
+       && ( tfontptr->s != s 
+	    || tfontptr->d != d
+	    || strcmp(tfontptr->n,n) != 0 ) ) {
+#ifdef DEBUG
+    if (Debug)
+      fprintf(ERR_STREAM,"Font %d redefined\n",k);
+#endif
+    tfontptr->k = -1; /*NOFONT*/
+    tfontptr = NULL;
+  }
+  if ( tfontptr == NULL ) {
+#ifdef DEBUG
+    if (Debug)
+      fprintf(ERR_STREAM,"Mallocating %d Bytes)...\n", 
+	      sizeof(struct font_entry ));
+#endif
+
+    if ((tfontptr = NEW(struct font_entry )) == NULL)
+      Fatal("can't malloc space for font_entry");
+    allocated_storage += sizeof(struct font_entry );
+
+    tfontptr->next = hfontptr;
+    tfontptr->font_file_id = FPNULL;
+    fontptr = hfontptr = tfontptr;
+    tfontptr->k = k;
+    tfontptr->c = c; /* checksum */
+    tfontptr->s = s; /* space size */
+    tfontptr->d = d; /* design size */
+    tfontptr->a = a; /* length for font name */
+    tfontptr->l = l; /* device length */
+    strcpy(tfontptr->n,n);
+
+    tfontptr->font_mag = 
+      (long4)((ActualFactor((long4)(1000.0*tfontptr->s
+				    /(double)tfontptr->d+0.5))
+	       * ActualFactor(mag) * resolution * 5.0) + 0.5);
+
+    fontptr->name[0]='\0';
+    /*FontFind(tfontptr);*/
+  }
+}
+
+void FontFind P1C(struct font_entry *,tfontptr)
 {
   long4    t;
   unsigned short i;
-  struct font_entry *tfontptr; /* temporary font_entry pointer   */
   struct char_entry *tcharptr; /* temporary char_entry pointer  */
   static int      plusid = 0;
   bool font_found = _FALSE;
-  /*int depth, max_depth;*/
-
-#ifdef DEBUG
-  if (Debug)
-    fprintf(ERR_STREAM,"Mallocating %d Bytes)...\n", sizeof(struct font_entry ));
-#endif
-
-  if ((tfontptr = NEW(struct font_entry )) == NULL)
-    Fatal("can't malloc space for font_entry");
-
-  allocated_storage += sizeof(struct font_entry );
-
-  tfontptr->next = hfontptr;
-  tfontptr->font_file_id = FPNULL;
-  fontptr = hfontptr = tfontptr;
-  tfontptr->ncdl = 0;
-  tfontptr->k = k;
-  tfontptr->c = NoSignExtend(dvifp, 4); /* checksum */
-  tfontptr->s = NoSignExtend(dvifp, 4); /* space size */
-  tfontptr->d = NoSignExtend(dvifp, 4); /* design size */
-  tfontptr->a = (int)NoSignExtend(dvifp, 1); /* length for font name */
-  tfontptr->l = (int)NoSignExtend(dvifp, 1); /* device length */
-
-  /*tfontptr->max_width = tfontptr->max_height = tfontptr->max_yoff =
-    max_depth = 0;*/
-
-  GetBytes(dvifp, tfontptr->n, tfontptr->a + tfontptr->l);
-  tfontptr->n[tfontptr->a+tfontptr->l] = '\0';
-
-  tfontptr->font_mag = 
-    (long4)((ActualFactor((long4)(1000.0*tfontptr->s/(double)tfontptr->d+0.5))
-             * ActualFactor(mag) * resolution * 5.0) + 0.5);
-  /*
-printf("[%ld]=%lf * %lf * %lf + 0.5 = %ld\n",
-    ((long)(1000.0*tfontptr->s/(double)tfontptr->d+0.5)),
-    ActualFactor((long4)(1000.0*tfontptr->s/(double)tfontptr->d+0.5)),
-    ActualFactor(mag),
-    (double)resolution * 5,
-    (long)tfontptr->font_mag );
-*/
 
 #ifdef KPATHSEA
     {
@@ -307,32 +329,29 @@ printf("[%ld]=%lf * %lf * %lf + 0.5 = %ld\n",
       tfontptr->font_mag = dpi * 5; /* save correct dpi */
       
       name = kpse_find_pk (tfontptr->n, dpi, &font_ret);
-      if (name)
-        {
-          font_found = _TRUE;
-          strcpy (tfontptr->name, name);
-          free (name);
-          
-          if (!FILESTRCASEEQ (tfontptr->n, font_ret.name)) {
-              fprintf (stderr,
-                       "dvilj: Font %s not found, using %s at %d instead.\n",
-                       tfontptr->n, font_ret.name, font_ret.dpi);
-              tfontptr->c = 0; /* no checksum warning */
-            }
-          else if (!kpse_bitmap_tolerance ((double)font_ret.dpi, (double) dpi))
-            fprintf (stderr,
-                     "dvilj: Font %s at %d not found, using %d instead.\n",
-                     tfontptr->name, dpi, font_ret.dpi);
-          if (G_verbose)
-            fprintf(stderr,"%d: using font <%s>\n", plusid,tfontptr->name);
-        }
-      else
-        {
-          tfontptr->font_file_id = NO_FILE;
-          fprintf (stderr,
-            "dvilj: Font %s at %u not found, characters will be left blank.\n",
-            tfontptr->n, dpi);
-        }
+      if (name) {
+	font_found = _TRUE;
+	strcpy (tfontptr->name, name);
+	free (name);
+	
+	if (!FILESTRCASEEQ (tfontptr->n, font_ret.name)) {
+	  fprintf (stderr,
+		   "dvilj: Font %s not found, using %s at %d instead.\n",
+		   tfontptr->n, font_ret.name, font_ret.dpi);
+	  tfontptr->c = 0; /* no checksum warning */
+	}
+	else if (!kpse_bitmap_tolerance ((double)font_ret.dpi, (double) dpi))
+	  fprintf (stderr,
+		   "dvilj: Font %s at %d not found, using %d instead.\n",
+		   tfontptr->name, dpi, font_ret.dpi);
+	if (G_verbose)
+	  fprintf(stderr,"%d: using font <%s>\n", plusid,tfontptr->name);
+      } else {
+	tfontptr->font_file_id = NO_FILE;
+	fprintf (stderr,
+		 "dvilj: Font %s at %u not found, characters will be left blank.\n",
+		 tfontptr->n, dpi);
+      }
     }
 #else /* not KPATHSEA */
     if (!(findfile(PXLpath,
@@ -354,18 +373,15 @@ printf("[%ld]=%lf * %lf * %lf + 0.5 = %ld\n",
     }
 #endif /* not KPATHSEA */
 
-  tfontptr->plusid = plusid;
-  plusid++;
-
   /* sprintf(tfontptr->psname,"%s.%ld.%d",
        tfontptr->n, (long)tfontptr->font_mag, (long)tfontptr->plusid);*/
 
-  if (tfontptr != pfontptr) {
+  /*  if (tfontptr != pfontptr) {*/
     if (font_found)
       OpenFontFile();
-    else
+    else 
       pxlfp = NO_FILE;
-  }
+    /*  }*/
   if ( pxlfp == NO_FILE ) {        /* allow missing pxl files */
     tfontptr->magnification = 0;
     tfontptr->designsize = 0;
@@ -440,9 +456,9 @@ printf("[%ld]=%lf * %lf * %lf + 0.5 = %ld\n",
       tcharptr = &(tfontptr->ch[car]);
       tcharptr->fileOffset = FTELL(pxlfp);
       tcharptr->flag_byte = flag_byte;
+      tcharptr->isloaded = _FALSE;
       FSEEK(pxlfp, (long)packet_length, SEEK_CUR);
       flag_byte = skip_specials();
-
     } /* end of while */
     /*tfontptr->max_height = max_depth ? tfontptr->max_yoff+max_depth :
       tfontptr->max_yoff+1;*/
@@ -470,6 +486,9 @@ void SetFntNum P1C(long4, k)
     fontptr = fontptr->next;
   if (fontptr == NULL)
     Fatal("font %ld undefined", (long)k);
+
+  if (fontptr->name[0]=='\0')
+    FontFind(fontptr);
 }
 
 
