@@ -38,14 +38,19 @@
 /* Name of the program which is called to generate missing pk files */
 #define MAKETEXPK "mktexpk"
 
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#else
+#ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
+#else
+typedef signed char               int8_t;
+typedef unsigned char            uint8_t;
+typedef short                    int16_t;
+typedef unsigned short          uint16_t;
+typedef int                      int32_t;
+typedef unsigned int            uint32_t;
+typedef long long                int64_t;
+typedef unsigned long long      uint64_t;
 #endif
 
-/* For some reason FreeBSD does not follow the C standard */
-/* It has int32_t but not INT32_MAX                       */
 #ifndef INT32_MIN
 #define INT32_MIN   (-2147483647-1)
 #endif

@@ -70,7 +70,7 @@ if test -n "$PSFONTS_O"; then
   PSFONTS_O="$PSFONTS_O enc.o fontmap.o tfm.o"
 fi
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([fcntl.h sys/time.h])
+AC_CHECK_HEADERS([fcntl.h sys/time.h inttypes.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
