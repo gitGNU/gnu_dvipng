@@ -197,6 +197,33 @@ check_checksum P3C(unsigned, c1, unsigned, c2, const char*, name)
    }
 }
 
+double ActualFactor P1C(long4, unmodsize)
+/* compute the actual size factor given the approximation */
+/* actually factor * 1000 */
+{
+  double  realsize;     /* the actual magnification factor */
+  realsize = (double)unmodsize / 1000.0;
+  if (abs((int)(unmodsize - 1095l))<2)
+    realsize = 1.095445115; /*stephalf*/
+  else if (abs((int)(unmodsize - 1315l))<2)
+    realsize = 1.31453414; /*stepihalf*/
+  else if (abs((int)(unmodsize - 1577l))<2)
+    realsize = 1.57744097; /*stepiihalf*/
+  else if (abs((int)(unmodsize - 1893l))<2)
+    realsize = 1.89292916; /*stepiiihalf*/
+  else if (abs((int)(unmodsize - 2074l))<2)
+    realsize = 2.0736;   /*stepiv*/
+  else if (abs((int)(unmodsize - 2488l))<2)
+    realsize = 2.48832;  /*stepv*/
+  else if (abs((int)(unmodsize - 2986l))<2)
+    realsize = 2.985984; /*stepvi*/
+  /* the remaining magnification steps are represented with sufficient
+     accuracy already */
+  return(realsize);
+}
+
+
+
 void ReadFontDef P1C(long4, k)
 {
   struct font_entry *tfontptr; /* temporary font_entry pointer   */
@@ -229,7 +256,7 @@ void ReadFontDef P1C(long4, k)
     tfontptr->in_use=_FALSE;
 #ifdef DEBUG
     if (Debug)
-      printf("Font %d moved to unused list\n",k);
+      printf("Font %ld moved to unused list\n",k);
 #endif
   }
 
@@ -244,7 +271,7 @@ void ReadFontDef P1C(long4, k)
   if (tfontptr!=NULL) {
 #ifdef DEBUG
     if (Debug)
-      printf("Font %d resurrected from unused list\n",k);
+      printf("Font %ld resurrected from unused list\n",k);
 #endif
     tfontptr->k = k; 
     tfontptr->in_use=_TRUE;
