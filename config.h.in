@@ -78,6 +78,9 @@
 /* Define to 1 if you have the `gd' library (-lgd). */
 #undef HAVE_LIBGD
 
+/* Define to 1 if you have the `gen' library (-lgen). */
+#undef HAVE_LIBGEN
+
 /* Define to 1 if you have the `kpathsea' library (-lkpathsea). */
 #undef HAVE_LIBKPATHSEA
 
@@ -197,6 +200,10 @@
 
 /* Define to rpl_malloc if the replacement function should be used. */
 #undef malloc
+
+/* Define as `__inline' if that's what the C compiler calls it, or to nothing
+   if it is not supported. */
+#undef inline
 
 /* Define to `int' if <sys/types.h> does not define. */
 #undef pid_t
