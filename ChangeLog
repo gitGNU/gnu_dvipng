@@ -1,3 +1,9 @@
+2004-06-24  Jan-Åke Larsson  <jalar@mai.liu.se>
+
+	* fontmap.c: 
+	* pk.c: 
+	* vf.c: More memory fixes
+
 2004-06-21  Jan-Åke Larsson  <jalar@mai.liu.se>
 
 	* config.h.in:
