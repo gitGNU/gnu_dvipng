@@ -28,17 +28,26 @@ dviunits SetPK(int32_t c, int32_t hh,int32_t vv)
   hh -= ptr->xOffset/shrinkfactor;
   vv -= ptr->yOffset/shrinkfactor;
   
-  for( x=1; x<=GREYS ; x++) {
-    red = bRed-(bRed-Red)*x/GREYS;
-    green = bGreen-(bGreen-Green)*x/GREYS;
-    blue = bBlue-(bBlue-Blue)*x/GREYS;
-    Color[x] = gdImageColorResolve(page_imagep,red,green,blue);
-  }  
+  Color[0] = gdImageColorResolve(page_imagep,bRed,bGreen,bBlue);
+  for( x=1; x<=GREYS ; x++) 
+    Color[x] = -1;
   for( y=0; y<ptr->h; y++) {
     for( x=0; x<ptr->w; x++) {
       if (ptr->data[pos]>0) {
 	bgColor = gdImageGetPixel(page_imagep, hh + x, vv + y);
-	if (bgColor > 0) {
+	if (bgColor == Color[0]) {
+	  /* Standard background: use cached value if present */
+	  pixelcolor=Color[(int)ptr->data[pos]];
+	  if (pixelcolor==-1) {
+	    red = bRed-(bRed-Red)*ptr->data[pos]/GREYS;
+	    green = bGreen-(bGreen-Green)*ptr->data[pos]/GREYS;
+	    blue = bBlue-(bBlue-Blue)*ptr->data[pos]/GREYS;
+	    Color[ptr->data[pos]] = 
+	      gdImageColorResolve(page_imagep,red,green,blue);
+	    pixelcolor=Color[ptr->data[pos]];
+	  }
+	} else {
+	  /* Overstrike: No cache */
 	  red=gdImageRed(page_imagep, bgColor);
 	  green=gdImageGreen(page_imagep, bgColor);
 	  blue=gdImageBlue(page_imagep, bgColor);
@@ -46,10 +55,8 @@ dviunits SetPK(int32_t c, int32_t hh,int32_t vv)
 	  green = green-(green-Green)*ptr->data[pos]/GREYS;
 	  blue = blue-(blue-Blue)*ptr->data[pos]/GREYS;
 	  pixelcolor = gdImageColorResolve(page_imagep, red, green, blue);
-	  gdImageSetPixel(page_imagep, hh + x, vv + y, pixelcolor);
-	} else
-	  gdImageSetPixel(page_imagep, hh + x, vv + y, 
-			  Color[(int)ptr->data[pos]]);
+	}
+	gdImageSetPixel(page_imagep, hh + x, vv + y, pixelcolor);
       }
       pos++;
     }
