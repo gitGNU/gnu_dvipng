@@ -1,3 +1,11 @@
+2004-05-09  Jan-Åke Larsson  <jalar@mai.liu.se>
+
+	* dvipng.1:
+	* dvipng.texi: Add documentation, and spellcheck 
+
+	* special.c:
+	* color.c: Make colors work again. 
+
 2004-05-08  David Kastrup  <dakas@users.sourceforge.net>
 
 	* Create new ChangeLog for dvipng
