@@ -44,7 +44,7 @@ void LoadDvipsNam (void)
     Warning("color name file dvipsnam.def could not be found");
     return;
   }
-  DEBUG_PRINT((DEBUG_COLOR,"\n  OPEN COLOR NAMES:\t'%s'", dvipsnam_file));
+  DEBUG_PRINT(DEBUG_COLOR,("\n  OPEN COLOR NAMES:\t'%s'", dvipsnam_file));
   if ((fd = open(dvipsnam_file,O_RDONLY)) == -1) {
     Warning("color name file %s could not be opened", dvipsnam_file);
     return;
@@ -88,7 +88,7 @@ void LoadDvipsNam (void)
     }
     *buf++='\0';
     while (pos<max && *pos!='\\') pos++;
-    DEBUG_PRINT((DEBUG_COLOR,"\n  COLOR NAME '%s' '%s'",
+    DEBUG_PRINT(DEBUG_COLOR,("\n  COLOR NAME '%s' '%s'",
 		 tmp->name,tmp->color)); 
     tmp->next = colornames;
     colornames = tmp;
@@ -147,18 +147,6 @@ void stringrgb(char* p,int *r,int *g,int *b)
 void background(char* p)
 {
   stringrgb(p, &bRed, &bGreen, &bBlue);
-  if (page_imagep) {
-    CreateImage(); 
-    Warning("Setting background inside page will clear the image, sorry.");
-    /*fseek(dvi->filep,cpagep,SEEK_SET);*/ /* Restart page output */
-    /* GdImageFilledRectangle(...); will take forever to finish and
-      will clear the image */
-    /* The below probably works only on color-indexed gdImages, and
-       doesn't work with antialiasing */
-    /*page_imagep->red[0]=bRed;
-    page_imagep->green[0]=bGreen;
-    page_imagep->blue[0]=bBlue;*/
-  }
 } 
 
 void pushcolor(char * p)

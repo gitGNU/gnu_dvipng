@@ -53,7 +53,7 @@ void LoadFT(int32_t c, struct ft_char * ptr)
   int i,j,k;
   char* bit;
 
-  DEBUG_PRINT((DEBUG_FT,"\n  LOAD FT CHAR\t%d (%d)",c,ptr->tfmw));
+  DEBUG_PRINT(DEBUG_FT,("\n  LOAD FT CHAR\t%d (%d)",c,ptr->tfmw));
   if (currentfont->enc == NULL)
     glyph_i = FT_Get_Char_Index( currentfont->face, c );
   else 
@@ -67,7 +67,7 @@ void LoadFT(int32_t c, struct ft_char * ptr)
   ptr->xOffset = -currentfont->face->glyph->bitmap_left;
   ptr->yOffset = currentfont->face->glyph->bitmap_top-1;
   bitmap=currentfont->face->glyph->bitmap;
-  DEBUG_PRINT((DEBUG_FT," (%dx%d)",bitmap.width,bitmap.rows));
+  DEBUG_PRINT(DEBUG_FT,(" (%dx%d)",bitmap.width,bitmap.rows));
     
   if ((ptr->data 
        = (char*) calloc(bitmap.width*bitmap.rows,sizeof(char))) == NULL)
@@ -77,15 +77,15 @@ void LoadFT(int32_t c, struct ft_char * ptr)
 #define GREYLEVELS 16
   ptr->greys = GREYLEVELS-1;
   
-  DEBUG_PRINT((DEBUG_GLYPH, "\nDRAW GLYPH %d\n", (int)c));
+  DEBUG_PRINT(DEBUG_GLYPH,("\nDRAW GLYPH %d\n", (int)c));
   bit=ptr->data;
   for(i=0;i<bitmap.rows;i++) {
     for(j=0;j<bitmap.width;j++) {
       k=bitmap.buffer[i*bitmap.pitch+j]/(256/GREYLEVELS);
-      DEBUG_PRINT((DEBUG_GLYPH,"%c",k+((k<=9)?'0':'A'-10)));
+      DEBUG_PRINT(DEBUG_GLYPH,("%c",k+((k<=9)?'0':'A'-10)));
       bit[i*bitmap.width+j]=k;
     }
-    DEBUG_PRINT((DEBUG_GLYPH,"|\n"));
+    DEBUG_PRINT(DEBUG_GLYPH,("|\n"));
   }
 }
 
@@ -94,7 +94,7 @@ bool InitFT(struct font_entry * tfontp, unsigned dpi,
 {
   int error;
 
-  DEBUG_PRINT(((DEBUG_DVI|DEBUG_FT),"\n  OPEN FONT:\t'%s'", tfontp->name));
+  DEBUG_PRINT((DEBUG_DVI|DEBUG_FT),("\n  OPEN FONT:\t'%s'", tfontp->name));
   error = FT_New_Face( libfreetype, tfontp->name, 0, &tfontp->face );
   if (error == FT_Err_Unknown_File_Format) {
     Warning("font file %s has unknown format", tfontp->name);

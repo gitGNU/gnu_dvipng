@@ -16,7 +16,7 @@ struct encoding* InitEncoding(char* encoding)
   
   if (enc_file == NULL)
     Warning("encoding file %s could not be found",encoding);
-  DEBUG_PRINT(((DEBUG_FT|DEBUG_ENC),"\n  OPEN ENCODING:\t'%s'", enc_file));
+  DEBUG_PRINT((DEBUG_FT|DEBUG_ENC),("\n  OPEN ENCODING:\t'%s'", enc_file));
   if ((encfd = open(enc_file,O_RDONLY)) == -1) {
     Warning("encoding file %s could not be opened", enc_file);
     return(NULL);
@@ -53,7 +53,7 @@ struct encoding* InitEncoding(char* encoding)
     while(pos<max && *pos!=' ' && *pos!='\t' && *pos!='\n' && *pos!='%') 
       *buf++=*pos++;
     *buf++='\0';
-    DEBUG_PRINT((DEBUG_ENC,"\n  PS ENCODING %d '%s'",
+    DEBUG_PRINT(DEBUG_ENC,("\n  PS ENCODING %d '%s'",
 		 i-1,encp->charname[i-1])); 
     while(pos<max && *pos!='/' && *pos!=']') {
       SKIPCOMMENT(pos);

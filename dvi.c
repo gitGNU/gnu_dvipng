@@ -34,16 +34,16 @@ void DVIInit(struct dvi_data* dvi)
     Fatal("PRE doesn't occur first--are you sure this is a DVI file?\n\n");
   }
   k = UNumRead(pre+1,1);
-  DEBUG_PRINT((DEBUG_DVI,"DVI START:\tPRE %d",k));
+  DEBUG_PRINT(DEBUG_DVI,("DVI START:\tPRE %d",k));
   if (k != DVIFORMAT) {
     Fatal("DVI format = %d, can only process DVI format %d files\n\n",
 	  k, DVIFORMAT);
   }
   dvi->num = UNumRead(pre+2, 4);
   dvi->den = UNumRead(pre+6, 4);
-  DEBUG_PRINT((DEBUG_DVI," %d/%d",dvi->num,dvi->den));
+  DEBUG_PRINT(DEBUG_DVI,(" %d/%d",dvi->num,dvi->den));
   dvi->mag = UNumRead(pre+10, 4); /*FIXME, see font.c*/
-  DEBUG_PRINT((DEBUG_DVI," %d",dvi->mag));
+  DEBUG_PRINT(DEBUG_DVI,(" %d",dvi->mag));
   if ( usermag > 0 && usermag != dvi->mag ) {
     Warning("DVI magnification of %d over-ridden by user (%ld)",
 	    (long)dvi->mag, usermag );
@@ -52,9 +52,9 @@ void DVIInit(struct dvi_data* dvi)
   dvi->conv = (1.0/(((double)dvi->num / (double)dvi->den) *
 		    ((double)dvi->mag / 1000.0) *
 		    ((double)resolution/254000.0)))+0.5;
-  DEBUG_PRINT((DEBUG_DVI," (%d)",dvi->conv));
+  DEBUG_PRINT(DEBUG_DVI,(" (%d)",dvi->conv));
   k = UNumRead(pre+14,1);
-  DEBUG_PRINT((DEBUG_DVI," '%.*s'",k,pre+15));
+  DEBUG_PRINT(DEBUG_DVI,(" '%.*s'",k,pre+15));
   Message(BE_VERBOSE,"'%.*s' -> %s\n",k,pre+15,dvi->outname);
   fstat(fileno(dvi->filep), &stat);
   dvi->mtime = stat.st_mtime;
@@ -114,7 +114,7 @@ struct dvi_data* DVIOpen(char* dviname,char* outname)
     perror(dviname);
     exit (EXIT_FAILURE);
   }
-  DEBUG_PRINT((DEBUG_DVI,"OPEN FILE\t%s", dvi->name));
+  DEBUG_PRINT(DEBUG_DVI,("OPEN FILE\t%s", dvi->name));
   DVIInit(dvi);
   return(dvi);
 }
@@ -130,7 +130,7 @@ unsigned char* DVIGetCommand(struct dvi_data* dvi)
   int length;
   uint32_t strlength=0;
 
-  DEBUG_PRINT((DEBUG_DVI,"\n@%ld ", ftell(dvi->filep)));
+  DEBUG_PRINT(DEBUG_DVI,("\n@%ld ", ftell(dvi->filep)));
   *(current++) = fgetc_follow(dvi->filep);
   length = dvi_commandlength[*command];
   if (length < 0)
@@ -203,7 +203,7 @@ void SkipPage(struct dvi_data* dvi)
   while (*command != EOP)  {
     switch (*command)  {
     case FNT_DEF1: case FNT_DEF2: case FNT_DEF3: case FNT_DEF4:
-      DEBUG_PRINT((DEBUG_DVI,"NOSKIP CMD:\t%s", dvi_commands[*command]));
+      DEBUG_PRINT(DEBUG_DVI,("NOSKIP CMD:\t%s", dvi_commands[*command]));
       FontDef(command,dvi);
       break;
     case BOP: case PRE: case POST: case POST_POST:
@@ -211,12 +211,12 @@ void SkipPage(struct dvi_data* dvi)
       break;
 #ifdef DEBUG
     default:
-      DEBUG_PRINT((DEBUG_DVI,"SKIP CMD:\t%s", dvi_commands[*command]));
+      DEBUG_PRINT(DEBUG_DVI,("SKIP CMD:\t%s", dvi_commands[*command]));
 #endif
     }
     command=DVIGetCommand(dvi);
   } /* while */
-  DEBUG_PRINT((DEBUG_DVI,"SKIP CMD:\t%s", dvi_commands[*command]));
+  DEBUG_PRINT(DEBUG_DVI,("SKIP CMD:\t%s", dvi_commands[*command]));
 }
 
 struct page_list* InitPage(struct dvi_data* dvi)
@@ -230,11 +230,11 @@ struct page_list* InitPage(struct dvi_data* dvi)
   while((*command != BOP) && (*command != POST)) {
     switch(*command) {
     case FNT_DEF1: case FNT_DEF2: case FNT_DEF3: case FNT_DEF4:
-      DEBUG_PRINT((DEBUG_DVI,"NOPAGE CMD:\t%s", dvi_commands[*command]));
+      DEBUG_PRINT(DEBUG_DVI,("NOPAGE CMD:\t%s", dvi_commands[*command]));
       FontDef(command,dvi);
       break;
     case NOP:
-      DEBUG_PRINT((DEBUG_DVI,"NOPAGE CMD:\tNOP"));
+      DEBUG_PRINT(DEBUG_DVI,("NOPAGE CMD:\tNOP"));
       break;
     default:
       Fatal("%s occurs outside page", dvi_commands[*command]);
@@ -246,19 +246,19 @@ struct page_list* InitPage(struct dvi_data* dvi)
   tpagelistp->next = NULL;
   if ( *command == BOP ) {  /*  Init page */
     int i;
-    DEBUG_PRINT((DEBUG_DVI,"PAGE START:\tBOP"));
+    DEBUG_PRINT(DEBUG_DVI,("PAGE START:\tBOP"));
     tpagelistp->offset = ftell(dvi->filep)-45;
     for (i = 0; i <= 9; i++) {
       tpagelistp->count[i] = UNumRead(command + 1 + i*4, 4);
-      DEBUG_PRINT((DEBUG_DVI," %d",tpagelistp->count[i]));
+      DEBUG_PRINT(DEBUG_DVI,(" %d",tpagelistp->count[i]));
     }
     if (dvi->pagelistp==NULL)
       tpagelistp->count[10] = 1;
     else
       tpagelistp->count[10] = dvi->pagelistp->count[10]+1;
-    DEBUG_PRINT((DEBUG_DVI," (%d)", tpagelistp->count[10]));
+    DEBUG_PRINT(DEBUG_DVI,(" (%d)", tpagelistp->count[10]));
   } else {
-    DEBUG_PRINT((DEBUG_DVI,"DVI END:\tPOST"));
+    DEBUG_PRINT(DEBUG_DVI,("DVI END:\tPOST"));
     tpagelistp->offset = ftell(dvi->filep)-1;
     tpagelistp->count[0] = PAGE_POST; /* POST */
   }
@@ -374,7 +374,7 @@ void DVIReOpen(struct dvi_data* dvi)
       exit(EXIT_FAILURE);
     }
     Message(PARSE_STDIN,"Reopened file\n");
-    DEBUG_PRINT((DEBUG_DVI,"\nREOPEN FILE\t%s", dvi->name));
+    DEBUG_PRINT(DEBUG_DVI,("\nREOPEN FILE\t%s", dvi->name));
     DVIInit(dvi);
   }
 }
