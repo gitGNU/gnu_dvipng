@@ -13,7 +13,7 @@ objects = dvipng.o color.o draw.o dvi.o font.o io.o misc.o pk.o \
 dvipng: $(objects)
 	$(CC) $(LDFLAGS) $(objects) -o dvipng $(LOADLIBES) $(LDLIBS)
 
-$(objects): dvipng.h config.h commands.h
+$(objects): dvipng.h commands.h
 
 install: dvipng
 	$(INSTALL) dvipng $(bindir)
