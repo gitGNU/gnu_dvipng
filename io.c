@@ -3,24 +3,24 @@
 void CloseFiles P1H(void)
 {
   struct font_entry *fe;
-  FILEPTR f;
 
   /*
-    if (dvi->filep != FPNULL) {
-    BCLOSE(dvi->filep);
+    if (dvi->filep != NULL) {
+    fclose(dvi->filep);
     }*/
 #ifdef __riscos
-  if (metafile != FPNULL) {
-    BCLOSE(metafile);
+  if (metafile != NULL) {
+    fclose(metafile);
   }
 #endif
   /* Now all open font files */
   fe = hfontptr;
   while (fe != NULL) {
-    f = fe->filep;
-    if ((f != FPNULL) && (f != NO_FILE)) {
-      BCLOSE(f);
-    }
+    /*    f = fe->filep;
+    if ((f != NULL) && (f != NO_FILE)) {
+      fclose(f);
+      }*/
+    close(fe->filedes);
     fe = fe->next;
   }
 }
