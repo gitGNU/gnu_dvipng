@@ -38,8 +38,6 @@ int main(int argc, char ** argv)
 #  ifdef HAVE_FTIME
   ftime(&timebuffer);
   timer = timebuffer.time + (float)(timebuffer.millitm) / 1000.0;
-#  else
-  timer = 0;
 #  endif
 # endif
 #endif
@@ -54,7 +52,7 @@ int main(int argc, char ** argv)
   kpse_init_prog("DVIPNG", resolution, MFMODE, "cmr10");
 #endif
 
-  DoPages();
+  DrawPages();
 
   if (parsestdin) {
     char    line[STRSIZE];
@@ -65,7 +63,7 @@ int main(int argc, char ** argv)
       DecodeString(line);
       if (dvi!=NULL) {
 	DVIReOpen(dvi);
-	DoPages();
+	DrawPages();
       }
       printf("%s> ",dvi!=NULL?dvi->name:"");
       fgets(line,STRSIZE,stdin);

@@ -2,7 +2,6 @@
 #define DVIPNG_H
 #include "config.h"
 
-#define VERSION "dvipng(k) 0.1"
 #define TIMING
 
 #define  STRSIZE         255     /* stringsize for file specifications  */
@@ -91,7 +90,7 @@ typedef struct {
   ValTyp  Typ;
 } KeyDesc;
 
-void    DoSpecial(char *, int);
+void    SetSpecial(char *, int, int32_t, int32_t);
 
 /********************************************************/
 /***********************  dvi.h  ************************/
@@ -229,21 +228,14 @@ uint32_t   UNumRead(unsigned char*, register int);
 /********************************************************/
 #include "commands.h"
 
-EXTERN int32_t     h;                   /* current horizontal position     */
-EXTERN int32_t     v;                   /* current vertical position       */
-EXTERN int32_t     w INIT(0);           /* current horizontal spacing      */
-EXTERN int32_t     x INIT(0);           /* current horizontal spacing      */
-EXTERN int32_t     y INIT(0);           /* current vertical spacing        */
-EXTERN int32_t     z INIT(0);           /* current vertical spacing        */
-
 void      CreateImage(void);
-void      DrawCommand(unsigned char*, int, void* /* dvi/vf */); 
-void      DoPages(void);
+void      DrawCommand(unsigned char*, void* /* dvi/vf */); 
+void      DrawPages(void);
 void      WriteImage(char*, int);
-int32_t   SetChar(int32_t, int);
-int32_t   SetPK(int32_t, int);
-int32_t   SetVF(int32_t, int);
-int32_t   SetRule(int32_t, int32_t, int);
+int32_t   SetChar(int32_t);
+int32_t   SetPK(int32_t,int32_t, int32_t);
+int32_t   SetVF(int32_t);
+int32_t   SetRule(int32_t, int32_t, int32_t, int32_t, int);
 
 
 /**************************************************/
@@ -298,22 +290,37 @@ EXTERN struct internal_state {
 
 /************************timing stuff*********************/
 #ifdef TIMING
-# ifdef __riscos
-#  include <sys/times.h>
-# else
-#  include <sys/time.h>
-EXTERN struct timeval Tp;
-EXTERN double timer;
-# endif
-EXTERN double my_tic,my_toc INIT(0);
-#define TIC() { gettimeofday(&Tp, NULL); \
-    my_tic= (float)Tp.tv_sec + ((float)(Tp.tv_usec))/ 1000000.0;}
-#define TOC() { gettimeofday(&Tp, NULL); \
-    my_toc += ((float)Tp.tv_sec + ((float)(Tp.tv_usec))/ 1000000.0) - my_tic;}
-EXTERN int      ndone INIT(0);          /* number of pages converted       */
+#if TIME_WITH_SYS_TIME
+# include <sys/time.h>
+# include <time.h>
 #else
-#define TIC()
-#define TOC()
+# if HAVE_SYS_TIME_H
+#  include <sys/time.h>
+# else
+#  include <time.h>
+# endif
+#endif
+EXTERN double timer INIT(0);
+EXTERN double my_tic,my_toc INIT(0);
+EXTERN int      ndone INIT(0);          /* number of pages converted       */
+# ifdef HAVE_GETTIMEOFDAY
+EXTERN struct timeval Tp;
+#  define TIC() { gettimeofday(&Tp, NULL); \
+    my_tic= (float)Tp.tv_sec + ((float)(Tp.tv_usec))/ 1000000.0;}
+#  define TOC() { gettimeofday(&Tp, NULL); \
+    my_toc += ((float)Tp.tv_sec + ((float)(Tp.tv_usec))/ 1000000.0) - my_tic;}
+# else
+#  ifdef HAVE_FTIME
+EXTERN struct timeb timebuffer;
+#   define TIC() { ftime(&timebuffer); \
+ my_tic= timebuffer.time + (float)(timebuffer.millitm) / 1000.0;
+#   define TOC() { gettimeofday(&Tp, NULL); \
+ my_toc += (timebuffer.time + (float)(timebuffer.millitm) / 1000.0) - my_tic;}
+#  else
+#   define TIC()
+#   define TOC()
+#  endif
+# endif
 #endif /* TIMING */
 
 EXTERN int   resolution INIT(300);
