@@ -126,6 +126,7 @@ struct page_list*FindPage(struct dvi_data*, int32_t, bool);
 struct page_list*NextPage(struct dvi_data*, struct page_list*);
 struct page_list*PrevPage(struct dvi_data*, struct page_list*);
 int              SeekPage(struct dvi_data*, struct page_list*);
+bool             DVIFollowToggle(void);
 unsigned char*   DVIGetCommand(struct dvi_data*);
 uint32_t         CommandLength(unsigned char*); 
 

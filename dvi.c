@@ -2,6 +2,26 @@
 #include <libgen.h>
 #include <sys/stat.h>
 
+bool followmode=0;
+
+bool DVIFollowToggle()
+{
+  return followmode = ! followmode;
+}
+
+static unsigned char fgetc_follow(FILE* fp)
+{
+  int got=fgetc(fp);
+
+  while(followmode && got==EOF) {
+    sleep(1);
+    got=fgetc(fp);
+  }
+  if (got==EOF)
+    Fatal("DVI file ends prematurely");
+  return (unsigned char)got;
+}
+
 void DVIInit(struct dvi_data* dvi)
 {
   int     k;
@@ -69,10 +89,20 @@ struct dvi_data* DVIOpen(char* dviname,char* outname)
     /* do not insist on .dvi */
     tmpstring = strrchr(dvi->name, '.');
     *tmpstring='\0';
+    dvi->filep = fopen(dvi->name,"rb");
+  }
+  while((dvi->filep == NULL) && followmode) {
+    sleep(1);
+    *tmpstring='.';
     if ((dvi->filep = fopen(dvi->name,"rb")) == NULL) {
-      perror(dvi->name);
-      exit (EXIT_FAILURE);
+      /* do not insist on .dvi */
+      *tmpstring='\0';
+      dvi->filep = fopen(dvi->name,"rb");
     }
+  }
+  if (dvi->filep == NULL) {
+    perror(dvi->name);
+    exit (EXIT_FAILURE);
   }
   DEBUG_PRINTF(DEBUG_DVI,"OPEN FILE\t%s", dvi->name);
   DVIInit(dvi);
@@ -81,63 +111,64 @@ struct dvi_data* DVIOpen(char* dviname,char* outname)
 
 unsigned char* DVIGetCommand(struct dvi_data* dvi)
      /* This function reads in and stores the next dvi command. */
-     /* Perhaps mmap would be appropriate here */
+     /* Mmap is not appropriate here, we may want to read from
+	half-written files. */
 { 
   static unsigned char command[STRSIZE];
   static unsigned char* lcommand = command;
+  unsigned char *current = command;
   int length;
   uint32_t strlength=0;
 
   DEBUG_PRINTF(DEBUG_DVI,"\n@%ld ", ftell(dvi->filep));
-  *command = fgetc(dvi->filep);
+  *(current++) = fgetc_follow(dvi->filep);
   length = dvi_commandlength[*command];
   if (length < 0)
-    Fatal("undefined dvi op-code %d",*command);
-  if (fread(command+1, 1, length-1, dvi->filep) < length-1) 
-    Fatal("%s command shorter than expected",dvi_commands[*command]);
+    Fatal("undefined DVI op-code %d",*command);
+  while(current < command+length) 
+    *(current++) = fgetc_follow(dvi->filep);
   switch (*command)  {
   case XXX4:
-    strlength = *(command + 1);
+    strlength =                   *(current - 4);
   case XXX3:
-    strlength = strlength * 256 + *(command + length - 3);
+    strlength = strlength * 256 + *(current - 3);
   case XXX2: 
-    strlength = strlength * 256 + *(command + length - 2);
+    strlength = strlength * 256 + *(current - 2);
   case XXX1:
-    strlength = strlength * 256 + *(command + length - 1);
-    /*    strlength = UNumRead((char*)command+1, length-1);*/
+    strlength = strlength * 256 + *(current - 1);
     break;
   case FNT_DEF1: case FNT_DEF2: case FNT_DEF3: case FNT_DEF4:
-    strlength = *(command + length - 1) + *(command + length - 2);
+    strlength = *(current - 1) + *(current - 2);
     break;
   case PRE: 
-    strlength = *(command + length - 1);
+    strlength = *(current - 1);
     break;
   }
-  if (lcommand!=command) {
-    free(lcommand);
-    lcommand=command;
-  }
   if (strlength > 0) { /* Read string */
+    if (lcommand!=command) {
+      free(lcommand);
+      lcommand=command;
+    }
     if (strlength + (uint32_t)length >  (uint32_t)STRSIZE) {
       /* string + command length exceeds that of buffer */
       if ((lcommand=malloc(length+strlength))==NULL) 
-	Fatal("cannot allocate memory for dvi command");
+	Fatal("cannot allocate memory for DVI command");
       memcpy(lcommand,command,length);
+      current = lcommand + length;
     }
-    if (fread(lcommand+length,1,strlength,dvi->filep) < strlength) 
-      Fatal("%s command shorter than expected",dvi_commands[*command]);
-  }
-  return(lcommand);
+    while(current < lcommand+length+strlength) 
+      *(current++) = fgetc_follow(dvi->filep);
+    return(lcommand);
+  } else
+    return(command);
 }
 
 
 uint32_t CommandLength(unsigned char* command)
 { 
   /* generally 2^32+5 bytes max, but in practice 32 bit numbers suffice */
-  unsigned char*   current;           
   uint32_t length=0;
 
-  current = command+1;
   length = dvi_commandlength[*command];
   switch (*command)  {
   case XXX1: case XXX2: case XXX3: case XXX4: 
@@ -245,8 +276,7 @@ struct page_list* NextPage(struct dvi_data* dvi, struct page_list* page)
   if (dvi->pagelistp==NULL
       || dvi->pagelistp->offset+45L < ftell(dvi->filep)) {
     tpagelistp=dvi->pagelistp;
-    if ((dvi->pagelistp=InitPage(dvi))==NULL)    
-      Fatal("no pages in %s",dvi->name);
+    dvi->pagelistp=InitPage(dvi);
     dvi->pagelistp->next=tpagelistp;
   }
 
@@ -302,7 +332,7 @@ void DelPageList(struct dvi_data* dvi)
   /* Delete the page list */
 
   temp=dvi->pagelistp;
-  while(dvi->pagelistp!=NULL) {
+  while(temp!=NULL) {
     dvi->pagelistp=dvi->pagelistp->next;
     free(temp);
     temp=dvi->pagelistp;
@@ -311,8 +341,8 @@ void DelPageList(struct dvi_data* dvi)
 
 void DVIClose(struct dvi_data* dvi)
 {
-  DelPageList(dvi);
   fclose(dvi->filep);
+  DelPageList(dvi);
   free(dvi);
 }
 
@@ -322,13 +352,17 @@ void DVIReOpen(struct dvi_data* dvi)
   fstat(fileno(dvi->filep), &stat);
   if (dvi->mtime != stat.st_mtime) {
     fclose(dvi->filep);
-    if ((dvi->filep = fopen(dvi->name,"rb")) == NULL) {
+    dvi->filep=NULL;
+    DelPageList(dvi);
+    while(((dvi->filep = fopen(dvi->name,"rb")) == NULL) && followmode) {
+      sleep(1);
+    }
+    if (dvi->filep == NULL) {
       perror(dvi->name);
-      exit (EXIT_FAILURE);
+      exit(EXIT_FAILURE);
     }
     Message(PARSE_STDIN,"Reopened file\n");
     DEBUG_PRINTF(DEBUG_DVI,"\nREOPEN FILE\t%s", dvi->name);
-    DelPageList(dvi);
     DVIInit(dvi);
   }
 }
