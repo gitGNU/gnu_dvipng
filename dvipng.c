@@ -64,8 +64,11 @@ int main(int argc, char ** argv)
   if (user_mfmode)
     if (user_bdpi)
       kpse_init_prog("DVIPNG", user_bdpi, user_mfmode, "cmr10");
-    else 
-      Fatal("--mfmode given without --bdpi. Note that the -D option has changed\nfrom base resolution to _output_ resolution. Read the file RELEASE.");
+    else {
+      Warning("--mfmode given without --bdpi. Note that the -D option has changed\nfrom base resolution to _output_ resolution. Read the file RELEASE.");
+      /* this will give a lot of warnings but... */
+      kpse_init_prog("DVIPNG", 300, user_mfmode, "cmr10");
+    }
   else
     kpse_init_prog("DVIPNG", 300, "cx", "cmr10");
 #endif
