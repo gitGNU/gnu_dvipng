@@ -8,10 +8,6 @@
 void DecodeArgs P2C(int, argc, char **, argv)
 {
   int     i;                 /* argument index for flags      */
-  char    curarea[STRSIZE];  /* current file area             */
-  char    curname[STRSIZE];  /* current file name             */
-  char    *p, *p1;           /* temporary character pointers  */
-  int     k;
 
 #ifndef KPATHSEA
   if ((tcp = getenv("TEXPXL")) != NULL) PXLpath = tcp;
@@ -29,7 +25,6 @@ For more information about these matters, see the files\n\
 named COPYING and dvipng.c.");
     exit (0); 
   }
-
   for (i=1; i<argc; i++) {
     if (*argv[i]=='-') {
       char *p=argv[i]+2 ;
@@ -44,18 +39,18 @@ named COPYING and dvipng.c.");
 	printf("Debug output enabled\n");
         break;
 #endif
-      case 'o':       /* Output file is specified */
-	if (*p == 0 && argv[i+1])
+	/*      case 'o':       *//* Output file is specified */
+	/*	if (*p == 0 && argv[i+1])
 	  p = argv[++i] ;
         (void) strcpy(rootname, p);
-        /* remove .png extension */
-        p1 = strrchr(rootname, '.');
+        *//* remove .png extension */
+        /*p1 = strrchr(rootname, '.');
         if (p1 != NULL && strcmp(p1,".png") == 0 ) {
 	  *p1='\0';
         }
 	if (ParseStdin)
 	  printf("Output file: %s.png\n",rootname);
-        break;
+        break;*/
 #ifdef MAKETEXPK
       case 'M':
         /* -M, -M1 => don't make font; -M0 => do.  */
@@ -70,17 +65,16 @@ named COPYING and dvipng.c.");
 	    printf("MakeTeXPK disabled\n");
 	}
         break;
-       case 'm':
- 	if (strcmp(p,"ode") == 0 ) {
- 	printf("%s\n",p);
- 	  if (argv[i+1])
- 	    MFMODE = argv[++i] ;
- 	  (void) strcpy(rootname, p);
- 	  if (ParseStdin)
- 	    printf("MetaFont mode: %s\n",MFMODE);
- 	  break ;
- 	}
- 	break;
+      case 'm':
+	if (strcmp(p,"ode") == 0 ) {
+	  if (argv[i+1])
+	    MFMODE = argv[++i] ;
+	  (void) strcpy(rootname, p);
+	  if (ParseStdin)
+	    printf("MetaFont mode: %s\n",MFMODE);
+	  break ;
+	}
+	break;
 #endif /* MAKETEXPK */
       case 'O' : /* Offset */
 	if (*p == 0 && argv[i+1])
@@ -163,11 +157,11 @@ named COPYING and dvipng.c.");
       case 'x' : case 'y' :
 	if (*p == 0 && argv[i+1])
 	  p = argv[++i] ;
-	if (sscanf(p, "%ld", &usermag)==0 || usermag < 1 ||
+	if (sscanf(p, "%d", &usermag)==0 || usermag < 1 ||
 	    usermag > 1000000)
 	  Fatal("Bad magnification parameter (-x or -y).") ;
 	if (ParseStdin)
-	  printf("Magstep: %ld\n",usermag);
+	  printf("Magstep: %d\n",usermag);
 	/*overridemag = (c == 'x' ? 1 : -1) ;*/
 	break ;
       case 'p' :
@@ -200,7 +194,7 @@ named COPYING and dvipng.c.");
 	  Abspage = _TRUE ;
 	  p++ ;
 	}
-	switch(sscanf(p, "%ld.%d", &FirstPage, &Firstseq)) {
+	switch(sscanf(p, "%d.%d", &FirstPage, &Firstseq)) {
 	case 1:           Firstseq = 0 ;
 	case 2:           break ;
 	default:     	  Fatal("bad first page option (-p %s).",p) ;
@@ -213,7 +207,7 @@ named COPYING and dvipng.c.");
 	  Abspage = _TRUE ;
 	  p++ ;
 	}
-	switch(sscanf(p, "%ld.%d", &LastPage, &Lastseq)) {
+	switch(sscanf(p, "%d.%d", &LastPage, &Lastseq)) {
 	case 1:           Lastseq = 0 ;
 	case 2:           break ;
 	default:	  Fatal("bad last page option (-l %s).",p);
@@ -257,103 +251,18 @@ named COPYING and dvipng.c.");
         Warning("%c is not a valid flag\n", c);
       }
     } else {
-
-#ifdef KPATHSEA
-      /* split into directory + file name */
-      p = (char *)basename(argv[i]);/* this knows about any kind of slashes */
-      if (p == argv[i])
-	curarea[0] = '\0';
-      else {
-	(void) strcpy(curarea, argv[i]);
-	curarea[p-argv[i]] = '\0';
-      }
-#else
-      p = strrchr(argv[i], '/');
-      /* split into directory + file name */
-      if (p == NULL) {
-	curarea[0] = '\0';
-	p = argv[i];
-      } else {
-	(void) strcpy(curarea, argv[i]);
-	curarea[p-argv[i]+1] = '\0';
-	p += 1;
-      }
-#endif
-      
-      (void) strcpy(curname, p);
-      /* split into file name + extension */
-      p1 = strrchr(curname, '.');
-      if (p1 == NULL) {
-	(void) strcpy(rootname, curname);
-	strcat(curname, ".dvi");
-      } else {
-	*p1 = '\0';
-	(void) strcpy(rootname, curname);
-	*p1 = '.';
-      }
-      
-      (void) strcpy(dvi.n, curarea);
-      (void) strcat(dvi.n, curname);
-      
-      if (dvi.filep != FPNULL) {
+      if (dvi != NULL && dvi->filep != FPNULL) {
 	DelPageList();
-	fclose(dvi.filep);
+	fclose(dvi->filep);
+	free(dvi);
       }
-
-      if ((dvi.filep = BINOPEN(dvi.n)) == FPNULL) {
-	/* do not insist on .dvi */
-	if (p1 == NULL) {
-	  int l = strlen(curname);
-	  if (l > 4)
-	    curname[l - 4] = '\0';
-	  l = strlen(dvi.n);
-	  if (l > 4)
-	    dvi.n[l - 4] = '\0';
-	}
-	if (p1 != NULL || (dvi.filep = BINOPEN(dvi.n)) == FPNULL) {
-#ifdef MSC5
-	  Fatal("can't find DVI file \"%s\"\n\n", dvi.n);
-#else
-	  perror(dvi.n);
-	  exit (EXIT_FAILURE);
-#endif
-	}
-      }
-#ifdef DEBUG
-      if (Debug)
-	printf("OPEN FILE\t%s\n", dvi.n);
-#endif
-
-      if ((k = (int)NoSignExtend(dvi.filep, 1)) != PRE) {
-	Fatal("PRE doesn't occur first--are you sure this is a DVI file?\n\n");
-      }
-      k = (int)SignExtend(dvi.filep, 1);
-      if (k != DVIFORMAT) {
-	Fatal("DVI format = %d, can only process DVI format %d files\n\n",
-	      k, DVIFORMAT);
-      }
-      num = NoSignExtend(dvi.filep, 4);
-      den = NoSignExtend(dvi.filep, 4);
-      mag = NoSignExtend(dvi.filep, 4);
-      if ( usermag > 0 && usermag != mag )
-	Warning("DVI magnification of %ld over-ridden by user (%ld)",
-		(long)mag, usermag );
-      if ( usermag > 0 )
-	mag = usermag;
-      conv = DoConv(num, den, resolution);
-      
-      k = (int)NoSignExtend(dvi.filep, 1);
-      GetBytes(dvi.filep, curname, k);
-      curname[k]='\0';
-      if (G_verbose)
-	printf("'%s' -> %sN.png\n",curname,rootname);
-
+      dvi=DVIOpen(argv[i]);
       if ((hpagelistp=InitPage())==NULL)
 	Fatal("no pages in DVI file");
     }
   }
 
-  if (dvi.filep == FPNULL) {
+  if (dvi->filep == FPNULL) {
     fprintf(ERR_STREAM,"\nThis is the DVI to PNG converter version %s",
              VERSION);
     fprintf(ERR_STREAM," (%s)\n", OS);
@@ -411,14 +320,14 @@ named COPYING and dvipng.c.");
 /*********************************************************************/
 /********************************  DoConv  ***************************/
 /*********************************************************************/
-long4 DoConv P3C(long4, num, long4, den, int, convResolution)
+uint32_t DoConv P3C(uint32_t, num, uint32_t, den, int, convResolution)
 {
   /*register*/ double conv;
   conv = ((double)num / (double)den) *
     ((double)mag / 1000.0) *
     ((double)convResolution/254000.0);
 
-  return((long4)((1.0/conv)+0.5));
+  return((uint32_t)((1.0/conv)+0.5));
 }
 
 
