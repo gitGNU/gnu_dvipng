@@ -1,3 +1,16 @@
+2004-11-25  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* INSTALL:
+	* README: Add license 
+
+	* dvipng.c: Remove duplicate copyright
+
+	* config.h.in:
+	* configure.ac: Add some tests
+
+	* dvipng.1:
+	* dvipng.texi: Add some minor things
+
 2004-11-24  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* config.h.in:
