@@ -1,53 +1,78 @@
 #include "dvipng.h"
 
 /*
- * Handle a list of pages for dvipng.  Code based on dvips 5.78 which
- * in turn is based on dvi2ps 2.49, maintained by Piet van Oostrum,
- * piet@cs.ruu.nl.  Collected and modularized for inclusion in dvips
- * by metcalf@lcs.mit.edu. Included in dvipng by jalar@imf.au.dk.
+ * Handle a queue of pages for dvipng.  Code would have been based on
+ * dvips, but for the intended use of dvipng the ordering becomes
+ * important.
  */
 
-#define MAXPAGE (1000000000) /* assume no pages out of this range */
-struct p_list_str {
-    struct p_list_str *next;    /* next in a series of alternates */
-    int ps_low, ps_high;    /* allowed range */
-} *ppages = 0;  /* the list of allowed pages */
 
-/*-->InPageList*/
-/**********************************************************************/
-/******************************  InPageList  **************************/
-/**********************************************************************/
-/* Return true iff i is one of the desired output pages */
+struct pagequeue {
+  struct pagequeue *next; 
+  int first,last;
+  bool abspage;
+} *hpagequeuep = NULL;  /* the list of allowed pages */
 
-int InPageList P1C(int, i)
+/*-->TodoPage*/
+/**********************************************************************/
+/******************************  TodoPage  ****************************/
+/**********************************************************************/
+/* Return the page in turn on our queue */
+
+int TodoPage P1H(void)
 {
-    register struct p_list_str *pl = ppages;
+  int val;
 
-    while (pl) {
-      if ( i >= pl -> ps_low && i <= pl -> ps_high)
-	return 1;		/* success */
-      pl = pl -> next;
-    }
-    return 0;
+  if (hpagequeuep==NULL) 
+    return(MAXPAGE);
+  
+  val = Reverse ? hpagequeuep->last-- : hpagequeuep->first++;
+  Abspage = hpagequeuep->abspage;
+  if (hpagequeuep->last<hpagequeuep->first) {
+    struct pagequeue *temp = hpagequeuep;
+    hpagequeuep = hpagequeuep->next;
+    free(temp);
+  }
+  return(val);
 }
 
-void InstallPL P2C(int, pslow, int, pshigh)
-{
-    register struct p_list_str   *pl;
 
-    if ((pl = (struct p_list_str *)malloc((int)(sizeof *pl)))==NULL)
-      Fatal("cannot allocate memory for page structure");
-    pl -> next = ppages;
-    pl -> ps_low = pslow;
-    pl -> ps_high = pshigh;
-    ppages = pl;
+void QueuePage P3C(int, first, int, last, bool, abspage)
+{
+  struct pagequeue *new;
+
+  if ((new = (struct pagequeue *)malloc(sizeof(struct pagequeue)))
+      ==NULL)
+    Fatal("cannot allocate memory for page queue");
+
+  new->first=first;
+  new->last=last;
+  new->abspage=abspage;
+
+  if (Reverse || hpagequeuep==NULL) {
+    new->next=hpagequeuep;
+    hpagequeuep=new;
+  } else {
+    register struct pagequeue *temp = hpagequeuep;
+    
+    while(temp->next!=NULL)
+      temp=temp->next;
+    temp->next=new;
+    new->next=NULL;
+  }
+}
+
+
+bool QueueEmpty P1H(void)
+{
+  return(hpagequeuep==NULL);
 }
 
 /* Parse a string representing a list of pages.  Return 0 iff ok.  As a
-   side effect, the page selection(s) is (are) prepended to ppages. */
-
+   side effect, the page(s) is (are) ap- or pre-pended to the queue. */
+/* THIS is adapted from dvips */
 int
-ParsePages P1C(register char  *, s)
+ParsePages P2C(register char  *, s, bool, abspage)
 {
     register int    c ;		/* current character */
     register int  n = 0,	/* current numeric value */
@@ -109,7 +134,7 @@ ParsePages P1C(register char  *, s)
 		    ps_low = ps_high;
 		}
 	    }
-	    InstallPL (ps_low, ps_high);
+	    QueuePage(ps_low, ps_high,abspage);
 	    if (c == 0)
 		return 0;
 	    range = 0;
