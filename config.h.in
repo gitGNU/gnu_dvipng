@@ -11,6 +11,15 @@
 /* Define as 1 to get the debug (-d) option. */
 #undef DEBUG
 
+/* The environment setting for \$SELFAUTODIR */
+#undef ENV_SELFAUTODIR
+
+/* The environment setting for \$SELFAUTOLOC */
+#undef ENV_SELFAUTOLOC
+
+/* The environment setting for \$SELFAUTOPARENT */
+#undef ENV_SELFAUTOPARENT
+
 /* Define as the path to GhostScript. */
 #undef GS_PATH
 
@@ -76,8 +85,14 @@
    to 0 otherwise. */
 #undef HAVE_MALLOC
 
+/* Define to 1 if you have the `memchr' function. */
+#undef HAVE_MEMCHR
+
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
+
+/* Define to 1 if you have the `memset' function. */
+#undef HAVE_MEMSET
 
 /* Define to 1 if you have a working `mmap' system call. */
 #undef HAVE_MMAP
@@ -85,8 +100,8 @@
 /* Define to 1 if you have the <png.h> header file. */
 #undef HAVE_PNG_H
 
-/* Define to 1 if you have ps2pk.map where expected */
-#undef HAVE_PS2PK_MAP
+/* Define to 1 if you have the `putenv' function. */
+#undef HAVE_PUTENV
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
