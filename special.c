@@ -310,13 +310,13 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 
   if (strncmp(token,"header=",7)==0) { /* header, ignored */
     if ( page_imagep != NULL )
-      Warning("at (%ld,%ld) unimplemented \\special{%.*s}.",
+      Warning("at (%ld,%ld) ignored header \\special{%.*s}.",
 	      hh, vv, length,special);
     return;
   }
-  if (strncmp(token,"!",7)==0) { /* literal PostScript, ignored */
+  if (token[0]=='!') { /* literal PostScript, ignored */
     if ( page_imagep != NULL )
-      Warning("at (%ld,%ld) unimplemented \\special{%.*s}.",
+      Warning("at (%ld,%ld) ignored literal PostScript \\special{%.*s}.",
 	      hh, vv, length,special);
     return;
   }
