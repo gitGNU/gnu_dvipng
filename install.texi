@@ -22,14 +22,13 @@ Installing dvipng should be simple: merely @code{./configure},
 @itemize @bullet
 @item The GD Graphics Draw library, libgd
 
-The one requirement that may be a problem is the requirement of Thomas
-Boutell's @samp{libgd}, downloadable at
-@uref{http://www.boutell.com/gd}. There are binary packages for at least
-RedHat linux from redhat.com, and probably also for several other
-operating systems from their distributors. The latest version of the
-library installs using @samp{autoconf} so it should really not be more
-difficult to install than dvipng, but the @samp{autoconf} support is
-quite new, though.
+The one requirement that may be a problem is Thomas Boutell's
+@samp{libgd}, downloadable at @uref{http://www.boutell.com/gd}. There
+are binary packages for at least RedHat linux from redhat.com, and
+probably also for several other operating systems from their
+distributors. The latest version of the library installs using
+@samp{autoconf} so it should really not be more difficult to install
+than dvipng, but the @samp{autoconf} support is quite new, though.
 
 @item The path-searching library kpathsea
 
@@ -64,7 +63,7 @@ various files will be.  To do so, run
 ./configure @var{options}
 @end example
 
-(Note: if you have fetched Dvipng from CVS rather than a regular
+(Note: if you have fetched dvipng from CVS rather than a regular
 release, you will have to first generate @file{./configure} by running
 @code{autoconf} 2.53 or later in the @file{preview} directory.)
 
@@ -96,8 +95,8 @@ use
 ./configure LDFLAGS='-L/sw/local/lib -R/sw/local/lib'
 @end example
 
-When this is necessary, it is likely that the C header files are also
-installed in nonstandard directories that are not in the C
+When either of these is necessary, it is likely that the C header files
+are also installed in nonstandard directories that are not in the C
 preprocessor's search path. This will also generate an error when
 running @file{./configure}, indicating that it cannot find e.g.,
 @file{gd.h} or @file{kpathsea.h} (most likely). You then need to specify
@@ -153,5 +152,4 @@ prefix argument is supported by most @file{configure} scripts.
 
 You'll have to add something like @file{/home/myself/bin} to your
 @code{PATH} shell variable, if it isn't there already, and similarly set
-the @code{MANPATH} and @code{INFOPATH} variables to be able to access
-the documentation.
+the @code{INFOPATH} variable to be able to access the documentation.
