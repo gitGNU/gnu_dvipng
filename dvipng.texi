@@ -68,9 +68,9 @@ approved by the Free Software Foundation.
 @c @summarycontents
 @contents
 
-@node Top, Introduction, (dir), (dir)
-@ifnottex
+@node Top
 @top dvipng
+@ifnottex
 
 This manual documents dvipng, a program to translate a DVI (DeVice
 Independent) file into PNG (Portable Network Graphics).
@@ -96,14 +96,14 @@ Jan-@AA{}ke Larsson
 
 
 
-@node Introduction, Installation, Top, Top
+@node Introduction
 @chapter Introduction
 
 @c man begin DESCRIPTION
 @include readme.texi
 @c man end
 
-@node Installation, Basic usage, Introduction, Top
+@node Installation
 @chapter Installation
 
 @cindex configuration, of dvipng
@@ -112,7 +112,7 @@ Jan-@AA{}ke Larsson
 
 @include install.texi
 
-@node Basic usage, Command-line options, Installation, Top
+@node Basic usage
 @chapter Basic usage of dvipng
 
 @cindex invoking dvipng
@@ -145,7 +145,7 @@ of available options, just type
 dvipng --help
 @end example
 
-@node Command-line options, Diagnosing problems, Basic usage, Top
+@node Command-line options
 @chapter Command-line options
 
 @cindex command-line options
@@ -160,7 +160,7 @@ section will give a good idea of the capabilities of the driver.
 @end menu
 
 
-@node Option summary, Option details, Command-line options, Command-line options
+@node Option summary
 @section Option summary
 
 @cindex options, summary
@@ -172,7 +172,7 @@ dvipng with no arguments or with the standard @samp{--help} option.
 @end example
 
 
-@node Option details,  , Option summary, Command-line options
+@node Option details
 @section Option details
 
 @cindex option, details of
@@ -1337,7 +1337,7 @@ when header files are included.
 
 @end ignore
 
-@node Diagnosing problems, Color, Command-line options, Top
+@node Diagnosing problems
 @chapter Diagnosing problems
 
 @cindex problems
@@ -1372,7 +1372,7 @@ problems, @pxref{Common problems,,, kpathsea, Kpathsea}.
 @end menu
 
 
-@node Debug options, Included graphics problems, Diagnosing problems, Diagnosing problems
+@node Debug options
 @section Debug options
 
 @cindex debugging options
@@ -1424,7 +1424,7 @@ Kpathsea path searches
 
 @end table
 
-@node Included graphics problems,  , Debug options, Diagnosing problems
+@node Included graphics problems
 @section Included graphics problems
 
 @cindex graphics inclusion problems
@@ -1457,7 +1457,7 @@ some applications read the PostScript file from the input stream,
 looking for a particular comment.
 @end ignore
 
-@node Color, Copying, Diagnosing problems, Top
+@node Color
 @chapter Color
 
 To support color, dvipng recognizes a certain set of specials. These
@@ -1470,7 +1470,7 @@ specials start with the keyword @samp{color} or the keyword
 @end menu
 
 
-@node Color specifications, Color specials, Color, Color
+@node Color specifications
 @section Color specifications
 
 @cindex color specifications
@@ -1481,7 +1481,7 @@ followed by the appropriate number of parameters. Thus, the color
 specification @samp{rgb 0.3 0.4 0.5} would correspond to the color that
 is @samp{0.3 0.4 0.5} in its red, blue and green values. 
 
-@node Color specials,  , Color specifications, Color
+@node Color specials
 @section Color specials
 
 We will describe @samp{background} first, since it is the simplest. The
@@ -1519,7 +1519,7 @@ info dvipng
 @c man end
 @end ifset
 
-@node Copying, Index, Color, Top
+@node Copying
 @chapter Copying
 
 
@@ -1551,7 +1551,7 @@ Copyright @copyright{} 2002-2004 Jan-Åke Larsson
 @end ifset
 @c man end
 
-@node Index,  , Copying, Top
+@node Index
 @unnumbered Index
 
 @printindex cp
