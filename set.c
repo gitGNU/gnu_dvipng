@@ -6,6 +6,10 @@ void DoBop P1H(void)
 
   if (page_imagep) 
     gdImageDestroy(page_imagep);
+#ifdef DEBUG
+  if (Debug)
+    printf("(image %dx%d) ",x_width,y_width);
+#endif
   page_imagep=gdImageCreate(x_width,y_width);
   /* Set bg color */
   Background = gdImageColorAllocate(page_imagep,bRed,bGreen,bBlue);
@@ -33,20 +37,20 @@ void DoBop P1H(void)
 /**********************************************************************/
 /*****************************  FormFeed ******************************/
 /**********************************************************************/
-void FormFeed P2C(struct font_entry*, dvi, int, pagenum)
+void FormFeed P2C(struct dvi_data*, dvi, int, pagenum)
 {
+  char  pngname[STRSIZE];       
   FILE* outfp=NULL;
 
-  (void)sprintf(pngname,"%s%d.png",dvi->n,pagenum);
+  (void)sprintf(pngname,"%s%d.png",dvi->outname,pagenum);
   if ((outfp = fopen(pngname,"wb")) == NULL)
       Fatal("Cannot open output file %s",pngname);
-#ifdef DEBUG
-  if (Debug)
-    printf("WRITE FILE:\t%s\n",pngname);
-#endif
-  
   gdImagePng(page_imagep,outfp);
   fclose(outfp);
+#ifdef DEBUG
+  if (Debug)
+    printf("(wrote %s)\n",pngname);
+#endif
   gdImageDestroy(page_imagep);
   page_imagep=NULL;
 }
@@ -58,75 +62,16 @@ void FormFeed P2C(struct font_entry*, dvi, int, pagenum)
 /**********************************************************************/
 int32_t SetChar P2C(int32_t, c, int, PassNo)
 {
-  register struct char_entry *ptr;  /* temporary char_entry pointer */
-
-  if ((ptr = vfstack[vfstackptr]->ch[c]) != NULL) {
-    if (vfstack[vfstackptr]->is_vf) {
-      return(SetVF(c, PassNo));
-    } else {
-      return(SetPK(c, PassNo));
-    }
-  } else {
-    return(0);
+  switch(currentfont->type) {
+  case FONT_TYPE_PK:
+    return(SetPK(c, PassNo));
+    break;
+  case FONT_TYPE_VF:
+    return(SetVF(c, PassNo));
+    break;
+  default:
   }
-}
-
-int32_t SetPK P2C(int32_t, c, int, PassNo)
-{
-  register struct char_entry *ptr;  /* temporary char_entry pointer */
-  int red,green,blue;
-  int Color,i;
-
-  if ((ptr = vfstack[vfstackptr]->ch[c]) != NULL) {
-    switch(PassNo) {
-    case PASS_BBOX:
-      if (!(ptr->isloaded)) {
-	LoadAChar(c, ptr);
-      }
-      min(x_min,PIXROUND(h, conv*shrinkfactor)
-	  -PIXROUND(ptr->xOffset,shrinkfactor));
-      min(y_min,PIXROUND(v, conv*shrinkfactor)
-	  -PIXROUND(ptr->yOffset,shrinkfactor));
-      max(x_max,PIXROUND(h, conv*shrinkfactor)
-	  -PIXROUND(ptr->xOffset,shrinkfactor)+ptr->glyph.w);
-      max(y_max,PIXROUND(v, conv*shrinkfactor)
-	  -PIXROUND(ptr->yOffset,shrinkfactor)+ptr->glyph.h);
-      break;
-    case PASS_DRAW:
-      if (!(ptr->isloaded)) {
-	LoadAChar(c, ptr);
-      }
-      /*
-       * Draw character. Remember now, we have stored the different
-       * greyscales in glyph.data with darkest last.  Draw the character
-       * greyscale by greyscale, lightest first.
-       */
-      for( i=1; i<=ptr->glyph.nchars ; i++) {
-	red = bRed-(bRed-Red)*i/shrinkfactor/shrinkfactor;
-	green = bGreen-(bGreen-Green)*i/shrinkfactor/shrinkfactor;
-	blue = bBlue-(bBlue-Blue)*i/shrinkfactor/shrinkfactor;
-	Color = gdImageColorResolve(page_imagep,red,green,blue);
-	gdImageChar(page_imagep, &(ptr->glyph),
-		    PIXROUND(h, conv*shrinkfactor)
-		    -PIXROUND(ptr->xOffset,shrinkfactor)
-		    +x_offset,
-		    PIXROUND(v, conv*shrinkfactor)
-		    -PIXROUND(ptr->yOffset,shrinkfactor)
-		    +y_offset,
-		    i,Color);
-      }
-    }
-  }
-#ifdef DEBUG
-  if (Debug)
-    printf("(at (%d,%d)-(%d,%d) offset (%d,%d)) ",
-	   PIXROUND(h, conv*shrinkfactor),
-	   PIXROUND(v, conv*shrinkfactor),
-	   PIXROUND(ptr->xOffset,shrinkfactor),
-	   PIXROUND(ptr->yOffset,shrinkfactor),
-	   x_offset,y_offset);
-#endif
-  return(ptr->isloaded?ptr->tfmw:0);
+  return(0);
 }
 
 
@@ -141,15 +86,15 @@ int32_t SetRule P3C(int32_t, a, int32_t, b, int, PassNo)
   int Color;
 
   if ( a > 0 && b > 0 ) {
-    xx = (int32_t)PIXROUND(b, conv*shrinkfactor);     /* width */
-    yy = (int32_t)PIXROUND(a, conv*shrinkfactor);     /* height */
+    xx = (int32_t)PIXROUND(b, dvi->conv*shrinkfactor);     /* width */
+    yy = (int32_t)PIXROUND(a, dvi->conv*shrinkfactor);     /* height */
   }
   switch(PassNo) {
   case PASS_BBOX:
-    min(x_min,PIXROUND(h, conv*shrinkfactor)-1);
-    min(y_min,PIXROUND(v, conv*shrinkfactor)-yy+1-1);
-    max(x_max,PIXROUND(h, conv*shrinkfactor)+xx-1-1);
-    max(y_max,PIXROUND(v, conv*shrinkfactor)-1);
+    min(x_min,PIXROUND(h, dvi->conv*shrinkfactor)-1);
+    min(y_min,PIXROUND(v, dvi->conv*shrinkfactor)-yy+1-1);
+    max(x_max,PIXROUND(h, dvi->conv*shrinkfactor)+xx-1-1);
+    max(y_max,PIXROUND(v, dvi->conv*shrinkfactor)-1);
     break;
   case PASS_DRAW:
     if ((yy>0) && (xx>0)) {
@@ -159,17 +104,17 @@ int32_t SetRule P3C(int32_t, a, int32_t, b, int, PassNo)
       */
       Color = gdImageColorResolve(page_imagep, Red,Green,Blue);
       gdImageFilledRectangle(page_imagep,
-			     PIXROUND(h, conv*shrinkfactor)+x_offset-1,
-			     PIXROUND(v, conv*shrinkfactor)-yy+1+y_offset-1,
-			     PIXROUND(h, conv*shrinkfactor)+xx-1+x_offset-1,
-			     PIXROUND(v, conv*shrinkfactor)+y_offset-1,
+			     PIXROUND(h, dvi->conv*shrinkfactor)+x_offset-1,
+			     PIXROUND(v, dvi->conv*shrinkfactor)-yy+1+y_offset-1,
+			     PIXROUND(h, dvi->conv*shrinkfactor)+xx-1+x_offset-1,
+			     PIXROUND(v, dvi->conv*shrinkfactor)+y_offset-1,
 			     Color);
 #ifdef DEBUG
       if (Debug)
 	printf("Rule (%d,%d) at (%d,%d) offset (%d,%d)\n",
 	       xx, yy,
-	       PIXROUND(h, conv*shrinkfactor),
-	       PIXROUND(v, conv*shrinkfactor),
+	       PIXROUND(h, dvi->conv*shrinkfactor),
+	       PIXROUND(v, dvi->conv*shrinkfactor),
 	       x_offset,y_offset);
 #endif
     }
