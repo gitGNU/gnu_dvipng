@@ -6,10 +6,6 @@ void DoBop P1H(void)
 
   if (page_imagep) 
     gdImageDestroy(page_imagep);
-#ifdef DEBUG
-  if (Debug)
-    printf("(image %dx%d) ",x_width,y_width);
-#endif
   page_imagep=gdImageCreate(x_width,y_width);
   /* Set bg color */
   Background = gdImageColorAllocate(page_imagep,bRed,bGreen,bBlue);
@@ -47,10 +43,7 @@ void FormFeed P2C(struct dvi_data*, dvi, int, pagenum)
       Fatal("Cannot open output file %s",pngname);
   gdImagePng(page_imagep,outfp);
   fclose(outfp);
-#ifdef DEBUG
-  if (Debug)
-    printf("(wrote %s)\n",pngname);
-#endif
+  DEBUG_PRINTF(DEBUG_DVI,"\n  WROTE:   \t%s\n",pngname);
   gdImageDestroy(page_imagep);
   page_imagep=NULL;
 }
@@ -109,14 +102,11 @@ int32_t SetRule P3C(int32_t, a, int32_t, b, int, PassNo)
 			     PIXROUND(h, dvi->conv*shrinkfactor)+xx-1+x_offset-1,
 			     PIXROUND(v, dvi->conv*shrinkfactor)+y_offset-1,
 			     Color);
-#ifdef DEBUG
-      if (Debug)
-	printf("Rule (%d,%d) at (%d,%d) offset (%d,%d)\n",
-	       xx, yy,
-	       PIXROUND(h, dvi->conv*shrinkfactor),
-	       PIXROUND(v, dvi->conv*shrinkfactor),
-	       x_offset,y_offset);
-#endif
+      DEBUG_PRINTF2(DEBUG_DVI,"\n  RULE \t(%d,%d)", xx, yy);
+      DEBUG_PRINTF2(DEBUG_DVI," at (%d,%d)", 
+		    PIXROUND(h, dvi->conv*shrinkfactor),
+		    PIXROUND(v, dvi->conv*shrinkfactor));
+      DEBUG_PRINTF2(DEBUG_DVI," offset (%d,%d)", x_offset,y_offset);
     }
   }
   return(b);

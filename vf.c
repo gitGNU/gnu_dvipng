@@ -16,23 +16,16 @@ int32_t SetVF P2C(int32_t, c, int, PassNo)
 
   currentvf=currentfont;
   SetFntNum(currentvf->defaultfont,(struct dvi_vf_entry*)currentvf);
-
   DrawCommand(&push,PassNo,(struct dvi_vf_entry*)NULL);
   w = x = y = z = 0;
-
   command = currentvf->vf_ch[c]->mmap;
   end = command + currentvf->vf_ch[c]->length;
   while (command < end)  {
-#ifdef DEBUG
-    if (Debug)
-      printf("\n  VF MACRO:\t%s ", dvi_commands[*command]);
-#endif
+    DEBUG_PRINTF(DEBUG_DVI,"\n  VF MACRO:\t%s ", dvi_commands[*command]);
     DrawCommand(command,PassNo,(struct dvi_vf_entry*)currentfont);
     command += CommandLength(command);
   } 
-
   DrawCommand(&pop,PassNo,(struct dvi_vf_entry*)NULL);
-
   currentfont=currentvf;
   return(currentvf->vf_ch[c]->tfmw);
 }
@@ -48,15 +41,9 @@ void InitVF  P1C(struct font_entry *,tfontp)
   uint32_t c=0;
   struct font_num *tfontnump;  /* temporary font_num pointer   */
   
-  /*  OpenFont(tfontp);*/
-#ifdef DEBUG
-  if (Debug)
-    printf("(OPEN %s) ", tfontp->name);
-#endif
-
+  DEBUG_PRINTF((DEBUG_DVI|DEBUG_VF),"\n  OPEN FONT:\t'%s'", tfontp->name);
   if ((tfontp->filedes = open(tfontp->name,O_RDONLY)) == -1) 
     Warning("font file %s could not be opened", tfontp->name);
-
   fstat(tfontp->filedes,&stat);
   tfontp->mmap = mmap(NULL,stat.st_size,
       PROT_READ, MAP_SHARED,tfontp->filedes,0);
@@ -65,32 +52,22 @@ void InitVF  P1C(struct font_entry *,tfontp)
   if (*(tfontp->mmap+1) != VF_ID) 
       Fatal( "wrong version of vf file!  (%d should be 202)\n",
 	     (int)*(tfontp->mmap+1));
-
-#ifdef DEBUG
-  if (Debug) 
-    printf("(VF_PRE: '%.*s' ", (int)*(tfontp->mmap+2), tfontp->mmap+3);
-#endif
-
+  DEBUG_PRINTF2(DEBUG_VF,"\n  VF_PRE:\t'%.*s'", 
+		(int)*(tfontp->mmap+2), tfontp->mmap+3);
   position = tfontp->mmap+3 + *(tfontp->mmap+2);
-  CheckChecksum (tfontp->c, UNumRead(position, 4), tfontp->name);
-  
+  c=UNumRead(position, 4);
+  DEBUG_PRINTF(DEBUG_VF," %d", c);
+  CheckChecksum (tfontp->c, c, tfontp->name);
   tfontp->designsize = UNumRead(position+4,4);
+  DEBUG_PRINTF(DEBUG_VF," %d", tfontp->designsize);
   tfontp->type = FONT_TYPE_VF;
   tfontp->vffontnump=NULL;
-  
-#ifdef DEBUG
-  if (Debug)
-    printf(")");
-#endif
-  
   /* Read font definitions */
   position += 8;
   while(*position >= FNT_DEF1 && *position <= FNT_DEF4) {
-#ifdef DEBUG
-    if (Debug)
-      printf("\n@%ld VF:\t%s ", (long)(position - tfontp->mmap), 
-	     dvi_commands[*position]);
-#endif
+    DEBUG_PRINTF2(DEBUG_VF,"\n  @%ld VF:\t%s", 
+		  (long)(position - tfontp->mmap), 
+		  dvi_commands[*position]);
     FontDef(position,(struct dvi_vf_entry*)tfontp);	
     length = dvi_commandlength[*position];
     position += length + *(position + length-1) + *(position+length-2);
@@ -104,28 +81,29 @@ void InitVF  P1C(struct font_entry *,tfontp)
   
   /* Read char definitions */
   while(*position < FNT_DEF1) {
-#ifdef DEBUG
-    if (Debug)
-      printf("\n@%ld VF CHAR:\t", (long)(position - tfontp->mmap));
-#endif
+    DEBUG_PRINTF(DEBUG_VF,"\n@%ld VF CHAR:\t", 
+		 (long)(position - tfontp->mmap));
     tcharptr=xmalloc(sizeof(struct vf_char));
-    switch (*position)  {
+    switch (*position) {
     case LONG_CHAR:
       tcharptr->length = UNumRead(position+1,4);
-      if ((c = UNumRead(position+5,4))>NFNTCHARS) /* Only positive for now */
-	Fatal("vf character exceeds numbering limit");
-      tcharptr->tfmw = (int32_t) 
-	((int64_t) UNumRead(position+9,4) * tfontp->d / (1 << 20));
+      c = UNumRead(position+5,4);
+      tcharptr->tfmw = UNumRead(position+9,4);
       position += 13;
       break;
     default:
       tcharptr->length = UNumRead(position,1);
-      if ((c = UNumRead(position+1,1)) > NFNTCHARS)
-	Fatal("vf character exceeds numbering limit");
-      tcharptr->tfmw = (int32_t) 
-	((int64_t) UNumRead(position+2,3) * tfontp->d / (1 << 20));
+      c = UNumRead(position+1,1);
+      tcharptr->tfmw = UNumRead(position+2,3);
       position += 5;
     }
+    DEBUG_PRINTF2(DEBUG_VF,"%d %d",tcharptr->length,c);
+    DEBUG_PRINTF(DEBUG_VF," %d",tcharptr->tfmw);
+    tcharptr->tfmw = (int32_t) 
+      ((int64_t) tcharptr->tfmw * tfontp->d / (1 << 20));
+    DEBUG_PRINTF(DEBUG_VF," (%d)",tcharptr->tfmw);
+    if (c > NFNTCHARS) /* Only positive for now */
+      Fatal("vf character exceeds numbering limit");
     tfontp->vf_ch[c] = tcharptr;
     tcharptr->mmap=position;
     position += tcharptr->length;

@@ -9,27 +9,18 @@ void OpenFont P1C(struct font_entry*, tfontp)
 {
   if (tfontp->filep != NULL)
     return;         /* we need not have been called */
-
-#ifdef DEBUG
-  if (Debug)
-    printf("(OPEN %s) ", tfontp->name);
-#endif
-
+  DEBUG_PRINTF(DEBUG_DVI,"(OPEN %s) ", tfontp->name);
   if ((tfontp->filep = fopen(tfontp->name,"rb")) == NULL) {
     Warning("font file %s could not be opened", tfontp->name);
   } 
 }
 #endif
 
-/*-->ReadFontDef*/
-/**********************************************************************/
-/****************************  ReadFontDef  ***************************/
-/**********************************************************************/
-/* Report a warning if both checksums are nonzero, they don't match, and
-   the user hasn't turned it off.  */
 
 void CheckChecksum P3C(uint32_t, c1, uint32_t, c2, const char*, name)
 {
+  /* Report a warning if both checksums are nonzero, they don't match,
+     and the user hasn't turned it off.  */
   if (c1 && c2 && c1 != c2
 #ifdef KPATHSEA
       && !kpse_tex_hush ("checksum")
@@ -38,6 +29,7 @@ void CheckChecksum P3C(uint32_t, c1, uint32_t, c2, const char*, name)
      Warning ("Checksum mismatch in %s", name) ;
    }
 }
+
 
 double ActualFactor P1C(uint32_t, unmodsize)
 /* compute the actual size factor given the approximation */
@@ -69,21 +61,24 @@ void FontDef P2C(unsigned char*, command,
 		 struct dvi_vf_entry*, parent)
 {
   int32_t k;
+  uint32_t   c, s, d;
+  uint8_t    a, l;
   unsigned char* current;
   struct font_entry *tfontptr; /* temporary font_entry pointer   */
   struct font_num *tfontnump = NULL;  /* temporary font_num pointer   */
-  uint32_t   c, s, d;
-  uint8_t    a, l;
   unsigned short i;
 
   current = command + 1;
   k = UNumRead(current, (int)*command - FNT_DEF1 + 1);
+  DEBUG_PRINTF(DEBUG_DVI," %d",k)
   current += (int)*command - FNT_DEF1 + 1;
   c = UNumRead(current, 4); /* checksum */
+  DEBUG_PRINTF(DEBUG_DVI," %d %d",c)
   s = UNumRead(current+4, 4); /* space size */
-  d = UNumRead(current+8, 4); /* design size */
+  DEBUG_PRINTF(DEBUG_DVI," %d",s)
   if (parent->type==FONT_TYPE_VF) {
     s = (uint32_t)((uint64_t) s * parent->d / 65536);
+    DEBUG_PRINTF(DEBUG_DVI," (%d)",s)
     /* 
      * According to some docs I read it should be d / (1 << 20) ?
      * Whatever. Can anyone inform me how this is _really_ calculated?
@@ -92,14 +87,12 @@ void FontDef P2C(unsigned char*, command,
      * font is actually used, not the designsize.
     */
   }
+  d = UNumRead(current+8, 4); /* design size */
+  DEBUG_PRINTF(DEBUG_DVI," %d",d)
   a = UNumRead(current+12, 1); /* length for font name */
   l = UNumRead(current+13, 1); /* device length */
-
-#ifdef DEBUG
-  if (Debug)
-    printf("'%.*s' ",a+l,current+14);
-#endif
-
+  DEBUG_PRINTF2(DEBUG_DVI," %d %d",a,l)
+  DEBUG_PRINTF2(DEBUG_DVI," '%.*s'",a+l,current+14);
   if (a+l > STRSIZE-1)
     Fatal("too long font name for font %ld\n",k);
 
@@ -119,6 +112,7 @@ void FontDef P2C(unsigned char*, command,
       && tfontnump->fontp->s == s 
       && tfontnump->fontp->d == d 
       && strncmp(tfontnump->fontp->n,current+14,a+l) == 0) {
+    DEBUG_PRINTF(DEBUG_DVI,"\n  FONT %d:\tMatch found",k)
     return;
   }
   /* If not found, create new */
@@ -147,14 +141,12 @@ void FontDef P2C(unsigned char*, command,
   }
   /* If found, set its number and return */
   if (tfontptr!=NULL) {
-#ifdef DEBUG
-    if (Debug)
-      printf("(in unused list) ");
-#endif
+    DEBUG_PRINTF(DEBUG_DVI,"\n  FONT %d:\tFound in unused list",k);
     tfontnump->fontp = tfontptr; 
     return;
   }
 
+  DEBUG_PRINTF(DEBUG_DVI,"\n  FONT %d:\tNew entry created",k);
   /* No fitting font found, create new entry. */
   if ((tfontptr = NEW(struct font_entry )) == NULL)
     Fatal("can't malloc space for font_entry");
@@ -170,7 +162,7 @@ void FontDef P2C(unsigned char*, command,
   strncpy(tfontptr->n,current+14,a+l); /* full font name */
   tfontptr->n[a+l] = '\0';
   
-  tfontptr->name[0]='\0';
+  tfontptr->name[0] = '\0';
   for (i = FIRSTFNTCHAR; i <= LASTFNTCHAR; i++) {
     tfontptr->pk_ch[i] = NULL;
   }
@@ -191,12 +183,7 @@ void FontFind P1C(struct font_entry *,tfontptr)
   dpi = kpse_magstep_fix ((unsigned) (tfontptr->font_mag / 5.0 + .5),
 			resolution, NULL);
   tfontptr->font_mag = dpi * 5; /* save correct dpi */
-
-#ifdef DEBUG
-  if (Debug)
-    printf("(FIND %s %d) ",tfontptr->n,dpi);
-#endif
-
+  DEBUG_PRINTF2(DEBUG_DVI,"\n  FIND FONT:\t%s %d",tfontptr->n,dpi);
   name = kpse_find_vf (tfontptr->n);
   if (name) {
     strcpy (tfontptr->name, name);

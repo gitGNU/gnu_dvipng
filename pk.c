@@ -2,9 +2,6 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 
-/*
-#define DRAWGLYPH
-*/
 #define PK_POST 245
 #define PK_PRE 247
 #define PK_ID 89
@@ -57,16 +54,13 @@ int32_t SetPK P2C(int32_t, c, int, PassNo)
       }
     }
   }
-#ifdef DEBUG
-  if (Debug)
-    printf("(at (%d,%d)-(%d,%d) offset (%d,%d)) ",
-	   PIXROUND(h, dvi->conv*shrinkfactor),
-	   PIXROUND(v, ((dvi->conv)*shrinkfactor)),
-	   PIXROUND(ptr->xOffset,shrinkfactor),
-	   PIXROUND(ptr->yOffset,shrinkfactor),
-	   x_offset,y_offset);
-#endif
-
+  DEBUG_PRINTF(DEBUG_DVI,"\n  PK CHAR:\t%d",(int)c);
+  DEBUG_PRINTF2(DEBUG_DVI," at (%d,%d)",
+		PIXROUND(h,dvi->conv*shrinkfactor),
+		PIXROUND(v, dvi->conv*shrinkfactor));
+  DEBUG_PRINTF2(DEBUG_DVI,"-(%d,%d) ",PIXROUND(ptr->xOffset,shrinkfactor),
+		PIXROUND(ptr->yOffset,shrinkfactor));
+  DEBUG_PRINTF2(DEBUG_DVI,"offset (%d,%d)",x_offset,y_offset);
   return(ptr->tfmw);
 }
 
@@ -129,17 +123,15 @@ unsigned char* skip_specials P1C(unsigned char*,pos)
       i = 256 * i + *pos++;
     case 240:
       i = 256 * i + *pos++;
-#ifdef DEBUG
-      if (Debug)
-	printf("\nPK SPECIAL\t'%.*s' ",i,pos);
-#endif
+      DEBUG_PRINTF2(DEBUG_PK,"\n  PK SPECIAL\t'%.*s' ",i,pos);
       pos += i;
       break;
     case 244: 
 #ifdef DEBUG
-      if (Debug) {
-	printf("\nPK SPECIAL\t");
-	(void)UNumRead(pos,4);
+      { 
+	uint32_t c;
+	c=UNumRead(pos,4);
+	DEBUG_PRINTF(DEBUG_PK,"\n  PK SPECIAL\t%d",c);
       }
 #endif
       pos += 4;
@@ -147,10 +139,7 @@ unsigned char* skip_specials P1C(unsigned char*,pos)
     case 245: 
       break;
     case 246:
-#ifdef DEBUG
-      if (Debug)
-	printf("\nPK\tNOP ");
-#endif      
+      DEBUG_PUTS(DEBUG_PK,"\n  PK\tNOP ");
       break;
     case 247: case 248: case 249: case 250:
     case 251: case 252: case 253: case 254:
@@ -176,45 +165,34 @@ void LoadAChar P2C(int32_t, c, register struct pk_char *, ptr)
   bool  paint_switch;
   unsigned char*   pos;
 
-  /*  if (ptr->fileOffset == NONEXISTANT) {
-    ptr->isloaded = _FALSE;
-    return;
-    }*/
-
-  /*OpenFont(currentfont);*/
-
-#ifdef DEBUG
-  if (Debug)
-    printf("(LOAD CHAR %d ",c);
-#endif
-
-  /*fseek(currentfont->filep, ptr->fileOffset, SEEK_SET);*/
+  DEBUG_PRINTF(DEBUG_PK,"\n  LOAD PK CHAR\t%d",c);
   pos=ptr->mmap;
-
   if ((ptr->flag_byte & 7) == 7) n=4;
   else if ((ptr->flag_byte & 4) == 4) n=2;
   else n=1;
-
   dyn_f = ptr->flag_byte / 16;
   paint_switch = ((ptr->flag_byte & 8) != 0);
-
   /*
    *  Read character preamble
    */
-
-  i= (n!=4) ? 3 : 8;
-  /*  fread(buffer, 1, i+5*n, currentfont->filep);*/
-
   if (n != 4) {
     ptr->tfmw = UNumRead(pos, 3);
+    /* +n:   vertical escapement not used */
+    pos+=3+n;
   } else {
     ptr->tfmw = UNumRead(pos, 4);
     /* +4:  horizontal escapement not used */
+    /* +n:   vertical escapement not used */
+    pos+=8+n;
   }
-  /* +n:   vertical escapement not used */
-
-  width   = UNumRead(pos+=i+n, n);
+  DEBUG_PRINTF(DEBUG_PK," %d",ptr->tfmw);
+  ptr->tfmw = (int32_t)
+    ((int64_t) ptr->tfmw * currentfont->s / 0x100000 );
+  DEBUG_PRINTF(DEBUG_PK," (%d)",ptr->tfmw);
+  
+  width   = UNumRead(pos, n);
   height  = UNumRead(pos+=n, n);
+  DEBUG_PRINTF2(DEBUG_PK," %dx%d",width,height);
 
   if (width > 0x7fff || height > 0x7fff)
     Fatal("Character %d too large in file %s", c, currentfont->name);
@@ -248,51 +226,30 @@ void LoadAChar P2C(int32_t, c, register struct pk_char *, ptr)
 	       (yoffset-shrinkfactor/2) % shrinkfactor ) % shrinkfactor;
   height += j_offset;
   ptr->yOffset = yoffset+j_offset;
-
-  ptr->tfmw = (int32_t)
-    ( ptr->tfmw * (double)currentfont->s / (double)0x100000 );
-  
+  DEBUG_PRINTF2(DEBUG_PK," (%dx%d)",width,height);
   /* 
      Extra marginal so that we do not crop the image when shrinking.
   */
-
   shrunk_width = (width + shrinkfactor - 1) / shrinkfactor;
   shrunk_height = (height + shrinkfactor - 1) / shrinkfactor;
-
   /* 
      The glyph structure is a gdFont structure. Each glyph gets a font
      consisting of greyscales for the glyph. There is then enough
      space to hold the unshrunk glyph as well.
   */
-
   ptr->glyph.w = shrunk_width;
   ptr->glyph.h = shrunk_height;
-
   ptr->glyph.offset = 1;
   ptr->glyph.nchars = shrinkfactor*shrinkfactor;
-
   pos+=n;
-
-#ifdef DEBUG
-  if (Debug)
-    printf(") ");
-#endif
-
   if ((ptr->glyph.data 
        = (char*) calloc(shrunk_width*shrunk_height*shrinkfactor*shrinkfactor,
 			sizeof(char))) == NULL)
     Fatal("Unable to allocate image space for char <%c>\n", (char)c);
-
-#ifdef DRAWGLYPH
-  printf("Drawing character <%c>(%d), font %s\n",
-	 (char)c,(int)c,currentfont->name);
-  printf("Size:%dx%d\n",width,height);
-#endif
-
+  DEBUG_PRINTF(DEBUG_GLYPH, "DRAW GLYPH %d\n", (int)c);
   /*
     Raster char
   */
-
   if (dyn_f == 14) {	/* get raster by bits */
     int bitweight = 0;
     for (j = j_offset; j < (int) height; j++) {	/* get all rows */
@@ -303,17 +260,15 @@ void LoadAChar P2C(int32_t, c, register struct pk_char *, ptr)
 	  bitweight = 128;
 	}
 	if (count & bitweight) {
-	  ptr->glyph.data[i+j*width]++; 
-#ifdef DRAWGLYPH
-	  printf("*");
+	  ptr->glyph.data[i+j*width]++;
+#ifdef DEBUG
+	  DEBUG_PUTS(DEBUG_GLYPH, "*");
 	} else {
-	  printf(" ");
+	  DEBUG_PUTS(DEBUG_GLYPH, " ");
 #endif
 	}
       }
-#ifdef DRAWGLYPH
-      printf("|\n");
-#endif
+      DEBUG_PUTS(DEBUG_GLYPH, "|\n");
     }
   } else {		/* get packed raster */
     poshalf=0;
@@ -322,29 +277,28 @@ void LoadAChar P2C(int32_t, c, register struct pk_char *, ptr)
       count = pk_packed_num(&pos);
       while (count > 0) {
 	if (i+count < width) {
-	  if (paint_switch) {
-	    for(k=0;k<count;k++)
+	  if (paint_switch) 
+	    for(k=0;k<count;k++) {
 	      ptr->glyph.data[k+i+j*width]++;
-#ifdef DRAWGLYPH
-	    for(k=0;k<count;k++) printf("*");
-	  } else {
-	    for(k=0;k<count;k++) printf(" ");
+	      DEBUG_PUTS(DEBUG_GLYPH,"*");
+	    }
+#ifdef DEBUG
+	  else for(k=0;k<count;k++) 
+	    DEBUG_PUTS(DEBUG_GLYPH," ");
 #endif
-	  }
 	  i += count;
 	  count = 0;
 	} else {
-	  if (paint_switch) {
-	    for(k=i;k<width;k++) 
+	  if (paint_switch) 
+	    for(k=i;k<width;k++) {
 	      ptr->glyph.data[k+j*width]++;
-#ifdef DRAWGLYPH
-	    for(k=i;k<width;k++) printf("*");
-	    printf("|\n");
-	  } else {
-	    for(k=i;k<width;k++) printf(" ");
-	    printf("|\n");
+	      DEBUG_PUTS(DEBUG_GLYPH,"*");
+	    }
+#ifdef DEBUG
+	  else for(k=i;k<width;k++) 
+	    DEBUG_PUTS(DEBUG_GLYPH," ");
 #endif
-	  }
+	  DEBUG_PUTS(DEBUG_GLYPH,"|\n");
 	  j++;
 	  count -= width-i;
 	  /* Repeat row(s) */
@@ -352,16 +306,15 @@ void LoadAChar P2C(int32_t, c, register struct pk_char *, ptr)
 	    for (i = i_offset; i<width; i++) {
 	      ptr->glyph.data[i+j*width]=
 		ptr->glyph.data[i+(j-1)*width];
-#ifdef DRAWGLYPH
-	      if (ptr->glyph.data[i+j*width]>0) 
-		printf("*");
-	      else
-		printf(" ");
+#ifdef DEBUG
+	      if (ptr->glyph.data[i+j*width]>0) {
+		DEBUG_PUTS(DEBUG_GLYPH,"*");
+	      } else {
+		DEBUG_PUTS(DEBUG_GLYPH," ");
+	      }
 #endif
 	    }
-#ifdef DRAWGLYPH
-	    printf("|\n");
-#endif
+	    DEBUG_PUTS(DEBUG_GLYPH,"|\n");
 	  }
 	  i=i_offset;
 	}
@@ -374,13 +327,11 @@ void LoadAChar P2C(int32_t, c, register struct pk_char *, ptr)
     if (j>height)
       Warning("Bad pk file (%s), too many bits", currentfont->name);
   }
-
   /*
     Shrink raster while doing antialiasing. (See above. The
     single-glyph output seems better than what xdvi at 300 dpi,
     shrinkfactor 3 produces.)
   */
-
   for (j = 0; j < (int) height; j++) {	
     for (i = 0; i < (int) width; i++) {    
       if (((i % shrinkfactor) == 0) && ((j % shrinkfactor) == 0))
@@ -391,21 +342,18 @@ void LoadAChar P2C(int32_t, c, register struct pk_char *, ptr)
 	  ptr->glyph.data[i+j*width];
     }
   }	
-
-#ifdef DRAWGLYPH
+#ifdef DEBUG
   for (j = 0; j < shrunk_height; j++) {	
     for (i = 0; i < shrunk_width; i++) {    
-      printf("%d",ptr->glyph.data[i+j*shrunk_width]);
+      DEBUG_PRINTF(DEBUG_GLYPH,"%d",ptr->glyph.data[i+j*shrunk_width]);
     }
-    printf("\n");
+    DEBUG_PUTS(DEBUG_GLYPH,"|\n");
   }	 
 #endif
-
   /*
     Separate the different greyscales with the darkest last.
     See SetChar in set.c
   */
-
   for (j = 0; j < shrunk_height; j++) {	
     for (i = 0; i < shrunk_width; i++) {    
       for (k = shrinkfactor*shrinkfactor; k>0; k--) {
@@ -423,59 +371,43 @@ void InitPK  P1C(struct font_entry *,tfontp)
   unsigned char* position;
   struct pk_char *tcharptr; /* temporary pk_char pointer  */
   uint32_t    hppp, vppp, packet_length;
-  int     car;
+  uint32_t    c;
 
-  /*OpenFont(tfontp);*/
-#ifdef DEBUG
-  if (Debug)
-    printf("(OPEN %s) ", tfontp->name);
-#endif
-
+  DEBUG_PRINTF((DEBUG_DVI|DEBUG_PK),"\n  OPEN FONT:\t'%s'", tfontp->name);
   if ((tfontp->filedes = open(tfontp->name,O_RDONLY)) == -1) 
     Warning("font file %s could not be opened", tfontp->name);
-
   fstat(tfontp->filedes,&stat);
   tfontp->mmap = position = 
     mmap(NULL,stat.st_size, PROT_READ, MAP_SHARED,tfontp->filedes,0);
-
   if (*position++ != PK_PRE) 
     Fatal("unknown font format in file <%s> !\n",currentfont->name);
   if (*position++ != PK_ID) 
       Fatal( "wrong version of pk file!  (%d should be 89)\n",
 	     (int)*(position-1));
-
-#ifdef DEBUG
-  if (Debug) 
-    printf("(PK_PRE: '%.*s' ",(int)*position, position+1);
-#endif
+  DEBUG_PRINTF2(DEBUG_PK,"\n  PK_PRE:\t'%.*s'",(int)*position, position+1);
   position += *position + 1;
 
   tfontp->designsize = UNumRead(position, 4);
+  DEBUG_PRINTF(DEBUG_PK," %d", tfontp->designsize);
   tfontp->type = FONT_TYPE_PK;
   
-  CheckChecksum (tfontp->c, UNumRead(position+4, 4), tfontp->name);
+  c = UNumRead(position+4, 4);
+  DEBUG_PRINTF(DEBUG_PK," %d", c);
+  CheckChecksum (tfontp->c, c, tfontp->name);
 
   hppp = UNumRead(position+8, 4);
   vppp = UNumRead(position+12, 4);
+  DEBUG_PRINTF2(DEBUG_PK," %d %d", hppp,vppp);
   if (hppp != vppp)
     Warning("aspect ratio is %d:%d (should be 1:1)!", 
 	    hppp, vppp);
   tfontp->magnification = (uint32_t)(hppp * 72.27 * 5 / 65536l + 0.5);
-  
-#ifdef DEBUG
-  if (Debug)
-    printf(")");
-#endif
-
   position+=16;
   /* Read char definitions */
   position = skip_specials(position);
   while (*position != PK_POST) {
-#ifdef DEBUG
-    if (Debug)
-      printf("\n@%ld PK CHAR:\t%d ", (long)(position - tfontp->mmap),
-	     *position);
-#endif
+    DEBUG_PRINTF2(DEBUG_PK,"\n  @%ld PK CHAR:\t%d",
+		  (long)(position - tfontp->mmap), *position);
     if ((tcharptr = NEW(struct pk_char)) == NULL)
       Fatal("can't malloc space for pk_char");
     tcharptr->flag_byte = *position;
@@ -483,26 +415,27 @@ void InitPK  P1C(struct font_entry *,tfontp)
     tcharptr->tfmw = 0;
     if ((*position & 7) == 7) {
       packet_length = UNumRead(position+1,4);
-      car = UNumRead(position+5, 4);
+      c = UNumRead(position+5, 4);
       position += 9;
     } else if (*position & 4) {
       packet_length = (*position & 3) * 65536l +
 	UNumRead(position+1, 2);
-      car = UNumRead(position+3, 1);
+      c = UNumRead(position+3, 1);
       position += 4;
     } else {
       packet_length = (*position & 3) * 256 +
 	UNumRead(position+1, 1);
-      car = UNumRead(position+2, 1);
+      c = UNumRead(position+2, 1);
       position += 3;
     }
-    if (car > (LASTFNTCHAR))
-      Fatal("Bad character (%d) in PK-File\n",(int)car);
-    tcharptr->length = packet_length;
-    tcharptr->mmap = position;
-    tfontp->pk_ch[car]=tcharptr;
-    position += packet_length;
-    position = skip_specials(position);
+  DEBUG_PRINTF2(DEBUG_PK," %d %d",packet_length,c);
+  if (c > (LASTFNTCHAR))
+    Fatal("Bad character (%d) in PK-File\n",(int)c);
+  tcharptr->length = packet_length;
+  tcharptr->mmap = position;
+  tfontp->pk_ch[c]=tcharptr;
+  position += packet_length;
+  position = skip_specials(position);
   }
 }
 

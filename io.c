@@ -32,10 +32,6 @@ uint32_t UNumRead P2C(unsigned char*, current, register int, n)
   while(--n) {
     x = (x << 8) | *(current)++;
   }
-#ifdef DEBUG
-    if (Debug)
-      printf("%d ", x);
-#endif
   return(x);
 }
 
@@ -52,10 +48,7 @@ int32_t SNumRead P2C(unsigned char*, current, register int, n)
   while(--n) { 
     x = (x << 8) | *(current)++;
   }
-#ifdef DEBUG
-    if (Debug)
-      printf("%d ", x);
-#endif
   return(x);
 }
+
 
