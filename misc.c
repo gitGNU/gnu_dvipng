@@ -127,12 +127,19 @@ bool DecodeArgs(int argc, char ** argv)
 	handlepapersize(p, &x_offset_def, &y_offset_def) ;
 	Message(PARSE_STDIN,"Offset: (%d,%d)\n",x_offset_def,y_offset_def);
         break ;
-      case 'T' :
-	flags &= ~EXPAND_BBOX;
-	if (*p == 'x') {
-	  flags |= EXPAND_BBOX;
-	  p++;
+      case 'e':
+	if (strncmp(p,"xpand-bbox",10) == 0 ) {	
+	  if (p[8] != '0') {
+	    flags |= EXPAND_BBOX;
+	    Message(PARSE_STDIN,"BBox expansion on\n",p);
+	  } else {
+	    flags &= ~EXPAND_BBOX;
+	    Message(PARSE_STDIN,"BBox expansion off\n");
+	  }
+	  break;
 	}
+	goto DEFAULT;
+      case 'T' :
 	if (*p == 0 && argv[i+1])
 	  p = argv[++i];
 	if (strcmp(p,"bbox")==0) {
@@ -145,10 +152,7 @@ bool DecodeArgs(int argc, char ** argv)
 	  Message(PARSE_STDIN,"Pagesize: (tight bbox)\n");
 	} else {
 	  handlepapersize(p, &x_width_def, &y_width_def) ;
-	  Message(PARSE_STDIN,"Pagesize: ");
-	  if (flags & EXPAND_BBOX)
-	    Message(PARSE_STDIN,"expanded from ");
-	  Message(PARSE_STDIN,"(%d,%d)\n",
+	  Message(PARSE_STDIN,"Pagesize: (%d,%d)\n",
 		  x_width_def,y_width_def);
 	}
 	break ;
