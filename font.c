@@ -11,7 +11,7 @@ void OpenFont P1C(struct font_entry*, tfontp)
 
 #ifdef DEBUG
   if (Debug)
-    printf("OPEN FONT FILE %s\n", tfontp->name);
+    printf("(OPEN %s) ", tfontp->name);
 #endif
 
   if ((tfontp->filep = fopen(tfontp->name,"rb")) == FPNULL) {
@@ -27,7 +27,7 @@ void OpenFont P1C(struct font_entry*, tfontp)
 /* Report a warning if both checksums are nonzero, they don't match, and
    the user hasn't turned it off.  */
 
-void CheckChecksum P3C(unsigned, c1, unsigned, c2, const char*, name)
+void CheckChecksum P3C(uint32_t, c1, uint32_t, c2, const char*, name)
 {
   if (c1 && c2 && c1 != c2
 #ifdef KPATHSEA
@@ -38,7 +38,7 @@ void CheckChecksum P3C(unsigned, c1, unsigned, c2, const char*, name)
    }
 }
 
-double ActualFactor P1C(long4, unmodsize)
+double ActualFactor P1C(uint32_t, unmodsize)
 /* compute the actual size factor given the approximation */
 /* actually factor * 1000 */
 {
@@ -67,13 +67,12 @@ double ActualFactor P1C(long4, unmodsize)
 void FontDef P2C(unsigned char*, command, 
 		 struct font_entry*, vfparent)
 {
-  long4 k;
+  int32_t k;
   unsigned char* current;
   struct font_entry *tfontptr; /* temporary font_entry pointer   */
   struct font_num *tfontnump;  /* temporary font_num pointer   */
-  long4   c, s, d;
-  int     a, l;
-  char n[STRSIZE];          /* FNT_DEF command parameters                */
+  uint32_t   c, s, d;
+  uint8_t    a, l;
   unsigned short i;
 
   current = command + 1;
@@ -83,7 +82,7 @@ void FontDef P2C(unsigned char*, command,
   s = UNumRead(current+4, 4); /* space size */
   d = UNumRead(current+8, 4); /* design size */
   /*  if (vfparent->d > 0) { */
-     s = (long4)((long long) s * vfparent->d / 65536);
+     s = (uint32_t)((uint64_t) s * vfparent->d / 65536);
 	/* 
 	   According to some docs I read it should rather be 
 	   d / (1 << 20) ? Whatever. Can anyone inform me how this is
@@ -96,10 +95,13 @@ void FontDef P2C(unsigned char*, command,
   a = UNumRead(current+12, 1); /* length for font name */
   l = UNumRead(current+13, 1); /* device length */
 
+#ifdef DEBUG
+  if (Debug)
+    printf("'%.*s' ",a+l,current+14);
+#endif
+
   if (a+l > STRSIZE-1)
     Fatal("too long font name for font %ld\n",k);
-  strncpy(n,current+14,a+l);
-  n[a+l] = '\0';
 
   /* Find entry with this font number in use */
   tfontnump = vfparent->hfontnump;
@@ -110,7 +112,7 @@ void FontDef P2C(unsigned char*, command,
   if (tfontnump!=NULL 
       && tfontnump->fontp->s == s 
       && tfontnump->fontp->d == d 
-      && strcmp(tfontnump->fontp->n,n) == 0) {
+      && strncmp(tfontnump->fontp->n,current+14,a+l) == 0) {
     return;
   }
   /* If not found, create new */
@@ -122,34 +124,25 @@ void FontDef P2C(unsigned char*, command,
     vfparent->hfontnump=tfontnump;
   }
 
-  if (Debug)
-    printf("DEF FONT%ld: %s\n",k,n);
-
   /* Search font list for possible match */
   tfontptr = hfontptr;
   while (tfontptr != NULL 
 	 && (tfontptr->s != s 
 	     || tfontptr->d != d 
-	     || strcmp(tfontptr->n,n) != 0 ) ) {
+	     || strncmp(tfontptr->n,current+14,a+l) != 0 ) ) {
     tfontptr = tfontptr->next;
   }
   /* If found, set its number and return */
   if (tfontptr!=NULL) {
 #ifdef DEBUG
     if (Debug)
-      printf("FOUND FONT%ld in unused list\n",k);
+      printf("(in unused list) ");
 #endif
     tfontnump->fontp = tfontptr; 
     return;
   }
 
   /* No fitting font found, create new entry. */
-#ifdef DEBUG
-  if (Debug)
-    printf("Mallocating %d bytes...\n", 
-	   sizeof(struct font_entry ));
-#endif
-
   if ((tfontptr = NEW(struct font_entry )) == NULL)
     Fatal("can't malloc space for font_entry");
 
@@ -162,10 +155,11 @@ void FontDef P2C(unsigned char*, command,
   tfontptr->d = d; /* design size */
   tfontptr->a = a; /* length for font name */
   tfontptr->l = l; /* device length */
-  strcpy(tfontptr->n,n);
+  strncpy(tfontptr->n,current+14,a+l); /* full font name */
+  tfontptr->n[a+l] = '\0';
   
   tfontptr->font_mag = 
-    (long4)((ActualFactor((long4)(1000.0*tfontptr->s
+    (uint32_t)((ActualFactor((uint32_t)(1000.0*tfontptr->s
 				  /(double)tfontptr->d+0.5))
 	     * ActualFactor(mag) * resolution * 5.0) + 0.5);
   /*  if (vf_size > 0) {
@@ -189,7 +183,7 @@ void FontFind P1C(struct font_entry *,tfontptr)
 
 #ifdef DEBUG
   if (Debug)
-    printf("FONT FIND: %s %d\n",tfontptr->n,dpi);
+    printf("(FIND %s %d) ",tfontptr->n,dpi);
 #endif
 
   name = kpse_find_vf (tfontptr->n);
@@ -249,7 +243,7 @@ void FontFind P1C(struct font_entry *,tfontptr)
 /**********************************************************************/
 /****************************  SetFntNum  *****************************/
 /**********************************************************************/
-void SetFntNum P1C(long4, k)
+void SetFntNum P1C(int32_t, k)
 /*  this routine is used to specify the font to be used in printing future
     characters */
 {
@@ -259,29 +253,12 @@ void SetFntNum P1C(long4, k)
   while (tfontnump != NULL && tfontnump->k != k)
     tfontnump = tfontnump->next;
   if (tfontnump == NULL)
-    Fatal("font %ld undefined", (long)k);
+    Fatal("font %d undefined", k);
 
   vfstack[vfstackptr] = tfontnump->fontp;
   if (vfstack[vfstackptr]->name[0]=='\0')
     FontFind(vfstack[vfstackptr]);
 }
 
-
-/*-->SkipFontDef*/
-/**********************************************************************/
-/****************************  SkipFontDef  ***************************/
-/**********************************************************************/
-void SkipFontDef P1H(void)
-{
-  int     a, l;
-  char    n[STRSIZE];
-  
-  (void) NoSignExtend(dvi.filep, 4);
-  (void) NoSignExtend(dvi.filep, 4);
-  (void) NoSignExtend(dvi.filep, 4);
-  a = (int)NoSignExtend(dvi.filep, 1);
-  l = (int)NoSignExtend(dvi.filep, 1);
-  GetBytes(dvi.filep, n, a + l);
-}
 
     
