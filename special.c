@@ -37,8 +37,8 @@ ps2png(const char *psfile, int hresolution, int vresolution,
       dup2(downpipe[0], STDIN_FILENO);
       close(downpipe[0]);
       DEBUG_PRINT(DEBUG_GS,
-		  ("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s %s %s",
-		   GS_PATH, device, resolution, devicesize,
+		  ("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s %s ",// %s",
+		   GS_PATH, device, resolution, //devicesize,
 		   "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
 		   "-sOutputFile=-", 
 		   "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
@@ -46,7 +46,7 @@ ps2png(const char *psfile, int hresolution, int vresolution,
       close(uppipe[0]);
       dup2(uppipe[1], STDOUT_FILENO);
       close(uppipe[1]);
-      execl (GS_PATH, GS_PATH, device, resolution, devicesize,
+      execl (GS_PATH, GS_PATH, device, resolution, //devicesize,
 	     "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
 	     "-sOutputFile=-", 
 	     "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
@@ -59,6 +59,10 @@ ps2png(const char *psfile, int hresolution, int vresolution,
       close(downpipe[0]);
       psstream=fdopen(downpipe[1],"w");
       if (psstream) {
+	DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\t<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice",
+	       urx - llx, ury - lly,llx,lly));
+       fprintf(psstream, "<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice\n",
+               urx - llx, ury - lly,llx,lly);
 	if ( bRed < 255 || bGreen < 255 || bBlue < 255 ) {
 	  DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\tgsave %f %f %f setrgbcolor clippath fill grestore",
 		       bRed/256.0, bGreen/256.0, bBlue/256.0));
