@@ -79,16 +79,16 @@ ps2png(const char *psfile, int hresolution, int vresolution,
 #ifdef DEBUG
     if (flags & NO_GSSAFER) {
       DEBUG_PRINT(DEBUG_GS,
-		  ("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s ",// %s",
-		   GS_PATH, device, resolution, //devicesize,
+		  ("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s ",/* %s", */
+		   GS_PATH, device, resolution, /* devicesize, */
 		   "-dBATCH", "-dNOPAUSE", "-q", 
 		   "-sOutputFile=-", 
 		   "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
 		   "-"));
     } else {
       DEBUG_PRINT(DEBUG_GS,
-		  ("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s %s ",// %s",
-		   GS_PATH, device, resolution, //devicesize,
+		  ("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s %s ",/* %s", */
+		   GS_PATH, device, resolution, /*devicesize,*/
 		   "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
 		   "-sOutputFile=-", 
 		   "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
@@ -99,13 +99,13 @@ ps2png(const char *psfile, int hresolution, int vresolution,
     dup2(uppipe[1], STDOUT_FILENO);
     close(uppipe[1]);
     if (flags & NO_GSSAFER) 
-      execl (GS_PATH, GS_PATH, device, resolution, //devicesize,
+      execl (GS_PATH, GS_PATH, device, resolution, /*devicesize,*/
 	     "-dBATCH", "-dNOPAUSE", "-q", 
 	     "-sOutputFile=-", 
 	     "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
 	     "-",NULL);
     else
-      execl (GS_PATH, GS_PATH, device, resolution, //devicesize,
+      execl (GS_PATH, GS_PATH, device, resolution, /*devicesize,*/
 	     "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
 	     "-sOutputFile=-", 
 	     "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
@@ -129,28 +129,28 @@ ps2png(const char *psfile, int hresolution, int vresolution,
   }
   if (flags & NO_GSSAFER) {
     DEBUG_PRINT(DEBUG_GS,
-		("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s ",// %s",
-		 szGsPath, device, resolution, //devicesize,
+		("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s ",/* %s",*/
+		 szGsPath, device, resolution, /*devicesize,*/
 		 "-dBATCH", "-dNOPAUSE", "-q", 
 		 "-sOutputFile=-", 
 		 "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
 		 "-"));
-    sprintf(szCommandLine,"\"%s\" %s %s %s %s %s %s %s %s %s",// %s",
-	    szGsPath, device, resolution, //devicesize,
+    sprintf(szCommandLine,"\"%s\" %s %s %s %s %s %s %s %s %s",/* %s",*/
+	    szGsPath, device, resolution, /*devicesize,*/
 	    "-dBATCH", "-dNOPAUSE", "-q", 
 	    "-sOutputFile=-", 
 	    "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
 	    "-");
   } else {
     DEBUG_PRINT(DEBUG_GS,
-		("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s %s ",// %s",
-		 szGsPath, device, resolution, //devicesize,
+		("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s %s ",/* %s",*/
+		 szGsPath, device, resolution, /*devicesize,*/
 		 "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
 		 "-sOutputFile=-", 
 		 "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
 		 "-"));
-    sprintf(szCommandLine,"\"%s\" %s %s %s %s %s %s %s %s %s %s",// %s",
-	    szGsPath, device, resolution, //devicesize,
+    sprintf(szCommandLine,"\"%s\" %s %s %s %s %s %s %s %s %s %s",/* %s",*/
+	    szGsPath, device, resolution, /*devicesize,*/
 	    "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
 	    "-sOutputFile=-", 
 	    "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
