@@ -131,9 +131,19 @@ named COPYING and dvipng.c.");
 	  p++;
 	  if (*p == 0 && argv[i+1])
 	    p = argv[++i] ;
-	  background(p);
-	  if (ParseStdin)
-	    printf("Background: rgb %d,%d,%d\n",bRed,bGreen,bBlue);
+	  if (strncmp(p,"Transparent",11) == 0 ) {
+	    borderwidth=-1;
+	  } else {
+	    background(p);
+	  }
+	  if (ParseStdin) {
+	    if (borderwidth>=0) {
+	      printf("Background: rgb %d,%d,%d\n",bRed,bGreen,bBlue);
+	    } else {
+	      printf("Transp. background (fallback rgb %d,%d,%d)\n",
+		     bRed,bGreen,bBlue);
+	    }
+	  } 
 	} else if ( *p == 'd' ) { /* -bd border width */
 	  p++;
 	  if (*p == 0 && argv[i+1])
@@ -141,7 +151,7 @@ named COPYING and dvipng.c.");
 	  if ( sscanf(p, "%d", &borderwidth) != 1 )
 	    Fatal("argument of -bd is not a valid integer\n");
 	  if (ParseStdin)
-	    printf("Transp. border: %d\n",borderwidth);
+	    printf("Transp. border: %d dots\n",borderwidth);
 	}
 	break;
       case 'f':
@@ -252,9 +262,7 @@ named COPYING and dvipng.c.");
       }
     } else {
       if (dvi != NULL && dvi->filep != FPNULL) {
-	DelPageList();
-	fclose(dvi->filep);
-	free(dvi);
+	DVIClose(dvi);
       }
       dvi=DVIOpen(argv[i]);
       if ((hpagelistp=InitPage())==NULL)
