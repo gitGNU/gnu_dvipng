@@ -189,7 +189,7 @@ struct font_entry {    /* font entry */
   uint32_t     c, s, d;                                                
   uint8_t      a, l;                                                   
   char         n[STRSIZE];      /* FNT_DEF command parameters        */
-  uint32_t     font_mag;        /* computed from s and d             */
+  int          dpi;             /* computed from s and d             */
   char         name[STRSIZE];   /* full name of PK/VF file           */
   int          filedes;         /* file descriptor                   */
   unsigned char* mmap,*end;     /* memory map                        */
@@ -382,8 +382,10 @@ EXTERN struct timeb timebuffer;
 # endif
 #endif /* TIMING */
 
-EXTERN int   resolution INIT(300);
-EXTERN char *MFMODE     INIT("cx");
+EXTERN char*  user_mfmode          INIT(NULL);
+EXTERN int    user_bdpi            INIT(0);
+EXTERN int    dpi                  INIT(100);
+
 #ifdef HAVE_GDIMAGEPNGEX
 EXTERN int   compression INIT(1);
 #endif

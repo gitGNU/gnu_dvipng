@@ -1,6 +1,5 @@
 #include "dvipng.h"
 
-
 void CheckChecksum(uint32_t c1, uint32_t c2, const char* name)
 {
   /* Report a warning if both checksums are nonzero, they don't match,
@@ -150,10 +149,10 @@ void FontDef(unsigned char* command, void* parent)
     tfontptr->chr[i] = NULL;
   }
 
-  tfontptr->font_mag = 
+  tfontptr->dpi = 
     (uint32_t)((ActualFactor((uint32_t)(1000.0*tfontptr->s
 				  /(double)tfontptr->d+0.5))
-	     * ActualFactor(dvi->mag) * resolution * 5.0) + 0.5);
+	     * ActualFactor(dvi->mag) * dpi*shrinkfactor) + 0.5);
 }
 
 #ifdef HAVE_FT2
@@ -171,16 +170,13 @@ void FontFind(struct font_entry * tfontptr)
 #ifdef HAVE_LIBKPATHSEA
   kpse_glyph_file_type font_ret;
   char *name;
-  unsigned dpi;  
 #ifdef HAVE_FT2
   FT_Matrix *transform=NULL;
   char *encoding=NULL,*psfile;
 #endif
 
-  dpi = kpse_magstep_fix ((unsigned) (tfontptr->font_mag / 5.0 + .5),
-			resolution, NULL);
-  tfontptr->font_mag = dpi * 5; /* save correct dpi */
-  DEBUG_PRINT(DEBUG_DVI,("\n  FIND FONT:\t%s %d",tfontptr->n,dpi));
+  //tfontptr->dpi = kpse_magstep_fix (tfontptr->dpi, resolution, NULL);
+  DEBUG_PRINT(DEBUG_DVI,("\n  FIND FONT:\t%s %d",tfontptr->n,tfontptr->dpi));
 
   name = kpse_find_vf (tfontptr->n);
   if (name!=NULL) {
@@ -201,7 +197,7 @@ void FontFind(struct font_entry * tfontptr)
       free (name);
       name = kpse_find_file(tfontptr->n, kpse_tfm_format, false);
       if (name!=NULL) {
-	if (InitFT(tfontptr,dpi,encoding,transform)) {
+	if (InitFT(tfontptr,tfontptr->dpi,encoding,transform)) {
 	  if (!ReadTFM(tfontptr,name)) {
 	    /* if Freetype or TFM loading fails for some reason, fall
 	       back to PK font */
@@ -220,26 +216,26 @@ void FontFind(struct font_entry * tfontptr)
   }
 #endif
   if (name==NULL) {
-    name = kpse_find_pk (tfontptr->n, dpi, &font_ret);
+    name = kpse_find_pk (tfontptr->n, tfontptr->dpi, &font_ret);
     if (name!=NULL) {
       strcpy (tfontptr->name, name);
       free (name);
       
       if (!FILESTRCASEEQ (tfontptr->n, font_ret.name)) {
 	flags |= PAGE_GAVE_WARN;
-	Warning("font %s not found, using %s at %d instead.\n",
+	Warning("font %s not found, using %s at %d dpi instead.\n",
 		tfontptr->n, font_ret.name, font_ret.dpi);
 	tfontptr->c = 0; /* no checksum warning */
-      } else if (!kpse_bitmap_tolerance ((double)font_ret.dpi, (double) dpi)) {
+      } else if (!kpse_bitmap_tolerance ((double)font_ret.dpi, (double) tfontptr->dpi)) {
 	flags |= PAGE_GAVE_WARN;
-	Warning("font %s at %d not found, using %d instead.\n",
-		tfontptr->name, dpi, font_ret.dpi);
+	Warning("font %s at %d dpi not found, using %d dpi instead.\n",
+		tfontptr->name, tfontptr->dpi, font_ret.dpi);
       }
       InitPK(tfontptr);
     } else {
       flags |= PAGE_GAVE_WARN;
-      Warning("font %s at %u not found, characters will be left blank.\n",
-	      tfontptr->n, dpi);
+      Warning("font %s at %u dpi not found, characters will be left blank.\n",
+	      tfontptr->n, tfontptr->dpi);
       strcpy (tfontptr->name, "None");
       tfontptr->filedes = 0;
       tfontptr->magnification = 0;
@@ -251,14 +247,14 @@ void FontFind(struct font_entry * tfontptr)
   /* Total argh, since none of this is adapted to vf and the like */
   if (!(findfile(PXLpath,
 		 tfontptr->n,
-		 tfontptr->font_mag,
+		 tfontptr->dpi,
 		 tfontptr->name,
 		 _FALSE,
 		 0))) {
     Warning(tfontptr->name); /* contains error messsage */
     tfontptr->filedes = 0;
 #ifdef __riscos
-    MakeMetafontFile(PXLpath, tfontptr->n, tfontptr->font_mag);
+    MakeMetafontFile(PXLpath, tfontptr->n, tfontptr->dpi);
 #endif
   }
 #endif 

@@ -106,7 +106,7 @@ int32_t myatodim(char ** s)
          break ;
       }
    /*w = scale(w, num, den, sc) ;*/
-   w = (int32_t)((int64_t) scale(w, num, den, sc)*resolution
+   w = (int32_t)((int64_t) scale(w, num, den, sc)*dpi*shrinkfactor
 		 /shrinkfactor/4736286L);
    *s = p ;
    return(negative?-w:w) ;
@@ -123,4 +123,32 @@ void handlepapersize(char * p, int32_t * x, int32_t * y)
    while (*p == ' ' || *p == ',')
       p++ ;
    *y = myatodim(&p) ;
+}
+
+const char *lengthnames[]={ "sp", "pt", "bp", 
+			    "dd", "mm", "pc", 
+			    "cc", "cm", "in" };
+const int32_t lengthsp[]={ 1L, 65536L, 65782L,
+			   70124L, 186468L, 786432L, 
+			   841489L, 1864680L, 4736286L };
+
+int32_t myatodim2(char ** p)
+{ 
+  double tmp;
+  int i=0;
+
+  tmp = strtod(*p,p);
+  while (**p == ' ') 
+    *p++;
+  while (i<9 && *p[0]==lengthnames[i][0] 
+	 && *p[1]==lengthnames[i][1])
+    i++;
+  if (i==9) {
+    Warning("Unrecognized length unit \"%.2s\", assuming inches.",*p);
+    i=8;
+  }
+  while (**p != ',' && **p !='\0')
+    *p++;
+  tmp*=lengthsp[i];
+  return((int32_t) tmp);
 }

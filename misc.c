@@ -101,8 +101,8 @@ bool DecodeArgs(int argc, char ** argv)
       case 'm':
 	if (strcmp(p,"ode") == 0 ) {
 	  if (argv[i+1])
-	    MFMODE = argv[++i] ;
-	  Message(PARSE_STDIN,"MetaFont mode: %s\n",MFMODE);
+	    user_mfmode = argv[++i] ;
+	  Message(PARSE_STDIN,"MetaFont mode: %s\n",user_mfmode);
 	  break;
 	}
 	goto DEFAULT;
@@ -212,6 +212,15 @@ bool DecodeArgs(int argc, char ** argv)
 	  else 
 	    Message(PARSE_STDIN,"Transp. background (fallback rgb %d,%d,%d)\n",
 		    bRed,bGreen,bBlue);
+	  break;
+	} else if (strcmp(p, "dpi")==0) {
+	  p+=3;
+	  if (*p == 0 && argv[i+1])
+	    p = argv[++i] ;
+	  user_bdpi = atoi(p);
+	  if (user_bdpi < 10 || user_bdpi > 10000)
+	    Fatal("bad --bdpi parameter (-D).") ;
+	  Message(PARSE_STDIN,"Bdpi: %d\n",user_bdpi);
 	  break;
 	} else if ( *p == 'd' ) { /* -bd border width */
 	  p++;
@@ -335,10 +344,10 @@ named COPYING and dvipng.c.");
       case 'D' :
 	if (*p == 0 && argv[i+1])
 	  p = argv[++i] ;
-	resolution = atoi(p);
-	if (resolution < 10 || resolution > 10000)
-	  Fatal("bad dpi parameter (-D).") ;
-	Message(PARSE_STDIN,"Dpi: %d\n",resolution);
+	dpi = atoi(p);
+	if (dpi < 10 || dpi > 10000)
+	  Fatal("bad -D parameter.") ;
+	Message(PARSE_STDIN,"Dpi: %d\n",dpi);
 	break;
       case 'Q':       /* quality (= shrinkfactor) */
 	if (*p == 0 && argv[i+1])
@@ -510,8 +519,6 @@ void Fatal (char *fmt, ...)
 #endif  
   exit(EXIT_FAILURE);
 }
-
-
 
 /*-->Warning*/
 /**********************************************************************/

@@ -61,7 +61,13 @@ int main(int argc, char ** argv)
   putenv(ENV_SELFAUTOPARENT);
 # endif
   kpse_set_program_enabled (kpse_pk_format, makeTexPK, kpse_src_compile);
-  kpse_init_prog("DVIPNG", resolution, MFMODE, "cmr10");
+  if (user_mfmode)
+    if (user_bdpi)
+      kpse_init_prog("DVIPNG", user_bdpi, user_mfmode, "cmr10");
+    else 
+      Fatal("--mfmode given without --bdpi. Note that the -D option has changed\nfrom base resolution to _output_ resolution. Read the file RELEASE.");
+  else
+    kpse_init_prog("DVIPNG", 300, "cx", "cmr10");
 #endif
 
 #ifdef HAVE_FT2

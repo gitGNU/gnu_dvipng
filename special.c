@@ -155,11 +155,11 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
     
     /* Calculate resolution, and use our base resolution as a fallback. */
     /* The factor 10 is magic, the dvips graphicx driver needs this.    */
-    hresolution = resolution/shrinkfactor*rwi/(urx - llx)/10;
-    vresolution = resolution/shrinkfactor*rhi/(ury - lly)/10;
+    hresolution = dpi*rwi/(urx - llx)/10;
+    vresolution = dpi*rhi/(ury - lly)/10;
     if (vresolution==0) vresolution = hresolution;
     if (hresolution==0) hresolution = vresolution;
-    if (hresolution==0) hresolution = vresolution = resolution/shrinkfactor;
+    if (hresolution==0) hresolution = vresolution = dpi;
     
     if (page_imagep != NULL) { /* Draw into image */
       char* psfile = kpse_find_file(psname,kpse_pict_format,0);

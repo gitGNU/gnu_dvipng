@@ -51,7 +51,7 @@ void DVIInit(struct dvi_data* dvi)
   }
   dvi->conv = (1.0/(((double)dvi->num / (double)dvi->den) *
 		    ((double)dvi->mag / 1000.0) *
-		    ((double)resolution/254000.0)))+0.5;
+		    ((double)dpi*shrinkfactor/254000.0)))+0.5;
   DEBUG_PRINT(DEBUG_DVI,(" (%d)",dvi->conv));
   k = UNumRead(pre+14,1);
   DEBUG_PRINT(DEBUG_DVI,(" '%.*s'",k,pre+15));
