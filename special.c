@@ -231,8 +231,8 @@ void DoSpecial P2C(char *,str, int, n)
     break ;
   default:
     Warning("at (%ld,%ld) unimplemented \\special{%.*s}.",
-	    PIXROUND(h,conv*shrinkfactor),
-	    PIXROUND(v,conv*shrinkfactor),n,str);
+	    PIXROUND(h,dvi->conv*shrinkfactor),
+	    PIXROUND(v,dvi->conv*shrinkfactor),n,str);
   }
 }
 
@@ -323,8 +323,8 @@ if ((k.v.i >= 0) && (k.v.i < 2)) {*/
         if (i>1) {
 	#ifdef LJ*/
 	  /*          SetPosn(p_x[j], p_y[j]); */
-/*          x_pos = (long4)PIXROUND(p_x[j1]-p_x[j], conv*shrinkfactor);
-          y_pos = (long4)PIXROUND(p_y[j1]-p_y[j], conv*shrinkfactor);
+/*          x_pos = (long4)PIXROUND(p_x[j1]-p_x[j], dvi->conv*shrinkfactor);
+          y_pos = (long4)PIXROUND(p_y[j1]-p_y[j], dvi->conv*shrinkfactor);
           if (labs(x_pos)<labs(y_pos)) x_pos = x_pos+3;
           else                         y_pos = y_pos+3;
           if (GrayFill) {*/
@@ -394,16 +394,16 @@ if (psfile) {*/
         char scale_file_name[255];
         char *scale_file = tmpnam(scale_file_name);
         char *pcl_file = tmpnam(NULL);  
-        FILEPTR scalef;
+        FILE* scalef;
 
-        if ( (scalef = BOUTOPEN(scale_file)) == FPNULL ) {
+        if ( (scalef = fopen(scale_file,"wb")) == NULL ) {
           Warning("Unable to open file %s for writing", scale_file );
           return;
         }
         fprintf(scalef, "%.2f %.2f scale\n%d %d translate\n",  
                 300.0/scale_factor, 300.0/scale_factor,
                 0, adjusted_height == height ? 0 : ury);
-        BCLOSE( scalef );
+        fclose( scalef );
 
 #ifdef WIN32
 	gs_path = getenv("GS_PATH");
@@ -429,16 +429,16 @@ if (psfile) {*/
                   llx, height, adjusted_llx, adjusted_height);
           
           fprintf(stderr, "OLD x=%d, y=%d\n", 
-                  (int)PIXROUND(h, conv*shrinkfactor) + x_goffset,
-                  (int)PIXROUND(v, conv*shrinkfactor) + y_goffset);
+                  (int)PIXROUND(h, dvi->conv*shrinkfactor) + x_goffset,
+                  (int)PIXROUND(v, dvi->conv*shrinkfactor) + y_goffset);
 #endif  
           v -= 65536l*adjusted_height;*/ /**300/scale_factor;*/
 /*        h -= 65536l*adjusted_llx; *//* *300/scale_factor;*/
 	  /* SetPosn(h, v);*/
 /*#ifdef DEBUGGS   
           fprintf(stderr, "NEW x=%d, y=%d\n", 
-                  (int)PIXROUND(h, conv*shrinkfactor) + x_goffset,
-                  (int)PIXROUND(v, conv*shrinkfactor) + y_goffset);
+                  (int)PIXROUND(h, dvi->conv*shrinkfactor) + x_goffset,
+                  (int)PIXROUND(v, dvi->conv*shrinkfactor) + y_goffset);
 #endif
 */
           /*CopyHPFile( pcl_file );*/
