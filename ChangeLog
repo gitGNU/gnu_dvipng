@@ -1,3 +1,8 @@
+2004-08-18  Jan-Åke Larsson  <jalar@mai.liu.se>
+
+	* draw.c, misc.c, dvipng.c, dvipng.h:
+	Add an intermediate exit status
+
 2004-08-17  Jan-Åke Larsson  <jalar@mai.liu.se>
 
 	* misc.c: add --gamma switch
