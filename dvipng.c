@@ -68,9 +68,6 @@ char    *argv[];
   for (i = 0; i <= MAXOPEN; i++)
     pixel_files[i].pixel_file_id = FPNULL;
 
-  x_origin = XDEFAULTOFF; /* x-origin in dots                    */
-  y_origin = YDEFAULTOFF; /* y-origin in dots                    */
-
   setbuf(ERR_STREAM, NULL);
   (void) strcpy(G_progname, argv[0]);
 #ifdef KPATHSEA
@@ -118,7 +115,7 @@ char    *argv[];
     k = (int)NoSignExtend(dvifp, 1);
     GetBytes(dvifp, n, k);
   }
-  PassNo = 0;
+  PassNo = PASS_SKIP;
   while (_TRUE)  {
     command = (short) NoSignExtend(dvifp, 1);
 #ifdef DEBUG
@@ -128,15 +125,14 @@ char    *argv[];
     if (/*command >= SETC_000 &&*/ command <= SETC_127) {
       SetChar(command, command, PassNo);
     } else if (command >= FONT_00 && command <= FONT_63) {
-        /*if (!SkipMode)*/
-      SetFntNum((long4)command - FONT_00, Emitting);
+      if ( PassNo != PASS_SKIP )
+	SetFntNum((long4)command - FONT_00, Emitting);
     } else switch (command)  {
     case PUT1:
     case PUT2:
     case PUT3:
     case PUT4:
       val = NoSignExtend(dvifp, (int)command - PUT1 + 1);
-      /*if (!SkipMode)*/
       SetChar(val, command, PassNo);
       break;
     case SET1:
@@ -144,19 +140,16 @@ char    *argv[];
     case SET3:
     case SET4:
       val = NoSignExtend(dvifp, (int)command - SET1 + 1);
-      /*      if (!SkipMode)*/
       SetChar(val, command, PassNo);
       break;
     case SET_RULE:
       val = NoSignExtend(dvifp, 4);
       val2 = NoSignExtend(dvifp, 4);
-      /*if (Emitting)*/
       SetRule(val, val2, PassNo, 1);
       break;
     case PUT_RULE:
       val = NoSignExtend(dvifp, 4);
       val2 = NoSignExtend(dvifp, 4);
-      /*if (Emitting)*/
       SetRule(val, val2, PassNo, 0);
       break;
     case BOP:
@@ -169,42 +162,42 @@ char    *argv[];
       sp = 0;
       fontptr = NULL;
       prevfont = NULL;
-      /*if ( !SkipMode ) {*/
-      if (PassNo == 0) {
+      if ( PassNo == PASS_SKIP ) {
+	if ( !Pagelist || InPageList(count[0]))  {
+	  PassNo = PassDefault;
+	}
+      }
+      if (PassNo == PASS_DRAW) {
 	qfprintf(ERR_STREAM,"[%ld",  (long)count[0]);
-      } else {
-	DoBop();	  /*}*/
+	DoBop();
       }
       break;
     case EOP:
-      /*if ( !SkipMode ) {*/
-      if (PassNo == 0) {
+      if (PassNo == PASS_BBOX) {
 	/* start second pass on current page */
 	FSEEK(dvifp, cpagep, SEEK_SET);
-	PassNo = 1;
+
+	x_width = x_max-x_min;
+	y_width = y_max-y_min;
+	x_offset = -x_min; /* offset by moving topleft corner */
+	y_offset = -y_min; 
+	x_max = x_min = -x_offset_def; /* reset BBOX */
+	y_max = y_min = -y_offset_def;
+
+	PassNo = PASS_DRAW;
 #ifdef DEBUG
 	if (Debug)
-	  fprintf(ERR_STREAM,"\nStarting second pass\n");
+	  fprintf(ERR_STREAM,"\nStarting PASS_DRAW\n");
 #endif
 
-      } else {
+      } else if ( PassNo == PASS_DRAW ) {
 	/* end of second pass, and of page processing */
 	FormFeed(count[0]);
 	++ndone;
 
 	qfprintf(ERR_STREAM,"] ");
-	PassNo = 0;
+	PassNo = PASS_SKIP;
       }
-      /*}  else
-        PassNo = 0;
-
-      if ( PassNo == 0 && Reverse ) {
-        if ( ppagep > 0 )
-          FSEEK(dvifp, ppagep, SEEK_SET);
-        else {
-          AllDone(_FALSE);
-        }
-	}*/
       break;
     case PUSH:
       if (sp >= STACK_SIZE)
@@ -233,8 +226,7 @@ char    *argv[];
     case RIGHT3:
     case RIGHT4:
       val = SignExtend(dvifp, (int)command - RIGHT1 + 1);
-      /*if (Emitting)*/
-        MoveOver(val);
+      MoveOver(val);
       break;
     case W1:
     case W2:
@@ -242,8 +234,7 @@ char    *argv[];
     case W4:
       w = SignExtend(dvifp, (int)command - W1 + 1);
     case W0:
-      /*if (Emitting)*/
-        MoveOver(w);
+      MoveOver(w);
       break;
     case X1:
     case X2:
@@ -251,16 +242,14 @@ char    *argv[];
     case X4:
       x = SignExtend(dvifp, (int)command - X1 + 1);
     case X0:
-      /*if (Emitting)*/
-        MoveOver(x);
+      MoveOver(x);
       break;
     case DOWN1:
     case DOWN2:
     case DOWN3:
     case DOWN4:
       val = SignExtend(dvifp, (int)command - DOWN1 + 1);
-      /*if (Emitting)*/
-        MoveDown(val);
+      MoveDown(val);
       break;
     case Y1:
     case Y2:
@@ -268,26 +257,24 @@ char    *argv[];
     case Y4:
       y = SignExtend(dvifp, (int)command - Y1 + 1);
     case Y0:
-      /*if (Emitting)*/
-        MoveDown(y);
+      MoveDown(y);
       break;
     case Z1:
     case Z2:
     case Z3:
     case Z4:
       z = SignExtend(dvifp, (int)command - Z1 + 1);
-      /*if (Emitting)*/
     case Z0:
-        MoveDown(z);
+      MoveDown(z);
       break;
     case FNT1:
     case FNT2:
     case FNT3:
     case FNT4:
       k = NoSignExtend(dvifp, (int) command - FNT1 + 1);
-      /*if (!SkipMode) {*/
+      if ( PassNo != PASS_SKIP ) {
         SetFntNum(k, Emitting);
-	/*}*/
+      }
       break;
     case XXX1:
     case XXX2:
@@ -295,7 +282,7 @@ char    *argv[];
     case XXX4:
       k = (int)NoSignExtend(dvifp, (int)command - XXX1 + 1);
       GetBytes(dvifp, SpecialStr, k);
-      if (PassNo==1)
+      if ( PassNo == PASS_DRAW)
 	DoSpecial(SpecialStr, k);
       break;
     case FNT_DEF1:
@@ -310,7 +297,7 @@ char    *argv[];
       break;
     case POST:
       AllDone(_FALSE);
-      PassNo = 0;
+      PassNo = PASS_SKIP;
       qfprintf(ERR_STREAM,"\n");
       break;
     case POST_POST:
