@@ -1,27 +1,33 @@
 #include "dvipng.h"
 
-#if NeedFunctionPrototypes
-void DoBop(void)
-#else
-void DoBop()
-#endif
+void DoBop P1H(void)
 {
   if (page_imagep) 
     gdImageDestroy(page_imagep);
   page_imagep=gdImageCreate(x_width,y_width);
   gdImageColorAllocate(page_imagep,bRed,bGreen,bBlue); /* Set bg color */
+  if (borderwidth>0) {
+    int Transparent;
+
+    /* Set ANOTHER bg color, transparent this time */
+    Transparent = gdImageColorAllocate(page_imagep,bRed,bGreen,bBlue); 
+    gdImageColorTransparent(page_imagep,Transparent); 
+    gdImageFilledRectangle(page_imagep,0,0,
+			   x_width-1,borderwidth-1,Transparent);
+    gdImageFilledRectangle(page_imagep,0,0,
+			   borderwidth-1,y_width-1,Transparent);
+    gdImageFilledRectangle(page_imagep,x_width-borderwidth,0,
+			   x_width-1,y_width-1,Transparent);
+    gdImageFilledRectangle(page_imagep,0,y_width-borderwidth,
+			   x_width-1,y_width-1,Transparent);
+  }
 }
 
 /*-->FormFeed*/
 /**********************************************************************/
 /*****************************  FormFeed ******************************/
 /**********************************************************************/
-#if NeedFunctionPrototypes
-void FormFeed(int pagenum)
-#else
-void FormFeed(pagenum)
-     int pagenum;
-#endif
+void FormFeed P1C(int, pagenum)
 {
   FILE* outfp=NULL;
 
@@ -39,15 +45,7 @@ void FormFeed(pagenum)
 /**********************************************************************/
 /*****************************  SetChar  ******************************/
 /**********************************************************************/
-void
-#if NeedFunctionPrototypes
-SetChar(long4 c, short command, int PassNo)
-#else
-SetChar(c, command, PassNo)
-long4   c;
-short   command;
-int     PassNo;
-#endif
+long4 SetChar P2C(long4, c, int, PassNo)
 {
   register struct char_entry *ptr;  /* temporary char_entry pointer */
   int red,green,blue;
@@ -66,15 +64,12 @@ int     PassNo;
 	-PIXROUND(ptr->xOffset,shrinkfactor)+ptr->glyph.w);
     max(y_max,PIXROUND(v, hconv*shrinkfactor)
 	-PIXROUND(ptr->yOffset,shrinkfactor)+ptr->glyph.h);
-    if (command <= SET4)
-      h += ptr->tfmw;
-  }
-  if ( PassNo == PASS_DRAW && fontptr->font_file_id != NO_FILE) {
+  } else if ( PassNo == PASS_DRAW && fontptr->font_file_id != NO_FILE) {
     /*
-      Draw character. Remember now, we have stored the different
-      greyscales in glyph.data with darkest last.  Draw the
-      character greyscale by greyscale, lightest first. 
-    */
+     * Draw character. Remember now, we have stored the different
+     * greyscales in glyph.data with darkest last.  Draw the character
+     * greyscale by greyscale, lightest first.
+     */
     for( i=1; i<=ptr->glyph.nchars ; i++) {
       red = bRed-(bRed-Red)*i/shrinkfactor/shrinkfactor;
       green = bGreen-(bGreen-Green)*i/shrinkfactor/shrinkfactor;
@@ -90,9 +85,6 @@ int     PassNo;
 		  i,Color);
     }
 
-    if (command <= SET4)
-      h += ptr->tfmw;
-
 #ifdef DEBUG
     if (Debug)
       printf("<%c> at (%d,%d)-(%d,%d)\n",(char)c,
@@ -101,6 +93,7 @@ int     PassNo;
 	     ptr->xOffset,ptr->yOffset);
 #endif
   }
+  return(ptr->tfmw);
 }
 
 
@@ -109,23 +102,16 @@ int     PassNo;
 /*****************************  SetRule  ******************************/
 /**********************************************************************/
 /*   this routine will draw a rule */
-#if NeedFunctionPrototypes
-void SetRule(long4 a, long4 b, int PassNo, int Set)
-#else
-void SetRule(a, b, PassNo, Set)
-long4    a, b;
-int     PassNo, Set;
-#endif
+void SetRule P4C(long4, a, long4, b, int, PassNo, int, Set)
 {
   long4    xx=0, yy=0;
   int Color;
 
   if ( a > 0 && b > 0 ) {
-    /*SetPosn(h, v);             /* lower left corner */
     xx = (long4)PIXROUND(b, hconv*shrinkfactor);     /* width */
     yy = (long4)PIXROUND(a, vconv*shrinkfactor);     /* height */
   }
-  if (PassNo == PASS_BBOX ) {
+  if ( PassNo == PASS_BBOX ) {
     min(x_min,PIXROUND(h, hconv*shrinkfactor)-1);
     min(y_min,PIXROUND(v, hconv*shrinkfactor)-yy+1-1);
     max(x_max,PIXROUND(h, hconv*shrinkfactor)+xx-1-1);
@@ -138,8 +124,8 @@ int     PassNo, Set;
 #endif
     if ((yy>0) && (xx>0)) {
       /*
-	Oh, bugger. Shrink rule properly. Currently crude, but...
-	Why do I need the -1's? Beats me.
+	Oh, bugger. Shrink rule properly. Currently produces too dark
+	rules, but...  Why do I need the -1's? Beats me.
       */
 
       Color = gdImageColorResolve(page_imagep, Red,Green,Blue);
