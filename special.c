@@ -1,528 +1,147 @@
 #include "dvipng.h"
 
-/*char    *GetKeyStr(char *, KeyWord *);
-  bool    GetKeyVal(KeyWord *, KeyDesc[], int, int *);*/
-/*bool    IsSame(char *, char *);*/
-
-
-/*-->DoSpecial*/
+/*-->SetSpecial*/
 /*********************************************************************/
-/*****************************  DoSpecial  ***************************/
+/****************************  SetSpecial  ***************************/
 /*********************************************************************/
 
-#define PSFILE 0
-#define ORIENTATION 1
-#define RESETPOINTS 2
-#define DEFPOINT 3
-#define FILL 4
-#define GRAY 5
-#define PATTERN 6
-#define HPFILE 7
-#define LLX 8
-#define LLY 9
-#define URX 10
-#define URY 11
-#define RWI 12
-#define RHI 13
-
-
-KeyDesc KeyTab[] = {
-  { "psfile", String },
-  { "orientation", Integer},
-  { "resetpoints", String},
-  { "defpoint", String},
-  { "fill", String},
-  { "gray", Integer},
-  { "pattern", Integer},
-  { "hpfile", String},
-  { "llx", Integer},
-  { "lly", Integer},
-  { "urx", Integer},
-  { "ury", Integer},
-  { "rwi", Integer},
-  { "rhi", Integer}
-  /*,
-    {"hsize", Dimension},
-    {"vsize", Dimension},
-    {"hoffset", Dimension},
-    {"voffset", Dimension},
-    {"hscale", Number},
-    {"vscale", Number}*/
-};
-
-#define NKEYS (sizeof(KeyTab)/sizeof(KeyTab[0]))
-
-#ifdef __riscos
-# ifdef LJ
-
-/* Compare two strings, ignoring case;
-   s1 pointer to null-terminated keyword, s2 pointer to parseline;
-   returns (if successful) pointer to character following keyword in s2 */
-bool StrCompare(char *s1, char *s2, char **end)
-{
-  char *a,*b;
-  
-  a = s1; 
-  b = s2;
-  while (*a != '\0') {
-    if (tolower(*a) != tolower(*b)) return(_FALSE);
-    a++; 
-    b++;
-  }
-  *end = b; 
-  return(_TRUE);
-}
-
-/* Read <number> integer values from string and store results in
-   <result>. Returns number + of arguments actually read, end =
-   pointer to char following last number */
-int ParseNumbers(char *str, int *result, int number, char **end)
-{
-  char *s;
-  int count = 0;
-  
-  s = str;
-  while ((*s != '\0') && (count < number)) {
-    while ((*s == ' ') || (*s == ',') || (*s == '=')) 
-      s++;
-    if (*s != '\0') {
-      result[count++] = strtod(s,&s);
-    }
-  }
-  while ((*s == ' ') || (*s == ',') || (*s == '=')) 
-    s++;
-  *end = s; 
-  return(count);
-}
-
-#if 0
-/* Diagram commands are parsed separately since the format varies from the one
-+    used by the other special commands */
-bool ParseDiagram(char *str)
-{
-  diagtrafo dt;
-  char *s,*sh;
-  char diagname[STRSIZE];
-  int results[4],no;
-
-  s = str;
-  while (*s == ' ') 
-    s++;
-  if ((StrCompare("drawfile",s,&s)) || (StrCompare("DVIview_diagram",s,&s))) {
-
-    if (printdiag == _FALSE) 
-      return(_TRUE); /* it's a diagram, but don't print */
-
-    while ((*s == ' ') || (*s == '=')) 
-      s++; /* space or '=' separates keyword/keyval */
-
-    if (*s == '\0') {
-      fprintf(ERR_STREAM,"No filename given for \\special-diagram!\n"); 
-      return(_TRUE);
-    }
-    sh = diagname;
-    while ((*s != ' ') && (*s != ',') && (*s != '\0')) 
-      *sh++ = *s++;
-    *sh = '\0';
-
-    /* Set up default values */
-    dt.scalex = dt.scaley = 100;
-    dt.cropl = dt.cropb = dt.cropr = dt.cropt = 0;
-    while (*s != '\0') {
-      while ((*s == ' ') || (*s == ',')) 
-        s++;
-      if (*s != '\0') {
-        if (StrCompare("scale",s,&s)) {
-          if ((no = ParseNumbers(s,results,2,&s)) != 2) {
-            fprintf(ERR_STREAM,
-                   "Too few arguments (%d) given for <scale> - ignored.\n",no);
-          }
-          dt.scalex = results[0]; 
-          dt.scaley = results[1];
-        }
-        else if (StrCompare("crop",s,&s)) {
-          if ((no = ParseNumbers(s,results,4,&s)) != 4) {
-            fprintf(ERR_STREAM,
-                   "Too few arguments (%d) given for <crop> - ignored.\n",no);
-          }
-          dt.cropl = results[0]; 
-          dt.cropr = results[1];
-          dt.cropt = results[2]; 
-          dt.cropb = results[3];
-        }
-        else {
-          fprintf(ERR_STREAM,"Bad \\special keyword - <%s> ignored\n",s);
-          /* skip over this word */
-          while ((*s != ' ') && (*s != ',') && (*s != '=') && (*s != '\0')) 
-            s++;
-        }
-      }
-    }
-    /* fprintf(ERR_STREAM,"Diagram: %s, scale %d %d, crop %d %d %d %d\n",
-       diagname,dt.scalex,dt.scaley,dt.cropl,dt.cropb,dt.cropr,dt.cropt);*/
-    diagram(diagname,&dt);
-    return(_TRUE);
-  }
-  else 
-    return(_FALSE);
-}
-#endif /*0*/
-# endif /* LJ */
-#endif /* __riscos */
-
-
-void SetSpecial(char * str, int n, int32_t h, int32_t v)
+void SetSpecial(char * special, int32_t length, int32_t h, int32_t v, 
+		bool PassNo)
 /* interpret a \special command, made up of keyword=value pairs */
 /* Color specials only for now. Warn otherwise. */
 {
-  char *p;
+  char *buffer, *token;
 
-  DEBUG_PRINTF2(DEBUG_DVI,"'%.*s' ",n,str);
+  DEBUG_PRINTF2(DEBUG_DVI," '%.*s'",length,special);
 
-  p=str;
-  while(*p==' ') p++;
+  buffer = malloc(sizeof(char)*(length+1));
+  if (buffer==NULL) 
+    Fatal("Cannot allocate space for special string");
 
-  /* Fragile. Should compare with n */
+  strncpy(buffer,special,length);
+  buffer[length]='\0';
 
-  switch (*p) {
-  case 'b':
-    if (strncmp(p,"background",10) == 0 ) {
-      p += 10 ;
-      while ( *p <= ' ' ) p++ ;
-      background(p);
-    }
-    break;
-  case 'c':
-    if (strncmp(p,"color",5) == 0 ) {
-      p += 6 ;
-      while ( *p <= ' ' ) p++ ;
-       if (strncmp(p, "push", 4) == 0 ) {
-	p += 5 ;
-	while ( *p <= ' ' ) p++ ;
-	pushcolor(p) ;
-      } else if (strncmp(p, "pop", 3) == 0 ) {
-	popcolor() ;
-      } else {
-	resetcolorstack(p) ;
-      }
-    } 
-    break ;
-  default:
-    Warning("at (%ld,%ld) unimplemented \\special{%.*s}.",
-	    PIXROUND(h,dvi->conv*shrinkfactor),
-	    PIXROUND(v,dvi->conv*shrinkfactor),n,str);
-  }
-}
+  token = strtok(buffer," ");
 
-
-#if 0
-  char    spbuf[STRSIZE], xs[STRSIZE], ys[STRSIZE];
-  char    *psfile = NULL;
-  float   x,y;
-  long4   x_pos, y_pos;
-  KeyWord k;
-  int     i, j, j1;
-  static  int   GrayScale = 10, Pattern = 1;
-  static  bool  GrayFill = _TRUE;
-  static  long4 p_x[80], p_y[80];
-  int llx=0, lly=0, urx=0, ury=0, rwi=0, rhi=0;
-#ifdef WIN32
-  char    *gs_path;
-#endif
-
-  str[n] = '\0';
-  spbuf[0] = '\0';
-
-
-#ifdef __riscos
-#ifdef LJ
-  if (ParseDiagram(str)) 
+  /********************** Color specials ***********************/
+  if (strcmp(token,"background")==0) {
+    background(token+11);
     return;
-#endif
-#endif
- 
-  while ( (str = GetKeyStr(str, &k)) != NULL ) {
-    /* get all keyword-value pairs */
-    /* for compatibility, single words are taken as file names */
-    if ( GetKeyVal( &k, KeyTab, NKEYS, &i ) && i != -1 )
-      switch (i) {
-      case PSFILE:
-        (void) strcpy(spbuf, k.Val);
-        psfile = spbuf;
-        break;
-        
-      case ORIENTATION:
-#ifdef LJ
-	if ((k.v.i >= 0) && (k.v.i < 2)) {
-	  EMIT2("\033&l%dO\033*rF", (unsigned char)k.v.i);
-        }
-#endif
-	else
-#ifdef HAVE_LIBKPATHSEA
-	  if (!kpse_tex_hush ("special"))
-#endif
-          Warning( "Invalid orientation (%d)given; ignored.", k.v.i);
-        break;
-
-      case RESETPOINTS:
-        (void) strcpy(spbuf, k.Val);
-        break;
-
-      case DEFPOINT:
-        (void) strcpy(spbuf, k.Val);
-        i = sscanf(spbuf,"%d(%[^,],%s)",&j,xs,ys);
-        if (i>0) {
-          x_pos = h; 
-          y_pos = v;
-          if (i>1) {
-            if (sscanf(xs,"%fpt",&x)>0) {
-              fprintf(ERR_STREAM,"x = %f\n",x);
-              x_pos = PT_TO_DVI(x);
-            }
-          }
-          if (i>2) {
-            if (sscanf(ys,"%fpt",&y)>0) {
-              fprintf(ERR_STREAM,"y = %f\n",y);
-              y_pos = PT_TO_DVI(y);
-            }
-          }
-          p_x[j]=x_pos;
-          p_y[j]=y_pos;
-        } else
-#ifdef HAVE_LIBKPATHSEA
-              if (!kpse_tex_hush ("special"))
-#endif
-          Warning("invalid point definition\n");
-        break;
-
-      case FILL:
-        (void) strcpy(spbuf, k.Val);
-        i = sscanf(spbuf,"%d/%d %s",&j,&j1,xs);
-        if (i>1) {
-	#ifdef LJ
-	  SetPosn(p_x[j], p_y[j]);
-          x_pos = (long4)PIXROUND(p_x[j1]-p_x[j], dvi->conv*shrinkfactor);
-          y_pos = (long4)PIXROUND(p_y[j1]-p_y[j], dvi->conv*shrinkfactor);
-          if (labs(x_pos)<labs(y_pos)) x_pos = x_pos+3;
-          else                         y_pos = y_pos+3;
-          if (GrayFill) {
-	    EMIT4("\033*c%lda%ldb%dg2P", x_pos, y_pos, GrayScale);
-          } else {
-	    EMIT4("\033*c%lda%ldb%dg3P", x_pos, y_pos, Pattern);
-	  }
-#endif
-        }
-        break;
-
-      case GRAY:
-        if ((k.v.i >= 0) && (k.v.i < 101)) {
-          GrayScale = k.v.i;
-          GrayFill = _TRUE;
-        } else
-#ifdef HAVE_LIBKPATHSEA
-           if (!kpse_tex_hush ("special"))
-#endif
-          Warning( "Invalid gray scale (%d) given; ignored.", k.v.i);
-        break;
-
-      case PATTERN:
-        if ((k.v.i >= 0) && (k.v.i < 7)) {
-          Pattern = k.v.i;
-          GrayFill = _FALSE;
-        } else
-#ifdef HAVE_LIBKPATHSEA
-           if (!kpse_tex_hush ("special"))
-#endif
-          Warning( "Invalid pattern (%d) given; ignored.", k.v.i);
-        break;
-
-      case LLX: llx = k.v.i; break;
-      case LLY: lly = k.v.i; break;
-      case URX: urx = k.v.i; break;
-      case URY: ury = k.v.i; break;
-      case RWI: rwi = k.v.i; break;
-      case RHI: rhi = k.v.i; break;
-
-      default:
-#ifdef HAVE_LIBKPATHSEA
-           if (!kpse_tex_hush ("special"))
-#endif
-        Warning("Can't handle %s=%s command; ignored.", k.Key, k.Val);
-        break;
-      }
-    
-    else
-#ifdef HAVE_LIBKPATHSEA
-      if (!kpse_tex_hush ("special"))
-#endif
-	Warning("Invalid keyword or value in \\special - <%s> ignored", k.Key);
   }
-#ifdef LJ
-      if (psfile) {
-        int height = rwi * (urx - llx) / (ury - lly);*/
-        int width  = urx - llx;
-        int height = ury - lly;
-        char cmd[255];
-        int scale_factor    = 3000 * width / rwi;
-        int adjusted_height = height * 300/scale_factor;
-        int adjusted_llx    = llx    * 300/scale_factor;
-        char *printer = "ljetplus"; /* use the most stupid one */
-        char scale_file_name[255];
-        char *scale_file = tmpnam(scale_file_name); /* mkstemp */
-        char *pcl_file = tmpnam(NULL);  
-        FILE* scalef;
+  if (strcmp(token,"color")==0) {
+    token = strtok(NULL," ");
+    if (strcmp(token,"push")==0)
+      pushcolor(token+5);
+    else 
+      if (strcmp(token,"pop")==0)
+	popcolor();
+      else 
+	resetcolorstack(token);
+    return;
+  }
 
-        if ( (scalef = fopen(scale_file,"wb")) == NULL ) {
-          Warning("Unable to open file %s for writing", scale_file );
-          return;
-        }
-        fprintf(scalef, "%.2f %.2f scale\n%d %d translate\n",  
-                300.0/scale_factor, 300.0/scale_factor,
-                0, adjusted_height == height ? 0 : ury);
-        fclose( scalef );
+  /******************* Postscript inclusion ********************/
+  if (strncmp(token,"PSfile=",7)==0) { /* PSfile */
+    char* psfile = token+7;
+    int llx=0,lly=0,urx=0,ury=0,rwi=-1,rhi=-1;
+    int hresolution,vresolution;
 
-#ifdef WIN32
-	gs_path = getenv("GS_PATH");
-	if (!gs_path)
-	  gs_path = "gswin32c.exe";
-        sprintf(cmd,"%s -q -dSIMPLE -dSAFER -dNOPAUSE -sDEVICE=%s -sOutputFile=%s %s %s showpage.ps -c quit",
-		gs_path, printer, pcl_file, scale_file, psfile);
-#else
-        sprintf(cmd,"gs -q -dSIMPLE -dSAFER -dNOPAUSE -sDEVICE=%s -sOutputFile=%s %s %s showpage.ps -c quit",
-                printer, pcl_file, scale_file, psfile);
-#endif
-#ifdef DEBUGGS   
-        fprintf(stderr,
-          "PS-file '%s' w=%d, h=%d, urx=%d, ury=%d, llx=%d, lly=%d, rwi=%d\n",
-                psfile, urx - llx, height, urx,ury,llx,lly, rwi);
-        fprintf(stderr,"%s\n",cmd);
-#endif
-        if (system(cmd)) {
-          Warning("execution of '%s' returned an error", cmd);
-        } else {
-#ifdef DEBUGGS   
-          fprintf(stderr, "o=%d, h=%d, so=%d, sh=%d\n", 
-                  llx, height, adjusted_llx, adjusted_height);
-          
-          fprintf(stderr, "OLD x=%d, y=%d\n", 
-                  (int)PIXROUND(h, dvi->conv*shrinkfactor) + x_goffset,
-                  (int)PIXROUND(v, dvi->conv*shrinkfactor) + y_goffset);
-#endif  
-          v -= 65536l*adjusted_height; /**300/scale_factor;*/
-	  h -= 65536l*adjusted_llx; /* *300/scale_factor;*/
-	  SetPosn(h, v);
-#ifdef DEBUGGS   
-          fprintf(stderr, "NEW x=%d, y=%d\n", 
-                  (int)PIXROUND(h, dvi->conv*shrinkfactor) + x_goffset,
-                  (int)PIXROUND(v, dvi->conv*shrinkfactor) + y_goffset);
-#endif
-          CopyHPFile( pcl_file );
-          unlink(pcl_file);
-          unlink(scale_file);
-        }
+    /* Remove quotation marks around filename */
+    if (*psfile=='"') {
+      char* tmp;
+      psfile++;
+      tmp=strchr(psfile,'"');
+      if (tmp!=NULL) {
+	*tmp='\0';
       }
-#endif /* LJ */
-}
-
-/*-->GetKeyStr*/
-/**********************************************************************/
-/*****************************  GetKeyStr  ****************************/
-/**********************************************************************/
-/* extract first keyword-value pair from string (value part may be null)
- * return pointer to remainder of string
- * return NULL if none found
- */
-char    KeyStr[STRSIZE];
-char    ValStr[STRSIZE];
-char *GetKeyStr(char *str, KeyWord *kw )
-{
-  char    *s, *k, *v, t;
-  if ( !str )
-    return( NULL );
-  for (s = str; *s == ' '; s++)
-    ;          /* skip over blanks */
-  if (*s == '\0')
-    return( NULL );
-  for (k = KeyStr; /* extract keyword portion */
-       *s != ' ' && *s != '\0' && *s != '=';
-       *k++ = *s++)
-    ;
-  *k = '\0';
-  kw->Key = KeyStr;
-  kw->Val = v = NULL;
-  kw->vt = None;
-  for ( ; *s == ' '; s++)
-    ;            /* skip over blanks */
-  if ( *s != '=' )         /* look for "=" */
-    return( s );
-  for (s++; *s == ' '; s++);      /* skip over blanks */
-  if ( *s == '\'' || *s == '\"' )  /* get string delimiter */
-    t = *s++;
-  else
-    t = ' ';
-  for (v = ValStr; /* copy value portion up to delim */
-       *s != t && *s != '\0';
-       *v++ = *s++)
-    ;
-  if ( t != ' ' && *s == t )
-    s++;
-  *v = '\0';
-  kw->Val = ValStr;
-  kw->vt = String;
-  return( s );
-}
-
-
-
-/*-->IsSame*/
-/**********************************************************************/
-/*******************************  IsSame  *****************************/
-/**********************************************************************/
-/* compare strings, ignore case */
-bool IsSame(char *,a, char *,b)
-{
-  char *x, *y;
-  
-  for (x = a, y = b; *a; a++, b++)
-    if ( tolower(*a) != tolower(*b) )
-      return( _FALSE );
-
-  return( *a == *b ? _TRUE : _FALSE );
-}
-
-
-/*-->GetKeyVal*/
-/**********************************************************************/
-/*****************************  GetKeyVal  ****************************/
-/**********************************************************************/
-/* get next keyword-value pair decode value according to table entry  */
-bool GetKeyVal(KeyWord *kw, KeyDesc tab[], int nt, int *tno)
-{
-  int     i;
-  char    c = '\0';
-  *tno = -1;
-  for (i = 0; i < nt; i++)
-    if ( IsSame(kw->Key, tab[i].Entry) ) {
-      *tno = i;
-      switch ( tab[i].Typ ) {
-      case None:
-        if ( kw->vt != None )
-          return( _FALSE );
-        break;
-      case String:
-        if ( kw->vt != String )
-          return( _FALSE );
-        break;
-      case Integer:
-        if ( kw->vt != String )
-          return( _FALSE );
-        if ( sscanf(kw->Val, "%d%c", &(kw->v.i), &c) != 1 || c != '\0' )
-          return( _FALSE );
-        break;
-      }
-      kw->vt = tab[i].Typ;
-      return( _TRUE );
     }
-  return( _TRUE );
+
+    while((token = strtok(NULL," ")) != NULL) {
+      if (strncmp(token,"llx=",4)==0) llx = atoi(token+4);
+      if (strncmp(token,"lly=",4)==0) lly = atoi(token+4);
+      if (strncmp(token,"urx=",4)==0) urx = atoi(token+4);
+      if (strncmp(token,"ury=",4)==0) ury = atoi(token+4);
+      if (strncmp(token,"rwi=",4)==0) rwi = atoi(token+4);
+      if (strncmp(token,"rhi=",4)==0) rhi = atoi(token+4);
+    }
+    
+    /* Calculate resolution, and use our base resolution as a fallback. */
+    /* The factor 10 is magic, the dvips graphicx driver needs this.    */
+    hresolution = resolution/shrinkfactor*rwi/(urx - llx)/10;
+    vresolution = resolution/shrinkfactor*rhi/(ury - lly)/10;
+    if (vresolution<0) vresolution = hresolution;
+    if (hresolution<0) hresolution = vresolution;
+    if (hresolution<0) hresolution = vresolution = resolution/shrinkfactor;
+    
+    if (PassNo==PASS_DRAW) { /* PASS_DRAW */
+      char cmd[255],tmp[255];
+      char *scale_file = tmpnam(tmp);
+      char *pngfile = tmpnam(NULL);
+      FILE* scalef;
+
+      if ( (scalef = fopen(scale_file,"wb")) == NULL ) {
+	Warning("Unable to open file %s for writing", scale_file );
+	return;
+      }
+      fprintf(scalef, "<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice\n",  
+	      urx - llx, ury - lly,llx,lly);
+      fclose( scalef );
+      sprintf(cmd,"gs -sDEVICE=png16m -r%dx%d -dBATCH -dSAFER -q -dNOPAUSE -sOutputFile=%s -dTextAlphaBits=4 -dGraphicsAlphaBits=4 %s %s",
+	      hresolution,
+	      vresolution,
+	      pngfile,
+	      scale_file,
+	      psfile);
+      
+      if (system(cmd)) {
+	Warning("execution of '%s' returned an error, image will be left blank.", cmd);
+      } else {   
+	gdImagePtr psimage;
+	FILE* pngf;
+	
+	if ( (pngf = fopen(pngfile,"rb")) == NULL ) {
+	  Warning("Unable to open file %s for writing", pngfile );
+	  return;
+	}
+	psimage = gdImageCreateFromPng(pngf);
+	fclose(pngf);
+	DEBUG_PRINTF2(DEBUG_DVI,"\n  PS-PNG INCLUDE \t(%d,%d)", 
+		      gdImageSX(psimage),gdImageSY(psimage));
+	DEBUG_PRINTF2(DEBUG_DVI," resolution %dx%d", 
+		      hresolution,vresolution);
+	DEBUG_PRINTF2(DEBUG_DVI," at (%d,%d)", 
+		      PIXROUND(h, dvi->conv*shrinkfactor),
+		      PIXROUND(v, dvi->conv*shrinkfactor));
+	DEBUG_PRINTF2(DEBUG_DVI," offset (%d,%d)", x_offset,y_offset);
+	gdImageCopy(page_imagep, psimage,
+		    PIXROUND(h,dvi->conv*shrinkfactor)+x_offset,
+		    PIXROUND(v,dvi->conv*shrinkfactor)-gdImageSY(psimage)
+		       +y_offset,
+		    0,0,
+		    gdImageSX(psimage),gdImageSY(psimage));
+	gdImageDestroy(psimage);
+	Message(BE_NONQUIET,"<%s>",psfile);
+      }
+      unlink(scale_file);
+      unlink(pngfile);
+    } else {
+      int pngheight,pngwidth;
+
+      /* Convert from postscript 72 dpi resolution to our given resolution */
+      pngheight = vresolution*(ury - lly)/72;
+      pngwidth  = hresolution*(urx - llx)/72;
+      DEBUG_PRINTF2(DEBUG_DVI,"\n  PS-PNG INCLUDE \t(%d,%d)", 
+		      pngwidth,pngheight);
+      min(x_min,PIXROUND(h, dvi->conv*shrinkfactor));
+      min(y_min,PIXROUND(v, dvi->conv*shrinkfactor)-pngheight);
+      max(x_max,PIXROUND(h, dvi->conv*shrinkfactor)+pngwidth);
+      max(y_max,PIXROUND(v, dvi->conv*shrinkfactor));
+    }
+    return;
+  }
+  Warning("at (%ld,%ld) unimplemented \\special{%.*s}. %s",
+	  PIXROUND(h,dvi->conv*shrinkfactor),
+	  PIXROUND(v,dvi->conv*shrinkfactor),length,special,token);
 }
-#endif /* 0 */
+
+
