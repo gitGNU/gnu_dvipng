@@ -23,11 +23,12 @@ AC_PATH_PROG(GS, gs, :)
 AC_DEFINE_UNQUOTED(GS_PATH, "$GS", [Define as the path to GhostScript.])
 
 # Checks for libraries.
+AC_CHECK_LIB(gen, basename)
 AC_CHECK_LIB([png], [png_read_image],,
              [AC_MSG_ERROR([cannot find/use libpng])],
 	     [-lm])
 ######
-# Needed when statically linking against gd
+# Needed when statically linking against libpng
 AC_MSG_CHECKING([if -lpng needs -lm])
 AC_TRY_LINK(, [png_read_image()], 
    AC_MSG_RESULT([no]),	
@@ -39,7 +40,7 @@ AC_CHECK_LIB([gd], [gdImageCreate],,
 This drawing library can be downloaded at http://www.boutell.com/gd])],
 	     [-lm])
 ######
-# Needed when statically linking against gd
+# Needed when statically linking against libgd
 AC_MSG_CHECKING([if -lgd needs -lm])
 AC_TRY_LINK(, [gdImageCreate()], 
    AC_MSG_RESULT([no]),	
@@ -73,6 +74,7 @@ AC_CHECK_HEADERS([fcntl.h sys/time.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
+AC_C_INLINE
 AC_TYPE_PID_T
 AC_HEADER_TIME
 AC_HAS_KPSE_ENC_FORMATS
