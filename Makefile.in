@@ -38,15 +38,19 @@ dvipng.dvi: $(TEXIFILES)
 	-$(TEXINDEX) dvipng.cp
 	-$(TEX) "\nonstopmode\input dvipng.texi"
 
+# SunOS make suffix rule wierdness
+.cps.h:
+
 dvipng.ps: dvipng.dvi
 	$(DVIPS) dvipng.dvi -o dvipng.ps
 
 dvipng.info: $(TEXIFILES)
 	-$(MAKEINFO) dvipng.texi
 
-dvipng.help: dvipng
-	-./dvipng > dvipng.help
-	touch dvipng.help
+dvipng.help: 
+	rm dvipng.tmp
+	-./dvipng > dvipng.tmp
+	diff dvipng.tmp dvipng.help || cp dvipng.tmp dvipng.help
 
 clean:
 	rm -f *.o dvipng
