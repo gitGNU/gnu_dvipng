@@ -160,11 +160,11 @@ void FontFind(struct font_entry * tfontptr)
 {
 #ifdef HAVE_LIBKPATHSEA
   kpse_glyph_file_type font_ret;
-  char *name,*psfile;
+  char *name;
   unsigned dpi;  
 #ifdef HAVE_FT2
   FT_Matrix *transform=NULL;
-  char *encoding=NULL;
+  char *encoding=NULL,*psfile;
 #endif
 
   dpi = kpse_magstep_fix ((unsigned) (tfontptr->font_mag / 5.0 + .5),
