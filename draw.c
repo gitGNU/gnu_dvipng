@@ -1,27 +1,23 @@
 #include "dvipng.h"
 
 struct stack_entry {  
-  long4    h, v, w, x, y, z; /* stack entry                           */
+  int32_t    h, v, w, x, y, z; /* stack entry                           */
 } stack[STACK_SIZE];       /* stack                                   */
-int     sp = 0;            /* stack pointer                           */
-long4   w = 0;             /* current horizontal spacing              */
-long4   x = 0;             /* current horizontal spacing              */
-long4   y = 0;             /* current vertical spacing                */
-long4   z = 0;             /* current vertical spacing                */
+int       sp = 0;            /* stack pointer                           */
 
-#define DO_VFCONV(a) (long4)((long long) a * vfstack[vfstackptr-1]->d / 65535l)
+#define DO_VFCONV(a) (int32_t)((int64_t) a * vfstack[vfstackptr-1]->d / 65535l)
 
 void DrawCommand P2C(unsigned char*, command, int, PassNo)
      /* To be used both in plain DVI drawing and VF drawing */
 {
   int     k=0;             /* temporary parameter                     */
-  long4   val, val2;       /* temporarys to hold command information  */
+  int32_t   val, val2;       /* temporarys to hold command information  */
 
   if (/*command >= SETC_000 &&*/ *command <= SETC_127) {
-    val=SetChar((long4)*command,PassNo);
+    val=SetChar((int32_t)*command,PassNo);
     MoveOver(val);
   } else if (*command >= FONT_00 && *command <= FONT_63) {
-    SetFntNum((long4)*command - FONT_00);
+    SetFntNum((int32_t)*command - FONT_00);
   } else switch (*command)  {
   case PUT1: case PUT2: case PUT3: case PUT4:
     val = UNumRead(command+1, (int)*command - PUT1 + 1);
@@ -108,7 +104,7 @@ void DrawCommand P2C(unsigned char*, command, int, PassNo)
       DoSpecial(command + 1 + *command - XXX1 + 1, k);
     break;
   case FNT_DEF1: case FNT_DEF2: case FNT_DEF3: case FNT_DEF4:
-    FontDef(command, &dvi); /* Not allowed within a VF macro */
+    FontDef(command, dvi); /* Not allowed within a VF macro */
     break;
   case PRE:
     Fatal("PRE occurs within page");
@@ -132,78 +128,44 @@ void DrawPage P1C(int, PassNo)
       * encountering EOP.
       */
 {
-  unsigned char  command[STRSIZE];  /* current command                  */
+  unsigned char*  command;  /* current command                  */
 
   h = v = w = x = y = z = 0;
   vfstack[1] = NULL;                /* No default font                  */
 
-  ReadCommand(command);
+  command=DVIGetCommand(dvi);
 #ifdef DEBUG
   if (Debug)
-    printf("DRAW CMD:\t%d\n", *command);
+    printf("DRAW CMD:\t%s ", dvi_commands[*command]);
 #endif
   while (*command != EOP)  {
     DrawCommand(command,PassNo);
-    ReadCommand(command);
 #ifdef DEBUG
     if (Debug)
-      printf("DRAW CMD:\t%d\n", *command);
+      printf("\n");
+#endif
+    command=DVIGetCommand(dvi);
+#ifdef DEBUG
+    if (Debug)
+      printf("DRAW CMD:\t%s ", dvi_commands[*command]);
 #endif
   } 
-}
-
-unsigned char push=PUSH;
-unsigned char pop=POP;
-
-long4 SetVF P2C(long4, c, int, PassNo) 
-{
-  struct vf_char* ptr;
-  unsigned char *command;
-  long4 bytes_left, length;
-  struct font_num *tfontnump;  /* temporary font_num pointer   */
-
-  DrawCommand(&push,PassNo);
-  w = x = y = z = 0;
-  ptr = vfstack[vfstackptr]->ch[c];
-  command = ptr->macro;
-  bytes_left = ptr->macro_length;
-
-  tfontnump = vfstack[vfstackptr]->hfontnump;
-  while (tfontnump->next != NULL) {
-    tfontnump = tfontnump->next;
-  }
-  vfstack[++vfstackptr] = tfontnump->fontp;
-  if (vfstack[vfstackptr]->name[0]=='\0')
-    FontFind(vfstack[vfstackptr]);
-
 #ifdef DEBUG
   if (Debug)
-    printf("VF CMD:\t%d\n", *command);
+    printf("\n");
 #endif
-  while (bytes_left > 0)  {
-    DrawCommand(command,PassNo);
-    length = CommandLength(command)+1;
-    command += length;
-    bytes_left -= length;
-#ifdef DEBUG
-    if (Debug)
-      printf("VF CMD:\t%d\n", *command);
-#endif
-  } /* while  */
-  --vfstackptr;
-  DrawCommand(&pop,PassNo);
-  return(ptr->tfmw);
 }
 
 void DoPages P1H(void)
 {
-  struct page_list *tpagelistp;
+  struct page_list *tpagelistp=NULL;
 
-  while((tpagelistp=FindPage(TodoPage()))!=NULL) {
+  while((tpagelistp=FindPage(TodoPage()))!=NULL
+	&& tpagelistp->count[10]!=-1) {
     if (PassDefault == PASS_BBOX) {
       DrawPage(PASS_BBOX);
       /* Reset to after BOP of current page */
-      FSEEK(dvi.filep, tpagelistp->offset+45, SEEK_SET); 
+      FSEEK(dvi->filep, tpagelistp->offset+45, SEEK_SET); 
       x_width = x_max-x_min;
       y_width = y_max-y_min;
       x_offset = -x_min; /* offset by moving topleft corner */
@@ -211,7 +173,7 @@ void DoPages P1H(void)
       x_max = x_min = -x_offset_def; /* reset BBOX */
       y_max = y_min = -y_offset_def;
     }
-    qfprintf(ERR_STREAM,"[%ld",  tpagelistp->count[0]);
+    qfprintf(ERR_STREAM,"[%d",  tpagelistp->count[0]);
     DoBop();
     DrawPage(PASS_DRAW);
     FormFeed(tpagelistp->count[0]);
