@@ -267,6 +267,7 @@ necessary, and the unit is pixels (px).
 @cindex gamma
 @cindex dark fonts
 @cindex light fonts
+@cindex fuzzy images
 Control the interpolation of colors in the greyscale anti-aliasing
 color palette.  Default value is 1.0.  For 0 < @var{num} < 1, the
 fonts will be lighter (more like the background), and for @var{num} >
