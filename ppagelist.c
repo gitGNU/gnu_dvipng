@@ -1,10 +1,35 @@
+/* ppagelist.c */
+
+/************************************************************************
+
+  Part of the dvipng distribution
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+  02111-1307, USA.
+
+  Copyright © 2002-2004 Jan-Åke Larsson
+
+************************************************************************/
+
 #include "dvipng.h"
 
 /* Some code at the end of this file is adapted from dvips */
 
 static int32_t first=PAGE_FIRSTPAGE, last=PAGE_LASTPAGE;
-static bool    abspage=_FALSE, reverse=_FALSE;
-bool           no_ppage=_TRUE;
+static bool    abspage=false, reverse=false;
+bool           no_ppage=true;
 
 /* dvips' behaviour:
  * -pp outputs _all_ pages with the correct numbers,
@@ -22,9 +47,9 @@ void LastPage(int32_t page,bool data)
   last=page;
   abspage |= data;
 }
-bool Reverse(void)
+void Reverse(bool new)
 {
-  return(reverse = !reverse);
+  reverse=new;
 }
 /*-->NextPPage*/
 /**********************************************************************/
@@ -77,10 +102,10 @@ bool InPageList(int32_t i)
 
   while (pl) {
     if ( i >= pl -> ps_low && i <= pl -> ps_high)
-      return(_TRUE);		/* success */
+      return(true);		/* success */
     pl = pl -> next;
   }
-  return(_FALSE);
+  return(false);
 }
 
 void ListPage(int32_t pslow, int32_t pshigh)
@@ -88,7 +113,7 @@ void ListPage(int32_t pslow, int32_t pshigh)
   register struct pp_list   *pl;
 
   /* Some added code, we want to reuse the list */
-  no_ppage=_FALSE;
+  no_ppage=false;
   pl = ppages;
   while (pl != NULL && pl->ps_low <= pl->ps_high)
     pl = pl->next;
@@ -129,7 +154,7 @@ bool ParsePages(char *s)
       c=s;
       ps_low = ps_high = strtol(c,&s,10);
       if (c==s) 
-	return(TRUE);
+	return(true);
       if (*s=='-' || *s==':') { /* range */
 	c=s+1;
 	ps_high = strtol(c,&s,10);
@@ -139,7 +164,7 @@ bool ParsePages(char *s)
     ListPage(ps_low, ps_high);
     while (*s==' ' || *s=='\t' || *s==',') s++;
   }
-  return(FALSE);
+  return(false);
 }
 
 /* Addition, we want to be able to clear the pplist */
@@ -148,13 +173,13 @@ void ClearPpList(void)
   register struct pp_list *pl = ppages;
 
   while (pl) {
-    pl -> ps_low = 0;
-    pl -> ps_high = -1;
-    pl = pl -> next;
+    ppages=ppages->next;
+    free(pl);
+    pl = ppages;
   }
   first=PAGE_FIRSTPAGE;
   last=PAGE_LASTPAGE;
-  abspage = _FALSE;
-  no_ppage=_TRUE;
+  abspage = false;
+  no_ppage=true;
 }
 
