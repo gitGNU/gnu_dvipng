@@ -243,68 +243,47 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
     }
     return;
   }
-#if 0
-  { 
-    char cmd[255],tmp[255];
-    char *scale_file = tmpnam(tmp);
-    char *pngfile = tmpnam(NULL);
-    FILE* scalef;
-    
-    if ( (scalef = fopen(scale_file,"wb")) == NULL ) {
-      Warning("Unable to open file %s for writing", scale_file );
-      return;
-    }
-    fprintf(scalef, "<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice\n",  
-	    urx - llx, ury - lly,llx,lly);
-    fclose( scalef );
-    sprintf(cmd,"gs -sDEVICE=png16m -r%dx%d -dBATCH -dSAFER -q -dNOPAUSE -sOutputFile=%s -dTextAlphaBits=4 -dGraphicsAlphaBits=4 %s %s",
-	    hresolution,
-	    vresolution,
-	    pngfile,
-	    scale_file,
-	    psfile);
-    
-    if (system(cmd)) {
-      Warning("execution of '%s' returned an error, image will be left blank.", cmd);
-    } else {   
-      gdImagePtr psimage;
-      FILE* pngf;
-      
-      if ( (pngf = fopen(pngfile,"rb")) == NULL ) {
-	Warning("Unable to open file %s for reading", pngfile );
-	return;
-      }
-      psimage = gdImageCreateFromPng(pngf);
-      fclose(pngf);
-      DEBUG_PRINT(DEBUG_DVI,
-		  ("\n  PS-PNG INCLUDE \t(%d,%d) dpi %dx%d at (%d,%d)",   
-		   gdImageSX(psimage),gdImageSY(psimage),
-		   hresolution,vresolution,
-		   hh, vv));
-      gdImageCopy(page_imagep, psimage,
-		  hh, vv-gdImageSY(psimage),
-		  0,0,
-		  gdImageSX(psimage),gdImageSY(psimage));
-      gdImageDestroy(psimage);
-      Message(BE_NONQUIET,"<%s>",psfile);
-    }
-    unlink(scale_file);
-    unlink(pngfile);
-  } else {
-    int pngheight,pngwidth;
-    
-    /* Convert from postscript 72 dpi resolution to our given resolution */
-    pngheight = (vresolution*(ury - lly)+71)/72; /* +71: do 'ceil' */
-    pngwidth  = (hresolution*(urx - llx)+71)/72;
-    DEBUG_PRINT(DEBUG_DVI,("\n  PS-PNG INCLUDE \t(%d,%d)", 
-		 pngwidth,pngheight));
-    min(x_min,hh);
-    min(y_min,vv-pngheight);
-    max(x_max,hh+pngwidth);
-    max(y_max,vv);
+  /* preview-latex' tightpage option */
+  if (strcmp(buffer,"!userdict")==0 
+      && strcmp(buffer+10,"begin/bop-hook{7{currentfile token not{stop}if 65781.76 div DVImag mul}repeat 72 add 72 2 copy gt{exch}if 4 2 roll neg 2 copy lt{exch}if dup 0 gt{pop 0 exch}{exch dup 0 lt{pop 0}if}ifelse 720 add exch 720 add 3 1 roll 4{5 -1 roll add 4 1 roll}repeat <</PageSize[5 -1 roll 6 index sub 5 -1 roll 5 index sub]/PageOffset[7 -2 roll [1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice//bop-hook exec}bind def end")==0) {
+    if (page_imagep==NULL) 
+      Message(BE_NONQUIET,"preview-latex's tightpage option detected, will use its bounding box.\n");
+    return;
   }
-  return;
-#endif
+  if (strncmp(token,"ps::",4)==0) {
+    /* Hokay, decode bounding box */
+    dviunits adj_llx,adj_lly,adj_urx,adj_ury,ht,dp,wd;
+    adj_llx = atoi(token+4);
+    token = strtok(NULL," ");
+    adj_lly = atoi(token);
+    token = strtok(NULL," ");
+    adj_urx = atoi(token);
+    token = strtok(NULL," ");
+    adj_ury = atoi(token);
+    token = strtok(NULL," ");
+    ht = atoi(token);
+    token = strtok(NULL," ");
+    dp = atoi(token);
+    token = strtok(NULL," ");
+    wd = atoi(token);
+    if (wd>0) {
+      x_offset_def = 
+	(-adj_llx+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor;
+      x_width_def  = x_offset_def
+	+(wd+adj_urx+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor;
+    } else {
+      x_offset_def = 
+	(-wd+adj_urx+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor;
+      x_width_def  = x_offset_def
+	+(-adj_llx+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor;
+    }
+    y_offset_def = 
+      (((ht>0)?ht:0)+adj_ury+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor-1;
+    y_width_def  = y_offset_def+1
+      +(((dp>0)?dp:0)-adj_lly+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor;
+    return;
+  }
+
   if (page_imagep != NULL)
     Warning("at (%ld,%ld) unimplemented \\special{%.*s}.",
 	    hh, vv, length,special);
