@@ -73,7 +73,7 @@ named COPYING and dvipng.c.");
 #ifdef KPATHSEA
 	sscanf(p, "%u", &kpathsea_debug);
 #endif
-	qfprintf(ERR_STREAM,"Debug output enabled\n");
+	printf("Debug output enabled\n");
         break;
 #endif
       case 'o':       /* Output file is specified */
@@ -85,6 +85,8 @@ named COPYING and dvipng.c.");
         if (p1 != NULL && strcmp(p1,".png") == 0 ) {
 	  *p1='\0';
         }
+	if (ParseStdin)
+	  printf("Output file: %s.png\n",rootname);
         break;
 #ifdef MAKETEXPK
       case 'M':
@@ -93,6 +95,12 @@ named COPYING and dvipng.c.");
 #ifdef KPATHSEA
         kpse_set_program_enabled (kpse_pk_format, makeTexPK, kpse_src_cmdline);
 #endif /* KPATHSEA */
+	if (ParseStdin) {
+	  if (makeTexPK)
+	    printf("MakeTeXPK enabled\n");
+	  else
+	    printf("MakeTeXPK disabled\n");
+	}
         break;
 #endif /* MAKETEXPK */
       case 'O' : /* Offset */
@@ -103,12 +111,16 @@ named COPYING and dvipng.c.");
 	y_offset = y_offset_def; 
 	x_max = x_min = -x_offset_def; /* set BBOX */
 	y_max = y_min = -y_offset_def;
-	break ;
+	if (ParseStdin)
+	  printf("Offset: (%d,%d)\n",x_offset_def,y_offset_def);
+        break ;
       case 'T' :
 	if (*p == 0 && argv[i+1])
 	  p = argv[++i] ;
-	if (strcmp(p,"bbox")) {
+	if (strcmp(p,"bbox")==0) {
 	  PassDefault=PASS_BBOX;
+	  if (ParseStdin)
+	    printf("Pagesize: (bbox)\n");
 	} else { 
 	  handlepapersize(p, &x_width, &y_width) ;
 	  if (Landscape) {
@@ -117,6 +129,8 @@ named COPYING and dvipng.c.");
 	  }
 	  /* Avoid PASS_BBOX */
 	  PassDefault = PASS_DRAW;
+	  if (ParseStdin)
+	    printf("Pagesize: (%d,%d)\n",x_width,y_width);
 	}
 	break ;
       case 't':       /* specify paper format, only for cropmarks */
@@ -136,6 +150,8 @@ named COPYING and dvipng.c.");
 	  Landscape = _TRUE;
 	} else 
 	  Fatal("The papersize %s is not implemented, sorry.\n",p);
+	if (ParseStdin)
+	  printf("Papersize: %s\n",p);
         break;
       case 'b':
 	if ( *p == 'g' ) { /* -bg background color */
@@ -143,12 +159,16 @@ named COPYING and dvipng.c.");
 	  if (*p == 0 && argv[i+1])
 	    p = argv[++i] ;
 	  background(p);
+	  if (ParseStdin)
+	    printf("Background: rgb %d,%d,%d\n",bRed,bGreen,bBlue);
 	} else if ( *p == 'd' ) { /* -bd border width */
 	  p++;
 	  if (*p == 0 && argv[i+1])
 	    p = argv[++i] ;
 	  if ( sscanf(p, "%d", &borderwidth) != 1 )
 	    Fatal("argument of -bd is not a valid integer\n");
+	  if (ParseStdin)
+	    printf("Transp. border: %d\n",borderwidth);
 	}
 	break;
       case 'f':
@@ -157,6 +177,8 @@ named COPYING and dvipng.c.");
 	  if (*p == 0 && argv[i+1])
 	    p = argv[++i] ;
 	  resetcolorstack(p);
+	  if (ParseStdin)
+	    printf("Foreground: rgb %d,%d,%d\n",Red,Green,Blue);
 	}
 	break;
       case 'x' : case 'y' :
@@ -165,6 +187,8 @@ named COPYING and dvipng.c.");
 	if (sscanf(p, "%ld", &usermag)==0 || usermag < 1 ||
 	    usermag > 1000000)
 	  Fatal("Bad magnification parameter (-x or -y).") ;
+	if (ParseStdin)
+	  printf("Magstep: %ld\n",usermag);
 	/*overridemag = (c == 'x' ? 1 : -1) ;*/
 	break ;
       case 'p' :
@@ -235,6 +259,12 @@ named COPYING and dvipng.c.");
         break;
       case 'r':       /* switch order to process pages */
         Reverse = (bool)(!Reverse);
+	if (ParseStdin) {
+	  if (Reverse) 
+	    printf("Reverse order\n");
+	  else
+	    printf("Normal order\n");
+	}
         break;
       case 'v':    /* verbatim mode */
         G_verbose = _TRUE;
@@ -245,10 +275,14 @@ named COPYING and dvipng.c.");
 	if (sscanf(p, "%d", &resolution)==0 || resolution < 10 ||
 	    resolution > 10000)
 	  Fatal("bad dpi parameter (-D).") ;
+	if (ParseStdin) 
+	  printf("Dpi: %d\n",resolution);
 	break;
       case 'Q':       /* quality (= shrinkfactor) */
         if ( sscanf(p, "%d", &shrinkfactor) != 1 )
           Fatal("argument of -Q is not a valid integer\n");
+	if (ParseStdin) 
+	  printf("Shrinkfactor: %d\n",shrinkfactor);
 	break;
       case '\0':
 	ParseStdin=_TRUE;
@@ -345,6 +379,9 @@ named COPYING and dvipng.c.");
       
       k = (int)NoSignExtend(dvifp, 1);
       GetBytes(dvifp, curname, k);
+      curname[k]='\0';
+      if (G_verbose)
+	printf("'%s' -> %sN.png\n",curname,rootname);
 
       if ((hpagelistp=InitPage())==NULL)
 	Fatal("no pages in DVI file");
