@@ -1,3 +1,28 @@
+/* special.c */
+
+/************************************************************************
+
+  Part of the dvipng distribution
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+  02111-1307, USA.
+
+  Copyright © 2002-2004 Jan-Åke Larsson
+
+************************************************************************/
+
 #include "dvipng.h"
 #include <sys/wait.h>
 #if HAVE_ALLOCA_H
@@ -63,11 +88,11 @@ ps2png(const char *psfile, int hresolution, int vresolution,
 	       urx - llx, ury - lly,llx,lly));
        fprintf(psstream, "<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice\n",
                urx - llx, ury - lly,llx,lly);
-	if ( bRed < 255 || bGreen < 255 || bBlue < 255 ) {
+	if ( cstack[0].red < 255 || cstack[0].green < 255 || cstack[0].blue < 255 ) {
 	  DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\tgsave %f %f %f setrgbcolor clippath fill grestore",
-		       bRed/256.0, bGreen/256.0, bBlue/256.0));
+		  cstack[0].red/255.0, cstack[0].green/255.0, cstack[0].blue/255.0));
 	  fprintf(psstream, "gsave %f %f %f setrgbcolor clippath fill grestore",
-		  bRed/256.0, bGreen/256.0, bBlue/256.0);
+		  cstack[0].red/255.0, cstack[0].green/255.0, cstack[0].blue/255.0);
 	}
 	DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\t(%s) run", psfile));
 	fprintf(psstream, "(%s) run\n", psfile);
@@ -94,10 +119,10 @@ ps2png(const char *psfile, int hresolution, int vresolution,
       if (psimage == NULL) {
 	DEBUG_PRINT(DEBUG_GS,("\n  GS OUTPUT:\tNO IMAGE "));
 	if (!showpage) {
-	  showpage=TRUE;
+	  showpage=true;
 	  DEBUG_PRINT(DEBUG_GS,("(will try adding \"showpage\") "));
 	  psimage=ps2png(psfile, hresolution, vresolution, urx, ury, llx, lly);
-	  showpage=FALSE;
+	  showpage=false;
 	}
       } else {
 	DEBUG_PRINT(DEBUG_GS,("\n  GS OUTPUT:\t%dx%d image ",
@@ -182,39 +207,41 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
     if (hresolution==0) hresolution = vresolution = dpi;
     
     if (page_imagep != NULL) { /* Draw into image */
-      char* psfile = kpse_find_file(psname,kpse_pict_format,0);
-      char* pngname = NULL;
+      char* psfile;
       gdImagePtr psimage=NULL;
 
-      if (flags & CACHE_IMAGES) {
-	char* pngfile;
+      /*---------- Cache ----------*/
+      char* cachename = NULL;
+      gdImagePtr cacheimage=NULL;
 
-	pngname = malloc(sizeof(char)*(strlen(psname+5)));
-	if (pngname==NULL) 
+      TEMPSTR(psfile,kpse_find_file(psname,kpse_pict_format,0));
+      if (flags & CACHE_IMAGES) { /* Find cached image, if it exists */
+	char *cachefile,*separator;
+
+	cachename = alloca(sizeof(char)*(strlen(psname+5)));
+	if (cachename==NULL) 
 	  Fatal("Cannot allocate space for cached image filename");
-	strcpy(pngname,psname);
-	pngfile = strrchr(pngname,'.');
-	if (pngfile==NULL)
-	  strcat(pngname,".png");
-	else {
-	  pngfile[1] = 'p';
-	  pngfile[2] = 'n';
-	  pngfile[3] = 'g';
-	  pngfile[4] = '\0';
-	}
-	pngfile = kpse_find_file(pngname,kpse_pict_format,0);
-	if (pngfile!=NULL) {
-	  FILE* pngfilep = fopen(pngfile,"rb");
+	strcpy(cachename,psname);
+	separator = strrchr(cachename,'.');
+	if (separator!=NULL)
+	  *separator='\0';
+	strcat(cachename,".png");
+	cachefile = kpse_find_file(cachename,kpse_pict_format,0);
+	if (cachefile!=NULL) {
+	  FILE* cachefilep = fopen(cachefile,"rb");
 
-	  if (pngfilep!=NULL) {
-	    psimage = gdImageCreateFromPng(pngfilep);
-	    fclose(pngfilep);
+	  if (cachefilep!=NULL) {
+	    cacheimage = gdImageCreateFromPng(cachefilep);
+	    fclose(cachefilep);
 	  }
-	  free(pngfile);
+	  free(cachefile);
 	}
+	psimage = cacheimage;
       }
+      /*---------- End Cache ----------*/
       Message(BE_NONQUIET,"<%s",psname);
       if (psimage==NULL) {
+	/* No cached image, convert postscript */
 	if (psfile == NULL) {
 	  Warning("PS file %s not found, image will be left blank", psname );
 	  flags |= PAGE_GAVE_WARN;
@@ -228,14 +255,18 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 	  }
 	}
       }
-      if (pngname !=NULL && psimage != NULL) {
-	FILE* pngfilep = fopen(pngname,"wb");
-	if (pngfilep!=NULL) {
-	  gdImagePng(psimage,pngfilep);
-	  fclose(pngfilep);
+      /*---------- Store Cache ----------*/
+      if (flags & CACHE_IMAGES && cachename !=NULL && 
+	  cacheimage==NULL && psimage != NULL) {
+	/* Cache image not found, save converted postscript */
+	FILE* cachefilep = fopen(cachename,"wb");
+	if (cachefilep!=NULL) {
+	  gdImagePng(psimage,cachefilep);
+	  fclose(cachefilep);
 	} else
 	  Warning("Unable to cache %s as PNG", psfile );
       } 
+      /*---------- End Store Cache ----------*/
       if (psimage!=NULL) {
 	DEBUG_PRINT(DEBUG_DVI,
 		    ("\n  PS-PNG INCLUDE \t%s (%d,%d) res %dx%d at (%d,%d)",
@@ -249,6 +280,8 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 		    gdImageSX(psimage),gdImageSY(psimage));
 	gdImageDestroy(psimage);
       }
+      //if (psfile!=NULL)
+      //	free(psfile);
       Message(BE_NONQUIET,">");
     } else { /* Not PASS_DRAW */
       int pngheight,pngwidth;
