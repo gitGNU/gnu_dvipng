@@ -31,23 +31,27 @@ The benefits include
 @end ifclear
 
 @itemize @bullet
-@item Speed. It is the fastest bitmap-rendering code for DVI files that
-I know of. On my fairly low-end laptop, it takes less than a second to
-generate 150 one-formula images. This makes dvipng suitable for
-generating large amounts of images on-the-fly, as needed in
-@previewlatex{}, WeBWorK and others.
+@item 
+Speed. It is the fastest bitmap-rendering code for DVI files that I know
+of. On my fairly low-end laptop, it takes less than a second to generate
+150 one-formula images. This makes dvipng suitable for generating large
+amounts of images on-the-fly, as needed in @previewlatex{}, WeBWorK and
+others.
 
-@item It does not read the postamble, so it can be started before TeX
+@item 
+It does not read the postamble, so it can be started before TeX
 finishes. There is a -follow switch that makes dvipng wait at EOF for
 further output, unless it finds the POST marker that indicates the end
 of the DVI.
 
-@item Interactive query of options. dvipng can read options interactively
+@item 
+Interactive query of options. dvipng can read options interactively
 through stdin, and all options are usable. It is even possible to change
 the input file through this interface.
 
-@item Supports PK, VF and PostScript Type1 fonts, color specials and
-simple PostScript inclusion specials.
+@item 
+Supports PK, VF and PostScript Type1 fonts, color specials and simple
+PostScript inclusion specials.
 
 @item and more...
 
@@ -100,5 +104,25 @@ send a message with just the word `help' as subject or body to
 
 Offers to support further development will be appreciated. For developer
 access, ask on @email{preview-latex-devel@@lists.sourceforge.net}.
+
+
+@section Todo
+
+@itemize @bullet
+@item 
+TrueType fonts. The new Gd has a link to FreeType, so perhaps it's not
+too much work.
+
+@item 
+Non-integer shrinkfactors.
+
+@item 
+Further speed improvements, such as faster font scaling, and perhaps
+more efficient code overall.
+
+@item 
+Other output specials and source specials.
+@end itemize
+
 
 @end ifset
