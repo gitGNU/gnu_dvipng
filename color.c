@@ -88,7 +88,7 @@ void LoadDvipsNam (void)
     }
     *buf++='\0';
     while (pos<max && *pos!='\\') pos++;
-    DEBUG_PRINT(DEBUG_COLOR,("\n  COLOR NAME '%s' '%s'",
+    DEBUG_PRINT(DEBUG_COLOR,("\n  COLOR NAME:\t'%s' '%s'",
 		 tmp->name,tmp->color)); 
     tmp->next = colornames;
     colornames = tmp;
@@ -100,31 +100,43 @@ void LoadDvipsNam (void)
     Warning("cannot close color name file %s!?\n",dvipsnam_file);
 }
 
+float toktof(char* token)
+{
+  if (token!=NULL)
+    return(atof(token));
+  flags |= PAGE_GAVE_WARN;
+  Warning("Missing color-specification value, treated as zero\n");
+  return(0.0);
+}
 
 void stringrgb(char* p,int *r,int *g,int *b)
 {
-  if (strncmp(p,"Black",5)==0) {
+  char* token;
+
+  DEBUG_PRINT(DEBUG_COLOR,("\n  COLOR SPEC:\t'%s' ",p));
+  token=strtok(p," ");
+  if (strcmp(token,"Black")==0) {
     p+=5;
     *r = *g = *b = 0;
-  } else if (strncmp(p,"White",5)==0) {
+  } else if (strcmp(token,"White")==0) {
     p+=5;
     *r = *g = *b = 255;
-  } else if (strncmp(p,"gray",4)==0) {
+  } else if (strcmp(token,"gray")==0) {
     p+=4;
-    *r = *g = *b = (int) (255 * strtod(p,&p));
-  } else if (strncmp(p,"rgb",3)==0) {
+    *r = *g = *b = (int) (255 * toktof(strtok(NULL," ")));
+  } else if (strcmp(token,"rgb")==0) {
     p+=3;
-    *r = (int) (255 * strtod(p,&p));
-    *g = (int) (255 * strtod(p,&p));
-    *b = (int) (255 * strtod(p,&p));
+    *r = (int) (255 * toktof(strtok(NULL," ")));
+    *g = (int) (255 * toktof(strtok(NULL," ")));
+    *b = (int) (255 * toktof(strtok(NULL," ")));
   } else if (strncmp(p,"cmyk",4)==0) {
     double c,m,y,k;
 
     p+=4;
-    c = strtod(p,&p);
-    m = strtod(p,&p);
-    y = strtod(p,&p);
-    k = strtod(p,&p);
+    c = toktof(strtok(NULL," "));
+    m = toktof(strtok(NULL," "));
+    y = toktof(strtok(NULL," "));
+    k = toktof(strtok(NULL," "));
     *r = (int) (255 * ((1-c)*(1-k)));
     *g = (int) (255 * ((1-m)*(1-k)));
     *b = (int) (255 * ((1-y)*(1-k)));
@@ -134,21 +146,27 @@ void stringrgb(char* p,int *r,int *g,int *b)
     if (colornames==NULL) 
       LoadDvipsNam();
     tmp=colornames;
-    while(tmp!=NULL && strcmp(tmp->name,p)) 
+    while(tmp!=NULL && strcmp(tmp->name,token)) 
       tmp=tmp->next;
     if (tmp!=NULL)
       /* One-level recursion */
       stringrgb(tmp->color,r,g,b);
     else {
+      char* t2=strtok(NULL,"");  
+      if (t2!=NULL) 
+	Warning("Unimplemented color specification '%s %s'\n",p,t2);
+      else 
+	Warning("Unimplemented color specification '%s'\n",p);
       flags |= PAGE_GAVE_WARN;
-      Warning("Unimplemented color specification '%s'\n",p);
     }
   }
+  DEBUG_PRINT(DEBUG_COLOR,("(%d %d %d) ",*r,*g,*b))
 }
 
 void background(char* p)
 {
   stringrgb(p, &bRed, &bGreen, &bBlue);
+  DEBUG_PRINT(DEBUG_COLOR,("\n  BACKGROUND:\t(%d %d %d) ",bRed, bGreen, bBlue))
 } 
 
 void pushcolor(char * p)
@@ -159,6 +177,7 @@ void pushcolor(char * p)
   cstack_red[csp] = Red; 
   cstack_green[csp] = Green; 
   cstack_blue[csp] = Blue; 
+  DEBUG_PRINT(DEBUG_COLOR,("\n  COLOR PUSH:\t(%d %d %d) ",Red, Green,Blue))
 }
 
 void popcolor()
@@ -167,6 +186,7 @@ void popcolor()
   Red = cstack_red[csp];
   Green = cstack_green[csp];
   Blue = cstack_blue[csp];
+  DEBUG_PRINT(DEBUG_COLOR,("\n  COLOR POP\t"))
 }
 
 void resetcolorstack(char * p)
@@ -175,4 +195,5 @@ void resetcolorstack(char * p)
     Warning("Global color change within nested colors\n");
   csp=-1;
   pushcolor(p) ;
+  DEBUG_PRINT(DEBUG_COLOR,("\n  RESET COLOR:\tbottom of stack:"))
 }

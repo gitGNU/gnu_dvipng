@@ -131,17 +131,18 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
   token = strtok(buffer," ");
   /********************** Color specials ***********************/
   if (strcmp(token,"background")==0) {
-    token = strtok(NULL," ");
+    token = strtok(NULL,"\0");
     background(token);
     return;
   }
   if (strcmp(token,"color")==0) {
-    token = strtok(NULL," ");
-    if (strcmp(token,"push")==0) {
-      token = strtok(NULL," ");
+    token = strtok(NULL,"\0");
+    if (strncmp(token,"push",4)==0) {
+      token = strtok(token," ");
+      token = strtok(NULL,"\0");
       pushcolor(token);
     } else {
-      if (strcmp(token,"pop")==0)
+      if (strncmp(token,"pop",3)==0)
 	popcolor();
       else 
 	resetcolorstack(token);
