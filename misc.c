@@ -380,7 +380,7 @@ named COPYING and dvipng.c.");
     }
   }
   if ((flags & PARSE_STDIN) == 0 && (! ppused)) 
-    ParsePages("--");
+    ParsePages("-");
   return((flags & PARSE_STDIN) != 0);
 }
 /*

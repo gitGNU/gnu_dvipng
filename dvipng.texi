@@ -400,7 +400,10 @@ This is the (undocumented) behaviour of dvips. In dvipng you can give
 both kinds of options, in which case you get all pages that matches the
 range in @samp{-pp} between the pages from @samp{-p} to @samp{-l}. Also
 multiple @samp{-pp} options accumulate, unlike @samp{-p} and @samp{-l}.
-@c The @samp{-} separator can also be @samp{:}.
+The @samp{-} separator can also be @samp{:}. Note that @samp{-pp -1}
+will be interpreted as "all pages up to and including 1", if you want a
+page numbered -1 (only the table of contents, say) put @samp{-pp -1--1},
+or more readable, @samp{-pp -1:-1}.
 
 @item -q*
 @cindex quiet operation

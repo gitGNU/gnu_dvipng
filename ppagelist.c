@@ -60,11 +60,6 @@ struct page_list* NextPPage(void* dvi, struct page_list* page)
   return(page);
 }
 
-/*
- * Handle a list of pages for dvipng.  Code based on dvips 5.74, in
- * turn based on dvi2ps 2.49.
- */
-
 struct pp_list {
     struct pp_list *next;	/* next in a series of alternates */
     int32_t ps_low, ps_high;	/* allowed range */
@@ -111,77 +106,40 @@ void ListPage(int32_t pslow, int32_t pshigh)
 /* Parse a string representing a list of pages.  Return 0 iff ok.  As a
    side effect, the page selection(s) is (are) prepended to ppages. */
 
-bool ParsePages(register char  *s)
+bool ParsePages(char *s)
 {
-  register int    c ;		/* current character */
-  register int    n = 0,	/* current numeric value */
-    innumber;	/* true => gathering a number */
-  int32_t ps_low = 0, ps_high = 0 ;
-  int     range,		/* true => saw a range indicator */
-    negative = 0;	/* true => number being built is negative */
-  
-#define white(x) ((x) == ' ' || (x) == '\t' || (x) == ',')
-  
-  range = 0;
-  innumber = 0;
-  for (;;) {
-    c = *s++;
-    if ( !innumber && !range) {/* nothing special going on */
-      if (c == 0)
-	return(_FALSE);
-      if (white (c))
-	continue;
-    }
-    if (c == '-' && !innumber) {
-      innumber++;
-      negative++;
-      n = 0;
-      continue;
-    }
-    if ('0' <= c && c <= '9') {	/* accumulate numeric value */
-      if (!innumber) {
-	innumber++;
-	negative = 0;
-	n = c - '0';
-	continue;
+  char *c;		/* conversion start */
+  long int ps_low = PAGE_MINPAGE, ps_high = PAGE_MAXPAGE;
+
+  while (*s==' ' || *s=='\t') s++;
+  while (*s!='\0') {
+    if (*s=='-' || *s==':') { /* range with no starting value */
+      ps_low = PAGE_MINPAGE;
+      c=s+1;
+      ps_high = strtol(c,&s,10);
+      if (c==s) ps_high=PAGE_MAXPAGE; /* no number */
+      while (*s==' ' || *s=='\t') s++;
+      if (*s=='-' || *s==':') { /* Oh, range with negative starting value */
+	ps_low = -ps_high;
+	c=s+1;
+	ps_high = strtol(c,&s,10);
+	if (c==s) ps_high=PAGE_MAXPAGE; /* no number */
       }
-      n *= 10;
-      n += negative ? '0' - c : c - '0';
-      continue;
-    }
-    if (c == '-' || c == ':') {/* here's a range */
-      if (range)
-	return(_TRUE);
-      if (innumber) {	/* have a lower bound */
-	ps_low = n;
+    } else { /* range with starting value, or singleton */
+      c=s;
+      ps_low = ps_high = strtol(c,&s,10);
+      if (c==s) 
+	return(TRUE);
+      if (*s=='-' || *s==':') { /* range */
+	c=s+1;
+	ps_high = strtol(c,&s,10);
+	if (c==s) ps_high=PAGE_MAXPAGE; /* no number */
       }
-      else
-	ps_low = PAGE_MINPAGE;
-      range++;
-      innumber = 0;
-      continue;
     }
-    if (c == 0 || white (c)) {/* end of this range */
-      if (!innumber) {	/* no upper bound */
-	ps_high = PAGE_MAXPAGE;
-	if (!range)	/* no lower bound either */
-	  ps_low = PAGE_MINPAGE;
-      } else {		/* have an upper bound */
-	ps_high = n;
-	if (!range) {	/* no range => lower bound == upper */
-	  ps_low = ps_high;
-	}
-      }
-      ListPage(ps_low, ps_high);
-      if (c == 0)
-	return(_FALSE);
-      range = 0;
-      innumber = 0;
-      continue;
-    }
-    return(_TRUE);
+    ListPage(ps_low, ps_high);
+    while (*s==' ' || *s=='\t' || *s==',') s++;
   }
-#undef white
+  return(FALSE);
 }
 
 /* Addition, we want to be able to clear the pplist */
