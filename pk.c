@@ -3,8 +3,6 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 
-#define PROPER_OVERSTRIKE
-
 #define PK_POST 245
 #define PK_PRE 247
 #define PK_ID 89
@@ -18,72 +16,53 @@ int32_t SetPK(int32_t c, int32_t hh,int32_t vv)
   register struct pk_char *ptr = currentfont->chr[c];
                                       /* temporary pk_char pointer */
   int red,green,blue;
-  int Color,i;
-  /*
-   * Draw character. Remember now, we have stored the different
-   * greyscales in glyph.data with darkest last.  Draw the character
-   * greyscale by greyscale, lightest first.
-   */
-
-  /* This code saves _no_ execution time, strangely. Possibly,
-     gdImageChar is implemented as coded below.
-
-     #ifdef HAVE_GDIMAGECREATETRUECOLOR 
-       if (truecolor) 
-         for( i=1; i<=ptr->glyph.nchars ; i++) {
-           Color = gdImageColorResolveAlpha(page_imagep,Red,Green,Blue,
-                                            128-128*i/ptr->glyph.nchars);
-           gdImageChar(page_imagep, &(ptr->glyph),
-	               hh - ptr->xOffset/shrinkfactor,
-		       vv - ptr->yOffset/shrinkfactor,
-	  	       i,Color);
-           }
-        else {
-      #endif */
-#ifdef PROPER_OVERSTRIKE 
+  int *Color=alloca(sizeof(int)*ptr->greys);
   int x,y;
   int pos=0;
   int bgColor,pixelcolor;
   hh -= ptr->xOffset/shrinkfactor;
   vv -= ptr->yOffset/shrinkfactor;
   
-  for( i=1; i<=ptr->glyph.nchars ; i++) {
-    red = bRed-(bRed-Red)*i/ptr->glyph.nchars;
-    green = bGreen-(bGreen-Green)*i/ptr->glyph.nchars;
-    blue = bBlue-(bBlue-Blue)*i/ptr->glyph.nchars;
-    Color = gdImageColorResolve(page_imagep,red,green,blue);
-    for( y=0; y<ptr->glyph.h; y++) {
-      for( x=0; x<ptr->glyph.w; x++) {
-	if (ptr->glyph.data[pos]>0) {
-	  bgColor = gdImageGetPixel(page_imagep, hh + x, vv + y);
-	  if (bgColor > 0) {
-	    red=gdImageRed(page_imagep, bgColor);
-	    green=gdImageGreen(page_imagep, bgColor);
-	    blue=gdImageBlue(page_imagep, bgColor);
-	    red = red-(red-Red)*i/ptr->glyph.nchars;
-	    green = green-(green-Green)*i/ptr->glyph.nchars;
-	    blue = blue-(blue-Blue)*i/ptr->glyph.nchars;
-	    pixelcolor = gdImageColorResolve(page_imagep, red, green, blue);
-	    gdImageSetPixel(page_imagep, hh + x, vv + y, pixelcolor);
-	  } else
-	    gdImageSetPixel(page_imagep, hh + x, vv + y, Color);
-	}
-	pos++;
+  for( x=1; x<=ptr->greys ; x++) {
+    red = bRed-(bRed-Red)*x/ptr->greys;
+    green = bGreen-(bGreen-Green)*x/ptr->greys;
+    blue = bBlue-(bBlue-Blue)*x/ptr->greys;
+    Color[x] = gdImageColorResolve(page_imagep,red,green,blue);
+  }  
+  for( y=0; y<ptr->h; y++) {
+    for( x=0; x<ptr->w; x++) {
+      if (ptr->data[pos]>0) {
+	bgColor = gdImageGetPixel(page_imagep, hh + x, vv + y);
+	if (bgColor > 0) {
+	  red=gdImageRed(page_imagep, bgColor);
+	  green=gdImageGreen(page_imagep, bgColor);
+	  blue=gdImageBlue(page_imagep, bgColor);
+	  red = red-(red-Red)*ptr->data[pos]/ptr->greys;
+	  green = green-(green-Green)*ptr->data[pos]/ptr->greys;
+	  blue = blue-(blue-Blue)*ptr->data[pos]/ptr->greys;
+	  pixelcolor = gdImageColorResolve(page_imagep, red, green, blue);
+	  gdImageSetPixel(page_imagep, hh + x, vv + y, pixelcolor);
+	} else
+	  gdImageSetPixel(page_imagep, hh + x, vv + y, 
+			  Color[(int)ptr->data[pos]]);
       }
+      pos++;
     }
   }
-#else /* not PROPER_OVERSTRIKE */  
-  for( i=1; i<=ptr->glyph.nchars ; i++) {
-    red = bRed-(bRed-Red)*i/ptr->glyph.nchars;
-    green = bGreen-(bGreen-Green)*i/ptr->glyph.nchars;
-    blue = bBlue-(bBlue-Blue)*i/ptr->glyph.nchars;
-    Color = gdImageColorResolve(page_imagep,red,green,blue);
-    gdImageChar(page_imagep, &(ptr->glyph),
-		hh - PIXROUND(ptr->xOffset,shrinkfactor),
-		vv - PIXROUND(ptr->yOffset,shrinkfactor),
-		i,Color);
-  }
-#endif /* PROPER_OVERSTRIKE */
+  /* This code saved _no_ execution time, strangely.
+   *
+   * #ifdef HAVE_GDIMAGECREATETRUECOLOR 
+   *   if (truecolor) 
+   *     for( i=1; i<=ptr->glyph.nchars ; i++) {
+   *       Color = gdImageColorResolveAlpha(page_imagep,Red,Green,Blue,
+   *                                        128-128*i/ptr->glyph.nchars);
+   *       gdImageChar(page_imagep, &(ptr->glyph),
+   *	               hh - ptr->xOffset/shrinkfactor,
+   *		       vv - ptr->yOffset/shrinkfactor,
+   *	  	       i,Color);
+   *       }
+   *    else {
+   *  #endif */
   return(ptr->tfmw);
 }
 
@@ -174,11 +153,8 @@ unsigned char* skip_specials(unsigned char* pos)
   return(pos);
 }
 
-/*-->LoadAChar*/
-/**********************************************************************/
-/***************************** LoadAChar ******************************/
-/**********************************************************************/
-void LoadAChar(int32_t c, register struct pk_char * ptr)
+
+void LoadPK(int32_t c, register struct pk_char * ptr)
 {
   unsigned short   shrunk_width,shrunk_height;
   unsigned short   width,height;
@@ -187,7 +163,7 @@ void LoadAChar(int32_t c, register struct pk_char * ptr)
   int   i,j,k,n;
   int   count=0;
   bool  paint_switch;
-  unsigned char*   pos;
+  unsigned char *pos,*buffer;
 
   DEBUG_PRINT((DEBUG_PK,"\n  LOAD PK CHAR\t%d",c));
   pos=ptr->mmap;
@@ -256,21 +232,15 @@ void LoadAChar(int32_t c, register struct pk_char * ptr)
   */
   shrunk_width = (width + shrinkfactor - 1) / shrinkfactor;
   shrunk_height = (height + shrinkfactor - 1) / shrinkfactor;
-  /* 
-     The glyph structure is a gdFont structure. Each glyph gets a font
-     consisting of greyscales for the glyph. There is then enough
-     space to hold the unshrunk glyph as well.
-  */
-  ptr->glyph.w = shrunk_width;
-  ptr->glyph.h = shrunk_height;
-  ptr->glyph.offset = 1;
-  ptr->glyph.nchars = shrinkfactor*shrinkfactor;
+  ptr->w = shrunk_width;
+  ptr->h = shrunk_height;
+  ptr->greys = shrinkfactor*shrinkfactor;
   pos+=n;
-  if ((ptr->glyph.data 
-       = (char*) calloc(shrunk_width*shrunk_height*shrinkfactor*shrinkfactor,
-			sizeof(char))) == NULL)
-    Fatal("Unable to allocate image space for char <%c>\n", (char)c);
-  DEBUG_PRINT((DEBUG_GLYPH, "DRAW GLYPH %d\n", (int)c));
+  buffer = (char*)alloca(shrunk_width*shrunk_height*
+			 shrinkfactor*shrinkfactor*sizeof(char));
+  (void)memset(buffer,0,shrunk_width*shrunk_height*
+	       shrinkfactor*shrinkfactor*sizeof(char));
+  DEBUG_PRINT((DEBUG_GLYPH, "\nDRAW GLYPH %d\n", (int)c));
   /*
     Raster char
   */
@@ -284,9 +254,9 @@ void LoadAChar(int32_t c, register struct pk_char * ptr)
 	  bitweight = 128;
 	}
 	if (count & bitweight) {
-	  ptr->glyph.data[i+j*width]++;
+	  buffer[i+j*width]=1;
 #ifdef DEBUG
-	  DEBUG_PRINT((DEBUG_GLYPH, "*"));
+	  DEBUG_PRINT((DEBUG_GLYPH, "+"));
 	} else {
 	  DEBUG_PRINT((DEBUG_GLYPH, " "));
 #endif
@@ -303,7 +273,7 @@ void LoadAChar(int32_t c, register struct pk_char * ptr)
 	if (i+count < width) {
 	  if (paint_switch) 
 	    for(k=0;k<count;k++) {
-	      ptr->glyph.data[k+i+j*width]++;
+	      buffer[k+i+j*width]=1;
 	      DEBUG_PRINT((DEBUG_GLYPH,"*"));
 	    }
 #ifdef DEBUG
@@ -315,8 +285,8 @@ void LoadAChar(int32_t c, register struct pk_char * ptr)
 	} else {
 	  if (paint_switch) 
 	    for(k=i;k<width;k++) {
-	      ptr->glyph.data[k+j*width]++;
-	      DEBUG_PRINT((DEBUG_GLYPH,"*"));
+	      buffer[k+j*width]=1;
+	      DEBUG_PRINT((DEBUG_GLYPH,"#"));
 	    }
 #ifdef DEBUG
 	  else for(k=i;k<width;k++) 
@@ -328,11 +298,10 @@ void LoadAChar(int32_t c, register struct pk_char * ptr)
 	  /* Repeat row(s) */
 	  for (;repeatcount>0; repeatcount--,j++) {
 	    for (i = i_offset; i<width; i++) {
-	      ptr->glyph.data[i+j*width]=
-		ptr->glyph.data[i+(j-1)*width];
+	      buffer[i+j*width]=buffer[i+(j-1)*width];
 #ifdef DEBUG
-	      if (ptr->glyph.data[i+j*width]>0) {
-		DEBUG_PRINT((DEBUG_GLYPH,"*"));
+	      if (buffer[i+j*width]>0) {
+		DEBUG_PRINT((DEBUG_GLYPH,"="));
 	      } else {
 		DEBUG_PRINT((DEBUG_GLYPH," "));
 	      }
@@ -356,36 +325,27 @@ void LoadAChar(int32_t c, register struct pk_char * ptr)
     single-glyph output seems better than what xdvi at 300 dpi,
     shrinkfactor 3 produces.)
   */
+  if ((ptr->data = 
+       (char*)calloc(shrunk_width*shrunk_height,sizeof(char))) == NULL)
+    Fatal("Unable to allocate image space for char <%c>\n", (char)c);
   for (j = 0; j < (int) height; j++) {	
     for (i = 0; i < (int) width; i++) {    
       if (((i % shrinkfactor) == 0) && ((j % shrinkfactor) == 0))
-	ptr->glyph.data[i/shrinkfactor+j/shrinkfactor*shrunk_width] =
-	  ptr->glyph.data[i+j*width];
+	ptr->data[i/shrinkfactor+j/shrinkfactor*shrunk_width] =
+	  buffer[i+j*width];
       else 
-	ptr->glyph.data[i/shrinkfactor+j/shrinkfactor*shrunk_width] +=
-	  ptr->glyph.data[i+j*width];
+	ptr->data[i/shrinkfactor+j/shrinkfactor*shrunk_width] +=
+	  buffer[i+j*width];
     }
   }	
 #ifdef DEBUG
   for (j = 0; j < shrunk_height; j++) {	
     for (i = 0; i < shrunk_width; i++) {    
-      DEBUG_PRINT((DEBUG_GLYPH,"%d",ptr->glyph.data[i+j*shrunk_width]));
+      DEBUG_PRINT((DEBUG_GLYPH,"%d",ptr->data[i+j*shrunk_width]));
     }
     DEBUG_PRINT((DEBUG_GLYPH,"|\n"));
   }	 
 #endif
-  /*
-    Separate the different greyscales with the darkest last.
-  */
-  for (j = 0; j < shrunk_height; j++) {	
-    for (i = 0; i < shrunk_width; i++) {    
-      for (k = shrinkfactor*shrinkfactor; k>0; k--) {
-	ptr->glyph.data[i+j*shrunk_width + 
-			(k-1)*shrunk_width*shrunk_height] = 
-	  (ptr->glyph.data[i+j*shrunk_width] == k) ? 1 : 0;
-      }
-    }
-  }	
 }
 
 void InitPK(struct font_entry * tfontp)
@@ -437,7 +397,7 @@ void InitPK(struct font_entry * tfontp)
     if ((tcharptr = malloc(sizeof(struct pk_char))) == NULL)
       Fatal("can't malloc space for pk_char");
     tcharptr->flag_byte = *position;
-    tcharptr->glyph.data = NULL;
+    tcharptr->data = NULL;
     tcharptr->tfmw = 0;
     if ((*position & 7) == 7) {
       packet_length = UNumRead(position+1,4);
