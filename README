@@ -4,8 +4,8 @@ dvipng
 This program makes PNG and/or GIF graphics from DVI files as obtained
 from TeX and its relatives.
 
-   If GIF support is enabled, GIF output is chosen with the `--gif'
-option or by using the `dvigif' binary.
+   If GIF support is enabled, GIF output is chosen by using the
+`dvigif' binary or with the `--gif' option.
 
    It is intended to produce anti-aliased screen-resolution images as
 fast as is possible. The target audience is people who need to generate
