@@ -7,8 +7,11 @@ struct encoding* encodingp=NULL;
 
 struct encoding* InitEncoding(char* encoding) 
 {
+#ifndef kpse_enc_format
+#define kpse_enc_format kpse_tex_ps_header_format
+#endif
   char *pos,*max,*buf,*enc_file =
-    kpse_find_file(encoding,kpse_tex_ps_header_format,false);
+    kpse_find_file(encoding,kpse_enc_format,false);
   int encfd,i;
   struct encoding* encp=NULL;
   struct stat stat;
