@@ -4,11 +4,6 @@
 #define DRAWGLYPH
 */
 
-/*-->PkRaster*/
-/*********************************************************************/
-/**************************** PkRaster *******************************/
-/*********************************************************************/
-
 unsigned char   bitweight, inputbyte;
 unsigned char   dyn_f;
 unsigned char   *pkloc;
@@ -134,23 +129,22 @@ register struct char_entry *ptr;
     Fatal("Character %d too large in file %s", c, fontptr->name);
 
   /* 
-     Hotspot issues: Shrinking to the topleft corner rather than the
+   * Hotspot issues: Shrinking to the topleft corner rather than the
      hotspot will displace glyphs a fraction of a pixel. We deal with
-     this in two ways:
+     this in as follows: The glyph is shrunk to its hotspot by
+     offsetting the bitmap somewhat to put the hotspot in the middle
+     of a "shrink square". Shrinking to the topleft corner will then
+     act as shrinking to the hotspot. This may enlarge the bitmap
+     somewhat, of course.  (Also remember that the below calculation
+     of i/j_offset is in integer arithmetics.)
      
-     -Vertically, the glyph is shrunk to its hotspot by offsetting the
-     bitmap somewhat to put the hotspot in the middle of a "shrink
-     square". Shrinking to the topleft corner will then act as
-     shrinking to the hotspot. This may enlarge the bitmap somewhat,
-     of course.  (Also remember that the below calculation of j_offset
-     is in integer arithmetics.) There will still be a displacement
-     but it will be equal for all glyphs on a line, so we displace a
-     whole line vertically by fractions of a pixel. This is
-     acceptible, IMHO.
-
-     -Horizontally, this may produce a crude result, since two
-      adjacent glyphs may have different offsets, and get moved
-      sideways by the shrinkage. Will do for now, I suppose.
+     There will still be a displacement from rounding the dvi
+     position, but vertically it will be equal for all glyphs on a
+     line, so we displace a whole line vertically by fractions of a
+     pixel. This is acceptible, IMHO.  Horizontally, this may produce
+     a crude result, since two adjacent glyphs may be moved
+     differently by rounding their dvi positions, and they get moved
+     sideways by the shrinkage. Will do for now, I suppose.
    */
   
   xoffset = (short) SignExtend(pxlfp, n);
@@ -284,9 +278,9 @@ register struct char_entry *ptr;
   }
 
   /*
-    Shrink raster while doing antialiasing. (Somewhat crude. Glyphs
-    get moved around by this. The single-glyph output seems better
-    than what xdvi produces.)
+    Shrink raster while doing antialiasing. (See above. The
+    single-glyph output seems better than what xdvi at 300 dpi,
+    shrinkfactor 3 produces.)
   */
 
   for (j = 0; j < (int) height; j++) {	
@@ -310,9 +304,8 @@ register struct char_entry *ptr;
 #endif
 
   /*
-    Separate the different greyscales with the darkest
-    last. glyph.data will point to the lightest greyscale, but the
-    drawing routine will deal with this.
+    Separate the different greyscales with the darkest last.
+    See SetChar in set.c
   */
 
   for (j = 0; j < shrunk_height; j++) {	
