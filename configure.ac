@@ -54,7 +54,7 @@ AC_FUNC_MMAP
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([dup2 ftime gettimeofday strchr strrchr])
-AC_CHECK_FUNCS([gdImagePngEx gdImageCreateTrueColor])
+AC_CHECK_FUNCS([gdImagePngEx gdImageCreateTrueColor gdImageTrueColorToPalette])
 
 # Documentation-related checks
 AC_PATH_PROG(MAKEINFO, makeinfo, :)
