@@ -12,20 +12,9 @@ int32_t SetVF(int32_t c)
   struct font_entry* currentvf;
   unsigned char *command,*end;
   struct vf_char* ptr=currentfont->chr[c];
-  static unsigned char initvf[]={ PUSH, W1, 0, X1, 0, Y1, 0, Z1, 0, POP };
 
   currentvf=currentfont;
-  SetFntNum(currentvf->defaultfont,currentvf);
-  DEBUG_PRINT((DEBUG_DVI,"\n  INIT VF:\t%s %s", dvi_commands[initvf[0]],
-		dvi_commands[initvf[1]]));
-  DrawCommand(initvf,NULL);
-  DrawCommand(initvf+1,currentvf);
-  DEBUG_PRINT((DEBUG_DVI," %s", dvi_commands[initvf[3]]));
-  DrawCommand(initvf+3,currentvf);
-  DEBUG_PRINT((DEBUG_DVI," %s", dvi_commands[initvf[5]]));
-  DrawCommand(initvf+5,currentvf);
-  DEBUG_PRINT((DEBUG_DVI," %s", dvi_commands[initvf[7]]));
-  DrawCommand(initvf+7,currentvf);
+  BeginVFMacro(currentvf);
   command = ptr->mmap;
   end = command + ptr->length;
   while (command < end)  {
@@ -33,8 +22,7 @@ int32_t SetVF(int32_t c)
     DrawCommand(command,currentvf);
     command += CommandLength(command);
   } 
-  DEBUG_PRINT((DEBUG_DVI,"\n  EXIT VF:\t%s", dvi_commands[initvf[9]]));
-  DrawCommand(initvf+9,NULL);
+  EndVFMacro();
   currentfont=currentvf;
   return(ptr->tfmw);
 }
