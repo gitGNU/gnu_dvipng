@@ -99,17 +99,17 @@ char* FindPSFontMap(char* fontname, char** encoding, FT_Matrix** transform)
     DEBUG_PRINT((DEBUG_FT,"\n  PSFONTMAP: %s ",fontname));
     pos=entry->line;
     while(pos < entry->end) { 
-      if (*pos=='<') {
+      if (*pos=='<') {                               /* filename follows */
 	pos++;
-	if (pos<entry->end && *pos=='<') {
+	if (pos<entry->end && *pos=='<') {           /* <<download.font */
 	  pos++;
 	  psfile = newword((char**)&pos,entry->end);
 	  DEBUG_PRINT((DEBUG_FT,"<%s ",psfile));
-	} else if (pos<entry->end && *pos=='[') {
+	} else if (pos<entry->end && *pos=='[') {    /* <[encoding.file */
 	  pos++;
 	  *encoding = newword((char**)&pos,entry->end);
 	  DEBUG_PRINT((DEBUG_FT,"<[%s ",*encoding));
-	} else {
+	} else {                                     /* <some.file      */
 	  char* word =newword((char**)&pos,entry->end); 
 	  if (strncmp(word+strlen(word)-4,".enc",4)==0) {   /* encoding */
 	    *encoding=word;
@@ -119,7 +119,7 @@ char* FindPSFontMap(char* fontname, char** encoding, FT_Matrix** transform)
 	    DEBUG_PRINT((DEBUG_FT,"<%s ",psfile));
 	  }
 	}
-      } else if (*pos=='"') {    /* Reencoding/tranformation exists */
+      } else if (*pos=='"') { /* PS code: reencoding/tranformation exists */
 	FT_Fixed xx=0,xy=0,val=0;
 	
 	pos++;
@@ -153,7 +153,7 @@ char* FindPSFontMap(char* fontname, char** encoding, FT_Matrix** transform)
 	  else
 	    (**transform).xy=0;
 	}
-      } else {
+      } else {                                      /* bare word */
 	switch (++nameno) {
 	case 1:
 	  while(pos<entry->end && *pos!=' ' && *pos!='\t') pos++;
