@@ -1358,18 +1358,20 @@ FreeType calls
 @item 64
 Encoding loads
 @item 128
-GhostScript specials
+Color specials
 @item 256
-Kpathsea @code{stat} calls
+GhostScript specials
 @item 512
-Kpathsea hash table lookups
+Kpathsea @code{stat} calls
 @item 1024
-Kpathsea path element expansion
+Kpathsea hash table lookups
 @item 2048
+Kpathsea path element expansion
+@item 4096
 Kpathsea path searches
 @ignore
-@item 4096
 @item 8192
+@item 16384
 @end ignore
 
 @end table
