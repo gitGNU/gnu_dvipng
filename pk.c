@@ -14,7 +14,7 @@ void    LoadAChar(int32_t, register struct pk_char *);
 
 int32_t SetPK(int32_t c, int32_t h,int32_t v)
 {
-  register struct pk_char *ptr = currentfont->pk_ch[c];
+  register struct pk_char *ptr = currentfont->chr[c];
                                       /* temporary pk_char pointer */
   int red,green,blue;
   int Color,i;
@@ -412,7 +412,7 @@ void InitPK(struct font_entry * tfontp)
     Fatal("Bad character (%d) in PK-File\n",(int)c);
   tcharptr->length = packet_length;
   tcharptr->mmap = position;
-  tfontp->pk_ch[c]=tcharptr;
+  tfontp->chr[c]=tcharptr;
   position += packet_length;
   position = skip_specials(position);
   }

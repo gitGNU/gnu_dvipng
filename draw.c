@@ -37,10 +37,11 @@ int32_t SetChar(int32_t c)
 #endif
 
   if (currentfont->type==FONT_TYPE_VF) { 
-    DEBUG_PRINTF(DEBUG_DVI," tfmw %d", currentfont->vf_ch[c]->tfmw);
+    DEBUG_PRINTF(DEBUG_DVI," tfmw %d", 
+		 ((struct vf_char*)currentfont->chr[c])->tfmw);
     return(SetVF(c));
   } else {
-    struct pk_char* ptr = currentfont->pk_ch[c];
+    struct pk_char* ptr = currentfont->chr[c];
     if (ptr) {
       if (ptr->glyph.data == NULL) 
 	LoadAChar(c, ptr);

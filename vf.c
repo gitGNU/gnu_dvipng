@@ -10,6 +10,7 @@ int32_t SetVF(int32_t c)
 {
   struct font_entry* currentvf;
   unsigned char *command,*end;
+  struct vf_char* ptr=currentfont->chr[c];
   static unsigned char initvf[]={ PUSH, W1, 0, X1, 0, Y1, 0, Z1, 0, POP };
 
   currentvf=currentfont;
@@ -24,8 +25,8 @@ int32_t SetVF(int32_t c)
   DrawCommand(initvf+5,currentvf);
   DEBUG_PRINTF(DEBUG_DVI," %s", dvi_commands[initvf[7]]);
   DrawCommand(initvf+7,currentvf);
-  command = currentvf->vf_ch[c]->mmap;
-  end = command + currentvf->vf_ch[c]->length;
+  command = ptr->mmap;
+  end = command + ptr->length;
   while (command < end)  {
     DEBUG_PRINTF(DEBUG_DVI,"\n  VF MACRO:\t%s ", dvi_commands[*command]);
     DrawCommand(command,currentvf);
@@ -34,7 +35,7 @@ int32_t SetVF(int32_t c)
   DEBUG_PRINTF(DEBUG_DVI,"\n  EXIT VF:\t%s", dvi_commands[initvf[9]]);
   DrawCommand(initvf+9,NULL);
   currentfont=currentvf;
-  return(currentvf->vf_ch[c]->tfmw);
+  return(ptr->tfmw);
 }
 
 
@@ -114,7 +115,7 @@ void InitVF(struct font_entry * tfontp)
     DEBUG_PRINTF(DEBUG_VF," (%d)",tcharptr->tfmw);
     if (c > NFNTCHARS) /* Only positive for now */
       Fatal("vf character exceeds numbering limit");
-    tfontp->vf_ch[c] = tcharptr;
+    tfontp->chr[c] = tcharptr;
     tcharptr->mmap=position;
     position += tcharptr->length;
   }

@@ -167,7 +167,7 @@ void FontDef(unsigned char* command, void* parent)
   
   tfontptr->name[0] = '\0';
   for (i = FIRSTFNTCHAR; i <= LASTFNTCHAR; i++) {
-    tfontptr->pk_ch[i] = NULL;
+    tfontptr->chr[i] = NULL;
   }
 
   tfontptr->font_mag = 
