@@ -9,32 +9,32 @@ Prerequisites
 
    * The GD Graphics Draw library, libgd
 
-     The one requirement that may be a problem is Thomas Boutell's
-     `libgd', downloadable at `http://www.boutell.com/gd'. There are
-     binary packages for at least RedHat linux from redhat.com, and
-     probably also for several other operating systems from their
-     distributors. The latest version of the library installs using
-     `autoconf' so it should really not be more difficult to install
-     than dvipng, but the `autoconf' support is quite new, though.
+     The drawing library `libgd' is necessary, and is downloadable at
+     `http://www.boutell.com/gd', and there are binary packages for
+     most operating systems from their respective distributors. In any
+     case, the latest version of the library installs using `autoconf'
+     so it should not be difficult for you to install it from source,
+     and then proceed with installing dvipng.
 
    * The path-searching library kpathsea
 
-     Kpathsea is most likely included in your LaTeX installation, but
-     it may happen that ./configure does not find it; see below. If you
-     have not got it, download it from `http://www.ctan.org' and
-     compile it.  I have no experience with this, so I cannot help much
-     here.
+     Kpathsea is most likely included in your LaTeX installation, but it
+     may happen that ./configure does not find it; see below. If you do
+     not have it, download it from `http://www.ctan.org' and compile it.
+     I have no experience with this, so I cannot help much here.
 
-   * FreeType 2
+   * FreeType 2 and/or T1lib
 
-     While not strictly necessary, you may want to have FreeType 2
-     available. Its presence will enable direct support for PostScript
-     fonts in dvipng, rather than using `gsftopk' for rendering the
-     fonts. If you have PostScript versons of Computer Modern
-     installed, there will be no need to generate bitmapped variants on
-     disk of these. Then, you can render images at different (and
-     unusual) resolutions without cluttering the disk with lots of
-     bitmapped fonts.
+     While not strictly necessary, you may want to have FreeType 2 or
+     T1lib available. Their presence will enable direct support for
+     PostScript fonts in dvipng, rather than using `gsftopk' for
+     rendering the fonts. If you have PostScript versons of Computer
+     Modern installed, there will be no need to generate bitmapped
+     variants on disk of these. Then, you can render images at
+     different (and unusual) resolutions without cluttering the disk
+     with lots of bitmapped fonts.  If both FreeType 2 and T1lib are
+     present, FreeType will be internally preferred by dvipng, but
+     T1lib can be chosen at runtime.
 
    * libpng and libz
 
@@ -50,7 +50,7 @@ Prerequisites
 Configure
 =========
 
-   The first step is to configure the source code, telling it where
+The first step is to configure the source code, telling it where
 various files will be.  To do so, run
 
      ./configure OPTIONS
@@ -65,11 +65,11 @@ it out. For a list of the options type
 
      ./configure --help
 
-   On some machines, the libraries will be installed in nonstandard
-directories that are not in the linker's search path. This will generate
-an error when running `./configure', indicating that it cannot find
-libgd or libkpathsea (most likely). You then need to specify the path to
-the respective library's object files. They are typically called e.g.,
+   On some machines, the libraries will be installed in directories that
+are not in the linker's search path. This will generate an error when
+running `./configure', indicating that it cannot find libgd or
+libkpathsea (most likely). You then need to specify the path to the
+respective library's object files. They are typically called e.g.,
 `libgd.a' or `libgd.so'. If they are located in e.g., `/sw/local/lib',
 do
 
@@ -82,8 +82,8 @@ use
      ./configure LDFLAGS='-L/sw/local/lib -R/sw/local/lib'
 
    When either of these is necessary, it is likely that the C header
-files are also installed in nonstandard directories that are not in the
-C preprocessor's search path. This will also generate an error when
+files are also installed in directories that are not in the C
+preprocessor's search path. This will also generate an error when
 running `./configure', indicating that it cannot find e.g., `gd.h' or
 `kpathsea.h' (most likely). You then need to specify the path to the
 respective library's C header files. If they are located in e.g.,
@@ -101,7 +101,7 @@ where the backslash denotes a continuation of the line.
 Build/install
 =============
 
-   Once `configure' has been run, simply enter
+Once `configure' has been run, simply enter
 
      make
 
@@ -116,18 +116,19 @@ into system directories.
 Installation outside the texmf tree
 ===================================
 
-   In some cases, a dvipng binary installed outside the texmf tree will
-not be able to find virtual fonts, or the PostScript font maps (normally
-used by dvips). This may be because one or more of $SELFAUTOLOC,
-$SELFAUTODIR or $SELFAUTOPARENT are used in the texmf tree configuration
-file `texmf.cnf'. If so, give the switch `--enable-selfauto-set' to
-`./configure', which will make dvipng adjust these internally so that
-kpathsea thinks that dvipng _is_ installed in the texmf tree.
+In some cases, a dvipng binary installed outside the texmf tree will
+not be able to find virtual fonts, or the PostScript font maps
+(normally used by dvips). This may be because _only_ $SELFAUTOLOC,
+$SELFAUTODIR, and $SELFAUTOPARENT are used in the texmf tree
+configuration file `texmf.cnf'. If so, give the switch
+`--enable-selfauto-set' to `./configure'. This will make dvipng adjust
+these three internally so that kpathsea thinks that dvipng _is_
+installed in the texmf tree.
 
 Installation for non-privileged users
 =====================================
 
-   Often people without system administration privileges want to install
+Often people without system administration privileges want to install
 software for their private use. In that case you need to specify more
 options to the `configure' script, usually this is done by using the
 `--prefix' option to the `configure' script, and let it point to the

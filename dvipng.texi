@@ -9,8 +9,8 @@ dvipng [options] [filename] -
 @c man end
 @end ifset
 
-@set version 1.0
-@set month-year March 2004
+@set version 1.1
+@set month-year May 2004
 
 @c Put everything in one index (arbitrarily chosen to be the concept index).
 @syncodeindex fn cp
