@@ -157,38 +157,41 @@ void DoPages(void)
 {
   struct page_list *tpagelistp=NULL;
 
-  while((tpagelistp=FindQdPage())!=NULL
-	&& tpagelistp->count[10]!=-1) {
-    if (PassDefault == PASS_BBOX || PassDefault == PASS_TIGHT_BBOX) {
-      if (PassDefault == PASS_TIGHT_BBOX) {
-	x_max = y_max = INT32_MIN;
-	x_min = y_min = INT32_MAX;
+  if((tpagelistp=FindQdPage())!=NULL
+     && tpagelistp->count[10]!=-1) {
+    while(tpagelistp!=NULL && tpagelistp->count[10]!=-1) {
+      if (PassDefault == PASS_BBOX || PassDefault == PASS_TIGHT_BBOX) {
+	if (PassDefault == PASS_TIGHT_BBOX) {
+	  x_max = y_max = INT32_MIN;
+	  x_min = y_min = INT32_MAX;
+	}
+	DrawPage(PASS_BBOX);
+	/* Reset to after BOP of current page */
+	fseek(dvi->filep, tpagelistp->offset+45, SEEK_SET); 
+	x_width = x_max-x_min;
+	y_width = y_max-y_min;
+	x_offset = -x_min; /* offset by moving topleft corner */
+	y_offset = -y_min; 
+	x_max = x_min = -x_offset_def; /* reset BBOX */
+	y_max = y_min = -y_offset_def;
+	DEBUG_PRINTF2(DEBUG_DVI,"\n  IMAGE:\t%dx%d",x_width,y_width);
       }
-      DrawPage(PASS_BBOX);
-      /* Reset to after BOP of current page */
-      fseek(dvi->filep, tpagelistp->offset+45, SEEK_SET); 
-      x_width = x_max-x_min;
-      y_width = y_max-y_min;
-      x_offset = -x_min; /* offset by moving topleft corner */
-      y_offset = -y_min; 
-      x_max = x_min = -x_offset_def; /* reset BBOX */
-      y_max = y_min = -y_offset_def;
-      DEBUG_PRINTF2(DEBUG_DVI,"\n  IMAGE:\t%dx%d",x_width,y_width);
-    }
-    DEBUG_PRINTF(DEBUG_DVI,"\n@%d PAGE START:\tBOP",tpagelistp->offset);
+      DEBUG_PRINTF(DEBUG_DVI,"\n@%d PAGE START:\tBOP",tpagelistp->offset);
 #ifdef DEBUG
-    {int i; for (i=0;i<10;i++) 
-      DEBUG_PRINTF(DEBUG_DVI," %d",tpagelistp->count[i]);
-    DEBUG_PRINTF(DEBUG_DVI," (%d)\n",tpagelistp->count[10]);}
+      {int i; for (i=0;i<10;i++) 
+	DEBUG_PRINTF(DEBUG_DVI," %d",tpagelistp->count[i]);
+      DEBUG_PRINTF(DEBUG_DVI," (%d)\n",tpagelistp->count[10]);}
 #endif
-    DoBop();
-    qfprintf(ERR_STREAM,"[%d",  tpagelistp->count[0]);
-    DrawPage(PASS_DRAW);
-    FormFeed(dvi,tpagelistp->count[0]);
+      DoBop();
+      qfprintf(ERR_STREAM,"[%d",  tpagelistp->count[0]);
+      DrawPage(PASS_DRAW);
+      FormFeed(dvi,tpagelistp->count[0]);
 #ifdef TIMING
-    ++ndone;
+      ++ndone;
 #endif
-    qfprintf(ERR_STREAM,"] ");
+      qfprintf(ERR_STREAM,"] ");
+      tpagelistp=FindQdPage();
+    }
+    qfprintf(ERR_STREAM,"\n");
   }
-  qfprintf(ERR_STREAM,"\n");
 }
