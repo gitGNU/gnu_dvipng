@@ -42,7 +42,6 @@ dviunits SetFT(int32_t c, subpixels hh, subpixels vv)
       }
       pos++;
     }
-    DEBUG_PRINT((DEBUG_GLYPH,"|\n"));
   }
   return(ptr->tfmw);
 }
@@ -83,7 +82,7 @@ void LoadFT(int32_t c, struct ft_char * ptr)
   for(i=0;i<bitmap.rows;i++) {
     for(j=0;j<bitmap.width;j++) {
       k=bitmap.buffer[i*bitmap.pitch+j]/(256/GREYLEVELS);
-      DEBUG_PRINT((DEBUG_GLYPH,"%c",k+(k>9)?'0':'A'-10));
+      DEBUG_PRINT((DEBUG_GLYPH,"%c",k+((k<=9)?'0':'A'-10)));
       bit[i*bitmap.width+j]=k;
     }
     DEBUG_PRINT((DEBUG_GLYPH,"|\n"));
