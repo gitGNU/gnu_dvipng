@@ -22,7 +22,7 @@ void CheckChecksum(uint32_t c1, uint32_t c2, const char* name)
   /* Report a warning if both checksums are nonzero, they don't match,
      and the user hasn't turned it off.  */
   if (c1 && c2 && c1 != c2
-#ifdef KPATHSEA
+#ifdef HAVE_LIBKPATHSEA
       && !kpse_tex_hush ("checksum")
 #endif
       ) {
@@ -57,7 +57,7 @@ double ActualFactor(uint32_t unmodsize)
 }
 
 
-void FontDef(unsigned char* command, struct dvi_vf_entry* parent)
+void FontDef(unsigned char* command, void* parent)
 {
   int32_t k;
   uint32_t   c, s, d;
@@ -75,14 +75,16 @@ void FontDef(unsigned char* command, struct dvi_vf_entry* parent)
   d = UNumRead(current+8, 4); /* design size */
   a = UNumRead(current+12, 1); /* length for font name */
   l = UNumRead(current+13, 1); /* device length */
-  if (parent->type==FONT_TYPE_VF) {
+  if (((struct font_entry*)parent)->type==FONT_TYPE_VF) {
     DEBUG_PRINTF2(DEBUG_VF," %d %d",k,c);
     DEBUG_PRINTF(DEBUG_VF," %d",s);
     /* Rescale. s is relative to the actual scale /(1<<20) */
-    s = (uint32_t)((uint64_t) s * parent->s / (1<<20));
+    s = (uint32_t)((uint64_t) s * (((struct font_entry*) parent)->s) 
+		   / (1<<20));
     DEBUG_PRINTF2(DEBUG_VF," (%d) %d",s,d);
     /* Oddly, d differs in the DVI and the VF that my system produces */
-    d = (uint32_t)((uint64_t) d * parent->d / parent->designsize);
+    d = (uint32_t)((uint64_t) d * ((struct font_entry*)parent)->d
+		   / ((struct font_entry*)parent)->designsize);
     DEBUG_PRINTF(DEBUG_VF," (%d)",d);
     DEBUG_PRINTF2(DEBUG_VF," %d %d",a,l);
     DEBUG_PRINTF2(DEBUG_VF," '%.*s'",a+l,current+14);
@@ -98,12 +100,12 @@ void FontDef(unsigned char* command, struct dvi_vf_entry* parent)
     Fatal("too long font name for font %ld\n",k);
 
   /* Find entry with this font number in use */
-  switch (parent->type) {
+  switch (((struct font_entry*)parent)->type) {
   case FONT_TYPE_VF:
-    tfontnump = parent->vffontnump;
+    tfontnump = ((struct font_entry*)parent)->vffontnump;
     break;
   case DVI_TYPE:
-    tfontnump = parent->fontnump;
+    tfontnump = ((struct dvi_data*)parent)->fontnump;
   }
   while (tfontnump != NULL && tfontnump->k != k) {
     tfontnump = tfontnump->next;
@@ -121,14 +123,14 @@ void FontDef(unsigned char* command, struct dvi_vf_entry* parent)
     if ((tfontnump=malloc(sizeof(struct font_num)))==NULL) 
       Fatal("cannot allocate memory for new font number");
     tfontnump->k=k;
-    switch (parent->type) {
+    switch (((struct font_entry*)parent)->type) {
     case FONT_TYPE_VF:
-      tfontnump->next=parent->vffontnump;
-      parent->vffontnump=tfontnump;
+      tfontnump->next=((struct font_entry*)parent)->vffontnump;
+      ((struct font_entry*)parent)->vffontnump=tfontnump;
       break;
     case DVI_TYPE:
-      tfontnump->next=parent->fontnump;
-      parent->fontnump=tfontnump;
+      tfontnump->next=((struct dvi_data*)parent)->fontnump;
+      ((struct dvi_data*)parent)->fontnump=tfontnump;
     }
   }
 
@@ -190,7 +192,7 @@ void FontFind(struct font_entry * tfontptr)
     strcpy (tfontptr->name, name);
     free (name);
     InitVF(tfontptr);
-  } else {
+    } else {
     name = kpse_find_pk (tfontptr->n, dpi, &font_ret);
     if (name) {
       strcpy (tfontptr->name, name);
@@ -236,18 +238,18 @@ void FontFind(struct font_entry * tfontptr)
 /**********************************************************************/
 /****************************  SetFntNum  *****************************/
 /**********************************************************************/
-void SetFntNum(int32_t k, struct dvi_vf_entry* parent)
+void SetFntNum(int32_t k, void* parent /* dvi/vf */)
 /*  this routine is used to specify the font to be used in printing future
     characters */
 {
   struct font_num *tfontnump=NULL;  /* temporary font_num pointer   */
 
-  switch (parent->type) {
+  switch (((struct font_entry*)parent)->type) {
   case FONT_TYPE_VF:
-    tfontnump = parent->vffontnump;
+    tfontnump = ((struct font_entry*)parent)->vffontnump;
     break;
   case DVI_TYPE:
-    tfontnump = parent->fontnump;
+    tfontnump = ((struct dvi_data*)parent)->fontnump;
   }
   while (tfontnump != NULL && tfontnump->k != k)
     tfontnump = tfontnump->next;
