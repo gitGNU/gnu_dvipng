@@ -17,7 +17,6 @@ void GetFontDef()
   while (((byte = (unsigned char) NoSignExtend(dvifp, 1)) >= FNT_DEF1) &&
          (byte <= FNT_DEF4)) {
 
-  TIC();
     switch (byte) {
     case FNT_DEF1:
       ReadFontDef( NoSignExtend(dvifp, 1));
@@ -36,7 +35,6 @@ void GetFontDef()
       break;
     }
 
-  TOC();
   }
   if (byte != POST_POST)
     Fatal("POST_POST missing after fontdefs");
