@@ -61,8 +61,10 @@ int main(int argc, char ** argv)
     fgets(line,STRSIZE,stdin);
     while(!feof(stdin)) {
       DecodeString(line);
-      if (dvi!=NULL) 
+      if (dvi!=NULL) {
+	DVIReInit(dvi);
 	DoPages();
+      }
       printf("%s> ",dvi!=NULL?dvi->name:"");
       fgets(line,STRSIZE,stdin);
     }

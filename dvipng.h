@@ -112,10 +112,11 @@ struct dvi_data {    /* dvi entry */
   int          type;            /* This is a DVI                    */
   struct dvi_data *next;
   uint32_t     num, den, mag;   /* PRE command parameters            */
-  int32_t     conv;             /* computed from num and den         */
+  int32_t      conv;            /* computed from num and den         */
   char         name[STRSIZE];   /* full name of DVI file             */
   char         outname[STRSIZE];/* output filename (basename)        */
   FILE *       filep;           /* file pointer                      */
+  time_t       mtime;           /* modification time                 */
   struct font_num  *fontnump;   /* DVI font numbering                */
   struct page_list *pagelistp;  /* DVI page list                     */
 };
@@ -134,6 +135,7 @@ struct page_list {
 
 struct dvi_data* DVIOpen(char*,char*);
 void             DVIClose(struct dvi_data*);
+void             DVIReInit(struct dvi_data*);
 struct page_list*FindPage(int32_t, bool);
 struct page_list*NextPage(struct page_list*);
 struct page_list*PrevPage(struct page_list*);
@@ -382,7 +384,6 @@ EXTERN int PassDefault INIT(PASS_BBOX);
 EXTERN bool ParseStdin INIT(_FALSE);
 
 EXTERN struct page_list* hpagelistp INIT(NULL);
-EXTERN uint32_t abspagenumber INIT(0);
 
 EXTERN struct font_entry* currentfont;
 EXTERN struct dvi_data* dvi INIT(NULL);

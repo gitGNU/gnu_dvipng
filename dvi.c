@@ -1,10 +1,47 @@
 #include "dvipng.h"
 #include <libgen.h>
+#include <sys/stat.h>
 
-struct dvi_data* DVIOpen(char* dviname,char* outname)
+void DVIInit(struct dvi_data* dvi)
 {
   int     k;
   unsigned char* pre;
+  struct stat stat;
+
+  fseek(dvi->filep,0,SEEK_SET);
+  pre=DVIGetCommand(dvi);
+  if (*pre != PRE) {
+    Fatal("PRE doesn't occur first--are you sure this is a DVI file?\n\n");
+  }
+  k = UNumRead(pre+1,1);
+  DEBUG_PRINTF(DEBUG_DVI,"DVI START:\tPRE %d",k);
+  if (k != DVIFORMAT) {
+    Fatal("DVI format = %d, can only process DVI format %d files\n\n",
+	  k, DVIFORMAT);
+  }
+  dvi->num = UNumRead(pre+2, 4);
+  dvi->den = UNumRead(pre+6, 4);
+  DEBUG_PRINTF2(DEBUG_DVI," %d/%d",dvi->num,dvi->den);  
+  dvi->mag = UNumRead(pre+10, 4); /*FIXME, see font.c*/
+  DEBUG_PRINTF(DEBUG_DVI," %d",dvi->mag);  
+  if ( usermag > 0 && usermag != dvi->mag ) {
+    Warning("DVI magnification of %d over-ridden by user (%ld)",
+	    (long)dvi->mag, usermag );
+    dvi->mag = usermag;
+  }
+  dvi->conv = (1.0/(((double)dvi->num / (double)dvi->den) *
+		    ((double)dvi->mag / 1000.0) *
+		    ((double)resolution/254000.0)))+0.5;
+  DEBUG_PRINTF(DEBUG_DVI," (%d)",dvi->conv);
+  k = UNumRead(pre+14,1);
+  DEBUG_PRINTF2(DEBUG_DVI," '%.*s'",k,pre+15);
+  Message(BE_VERBOSE,"'%.*s' -> %s#.png\n",k,pre+15,dvi->outname);
+  fstat(fileno(dvi->filep), &stat);
+  dvi->mtime = stat.st_mtime;
+}
+
+struct dvi_data* DVIOpen(char* dviname,char* outname)
+{
   char* tmpstring;
   struct dvi_data* dvi;
 
@@ -38,33 +75,7 @@ struct dvi_data* DVIOpen(char* dviname,char* outname)
     }
   }
   DEBUG_PRINTF(DEBUG_DVI,"OPEN FILE\t%s", dvi->name);
-  pre=DVIGetCommand(dvi);
-  if (*pre != PRE) {
-    Fatal("PRE doesn't occur first--are you sure this is a DVI file?\n\n");
-  }
-  k = UNumRead(pre+1,1);
-  DEBUG_PRINTF(DEBUG_DVI,"DVI START:\tPRE %d",k);
-  if (k != DVIFORMAT) {
-    Fatal("DVI format = %d, can only process DVI format %d files\n\n",
-	  k, DVIFORMAT);
-  }
-  dvi->num = UNumRead(pre+2, 4);
-  dvi->den = UNumRead(pre+6, 4);
-  DEBUG_PRINTF2(DEBUG_DVI," %d/%d",dvi->num,dvi->den);  
-  dvi->mag = UNumRead(pre+10, 4); /*FIXME, see font.c*/
-  DEBUG_PRINTF(DEBUG_DVI," %d",dvi->mag);  
-  if ( usermag > 0 && usermag != dvi->mag ) {
-    Warning("DVI magnification of %d over-ridden by user (%ld)",
-	    (long)dvi->mag, usermag );
-    dvi->mag = usermag;
-  }
-  dvi->conv = (1.0/(((double)dvi->num / (double)dvi->den) *
-		    ((double)dvi->mag / 1000.0) *
-		    ((double)resolution/254000.0)))+0.5;
-  DEBUG_PRINTF(DEBUG_DVI," (%d)",dvi->conv);
-  k = UNumRead(pre+14,1);
-  DEBUG_PRINTF2(DEBUG_DVI," '%.*s'",k,pre+15);
-  Message(BE_VERBOSE,"'%.*s' -> %s#.png\n",k,pre+15,dvi->outname);
+  DVIInit(dvi);
   return(dvi);
 }
 
@@ -200,8 +211,11 @@ struct page_list* InitPage(void)
       tpagelistp->count[i] = UNumRead(command + 1 + i*4, 4);
       DEBUG_PRINTF(DEBUG_DVI," %d",tpagelistp->count[i]);
     }
-    tpagelistp->count[10] = ++abspagenumber;
-    DEBUG_PRINTF(DEBUG_DVI," (%d)",abspagenumber);
+    if (hpagelistp==NULL)
+      tpagelistp->count[10] = 1;
+    else
+      tpagelistp->count[10] = hpagelistp->count[10]+1;
+    DEBUG_PRINTF(DEBUG_DVI," (%d)", tpagelistp->count[10]);
   } else {
     DEBUG_PUTS(DEBUG_DVI,"DVI END:\tPOST");
     tpagelistp->offset = ftell(dvi->filep)-1;
@@ -282,7 +296,7 @@ struct page_list* FindPage(int32_t pagenum, bool abspage)
 }
 
 
-void DVIClose(struct dvi_data* dvi)
+void DelPageList(struct dvi_data* dvi)
 {
   struct page_list* temp;
   
@@ -294,9 +308,23 @@ void DVIClose(struct dvi_data* dvi)
     free(temp);
     temp=hpagelistp;
   }
-  abspagenumber=0;
+}
 
+void DVIClose(struct dvi_data* dvi)
+{
+  DelPageList(dvi);
   fclose(dvi->filep);
   free(dvi);
 }
 
+void DVIReInit(struct dvi_data* dvi)
+{
+  struct stat stat;
+  fstat(fileno(dvi->filep), &stat);
+  if (dvi->mtime != stat.st_mtime) {
+    Message(PARSE_STDIN,"Reopened file\n");
+    DEBUG_PRINTF(DEBUG_DVI,"\nREOPEN FILE\t%s", dvi->name);
+    DelPageList(dvi);
+    DVIInit(dvi);
+  }
+}
