@@ -129,7 +129,7 @@
 .\" ========================================================================
 .\"
 .IX Title "DVIPNG 1"
-.TH DVIPNG 1 "2004-05-30" "dvipng 1.1" "User commands"
+.TH DVIPNG 1 "2004-08-17" "dvipng 1.2" "User commands"
 .SH "NAME"
 dvipng \- A DVI\-to\-PNG translator
 .SH "SYNOPSIS"
@@ -244,6 +244,12 @@ StyleSheets 1)
 .Sp
 The depth is a negative offset in this case, so the minus sign is
 necessary, and the unit is pixels (px).
+.IP "\fB\-\-gamma\fR \fInum\fR" 4
+.IX Item "--gamma num"
+Control the interpolation of colors in the greyscale anti-aliasing
+color palette.  Default value is 1.0.  For 0 < \fInum\fR < 1, the
+fonts will be lighter (more like the background), and for \fInum\fR >
+1, the fonts will be darker (more like the foreground).
 .IP "\fB\-fg\fR \fIcolor_spec\fR" 4
 .IX Item "-fg color_spec"
 Choose foreground color for the images. This option will be ignored if
@@ -269,6 +275,12 @@ resolutions without cluttering the disk with lots of bitmapped fonts.
 Note that if you have both FreeType and T1lib on your system, FreeType
 will be preferred by dvipng. If you for some reason would want to use
 T1lib rendering, use this option.
+.IP "\fB\-\-gif*\fR" 4
+.IX Item "--gif*"
+The images are output in the \s-1GIF\s0 format, if \s-1GIF\s0 support is
+enabled. This is the default for the \fBdvigif\fR binary, which only
+should be installed when \s-1GIF\s0 support is available. See also the
+\&\fB\-\-png\fR option.
 .IP "\fB\-\-height*\fR" 4
 .IX Item "--height*"
 Report the height of the image. This only works reliably when the
@@ -297,6 +309,18 @@ mode names for most devices.
 Turns off automatic \s-1PK\s0 font generation (\fImktexpk\fR). This will have
 no effect when using PostScript fonts, since no \s-1PK\s0 font generation will
 be done anyway.
+.IP "\fB\-\-noghostscript*\fR" 4
+.IX Item "--noghostscript*"
+This switch prohibits the internal call to GhostScript for displaying
+PostScript<tm> specials. \-\-noghostscript0 turns the call back on.
+.IP "\fB\-\-nogssafer*\fR" 4
+.IX Item "--nogssafer*"
+Normally, if GhostScript is used to render PostScript specials, the
+GhostScript interpreter is run with the option \-dSAFER.  The
+\&\-nogssafer option runs GhostScript without \-dSAFER.  The \-dSAFER
+option in Ghostscript disables PostScript operators such as
+deletefile, to prevent possibly malicious PostScript programs from
+having any effect.  
 .IP "\fB\-o\fR \fIname\fR" 4
 .IX Item "-o name"
 Send output to the file \fIname\fR. A single occurrence of \fB%d\fR or
@@ -320,6 +344,19 @@ specified) is treated as a physical (absolute) page number, rather than
 a value to compare with the TeX \fB\ecount0\fR values stored in the
 \&\s-1DVI\s0 file.  Thus, using \fB\-p =3\fR will start with the third page of
 the document, no matter what the pages are actually numbered.
+.IP "\fB\-\-picky*\fR" 4
+.IX Item "--picky*"
+No images are output when a warning occurs. Normally, dvipng will
+output an image in spite of a warning, but there may be something
+missing in this image. One reason to use this option would be if you
+have a more complete but slower fallback converter. Mainly, this is
+useful for failed figure inclusion and unknown \especial occurrences,
+but warnings will also occur for missing or unknown color specs and
+missing \s-1PK\s0 fonts.
+.IP "\fB\-\-png*\fR" 4
+.IX Item "--png*"
+The images are output in the \s-1PNG\s0 format. This is the default for the
+\&\fBdvipng\fR binary. See also the \fB\-\-gif\fR option.
 .IP "\fB\-pp\fR \fIfirstpage\fR\fB\-\fR\fIlastpage\fR" 4
 .IX Item "-pp firstpage-lastpage"
 Print pages \fIfirstpage\fR through \fIlastpage\fR; but not quite
@@ -423,4 +460,4 @@ This program is released under the \s-1GNU\s0 General Public License, see the
 \&\s-1COPYING\s0 file in the dvipng distribution or
 <\fBhttp://www.gnu.org/licenses/gpl.html\fR>.
 .PP
-Copyright (c) 2002\-2004 Jan\-Åke Larsson
+Copyright (c) 2002\-2004 Jan\-@AA{}ke Larsson

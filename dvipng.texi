@@ -263,6 +263,15 @@ StyleSheets 1)
 The depth is a negative offset in this case, so the minus sign is
 necessary, and the unit is pixels (px).
 
+@item --gamma @var{num}
+@cindex gamma
+@cindex dark fonts
+@cindex light fonts
+Control the interpolation of colors in the greyscale anti-aliasing
+color palette.  Default value is 1.0.  For 0 < @var{num} < 1, the
+fonts will be lighter (more like the background), and for @var{num} >
+1, the fonts will be darker (more like the foreground).
+
 @ignore
 @item -e @var{num}
 @cindex maxdrift
@@ -391,6 +400,20 @@ Otherwise, nothing is written.  The name @samp{missfont.log} is
 overridden by the @samp{MISSFONT_LOG} environment variable or
 configuration file value.
 @end ignore
+
+@item --noghostscript*
+@cindex GhostScript, turning off
+This switch prohibits the internal call to GhostScript for displaying
+PostScript<tm> specials. --noghostscript0 turns the call back on.
+
+@item --nogssafer*
+@cindex GhostScript and -dSAFER
+Normally, if GhostScript is used to render PostScript specials, the
+GhostScript interpreter is run with the option -dSAFER.  The
+-nogssafer option runs GhostScript without -dSAFER.  The -dSAFER
+option in Ghostscript disables PostScript operators such as
+deletefile, to prevent possibly malicious PostScript programs from
+having any effect.  
 
 @item -o @var{name}
 @cindex output, redirecting
