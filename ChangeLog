@@ -1,3 +1,7 @@
+2005-04-04  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* special.c: Simplify string search
+
 2005-04-03  jalar  <jalar@mai.liu.se>
 
 	* special.c: Try to detect all preview-latex versions tightpage
