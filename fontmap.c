@@ -141,7 +141,6 @@ void ClearPSFontMap(void)
   psfont_filedes=-1;
   if (psfont_name != NULL)
     free(psfont_name);
-  printf("%lX\n",psfont_name);
   psfont_name=NULL;
 }
 
