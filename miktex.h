@@ -202,19 +202,19 @@
 #undef HAVE__BOOL 1
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "dvipng-devel@lists.sf.net"
+#define PACKAGE_BUGREPORT "dvipng@nongnu.org"
 
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "dvipng"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "dvipng 1.2"
+#define PACKAGE_STRING "dvipng 1.6"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "dvipng"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.2"
+#define PACKAGE_VERSION "1.6"
 
 /* If using the C implementation of alloca, define if you know the
    direction of stack growth for your system; otherwise it will be
