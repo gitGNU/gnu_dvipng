@@ -186,6 +186,7 @@ struct font_entry {    /* font entry */
   char         name[STRSIZE];   /* full name of PK/VF file           */
   int          filedes;         /* file descriptor                   */
   unsigned char* mmap;          /* memory map                        */
+  int          length;          /* its length                        */
   uint32_t     magnification;   /* magnification read from font file */
   uint32_t     designsize;      /* design size read from font file   */
   void *       chr[NFNTCHARS];  /* character information             */ 
@@ -318,7 +319,8 @@ EXTERN struct internal_state {
 #define DEBUG_GLYPH   DEBUG_DEFAULT * 16
 #define DEBUG_FT      DEBUG_DEFAULT * 32
 #define DEBUG_ENC     DEBUG_DEFAULT * 64
-#define DEBUG_GS      DEBUG_DEFAULT * 128
+#define DEBUG_COLOR   DEBUG_DEFAULT * 128
+#define DEBUG_GS      DEBUG_DEFAULT * 256
 #define LASTDEBUG     DEBUG_GS
 #else
 #define DEBUG_PRINT(a)
