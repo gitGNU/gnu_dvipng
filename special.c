@@ -1,19 +1,14 @@
 #include "dvipng.h"
 
-#include <stddef.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-     
-FILE *
+
+gdImagePtr
 ps2png(const char *psfile, int hresolution, int vresolution, 
        int urx, int ury, int llx, int lly)
 {
-  FILE *pngstream=NULL;
   int status, downpipe[2], uppipe[2];
   pid_t pid;
   char resolution[STRSIZE]; 
+  gdImagePtr psimage=NULL;
 
   status=snprintf(resolution, STRSIZE, "-r%dx%d",hresolution,vresolution);
   if (status>0 && status<STRSIZE 
@@ -23,25 +18,34 @@ ps2png(const char *psfile, int hresolution, int vresolution,
       close(downpipe[1]);
       dup2(downpipe[0], STDIN_FILENO);
       close(downpipe[0]);
+      DEBUG_PRINT((DEBUG_GS,"\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s %s",
+		   GS_PATH,
+		   "-sDEVICE=png16m", resolution,
+		   "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
+		   "-sOutputFile=-", 
+		   "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
+		   "-"));
       close(uppipe[0]);
       dup2(uppipe[1], STDOUT_FILENO);
       close(uppipe[1]);
-      //printf("%s %s %s %s %s %s %s %s %s %ld\n", GS_PATH,
       execl (GS_PATH, GS_PATH,
 	     "-sDEVICE=png16m", resolution,
 	     "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
 	     "-sOutputFile=-", 
 	     "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
 	     "-",NULL);
-      //execl ("/bin/cat","/bin/cat",NULL);
       _exit (EXIT_FAILURE);
     }
     else if (pid > 0) { /* Parent process. */
-      FILE* psstream;
+      FILE *psstream, *pngstream;
       
       close(downpipe[0]);
       psstream=fdopen(downpipe[1],"w");
       if (psstream) {
+	DEBUG_PRINT((DEBUG_GS,"\n  PS CODE:\t<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice",
+		urx - llx, ury - lly,llx,lly));
+	DEBUG_PRINT((DEBUG_GS,"\n  PS CODE:\t(%s) run", psfile));
+	DEBUG_PRINT((DEBUG_GS,"\n  PS CODE:\tquit"));
 	fprintf(psstream, "<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice\n",
 		urx - llx, ury - lly,llx,lly);
 	fprintf(psstream, "(%s) run\n", psfile);
@@ -50,9 +54,14 @@ ps2png(const char *psfile, int hresolution, int vresolution,
       } 
       close(uppipe[1]);
       pngstream=fdopen(uppipe[0],"r");
+      if (pngstream) {
+	psimage = gdImageCreateFromPng(pngstream);
+	fclose(pngstream);
+      }
+      DEBUG_PRINT((DEBUG_GS,"\n  GS OUTPUT:\t%dx%d image ",gdImageSX(psimage),gdImageSY(psimage)));
     }
   }
-  return pngstream;
+  return psimage;
 }
 
 /*-->SetSpecial*/
@@ -67,7 +76,7 @@ void SetSpecial(char * special, int32_t length, int32_t h, int32_t v,
 {
   char *buffer, *token;
 
-  DEBUG_PRINTF2(DEBUG_DVI," '%.*s'",length,special);
+  DEBUG_PRINT((DEBUG_DVI," '%.*s'",length,special));
 
   buffer = malloc(sizeof(char)*(length+1));
   if (buffer==NULL) 
@@ -129,25 +138,21 @@ void SetSpecial(char * special, int32_t length, int32_t h, int32_t v,
     if (hresolution==0) hresolution = vresolution = resolution/shrinkfactor;
     
     if (PassNo==PASS_DRAW) { /* PASS_DRAW */
-      gdImagePtr psimage;
-      FILE* pngf;
+      gdImagePtr psimage = ps2png(psfile, hresolution, vresolution, 
+				  urx, ury, llx, lly);
       
-      if ((pngf = ps2png(psfile, hresolution, vresolution, 
-			 urx, ury, llx, lly)) == NULL 
-	   || (psimage = gdImageCreateFromPng(pngf)) == NULL ) {
+      if ( psimage == NULL ) {
 	Warning("Unable to convert %s to PNG, image will be left blank.", 
 		psfile );
 	return;
       }
-      fclose(pngf);
-      DEBUG_PRINTF2(DEBUG_DVI,"\n  PS-PNG INCLUDE \t(%d,%d)", 
-		    gdImageSX(psimage),gdImageSY(psimage));
-      DEBUG_PRINTF2(DEBUG_DVI," resolution %dx%d", 
-		    hresolution,vresolution);
-      DEBUG_PRINTF2(DEBUG_DVI," at (%d,%d)", 
-		    PIXROUND(h, dvi->conv*shrinkfactor),
-		    PIXROUND(v, dvi->conv*shrinkfactor));
-      DEBUG_PRINTF2(DEBUG_DVI," offset (%d,%d)", x_offset,y_offset);
+      DEBUG_PRINT((DEBUG_DVI,
+	     "\n  PS-PNG INCLUDE \t(%d,%d) dpi %dx%d at (%d,%d) offset (%d,%d)",   
+		   gdImageSX(psimage),gdImageSY(psimage),
+		   hresolution,vresolution,
+		   PIXROUND(h, dvi->conv*shrinkfactor),
+		   PIXROUND(v, dvi->conv*shrinkfactor),
+		   x_offset,y_offset));
       gdImageCopy(page_imagep, psimage,
 		  PIXROUND(h,dvi->conv*shrinkfactor)+x_offset,
 		  PIXROUND(v,dvi->conv*shrinkfactor)-gdImageSY(psimage)
@@ -160,10 +165,10 @@ void SetSpecial(char * special, int32_t length, int32_t h, int32_t v,
       int pngheight,pngwidth;
       
       /* Convert from postscript 72 dpi resolution to our given resolution */
-      pngheight = vresolution*(ury - lly)/72;
-      pngwidth  = hresolution*(urx - llx)/72;
-      DEBUG_PRINTF2(DEBUG_DVI,"\n  PS-PNG INCLUDE \t(%d,%d)", 
-		    pngwidth,pngheight);
+      pngheight = (vresolution*(ury - lly)+71)/72; /* +71: do 'ceil' */
+      pngwidth  = (hresolution*(urx - llx)+71)/72;
+      DEBUG_PRINT((DEBUG_DVI,"\n  PS-PNG INCLUDE \t(%d,%d)", 
+		   pngwidth,pngheight));
       min(x_min,PIXROUND(h, dvi->conv*shrinkfactor));
       min(y_min,PIXROUND(v, dvi->conv*shrinkfactor)-pngheight);
       max(x_max,PIXROUND(h, dvi->conv*shrinkfactor)+pngwidth);
@@ -203,14 +208,13 @@ void SetSpecial(char * special, int32_t length, int32_t h, int32_t v,
 	}
 	psimage = gdImageCreateFromPng(pngf);
 	fclose(pngf);
-	DEBUG_PRINTF2(DEBUG_DVI,"\n  PS-PNG INCLUDE \t(%d,%d)", 
-		      gdImageSX(psimage),gdImageSY(psimage));
-	DEBUG_PRINTF2(DEBUG_DVI," resolution %dx%d", 
-		      hresolution,vresolution);
-	DEBUG_PRINTF2(DEBUG_DVI," at (%d,%d)", 
-		      PIXROUND(h, dvi->conv*shrinkfactor),
-		      PIXROUND(v, dvi->conv*shrinkfactor));
-	DEBUG_PRINTF2(DEBUG_DVI," offset (%d,%d)", x_offset,y_offset);
+	DEBUG_PRINT((DEBUG_DVI,
+	     "\n  PS-PNG INCLUDE \t(%d,%d) dpi %dx%d at (%d,%d) offset (%d,%d)",   
+		     gdImageSX(psimage),gdImageSY(psimage),
+		     hresolution,vresolution,
+		     PIXROUND(h, dvi->conv*shrinkfactor),
+		     PIXROUND(v, dvi->conv*shrinkfactor),
+		     x_offset,y_offset));
 	gdImageCopy(page_imagep, psimage,
 		    PIXROUND(h,dvi->conv*shrinkfactor)+x_offset,
 		    PIXROUND(v,dvi->conv*shrinkfactor)-gdImageSY(psimage)
@@ -226,10 +230,10 @@ void SetSpecial(char * special, int32_t length, int32_t h, int32_t v,
       int pngheight,pngwidth;
 
       /* Convert from postscript 72 dpi resolution to our given resolution */
-      pngheight = vresolution*(ury - lly)/72;
-      pngwidth  = hresolution*(urx - llx)/72;
-      DEBUG_PRINTF2(DEBUG_DVI,"\n  PS-PNG INCLUDE \t(%d,%d)", 
-		      pngwidth,pngheight);
+      pngheight = (vresolution*(ury - lly)+71)/72; /* +71: do 'ceil' */
+      pngwidth  = (hresolution*(urx - llx)+71)/72;
+      DEBUG_PRINT((DEBUG_DVI,"\n  PS-PNG INCLUDE \t(%d,%d)", 
+		   pngwidth,pngheight));
       min(x_min,PIXROUND(h, dvi->conv*shrinkfactor));
       min(y_min,PIXROUND(v, dvi->conv*shrinkfactor)-pngheight);
       max(x_max,PIXROUND(h, dvi->conv*shrinkfactor)+pngwidth);
