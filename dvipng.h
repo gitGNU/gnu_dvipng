@@ -80,11 +80,6 @@ typedef  int     bool;
 
 /*************************************************************************/
 
-#define  MoveOver(b)  h += (int32_t) b
-#define  MoveDown(a)  v += (int32_t) a
-#define  qfprintf if (!G_quiet) fprintf
-#define  qprintf  if (!G_quiet) printf
-
 /********************************************************/
 /********************** special.h ***********************/
 /********************************************************/
@@ -223,6 +218,7 @@ void    FormFeed(struct dvi_data*,int);
 void    FontDef(unsigned char*, struct dvi_vf_entry*);
 struct page_list *InitPage(void);
 void    LoadAChar(int32_t, register struct pk_char *);
+void    Message(int, char *fmt, ...);
 uint32_t   NoSignExtend(FILE*, int);
 void       OpenFont(struct font_entry *);
 bool       QueueParse(char*,bool,bool);
@@ -273,10 +269,6 @@ EXTERN bool    makeTexPK INIT(_TRUE);
 #endif
 #endif
 
-EXTERN short   G_errenc INIT(0);        /* has an error been encountered?  */
-EXTERN bool    G_quiet INIT(_FALSE);    /* for quiet operation             */
-EXTERN bool    G_verbose INIT(_FALSE);  /* inform user about pxl-files used*/
-EXTERN bool    G_nowarn INIT(_FALSE);   /* don't print out warnings        */
 EXTERN int32_t     h;                   /* current horizontal position     */
 EXTERN int32_t     v;                   /* current vertical position       */
 EXTERN int32_t     w INIT(0);           /* current horizontal spacing      */
@@ -291,22 +283,25 @@ EXTERN struct internal_state {
   int                passno;
 } current_state;
 
+#define BE_NONQUIET 1
+#define BE_VERBOSE  2
+#define PARSE_STDIN 4
+#define LASTFLAG    PARSE_STDIN
+
 #ifdef DEBUG
-EXTERN unsigned int Debug INIT(0);
-#define DEBUG_START(a) if (Debug & a) {
-#define DEBUG_END      fflush(stdout);} 
-#define DEBUG_PUTS(a,str) DEBUG_START(a) fputs(str,stdout);DEBUG_END
-#define DEBUG_PRINTF(a,str,e1) DEBUG_START(a) printf(str,e1);DEBUG_END
-#define DEBUG_PRINTF2(a,str,e1,e2) DEBUG_START(a) printf(str,e1,e2);DEBUG_END
-#define DEBUG_DVI   1
-#define DEBUG_VF    2
-#define DEBUG_PK    4
-#define DEBUG_GLYPH 8 /* should always be last, see misc.c */
+/*EXTERN unsigned int Debug INIT(0);*/
+#define DEBUG_PUTS(a,str) Message(a,str) /* variadic macros? BAH!*/
+#define DEBUG_PRINTF(a,str,e1) Message(a,str,e1)
+#define DEBUG_PRINTF2(a,str,e1,e2) Message(a,str,e1,e2)
+#define DEBUG_DVI   LASTFLAG * 2
+#define DEBUG_VF    LASTFLAG * 4
+#define DEBUG_PK    LASTFLAG * 8
+#define DEBUG_GLYPH LASTFLAG * 16
+#define LASTDEBUG   DEBUG_GLYPH
 #else
-#define DEBUG_START(a) 
-#define DEBUG_END      
 #define DEBUG_PUT(a,str)
 #define DEBUG_PRINTF(a,str,e1)
+#define DEBUG_PRINTF2(a,str,e1,e2)
 #endif
 
 /************************timing stuff*********************/
