@@ -1,3 +1,28 @@
+/* pk.c */
+
+/************************************************************************
+
+  Part of the dvipng distribution
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+  02111-1307, USA.
+
+  Copyright © 2002-2004 Jan-Åke Larsson
+
+************************************************************************/
+
 #include "dvipng.h"
 #include <fcntl.h> // open/close
 #include <sys/mman.h>
@@ -13,73 +38,6 @@
 unsigned char   dyn_f;
 int             repeatcount;
 int             poshalf;
-
-#define GREYS 255
-
-dviunits SetPK(int32_t c, int32_t hh,int32_t vv)
-{
-  register struct pk_char *ptr = currentfont->chr[c];
-                                      /* temporary pk_char pointer */
-  int red,green,blue;
-  int *Color=alloca(sizeof(int)*(GREYS+1));
-  int x,y;
-  int pos=0;
-  int bgColor,pixelcolor;
-  hh -= ptr->xOffset/shrinkfactor;
-  vv -= ptr->yOffset/shrinkfactor;
-  
-  Color[0] = gdImageColorResolve(page_imagep,bRed,bGreen,bBlue);
-  for( x=1; x<=GREYS ; x++) 
-    Color[x] = -1;
-  for( y=0; y<ptr->h; y++) {
-    for( x=0; x<ptr->w; x++) {
-      if (ptr->data[pos]>0) {
-	bgColor = gdImageGetPixel(page_imagep, hh + x, vv + y);
-	if (bgColor == Color[0]) {
-	  /* Standard background: use cached value if present */
-	  pixelcolor=Color[(int)ptr->data[pos]];
-	  if (pixelcolor==-1) {
-	    red = bRed-(bRed-Red)*ptr->data[pos]/GREYS;
-	    green = bGreen-(bGreen-Green)*ptr->data[pos]/GREYS;
-	    blue = bBlue-(bBlue-Blue)*ptr->data[pos]/GREYS;
-	    Color[ptr->data[pos]] = 
-	      gdImageColorResolve(page_imagep,red,green,blue);
-	    pixelcolor=Color[ptr->data[pos]];
-	  }
-	} else {
-	  /* Overstrike: No cache */
-	  red=gdImageRed(page_imagep, bgColor);
-	  green=gdImageGreen(page_imagep, bgColor);
-	  blue=gdImageBlue(page_imagep, bgColor);
-	  red = red-(red-Red)*ptr->data[pos]/GREYS;
-	  green = green-(green-Green)*ptr->data[pos]/GREYS;
-	  blue = blue-(blue-Blue)*ptr->data[pos]/GREYS;
-	  pixelcolor = gdImageColorResolve(page_imagep, red, green, blue);
-	}
-	gdImageSetPixel(page_imagep, hh + x, vv + y, pixelcolor);
-      }
-      pos++;
-    }
-  }
-  /* This code saved _no_ execution time, strangely.
-   *
-   * #ifdef HAVE_GDIMAGECREATETRUECOLOR 
-   *   if (truecolor) 
-   *     for( i=1; i<=ptr->glyph.nchars ; i++) {
-   *       Color = gdImageColorResolveAlpha(page_imagep,Red,Green,Blue,
-   *                                        128-128*i/ptr->glyph.nchars);
-   *       gdImageChar(page_imagep, &(ptr->glyph),
-   *	               hh - ptr->xOffset/shrinkfactor,
-   *		       vv - ptr->yOffset/shrinkfactor,
-   *	  	       i,Color);
-   *       }
-   *    else {
-   *  #endif */
-  return(ptr->tfmw);
-}
-
-
-
 
 unsigned char getnyb(unsigned char** pos)
 {
@@ -166,7 +124,7 @@ unsigned char* skip_specials(unsigned char* pos)
 }
 
 
-void LoadPK(int32_t c, register struct pk_char * ptr)
+void LoadPK(int32_t c, register struct char_entry * ptr)
 {
   unsigned short   shrunk_width,shrunk_height;
   unsigned short   width,height;
@@ -178,7 +136,7 @@ void LoadPK(int32_t c, register struct pk_char * ptr)
   unsigned char *pos,*buffer;
 
   DEBUG_PRINT(DEBUG_PK,("\n  LOAD PK CHAR\t%d",c));
-  pos=ptr->mmap;
+  pos=ptr->pkdata;
   if ((ptr->flag_byte & 7) == 7) n=4;
   else if ((ptr->flag_byte & 4) == 4) n=2;
   else n=1;
@@ -361,7 +319,7 @@ void InitPK(struct font_entry * tfontp)
 {
   struct stat stat;
   unsigned char* position;
-  struct pk_char *tcharptr; /* temporary pk_char pointer  */
+  struct char_entry *tcharptr; /* temporary char_entry pointer  */
   uint32_t    hppp, vppp, packet_length;
   uint32_t    c;
 
@@ -405,8 +363,8 @@ void InitPK(struct font_entry * tfontp)
   while (*position != PK_POST) {
     DEBUG_PRINT(DEBUG_PK,("\n  @%ld PK CHAR:\t%d",
 		  (long)(position - tfontp->mmap), *position));
-    if ((tcharptr = malloc(sizeof(struct pk_char))) == NULL)
-      Fatal("can't malloc space for pk_char");
+    if ((tcharptr = malloc(sizeof(struct char_entry))) == NULL)
+      Fatal("can't malloc space for char_entry");
     tcharptr->flag_byte = *position;
     tcharptr->data = NULL;
     tcharptr->tfmw = 0;
@@ -429,14 +387,14 @@ void InitPK(struct font_entry * tfontp)
   if (c > (LASTFNTCHAR))
     Fatal("Bad character (%d) in PK-File\n",(int)c);
   tcharptr->length = packet_length;
-  tcharptr->mmap = position;
+  tcharptr->pkdata = position;
   tfontp->chr[c]=tcharptr;
   position += packet_length;
   position = skip_specials(position);
   }
 }
 
-void UnLoadPK(struct pk_char *ptr)
+void UnLoadPK(struct char_entry *ptr)
 {
   if (ptr->data!=NULL)
     free(ptr->data);
@@ -455,7 +413,7 @@ void DonePK(struct font_entry *tfontp)
   tfontp->filedes=-1;
   while(c<NFNTCHARS-1) {
     if (tfontp->chr[c]!=NULL) {
-      UnLoadPK((struct pk_char*)tfontp->chr[c]);
+      UnLoadPK((struct char_entry*)tfontp->chr[c]);
       free(tfontp->chr[c]);
     }
     c++;

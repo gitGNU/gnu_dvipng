@@ -1,3 +1,28 @@
+/* vf.c */
+
+/************************************************************************
+
+  Part of the dvipng distribution
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+  02111-1307, USA.
+
+  Copyright © 2002-2004 Jan-Åke Larsson
+
+************************************************************************/
+
 #include "dvipng.h"
 #include <fcntl.h> // open/close
 #include <sys/mman.h>
@@ -11,11 +36,11 @@ int32_t SetVF(int32_t c)
 {
   struct font_entry* currentvf;
   unsigned char *command,*end;
-  struct vf_char* ptr=currentfont->chr[c];
+  struct char_entry* ptr=currentfont->chr[c];
 
   currentvf=currentfont;
   BeginVFMacro(currentvf);
-  command = ptr->mmap;
+  command = ptr->data;
   end = command + ptr->length;
   while (command < end)  {
     DEBUG_PRINT(DEBUG_DVI,("\n  VF MACRO:\t%s ", dvi_commands[*command]));
@@ -34,7 +59,7 @@ void InitVF(struct font_entry * tfontp)
   struct stat stat;
   unsigned char* position;
   int length;
-  struct vf_char *tcharptr;  
+  struct char_entry *tcharptr;  
   uint32_t c=0;
   struct font_num *tfontnump;  /* temporary font_num pointer   */
   
@@ -84,7 +109,7 @@ void InitVF(struct font_entry * tfontp)
   while(*position < FNT_DEF1) {
     DEBUG_PRINT(DEBUG_VF,("\n@%ld VF CHAR:\t", 
 		 (long)(position - tfontp->mmap)));
-    tcharptr=xmalloc(sizeof(struct vf_char));
+    tcharptr=xmalloc(sizeof(struct char_entry));
     switch (*position) {
     case LONG_CHAR:
       tcharptr->length = UNumRead(position+1,4);
@@ -105,7 +130,7 @@ void InitVF(struct font_entry * tfontp)
     if (c > NFNTCHARS) /* Only positive for now */
       Fatal("vf character exceeds numbering limit");
     tfontp->chr[c] = tcharptr;
-    tcharptr->mmap=position;
+    tcharptr->data=position;
     position += tcharptr->length;
   }
 }
