@@ -1,6 +1,13 @@
 \input texinfo
 @setfilename dvipng.info
-@settitle dvipng: A DVI driver
+@settitle A DVI-to-PNG translator
+@ifset man
+@c man begin SYNOPSIS
+dvipng [options] filename
+
+dvipng [options] [filename] -
+@c man end
+@end ifset
 
 @set version 1.0
 @set month-year March 2004
@@ -19,7 +26,7 @@
 @dircategory TeX
 @direntry
 * DVI-to-PNG: (dvipng).              Translating TeX DVI files to Portable Network Graphics (PNG).
-* dvipng: (dvipng)Invoking dvipng.   DVI-to-PNG translator.
+* dvipng: (dvipng)Invoking dvipng.   A DVI-to-PNG translator.
 @end direntry
 
 @finalout
@@ -85,6 +92,7 @@ Jan-@AA{}ke Larsson
 * Command-line options::        Advanced usage
 * Diagnosing problems::         Problems?
 * Color::                       Using color with dvipng
+* Copying::                     GNU General Public License
 * Index::                       General index
 @end menu
 
@@ -93,7 +101,9 @@ Jan-@AA{}ke Larsson
 @node Introduction, Installation, Top, Top
 @chapter Introduction
 
+@c man begin DESCRIPTION
 @include readme.texi
+@c man end
 
 @node Installation, Basic usage, Introduction, Top
 @chapter Installation
@@ -168,6 +178,7 @@ dvipng with no arguments or with the standard @samp{--help} option.
 @section Option details
 
 @cindex option, details of
+@c man begin OPTIONS
 
 Many of the parameterless options listed here can be turned off by
 suffixing the option with a zero (@samp{0}); for instance, to turn off
@@ -346,13 +357,13 @@ mode names for most devices. With the default paths, explicitly
 specifying the mode also makes the program assume the fonts are in a
 subdirectory named @var{mode}. @xref{TeX directory structure,, @TeX{}
 directory structure, kpathsea, Kpathsea}. If Metafont does not
-understand the @var{mode} name, see @ref{Unable to generate fonts,,,
+understand the @var{mode} name, see @xref{Unable to generate fonts,,,
 kpathsea, Kpathsea}.
 
 @item -M*
 @cindex font generation, avoiding
 @pindex mktexpk@r{, avoiding}
-@comment this description repeated in kpathsea.texi
+@c this description repeated in kpathsea.texi
 Turns off automatic PK font generation (@file{mktexpk}). This will have
 no effect when using PostScript fonts, since no PK font generation will
 be done anyway.
@@ -500,7 +511,7 @@ It overrides any paper size special in the DVI file.
 @cindex truecolor output
 On systems with a fairly new @samp{libgd}, one can choose to generate
 truecolor output. This will not be necessary in general unless you
-include truecolor images via a GhostScript special (i.e., the
+include truecolor images via a PostScript special (i.e., the
 @samp{graphics} or @samp{graphicx} package). It will lead to longer
 execution time, mostly because more data is written to disk.
  
@@ -524,16 +535,26 @@ your @samp{libgd} is new enough. The default compression level is 1,
 wich selects maximum speed at the price of slightly larger PNGs. For an
 older @samp{libgd}, the hard-soldered value 5 is used. The include file
 @samp{png.h} says
+@ifclear man
 @quotation
-Currently, valid values range from 0 - 9,
-corresponding directly to the zlib compression levels 0 - 9 (0 - no
-compression, 9 - "maximal" compression).  Note that tests have shown
-that zlib compression levels 3-6 usually perform as well as level 9 for
-PNG images, and do considerably fewer calculations.  In the future,
-these values may not correspond directly to the zlib compression
-levels.
+Currently, valid values range from 0 - 9, corresponding directly to the
+zlib compression levels 0 - 9 (0 - no compression, 9 - "maximal"
+compression). Note that tests have shown that zlib compression levels
+3-6 usually perform as well as level 9 for PNG images, and do
+considerably fewer calculations. In the future, these values may not
+correspond directly to the zlib compression levels.
 @end quotation
+@end ifclear
+@ifset man
+``Currently, valid values range from 0 - 9, corresponding directly to
+the zlib compression levels 0 - 9 (0 - no compression, 9 - "maximal"
+compression). Note that tests have shown that zlib compression levels
+3-6 usually perform as well as level 9 for PNG images, and do
+considerably fewer calculations. In the future, these values may not
+correspond directly to the zlib compression levels.''
+@end ifset
 @end table
+@c man end
 
 @ignore
 @c @node Environment variables, papersize special, Command-line options, Top
@@ -1405,7 +1426,7 @@ some applications read the PostScript file from the input stream,
 looking for a particular comment.
 @end ignore
 
-@node Color, Index, Diagnosing problems, Top
+@node Color, Copying, Diagnosing problems, Top
 @chapter Color
 
 To support color, dvipng recognizes a certain set of specials. These
@@ -1458,11 +1479,50 @@ that color.
 @c dvipng correctly handles these color specials across pages, even when the
 @c pages are repeated or reversed.
 
+@ifset man
+@c man begin NOTES
+The full manual is accessible in the info format, on most systems by typing
+@example
+info dvipng
+@end example
+@c man end
+@end ifset
 
-@node Index,  , Color, Top
+@node Copying, Index, Color, Top
+@chapter Copying
+
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+@sp 2
+@noindent
+Copyright @copyright{} 2002-2004 Jan-@AA{}ke Larsson
+
+@c man begin COPYRIGHT
+@ifset man
+This program is released under the GNU General Public Licence, see the
+COPYING file in the dvipng distribution or
+@url{http://www.gnu.org/licenses/gpl.html}.
+
+Copyright @copyright{} 2002-2004 Jan-Åke Larsson
+@end ifset
+@c man end
+
+@node Index,  , Copying, Top
 @unnumbered Index
 
 @printindex cp
-
 @bye
 

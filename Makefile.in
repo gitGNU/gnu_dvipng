@@ -1,3 +1,5 @@
+PACKAGE_STRING="@PACKAGE_STRING@"
+
 CC = @CC@
 CFLAGS = @CFLAGS@ -Wall
 CPPFLAGS = @CPPFLAGS@ -I.
@@ -69,6 +71,12 @@ README: readme.texi
 	-$(MAKEINFO) -D rawfile --no-headers --no-validate \
 		readme.texi --output README
 
+dvipng.1: dvipng.texi readme.texi
+	texi2pod.pl -D man dvipng.texi > dvipng.pod
+	pod2man --center="User commands" --release=$(PACKAGE_STRING)\
+		dvipng.pod > dvipng.1
+	rm dvipng.pod
+
 install-docs: docs
 	-$(MKINSTALLDIRS) $(DESTDIR)$(infodir)
 	for x in dvipng.info* ; do \
@@ -98,7 +106,7 @@ clean:
 		*.tp *.vr *.pg *.toc *.tp *.bak *.cps *.kys *.tps \
 		*.fns *.vrs *.pgs *.html *.tmp
 
-distclean: clean INSTALL README
+distclean: clean INSTALL README dvipng.1
 	rm -f Makefile
 	rm -f config.status config.log config.cache c-auto.h
 

@@ -1,12 +1,15 @@
+@ifclear man
 @include macros.texi
 @ifset rawfile
 @chapter dvipng
 
 @end ifset
+@end ifclear
 @c -----------------------
 
 This program makes PNG graphics from DVI files as obtained from @TeX{}
 and its relatives.
+@ifclear man
 
 It is intended to produce anti-aliased screen-resolution images as fast
 as is possible. The target audience is people who need to generate and
@@ -26,9 +29,10 @@ and WYSIWYG editors like LyX.
 @ifset rawfile
 @section Benefits of dvipng
 @end ifset
-@ifclear rawfile
-The benefits include
 @end ifclear
+@ifclear rawfile
+@end ifclear
+The benefits include
 
 @itemize @bullet
 @item 
@@ -39,7 +43,7 @@ amounts of images on-the-fly, as needed in @previewlatex{}, WeBWorK and
 others.
 
 @item 
-It does not read the postamble, so it can be started before TeX
+It does not read the postamble, so it can be started before @TeX{}
 finishes. There is a --follow switch that makes dvipng wait at EOF for
 further output, unless it finds the POST marker that indicates the end
 of the DVI.
@@ -53,7 +57,8 @@ the input file through this interface.
 Supports PK, VF, PostScript Type1, and TrueType fonts, color specials
 and simple PostScript inclusion specials.
 
-@item and more...
+@item 
+and more...
 
 @end itemize
 

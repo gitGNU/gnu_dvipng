@@ -1,0 +1,508 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+''' Revision 1.1  2004/04/05 13:53:36  jalar
+''' Add man page
+'''
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH DVIPNG 1 "dvipng 1.0" "5/Apr/2004" "User commands"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+dvipng \- A DVI\-to-PNG translator
+.SH "SYNOPSIS"
+dvipng [options] filename
+.PP
+dvipng [options] [filename] -
+.SH "DESCRIPTION"
+This program makes PNG graphics from DVI files as obtained from TeX
+and its relatives.
+The benefits include
+.Ip "\(bu" 4
+Speed. It is a very fast bitmap-rendering code for \s-1DVI\s0 files. On a
+fairly low-end laptop, it takes less than a second to generate 150
+one-formula images. This makes dvipng suitable for generating large
+amounts of images on-the-fly, as needed in preview-latex, WeBWorK and
+others.
+.Ip "\(bu" 4
+It does not read the postamble, so it can be started before TeX
+finishes. There is a --follow switch that makes dvipng wait at \s-1EOF\s0 for
+further output, unless it finds the \s-1POST\s0 marker that indicates the end
+of the \s-1DVI\s0.
+.Ip "\(bu" 4
+Interactive query of options. dvipng can read options interactively
+through stdin, and all options are usable. It is even possible to change
+the input file through this interface.
+.Ip "\(bu" 4
+Supports \s-1PK\s0, \s-1VF\s0, PostScript Type1, and TrueType fonts, color specials
+and simple PostScript inclusion specials.
+.Ip "\(bu" 4
+and more...
+.SH "OPTIONS"
+Many of the parameterless options listed here can be turned off by
+suffixing the option with a zero (\fB0\fR); for instance, to turn off
+page reversal, use \fB\-r0\fR.  Such options are marked with a trailing
+\fB*\fR.
+.Ip "\fB\-\fR" 4
+Read additional options from standard input after processing the command
+line.
+.Ip "\fB--help\fR" 4
+Print a usage message and exit.
+.Ip "\fB--version\fR" 4
+Print the version number and exit.
+.Ip "\fB\-bd\fR \fInum\fR" 4
+Set the pixel width of the transparent border (default 0). Using this
+option will make the image edges transparent, but it only affects pixels
+with the background color.
+.Ip "\fB--bdpi\fR \fInum\fR" 4
+Set the base (Metafont) resolution, both horizontal and vertical, to
+\fInum\fR dpi (dots per inch). This option is neccessary when manually
+selecting Metafont mode with the --mode option (see below)
+.Ip "\fB\-bg\fR \fIcolor spec.\fR" 4
+Choose background color for the images. This option will be ignored if
+there is a background color \especial in the \s-1DVI\s0. The color spec should
+be in TeX syntax, e.g., \*(L'rgb 1.0 0.0 0.0\*(R'. See 
+.Ip "\fB\-d\fR \fInum\fR" 4
+Set the debug flags, showing what dvipng (thinks it) is doing.  This will
+work unless dvipng has been compiled without the \fB\s-1DEBUG\s0\fR option (not
+recommended).    Use \fB\-d \-1\fR as the first option for maximum output.
+.Ip "\fB\-D\fR \fInum\fR" 4
+Set the output resolution, both horizontal and vertical, to \fInum\fR
+dpi (dots per inch). 
+.Sp
+One may want to adjust this to fit a certain text font size (e.g., on
+a web page), and for a text font height of \fIfont_px\fR pixels (in
+Mozilla) the correct formula is
+  
+  <dpi> = <font_px> * 72.27 / 10 [px * TeXpt/in / TeXpt]
+.Sp
+The last division by ten is due to the standard font height 10pt in
+your document, if you use 12pt, divide by 12. Unfortunately, some
+proprietary browsers have font height in pt (points), not pixels. You
+have to rescale that to pixels, using the screen resolution (default
+is usually 96 dpi) which means the formula is
+  
+  <font_px> = <font_pt> * 96 / 72 [pt * px/in / (pt/in)] 
+.Sp
+On some high-res screens, the value is instead 120 dpi. Good luck!
+.Ip "\fB--depth*\fR" 4
+Report the depth of the image. This only works reliably when the
+LaTeX style \fBpreview.sty\fR from preview-latex is used. It
+reports the number of pixels from the bottom of the image to the
+baseline of the image. This can be used for vertical positioning of the
+image in, e.g., web documents, where one would use (Cascading
+StyleSheets 1)
+  
+  <\s-1IMG\s0 \s-1SRC\s0="<filename.png>\*(R" \s-1STYLE\s0="vertical-align: \-<depth>px">
+.Sp
+The depth is a negative offset in this case, so the minus sign is
+necessary, and the unit is pixels (px).
+.Ip "\fB\-fg\fR \fIcolor spec.\fR" 4
+Choose foreground color for the images. This option will be ignored if
+there is a foreground color \especial in the \s-1DVI\s0. The color spec should
+be in TeX syntax, e.g., \*(L'rgb 1.0 0.0 0.0\*(R'. See 
+.Ip "\fB--follow*\fR" 4
+Enable follow mode. One of the benefits of dvipng is that it does not
+read the postamble, so it can be started before TeX finishes. This
+switch makes dvipng wait at \s-1EOF\s0 for further output, unless it finds the
+\s-1POST\s0 marker that indicates the end of the \s-1DVI\s0. This is similar to
+\fBtail \-f\fR but for \s-1DVI\s0\-to-\s-1PNG\s0 conversion.
+.Ip "\fB--freetype*\fR" 4
+Enable/disable FreeType font rendering (default on). This option is
+available if the FreeType2 font library was present at compilation time.
+If this is the case, dvipng will have direct support for PostScript
+Type1 and TrueType fonts in dvipng, rather than using \fBgsftopk\fR for
+rendering the fonts. If you have PostScript versons of Computer Modern
+installed, there will be no need to generate bitmapped variants on disk
+of these. Then, you can render images at different (and unusual)
+resolutions without cluttering the disk with lots of bitmapped fonts.
+.Ip "\fB--height*\fR" 4
+Report the height of the image. This only works reliably when the
+LaTeX style \fBpreview.sty\fR from preview-latex is used. It
+reports the number of pixels from the top of the image to the
+baseline of the image. The total height of the image is obtained as the
+sum of the values reported from --height and the --depth.
+.Ip "\fB\-l [=]\fR\fInum\fR" 4
+The last page printed will be the first one numbered \fInum\fR. Default
+is the last page in the document.  If \fInum\fR is prefixed by an equals
+sign, then it (and the argument to the \fB\-p\fR option, if specified)
+is treated as a physical (absolute) page number, rather than a value to
+compare with the TeX \fB\ecount0\fR values stored in the \s-1DVI\s0 file.
+Thus, using \fB\-l =9\fR will end with the ninth page of the document,
+no matter what the pages are actually numbered.
+.Ip "\fB--mode\fR \fImode\fR" 4
+Use \fImode\fR as the Metafont device name for the \s-1PK\s0 fonts (both for
+path searching and font generation). This needs to be augmented with the
+base device resolution, given with the \fB--bdpi\fR option. See the
+file <\fBftp://ftp.tug.org/tex/modes.mf\fR> for a list of resolutions and
+mode names for most devices. With the default paths, explicitly
+specifying the mode also makes the program assume the fonts are in a
+subdirectory named \fImode\fR.  If Metafont does not
+understand the \fImode\fR name, see 
+.Ip "\fB\-M*\fR" 4
+Turns off automatic \s-1PK\s0 font generation (\fImktexpk\fR). This will have
+no effect when using PostScript fonts, since no \s-1PK\s0 font generation will
+be done anyway.
+.Ip "\fB\-o\fR \fIname\fR" 4
+Send output to the file \fIname\fR. A single occurrence of \fB%d\fR or
+\fB%03d\fR will be exchanged for the TeX page number. The default
+output filename is \fIfile\fR\fB%d.png\fR where the input \s-1DVI\s0 file was
+\fIfile\fR\fB.dvi\fR.
+.Ip "\fB\-O\fR \fIx-offset\fR\fB,\fR\fIy-offset\fR" 4
+Move the origin by \fIx-offset\fR,\fIy-offset\fR, a comma-separated
+pair of dimensions such as \fB.1in,\-.3cm\fR.
+The origin of the page is shifted from the default position
+(of one inch down, one inch to the right from the upper left corner of
+the paper) by this amount.  
+.Ip "\fB\-p [=]\fR\fInum\fR" 4
+The first page printed will be the first one numbered \fInum\fR. Default
+is the first page in the document.  If \fInum\fR is prefixed by an
+equals sign, then it (and the argument to the \fB\-l\fR option, if
+specified) is treated as a physical (absolute) page number, rather than
+a value to compare with the TeX \fB\ecount0\fR values stored in the
+\s-1DVI\s0 file.  Thus, using \fB\-p =3\fR will start with the third page of
+the document, no matter what the pages are actually numbered.
+.Ip "\fB\-pp\fR \fIfirstpage\fR\fB\-\fR\fIlastpage\fR" 4
+Print pages \fIfirstpage\fR through \fIlastpage\fR; but not quite
+equivalent to \fB\-p\fR \fIfirstpage\fR \fB\-l\fR \fIlastpage\fR. For example,
+when rendering a book, there may be several instances of a page in the
+\s-1DVI\s0 file (one in \f(CW\efrontmatter\fR, one in \f(CW\emainmatter\fR, and one
+in \f(CW\ebackmatter\fR). In case of several pages matching, \fB\-pp\fR
+\fIfirstpage\fR\fB\-\fR\fIlastpage\fR will render \fIall\fR pages that
+matches the specified range, while \fB\-p\fR \fIfirstpage\fR \fB\-l\fR
+\fIlastpage\fR will render the pages from the \fIfirst\fR occurrence
+of \fIfirstpage\fR to the \fIfirst\fR occurrence of \fIlastpage\fR.
+This is the (undocumented) behaviour of dvips. In dvipng you can give
+both kinds of options, in which case you get all pages that matches the
+range in \fB\-pp\fR between the pages from \fB\-p\fR to \fB\-l\fR. Also
+multiple \fB\-pp\fR options accumulate, unlike \fB\-p\fR and \fB\-l\fR.
+The \fB\-\fR separator can also be \fB:\fR. Note that \fB\-pp \-1\fR
+will be interpreted as \*(L"all pages up to and including 1\*(R", if you want a
+page numbered \-1 (only the table of contents, say) put \fB\-pp \-1\*(--1\fR,
+or more readable, \fB\-pp \-1:\-1\fR.
+.Ip "\fB\-q*\fR" 4
+Run quietly.  Don't chatter about pages converted, etc. to standard
+output; report no warnings (only errors) to standard error.
+.Ip "\fB\-Q\fR \fInum\fR" 4
+Set the quality to \fInum\fR. That is, choose the number of antialiasing
+levels for \s-1PK\s0 fonts to be \fInum\fR*\fInum\fR. The default value is 3
+which gives 9 levels of antialiasing for antialiased \s-1PK\s0 fonts.
+.Ip "\fB\-r*\fR" 4
+Toggle output of pages in reverse/forward order. By default, the first
+page in the \s-1DVI\s0 is output first.
+.Ip "\fB\-t\fR \fIpapertype\fR" 4
+Set the paper type to \fIpapertype\fR.
+You can also specify a \fIpapertype\fR of \fBlandscape\fR, which
+rotates a document by 90 degrees. To rotate a document whose paper type
+is not the default, you can use the \fB\-t\fR option twice, once for the
+paper type, and once for \fBlandscape\fR.
+.Ip "\fB\-T\fR \fIhsize\fR\fB,\fR\fIvsize\fR" 4
+Set the paper size to (\fIhsize\fR,\fIvsize\fR), a comma-separated pair
+of dimensions such as \fB.1in,\-.3cm\fR. 
+It overrides any paper size special in the \s-1DVI\s0 file.
+.Ip "\fB--truecolor*\fR" 4
+On systems with a fairly new \fBlibgd\fR, one can choose to generate
+truecolor output. This will not be necessary in general unless you
+include truecolor images via a PostScript special (i.e., the
+\fBgraphics\fR or \fBgraphicx\fR package). It will lead to longer
+execution time, mostly because more data is written to disk.
+ 
+.Ip "\fB\-v*\fR " 4
+Enable verbose operation. This will currently indicate what fonts is
+used, in addition to the usual output.
+.Ip "\fB\-x\fR \fInum\fR" 4
+Set the x magnification ratio to \fInum\fR/1000. Overrides
+the magnification specified in the \s-1DVI\s0 file.  Must be between 10 and
+100000.  It is recommended that you use standard magstep values (1095,
+1200, 1440, 1728, 2074, 2488, 2986, and so on) to help reduce the total
+number of \s-1PK\s0 files generated.  \fInum\fR may be a real number, not an
+integer, for increased precision.
+.Ip "\fB\-z\fR \fInum\fR" 4
+Set the \s-1PNG\s0 compression level to \fInum\fR. This option is enabled if
+your \fBlibgd\fR is new enough. The default compression level is 1,
+wich selects maximum speed at the price of slightly larger PNGs. For an
+older \fBlibgd\fR, the hard-soldered value 5 is used. The include file
+\fBpng.h\fR says
+``Currently, valid values range from 0 \- 9, corresponding directly to
+the zlib compression levels 0 \- 9 (0 \- no compression, 9 \- \*(L"maximal\*(R"
+compression). Note that tests have shown that zlib compression levels
+3-6 usually perform as well as level 9 for \s-1PNG\s0 images, and do
+considerably fewer calculations. In the future, these values may not
+correspond directly to the zlib compression levels.'\*(R'
+.SH "NOTES"
+The full manual is accessible in the info format, on most systems by typing
+  
+  info dvipng
+.SH "COPYRIGHT"
+This program is released under the GNU General Public Licence, see the
+COPYING file in the dvipng distribution or
+<\fBhttp://www.gnu.org/licenses/gpl.html\fR>.
+.PP
+Copyright (c) 2002-2004 Jan-Åke Larsson
+
+.rn }` ''
+.IX Title "DVIPNG 1"
+.IX Name "dvipng - A DVI-to-PNG translator"
+
+.IX Header "NAME"
+
+.IX Header "SYNOPSIS"
+
+.IX Header "DESCRIPTION"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Header "OPTIONS"
+
+.IX Item "\fB\-\fR"
+
+.IX Item "\fB--help\fR"
+
+.IX Item "\fB--version\fR"
+
+.IX Item "\fB\-bd\fR \fInum\fR"
+
+.IX Item "\fB--bdpi\fR \fInum\fR"
+
+.IX Item "\fB\-bg\fR \fIcolor spec.\fR"
+
+.IX Item "\fB\-d\fR \fInum\fR"
+
+.IX Item "\fB\-D\fR \fInum\fR"
+
+.IX Item "\fB--depth*\fR"
+
+.IX Item "\fB\-fg\fR \fIcolor spec.\fR"
+
+.IX Item "\fB--follow*\fR"
+
+.IX Item "\fB--freetype*\fR"
+
+.IX Item "\fB--height*\fR"
+
+.IX Item "\fB\-l [=]\fR\fInum\fR"
+
+.IX Item "\fB--mode\fR \fImode\fR"
+
+.IX Item "\fB\-M*\fR"
+
+.IX Item "\fB\-o\fR \fIname\fR"
+
+.IX Item "\fB\-O\fR \fIx-offset\fR\fB,\fR\fIy-offset\fR"
+
+.IX Item "\fB\-p [=]\fR\fInum\fR"
+
+.IX Item "\fB\-pp\fR \fIfirstpage\fR\fB\-\fR\fIlastpage\fR"
+
+.IX Item "\fB\-q*\fR"
+
+.IX Item "\fB\-Q\fR \fInum\fR"
+
+.IX Item "\fB\-r*\fR"
+
+.IX Item "\fB\-t\fR \fIpapertype\fR"
+
+.IX Item "\fB\-T\fR \fIhsize\fR\fB,\fR\fIvsize\fR"
+
+.IX Item "\fB--truecolor*\fR"
+
+.IX Item "\fB\-v*\fR "
+
+.IX Item "\fB\-x\fR \fInum\fR"
+
+.IX Item "\fB\-z\fR \fInum\fR"
+
+.IX Header "NOTES"
+
+.IX Header "COPYRIGHT"
+
