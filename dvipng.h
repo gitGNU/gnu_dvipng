@@ -2,8 +2,6 @@
 #define DVIPNG_H
 #include "config.h"
 
-#define TIMING
-
 #define  STRSIZE         255     /* stringsize for file specifications  */
 
 #define  FIRSTFNTCHAR  0
@@ -14,8 +12,6 @@
 
 /* Name of the program which is called to generate missing pk files */
 #define MAKETEXPK "mktexpk"
-
-#define ERR_STREAM stderr   /* ???? */
 
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
@@ -47,7 +43,7 @@ typedef  int     bool;
 # ifdef HAVE_DOPRNT
 #  define   vfprintf(stream, message, args)  _doprnt(message, args, stream)
 # else
-#  define vprintf vprintf_and_doprnt_missing
+#  error: vprintf AND _doprnt are missing!!!
    /* If we have neither, should fall back to fprintf with fixed args.  */
 # endif
 #endif

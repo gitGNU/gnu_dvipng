@@ -2,16 +2,22 @@
 AC_INIT([dvipng], [0.6], [preview-latex-bugs@lists.sf.net])
 AC_CONFIG_SRCDIR([dvipng.c])
 
-AC_SET_MAKE
-
-# Checks for programs.
-AC_PROG_CC
 AC_ARG_ENABLE(debug, 
   AC_HELP_STRING([--disable-debug],[Compile without debug (-d) option]), 
-  [ if test "$enableval" = no ; then DEBUG="" ; debug 
-    else DEBUG="-DDEBUG"; fi ], 
-  [ DEBUG="-DDEBUG" ; enable_debug="yes";])	
-AC_SUBST(DEBUG)
+    [ if test "$enableval" = yes ; then
+      AC_DEFINE(DEBUG, 1, [Define as 1 to get the debug (-d) option.])
+      fi ],	
+    [ enable_debug="yes";
+      AC_DEFINE(DEBUG, 1, [Define as 1 to get the debug (-d) option.])])
+AC_ARG_ENABLE(timing, 
+  AC_HELP_STRING([--enable-timing],[Output execution time of dvipng]), 
+   [ if test "$enableval" = yes ; then
+     AC_DEFINE(TIMING, 1, [Define as 1 to get execution time output.])
+     fi ])
+
+# Checks for programs.
+AC_SET_MAKE
+AC_PROG_CC
 AC_PROG_INSTALL
 AC_PATH_PROG(GS, gs, :)
 AC_DEFINE_UNQUOTED(GS_PATH, "$GS", [Define as the path to GhostScript.])
@@ -53,7 +59,10 @@ AC_HEADER_STDC
 AC_FUNC_MMAP
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([dup2 ftime gettimeofday strchr strrchr])
+AC_CHECK_FUNCS([dup2 strchr strrchr])
+if test "$enable_timing" = "yes"; then
+  AC_CHECK_FUNCS([ftime gettimeofday])
+fi
 AC_CHECK_FUNCS([gdImagePngEx gdImageCreateTrueColor gdImageTrueColorToPalette])
 
 # Documentation-related checks

@@ -8,6 +8,9 @@
 /* Define to 1 if using `alloca.c'. */
 #undef C_ALLOCA
 
+/* Define as 1 to get the debug (-d) option. */
+#undef DEBUG
+
 /* Define as the path to GhostScript. */
 #undef GS_PATH
 
@@ -33,14 +36,14 @@
 /* Define to 1 if you have the `ftime' function. */
 #undef HAVE_FTIME
 
-/* Define to 1 if you have the `gdImageColorResolveAlpha' function. */
-#undef HAVE_GDIMAGECOLORRESOLVEALPHA
-
 /* Define to 1 if you have the `gdImageCreateTrueColor' function. */
 #undef HAVE_GDIMAGECREATETRUECOLOR
 
 /* Define to 1 if you have the `gdImagePngEx' function. */
 #undef HAVE_GDIMAGEPNGEX
+
+/* Define to 1 if you have the `gdImageTrueColorToPalette' function. */
+#undef HAVE_GDIMAGETRUECOLORTOPALETTE
 
 /* Define to 1 if you have the <gd.h> header file. */
 #undef HAVE_GD_H
@@ -154,6 +157,9 @@
 
 /* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
 #undef TIME_WITH_SYS_TIME
+
+/* Define as 1 to get execution time output. */
+#undef TIMING
 
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const
