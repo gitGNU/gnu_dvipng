@@ -1,3 +1,11 @@
+2004-10-26  Jan-Åke Larsson  <jalar@mai.liu.se>
+
+	* set.c:
+	* misc.c:
+	* dvipng.h: Change background transparency
+
+	* configure.ac: Bump version, add test for libz 
+
 2004-10-07  Jan-Åke Larsson  <jalar@mai.liu.se>
 
 	* dvipng.texi: document change in -o switch
