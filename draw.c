@@ -385,7 +385,7 @@ void DrawPages(void)
       Message(BE_NONQUIET,"[%d", dvi_pos->count[dvipagenum?0:10]);
       if (dvi_pos->count[dvipagenum?0:10]!=dvi_pos->count[0])
 	Message(BE_NONQUIET," (%d)", dvi_pos->count[0]);
-      Message(REPORT_BASELINE,"(baseline=%d)", y_offset);
+      Message(REPORT_DEPTH," depth=%d", y_width-y_offset-1);
       PassNo=PASS_DRAW;
       DrawPage(x_offset*dvi->conv*shrinkfactor,
 	       y_offset*dvi->conv*shrinkfactor);

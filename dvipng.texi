@@ -199,19 +199,27 @@ Choose background color for the images. This option will be ignored if
 there is a background color \special in the DVI. The color spec should
 be in @TeX{} syntax, e.g., 'rgb 1.0 0.0 0.0'. See @xref{Color}.
 
-@item --baseline*
-@cindex baseline reporting
-Report baseline of the image. This only works reliably when the @LaTeX{}
-style @samp{preview.sty} from @previewlatex{} is used. It reports the
-y-coordinate of the baseline, starting from 0 at the top and increasing
-downwards.
-
 @item -d @var{num}
 @cindex debugging
 Set the debug flags, showing what dvipng (thinks it) is doing.  This will
 work unless dvipng has been compiled without the @samp{DEBUG} option (not
 recommended).  @xref{Debug options}, for the possible values of
 @var{num}.  Use @samp{-d -1} as the first option for maximum output.
+
+@item -depth*
+@cindex baseline reporting
+@cindex depth reporting
+Report the depth of the image. This only works reliably when the
+@LaTeX{} style @samp{preview.sty} from @previewlatex{} is used. It
+reports the number of pixels from the bottom of the image to the
+baseline of the image. This can be used for vertical positioning of the
+image in, e.g., web documents, where one would use (Cascading
+StyleSheets 1)
+@example
+<IMG SRC="@var{filename.png}" STYLE="vertical-align: -@var{depth}px">
+@end example
+The depth is a negative offset in this case, so the minus sign is
+necessary, and the unit is pixels (px).
 
 @item -D @var{num}
 @cindex resolution, setting
@@ -415,15 +423,15 @@ output; report no warnings (only errors) to standard error.
 @item -Q @var{num}
 @cindex shrinkfactor
 @cindex quality
-Set the shrinkfactor to @var{num}, at the same time setting the number
-of antialiasing levels. The default value is 3 which together with the
-default resolution of 300 dpi would give 9 levels of antialiasing at 100
-dpi for the final output.
+Set the shrinkfactor to @var{num}. For PK fonts this also sets the
+number of antialiasing levels. The default value is 3 which together
+with the default resolution of 300 dpi would give 9 levels of
+antialiasing at 100 dpi for the final antialiased PK font.
 
 @item -r*
 @cindex reverse pagination
-Toggle output of pages in reverse/forward order. By default, page 1 is
-output first.
+Toggle output of pages in reverse/forward order. By default, the first
+page in the DVI is output first.
 
 @ignore
 @item -R
@@ -486,9 +494,9 @@ integer, for increased precision.
 @cindex compression
 Set the PNG compression level to @var{num}. This option is enabled if
 your @samp{libgd} is new enough. The default compression level is 1,
-wich selects maximum speed and gives slightly larger PNGs. For an older
-@samp{libgd}, the hard-soldered value 5 is used. The include file
-@samp{png.h} says 
+wich selects maximum speed at the price of slightly larger PNGs. For an
+older @samp{libgd}, the hard-soldered value 5 is used. The include file
+@samp{png.h} says
 @quotation
 Currently, valid values range from 0 - 9,
 corresponding directly to the zlib compression levels 0 - 9 (0 - no

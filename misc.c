@@ -35,7 +35,18 @@ bool DecodeArgs(int argc, char ** argv)
 	    else 
 	      Message(PARSE_STDIN,"DVI page number output off\n");
 	    break;
-	  }
+	  } else if (strncmp(p,"epth",4)==0) { /* Depth reporting */ 
+	  if (p[8] != '0')
+	    flags |= REPORT_DEPTH;
+	  else
+	    flags &= !REPORT_DEPTH;
+	  break;
+	  if (flags & REPORT_DEPTH )
+	    Message(PARSE_STDIN,"Depth reporting on\n",p);
+	  else 
+	    Message(PARSE_STDIN,"Depth reporting off\n");
+	  break;
+	}
 	  goto DEFAULT;
 	} else { 
 #ifdef DEBUG
@@ -88,7 +99,7 @@ bool DecodeArgs(int argc, char ** argv)
       case 'h':
 	if (strcmp(p,"elp") == 0 ) {
 	  break;
-	}
+	} 
 	goto DEFAULT;
 #endif /* MAKETEXPK */
       case 'O' : /* Offset */
@@ -177,18 +188,7 @@ bool DecodeArgs(int argc, char ** argv)
 	  borderwidth = atoi(p);
 	  Message(PARSE_STDIN,"Transp. border: %d dots\n",borderwidth);
 	  break;
-	} else if (strncmp(p,"aseline",7)==0) { /* Baseline reporting */ 
-	  if (p[8] != '0')
-	    flags |= REPORT_BASELINE;
-	  else
-	    flags &= !REPORT_BASELINE;
-	  break;
-	  if (flags & REPORT_BASELINE )
-	    Message(PARSE_STDIN,"Baseline reporting on\n",p);
-	  else 
-	    Message(PARSE_STDIN,"Baseline reporting off\n");
-	  break;
-	}
+	} 
 	goto DEFAULT;
       case 'f':
 	if ( *p == 'g' ) { /* -fg foreground color */
