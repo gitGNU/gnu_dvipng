@@ -132,7 +132,8 @@ int32_t SetRule(int32_t a, int32_t b, int32_t h,int32_t v,int PassNo)
 	/* Adjust blackness of narrow rule */
 	left = shrinkfactor;
 	/* The (correct) alternative produces "fuzzy" tables */ 
-	/* left = ((h+b+dvi->conv-1)/dvi->conv - h/dvi->conv)%shrinkfactor;*/
+	/* left = ((h+b+dvi->conv-1)/dvi->conv - h/dvi->conv)%shrinkfactor;
+	 */
       } 
       if (width==2 && right+left <= shrinkfactor +1) {
 	/* Adjust blackness of narrow rule when spread across two columns */
@@ -150,7 +151,8 @@ int32_t SetRule(int32_t a, int32_t b, int32_t h,int32_t v,int PassNo)
 	/* Adjust blackness of short rule */
 	bottom = shrinkfactor;
 	/* The (correct) alternative produces "fuzzy" tables */ 
-	/* bottom = ((v+dvi->conv-1)/dvi->conv - (v-a)/dvi->conv)%shrinkfactor;*/
+	/* bottom = ((v+dvi->conv-1)/dvi->conv - (v-a)/dvi->conv)%shrinkfactor;
+	 */
       } 
       if (height==2 && top+bottom <= shrinkfactor +1) {
 	/* Adjust blackness of short rule when spread across two columns */
@@ -161,29 +163,29 @@ int32_t SetRule(int32_t a, int32_t b, int32_t h,int32_t v,int PassNo)
       }
 	
       Color = gdImageColorResolve(rule,
-				  bRed-(bRed-Red)*left*bottom/shrinkfactor/shrinkfactor,
-				  bGreen-(bGreen-Green)*left*bottom/shrinkfactor/shrinkfactor,
-				  bBlue-(bBlue-Blue)*left*bottom/shrinkfactor/shrinkfactor);
+		  bRed-(bRed-Red)*left*bottom/shrinkfactor/shrinkfactor,
+		  bGreen-(bGreen-Green)*left*bottom/shrinkfactor/shrinkfactor,
+		  bBlue-(bBlue-Blue)*left*bottom/shrinkfactor/shrinkfactor);
       gdImageSetPixel(rule,0,height-1,Color);
       if (width>1) {
 	Color = gdImageColorResolve(rule, 
-				    bRed-(bRed-Red)*right*bottom/shrinkfactor/shrinkfactor,
-				    bGreen-(bGreen-Green)*right*bottom/shrinkfactor/shrinkfactor,
-				    bBlue-(bBlue-Blue)*right*bottom/shrinkfactor/shrinkfactor);
+		  bRed-(bRed-Red)*right*bottom/shrinkfactor/shrinkfactor,
+		  bGreen-(bGreen-Green)*right*bottom/shrinkfactor/shrinkfactor,
+		  bBlue-(bBlue-Blue)*right*bottom/shrinkfactor/shrinkfactor);
 	gdImageSetPixel(rule,width-1,height-1,Color);
       }
       if (height>1) {
 	Color = gdImageColorResolve(rule, 
-				    bRed-(bRed-Red)*left*top/shrinkfactor/shrinkfactor,
-				    bGreen-(bGreen-Green)*left*top/shrinkfactor/shrinkfactor,
-				    bBlue-(bBlue-Blue)*left*top/shrinkfactor/shrinkfactor);
+	       	    bRed-(bRed-Red)*left*top/shrinkfactor/shrinkfactor,
+		    bGreen-(bGreen-Green)*left*top/shrinkfactor/shrinkfactor,
+		    bBlue-(bBlue-Blue)*left*top/shrinkfactor/shrinkfactor);
 	gdImageSetPixel(rule,0,0,Color);
       }
       if (height>1 && width>1) {
 	Color = gdImageColorResolve(rule, 
-				    bRed-(bRed-Red)*right*top/shrinkfactor/shrinkfactor,
-				    bGreen-(bGreen-Green)*right*top/shrinkfactor/shrinkfactor,
-				    bBlue-(bBlue-Blue)*right*top/shrinkfactor/shrinkfactor);
+		    bRed-(bRed-Red)*right*top/shrinkfactor/shrinkfactor,
+		    bGreen-(bGreen-Green)*right*top/shrinkfactor/shrinkfactor,
+		    bBlue-(bBlue-Blue)*right*top/shrinkfactor/shrinkfactor);
 	gdImageSetPixel(rule,width-1,0,Color);
       }
 
@@ -216,7 +218,8 @@ int32_t SetRule(int32_t a, int32_t b, int32_t h,int32_t v,int PassNo)
 	gdImageFilledRectangle(rule,width-1,1,width-1,height-2,Color);
       }
       gdImageCopy(page_imagep,rule,
-		  h/dvi->conv/shrinkfactor+x_offset,(v-a)/dvi->conv/shrinkfactor+y_offset,
+		  h/dvi->conv/shrinkfactor+x_offset,
+		  (v-a)/dvi->conv/shrinkfactor+y_offset,
 		  0,0,width,height);
       DEBUG_PRINT((DEBUG_DVI,"\n  RULE \t%dx%d at (%d,%d) offset (%d,%d)",
 		   width,height,
