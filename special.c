@@ -1,5 +1,5 @@
 #include "dvipng.h"
-
+#include <sys/wait.h>
 
 gdImagePtr
 ps2png(const char *psfile, int hresolution, int vresolution, 
@@ -44,21 +44,24 @@ ps2png(const char *psfile, int hresolution, int vresolution,
       if (psstream) {
 	DEBUG_PRINT((DEBUG_GS,"\n  PS CODE:\t<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice",
 		urx - llx, ury - lly,llx,lly));
-	DEBUG_PRINT((DEBUG_GS,"\n  PS CODE:\t(%s) run", psfile));
-	DEBUG_PRINT((DEBUG_GS,"\n  PS CODE:\tquit"));
 	fprintf(psstream, "<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice\n",
 		urx - llx, ury - lly,llx,lly);
+	DEBUG_PRINT((DEBUG_GS,"\n  PS CODE:\t(%s) run", psfile));
 	fprintf(psstream, "(%s) run\n", psfile);
+	DEBUG_PRINT((DEBUG_GS,"\n  PS CODE:\tquit"));
 	fprintf(psstream, "quit\n");
 	fclose(psstream);
-      } 
+      }
       close(uppipe[1]);
       pngstream=fdopen(uppipe[0],"r");
       if (pngstream) {
 	psimage = gdImageCreateFromPng(pngstream);
 	fclose(pngstream);
       }
-      DEBUG_PRINT((DEBUG_GS,"\n  GS OUTPUT:\t%dx%d image ",gdImageSX(psimage),gdImageSY(psimage)));
+      if (psimage != NULL)
+	DEBUG_PRINT((DEBUG_GS,"\n  GS OUTPUT:\t%dx%d image ",gdImageSX(psimage),gdImageSY(psimage)));
+      else
+	DEBUG_PRINT((DEBUG_GS,"\n  GS OUTPUT:\tNO IMAGE "));
     }
   }
   return psimage;
@@ -106,15 +109,15 @@ void SetSpecial(char * special, int32_t length, int32_t h, int32_t v,
 
   /******************* Postscript inclusion ********************/
   if (strncmp(token,"PSfile=",7)==0) { /* PSfile */
-    char* psfile = token+7;
+    char* psname = token+7;
     int llx=0,lly=0,urx=0,ury=0,rwi=0,rhi=0;
     int hresolution,vresolution;
 
     /* Remove quotation marks around filename */
-    if (*psfile=='"') {
+    if (*psname=='"') {
       char* tmp;
-      psfile++;
-      tmp=strchr(psfile,'"');
+      psname++;
+      tmp=strrchr(psname,'"');
       if (tmp!=NULL) {
 	*tmp='\0';
       }
@@ -138,29 +141,36 @@ void SetSpecial(char * special, int32_t length, int32_t h, int32_t v,
     if (hresolution==0) hresolution = vresolution = resolution/shrinkfactor;
     
     if (PassNo==PASS_DRAW) { /* PASS_DRAW */
-      gdImagePtr psimage = ps2png(psfile, hresolution, vresolution, 
-				  urx, ury, llx, lly);
-      
-      if ( psimage == NULL ) {
-	Warning("Unable to convert %s to PNG, image will be left blank.", 
-		psfile );
-	return;
+      char* psfile = kpse_find_file(psname,kpse_pict_format,0);
+
+      Message(BE_NONQUIET,"<%s",psname);
+      if (psfile == NULL) 
+	Warning("PS file %s not found, image will be left blank", psname );
+      else {
+	gdImagePtr psimage = ps2png(psfile, hresolution, vresolution, 
+				    urx, ury, llx, lly);
+	if ( psimage == NULL ) 
+	  Warning("Unable to convert %s to PNG, image will be left blank", 
+		  psfile );
+	else {
+	  DEBUG_PRINT((DEBUG_DVI,
+       "\n  PS-PNG INCLUDE \t%s (%d,%d) res %dx%d at (%d,%d) offset (%d,%d)",
+		       psfile,
+		       gdImageSX(psimage),gdImageSY(psimage),
+		       hresolution,vresolution,
+		       PIXROUND(h, dvi->conv*shrinkfactor),
+		       PIXROUND(v, dvi->conv*shrinkfactor),
+		       x_offset,y_offset));
+	  gdImageCopy(page_imagep, psimage,
+		      PIXROUND(h,dvi->conv*shrinkfactor)+x_offset,
+		      PIXROUND(v,dvi->conv*shrinkfactor)-gdImageSY(psimage)
+		      +y_offset,
+		      0,0,
+		      gdImageSX(psimage),gdImageSY(psimage));
+	  gdImageDestroy(psimage);
+	}
       }
-      DEBUG_PRINT((DEBUG_DVI,
-	     "\n  PS-PNG INCLUDE \t(%d,%d) dpi %dx%d at (%d,%d) offset (%d,%d)",   
-		   gdImageSX(psimage),gdImageSY(psimage),
-		   hresolution,vresolution,
-		   PIXROUND(h, dvi->conv*shrinkfactor),
-		   PIXROUND(v, dvi->conv*shrinkfactor),
-		   x_offset,y_offset));
-      gdImageCopy(page_imagep, psimage,
-		  PIXROUND(h,dvi->conv*shrinkfactor)+x_offset,
-		  PIXROUND(v,dvi->conv*shrinkfactor)-gdImageSY(psimage)
-		  +y_offset,
-		  0,0,
-		  gdImageSX(psimage),gdImageSY(psimage));
-      gdImageDestroy(psimage);
-      Message(BE_NONQUIET,"<%s>",psfile);
+      Message(BE_NONQUIET,">",psfile);
     } else { /* Not PASS_DRAW */
       int pngheight,pngwidth;
       
