@@ -8,23 +8,25 @@ void CreateImage(void)
     gdImageDestroy(page_imagep);
   if (x_width <= 0) x_width=1;
   if (y_width <= 0) y_width=1;
-#if 0
 #ifdef HAVE_GDIMAGECREATETRUECOLOR
-  if (truecolor) {
+  if (truecolor) 
     page_imagep=gdImageCreateTrueColor(x_width,y_width);
-    /* Image is black. There is no background color. */
-  } else {
+  else
 #endif
-#endif
-  page_imagep=gdImageCreate(x_width,y_width);
+    page_imagep=gdImageCreate(x_width,y_width);
   /* Set bg color */
   Background = gdImageColorAllocate(page_imagep,bRed,bGreen,bBlue);
   if (borderwidth<0) {
     gdImageColorTransparent(page_imagep,Background); 
   }
+#ifdef HAVE_GDIMAGECREATETRUECOLOR
+  if (truecolor) 
+    /* Truecolor: there is no background color index, fill image instead. */
+    gdImageFilledRectangle(page_imagep, 0, 0, x_width-1, y_width-1, Background);
+#endif
   if (borderwidth>0) {
     int Transparent;
-
+    
     /* Set ANOTHER bg color, transparent this time */
     Transparent = gdImageColorAllocate(page_imagep,bRed,bGreen,bBlue); 
     gdImageColorTransparent(page_imagep,Transparent); 
