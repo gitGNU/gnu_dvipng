@@ -1,5 +1,5 @@
-1 dvipng
-********
+dvipng
+******
 
 This program makes PNG graphics from DVI files as obtained from TeX and
 its relatives.
@@ -19,8 +19,8 @@ instant feedback as to whether or not their answers are correct, see
    Other applications may also benefit, like web applications as
 latex2html and WYSIWYG editors like LyX.
 
-1.1 Benefits of dvipng
-======================
+Benefits of dvipng
+==================
 
    The benefits include
 
@@ -44,16 +44,15 @@ latex2html and WYSIWYG editors like LyX.
 
    * and more...
 
+Installation
+============
 
-1.2 Installation
-================
+   Read `INSTALL', included in the distribution.
 
-Read `INSTALL', included in the distribution.
+Usage
+=====
 
-1.3 Usage
-=========
-
-To use dvipng at its simplest, simply type
+   To use dvipng at its simplest, simply type
 
      dvipng foo
 
@@ -67,19 +66,19 @@ summary of available options, just type
 
      dvipng --help
 
-1.4 Availability
-================
+Availability
+============
 
-The dvipng package is available at SourceForge, at
+   The dvipng package is available at SourceForge, at
 `http://sourceforge.net/projects/dvipng'. This is the project page of
 dvipng. Anonymous CVS is available from
 `http://sourceforge.net/projects/preview-latex', but this will change
 in the future.
 
-1.5 Contacts
-============
+Contacts
+========
 
-Bug reports should be sent to <dvipng-devel@lists.sourceforge.net>.
+   Bug reports should be sent to <dvipng-devel@lists.sourceforge.net>.
 
    Questions, suggestions for new features, pleas for help, and/or
 praise should go to <dvipng-devel@lists.sourceforge.net> (the dvipng
@@ -91,8 +90,17 @@ with just the word `help' as subject or body to
    Offers to support further development will be appreciated. For
 developer access, ask on <dvipng-devel@lists.sourceforge.net>.
 
-1.6 Todo
-========
+Copying
+=======
+
+   This program is released under the GNU General Public License, see
+the COPYING file in the dvipng distribution or
+`http://www.gnu.org/licenses/gpl.html'.
+
+   Copyright (C) 2002-2004 Jan-AAke Larsson
+
+Todo
+====
 
    * Test the FreeType interface so that TrueType fonts work properly.
 
