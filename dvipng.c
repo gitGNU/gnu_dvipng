@@ -64,9 +64,6 @@ int main(int argc, char ** argv)
 #endif
   /* setbuf(stderr, NULL); */
 
-  initcolor();
-  parsestdin = DecodeArgs(argc, argv);
-
 #ifdef HAVE_LIBKPATHSEA
   /* Use extra paths as used by dvips */
   kpse_set_program_name(argv[0],"dvips");
@@ -97,6 +94,9 @@ int main(int argc, char ** argv)
   else
     kpse_init_prog("DVIPNG", 300, "cx", "cmr10");
 #endif
+
+  initcolor();
+  parsestdin = DecodeArgs(argc, argv);
 
 #ifdef HAVE_FT2_OR_LIBT1
   InitPSFontMap();
