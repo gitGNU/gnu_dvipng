@@ -8,6 +8,14 @@ void CreateImage(void)
     gdImageDestroy(page_imagep);
   if (x_width <= 0) x_width=1;
   if (y_width <= 0) y_width=1;
+#if 0
+#ifdef HAVE_GDIMAGECREATETRUECOLOR
+  if (truecolor) {
+    page_imagep=gdImageCreateTrueColor(x_width,y_width);
+    /* Image is black. There is no background color. */
+  } else {
+#endif
+#endif
   page_imagep=gdImageCreate(x_width,y_width);
   /* Set bg color */
   Background = gdImageColorAllocate(page_imagep,bRed,bGreen,bBlue);
@@ -51,7 +59,11 @@ void WriteImage(char *pngname, int pagenum)
   }
   if ((outfp = fopen(pngname,"wb")) == NULL)
       Fatal("Cannot open output file %s",pngname);
+#ifdef HAVE_GDIMAGEPNGEX
+  gdImagePngEx(page_imagep,outfp,1)
+#else
   gdImagePng(page_imagep,outfp);
+#endif
   fclose(outfp);
   DEBUG_PRINT((DEBUG_DVI,"\n  WROTE:   \t%s\n",pngname));
   gdImageDestroy(page_imagep);
@@ -90,16 +102,15 @@ int32_t SetRule(int32_t a, int32_t b, int32_t h,int32_t v,int PassNo)
       */
       Color = gdImageColorResolve(page_imagep, Red,Green,Blue);
       gdImageFilledRectangle(page_imagep,
-			     PIXROUND(h, dvi->conv*shrinkfactor)+x_offset,
-			     PIXROUND(v, dvi->conv*shrinkfactor)-yy+1+y_offset,
-			     PIXROUND(h, dvi->conv*shrinkfactor)+xx-1+x_offset,
-			     PIXROUND(v, dvi->conv*shrinkfactor)+y_offset,
+			     PIXROUND(h, dvi->conv*shrinkfactor),
+			     PIXROUND(v, dvi->conv*shrinkfactor)-yy+1,
+			     PIXROUND(h, dvi->conv*shrinkfactor)+xx-1,
+			     PIXROUND(v, dvi->conv*shrinkfactor),
 			     Color);
-      DEBUG_PRINT((DEBUG_DVI,"\n  RULE \t%dx%d at (%d,%d) offset (%d,%d)",
+      DEBUG_PRINT((DEBUG_DVI,"\n  RULE \t%dx%d at (%d,%d)",
 		   xx, yy,
 		   PIXROUND(h, dvi->conv*shrinkfactor),
-		   PIXROUND(v, dvi->conv*shrinkfactor),
-		   x_offset,y_offset));
+		   PIXROUND(v, dvi->conv*shrinkfactor)));
     }
   }
 #endif
@@ -218,14 +229,13 @@ int32_t SetRule(int32_t a, int32_t b, int32_t h,int32_t v,int PassNo)
 	gdImageFilledRectangle(rule,width-1,1,width-1,height-2,Color);
       }
       gdImageCopy(page_imagep,rule,
-		  h/dvi->conv/shrinkfactor+x_offset,
-		  (v-a)/dvi->conv/shrinkfactor+y_offset,
+		  h/dvi->conv/shrinkfactor,
+		  (v-a)/dvi->conv/shrinkfactor,
 		  0,0,width,height);
       DEBUG_PRINT((DEBUG_DVI,"\n  RULE \t%dx%d at (%d,%d) offset (%d,%d)",
 		   width,height,
 		   PIXROUND(h, dvi->conv*shrinkfactor),
-		   PIXROUND(v, dvi->conv*shrinkfactor),
-		   x_offset,y_offset));
+		   PIXROUND(v, dvi->conv*shrinkfactor)));
       DEBUG_PRINT((DEBUG_DVI," (lrtb %d %d %d %d)",left,right,top,bottom));
     }
   }
