@@ -6,7 +6,6 @@
  * important.
  */
 
-
 struct pagequeue {
   struct pagequeue *next; 
   int first,last;
@@ -71,8 +70,7 @@ bool QueueEmpty P1H(void)
 /* Parse a string representing a list of pages.  Return 0 iff ok.  As a
    side effect, the page(s) is (are) ap- or pre-pended to the queue. */
 /* THIS is adapted from dvips */
-int
-ParsePages P2C(register char  *, s, bool, abspage)
+bool QueueParse P2C(register char  *, s, bool, abspage)
 {
     register int    c ;		/* current character */
     register int  n = 0,	/* current numeric value */
@@ -89,7 +87,7 @@ ParsePages P2C(register char  *, s, bool, abspage)
 	c = *s++;
 	if ( !innumber && !range) {/* nothing special going on */
 	    if (c == 0)
-		return 0;
+		return(_FALSE);
 	    if (white (c))
 		continue;
 	}
@@ -112,7 +110,7 @@ ParsePages P2C(register char  *, s, bool, abspage)
 	}
 	if (c == '-' || c == ':') {/* here's a range */
 	    if (range)
-		return (-1);
+		return(_TRUE);
 	    if (innumber) {	/* have a lower bound */
 		ps_low = n;
 	    }
@@ -136,12 +134,12 @@ ParsePages P2C(register char  *, s, bool, abspage)
 	    }
 	    QueuePage(ps_low, ps_high,abspage);
 	    if (c == 0)
-		return 0;
+		return(_FALSE);
 	    range = 0;
 	    innumber = 0;
 	    continue;
 	}
-	return (-1);
+	return(_TRUE);
     }
 #undef white
 }
