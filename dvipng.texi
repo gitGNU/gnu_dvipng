@@ -345,7 +345,7 @@ T1lib rendering, use this option.
 @cindex GIF image format
 The images are output in the GIF format, if GIF support is
 enabled. This is the default for the @samp{dvigif} binary, which only
-should be installed when GIF support is available. See also the
+will be available when GIF support is enabled. See also the
 @samp{--png} option.
 
 @item --height*
@@ -1376,18 +1376,17 @@ work. The following sections provide some helpful hints if you find
 yourself in such a situation.
 
 Bug reports should be sent to
-@email{preview-latex-bugs@@lists.sourceforge.net}. This is still a
-sub-project of @previewlatex{}.
+@email{dvipng-devel@@lists.sourceforge.net}.
 
 Questions, suggestions for new features, pleas for help, and/or praise
-should go to @email{preview-latex-devel@@lists.sourceforge.net} (the
-preview-latex devel team). For more information on this mailing list,
-send a message with just the word `help' as subject or body to
-@email{preview-latex-devel-request@@lists.sourceforge.net} or look at
-@url{http://lists.sourceforge.net/lists/listinfo/preview-latex-devel}.
+should go to @email{dvipng-devel@@lists.sourceforge.net} (the dvipng
+devel team). For more information on this mailing list, send a message
+with just the word `help' as subject or body to
+@email{dvipng-devel-request@@lists.sourceforge.net} or look at
+@url{http://lists.sourceforge.net/lists/listinfo/dvipng-devel}.
 
 Offers to support further development will be appreciated. For developer
-access, ask on @email{preview-latex-devel@@lists.sourceforge.net}.
+access, ask on @email{dvipng-devel@@lists.sourceforge.net}.
 
 For details on the @TeX{} path-searching library, and @code{mktexpk}
 problems, @pxref{Common problems,,, kpathsea, Kpathsea}.
