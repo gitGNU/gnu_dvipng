@@ -110,6 +110,10 @@ access, ask on @email{preview-latex-devel@@lists.sourceforge.net}.
 
 @itemize @bullet
 @item 
+Some specials affect the overall behaviour of dvipng, these should be
+read also in SkipPage.  Not a fatal bug, but annoying.
+
+@item 
 Test the FreeType interface so that TrueType fonts work properly.
 
 @item

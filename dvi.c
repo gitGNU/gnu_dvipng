@@ -358,7 +358,7 @@ void DVIClose(struct dvi_data* dvi)
   free(dvi);
 }
 
-void DVIReOpen(struct dvi_data* dvi)
+bool DVIReOpen(struct dvi_data* dvi)
 {
   struct stat stat;
   fstat(fileno(dvi->filep), &stat);
@@ -376,5 +376,7 @@ void DVIReOpen(struct dvi_data* dvi)
     Message(PARSE_STDIN,"Reopened file\n");
     DEBUG_PRINT(DEBUG_DVI,("\nREOPEN FILE\t%s", dvi->name));
     DVIInit(dvi);
+    return(true);
   }
+  return(false);
 }

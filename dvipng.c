@@ -91,7 +91,8 @@ int main(int argc, char ** argv)
     while(!feof(stdin)) {
       DecodeString(line);
       if (dvi!=NULL) {
-	DVIReOpen(dvi);
+	if (DVIReOpen(dvi))
+	  flags &= ~PREVIEW_LATEX_TIGHTPAGE;
 	DrawPages();
       }
       printf("%s> ",dvi!=NULL?dvi->name:"");
