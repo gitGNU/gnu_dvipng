@@ -11,8 +11,12 @@
 @end ifclear
 @c -----------------------
 
-This program makes PNG graphics from DVI files as obtained from @TeX{}
-and its relatives.
+This program makes PNG and/or GIF graphics from DVI files as obtained
+from @TeX{} and its relatives. 
+
+If GIF support is enabled, GIF output is chosen by using the
+@samp{dvigif} binary or with the @samp{--gif} option.
+
 @ifclear man
 
 It is intended to produce anti-aliased screen-resolution images as fast
@@ -36,7 +40,8 @@ and WYSIWYG editors like LyX.
 @end ifclear
 @ifclear rawfile
 @end ifclear
-The benefits include
+
+The benefits of @samp{dvipng}/@samp{dvigif} include
 
 @itemize @bullet
 @item 

@@ -1,8 +1,11 @@
 dvipng
 ******
 
-This program makes PNG graphics from DVI files as obtained from TeX and
-its relatives.
+This program makes PNG and/or GIF graphics from DVI files as obtained
+from TeX and its relatives.
+
+   If GIF support is enabled, GIF output is chosen with the `--gif'
+option or by using the `dvigif' binary.
 
    It is intended to produce anti-aliased screen-resolution images as
 fast as is possible. The target audience is people who need to generate
@@ -22,7 +25,7 @@ latex2html and WYSIWYG editors like LyX.
 Benefits of dvipng
 ==================
 
-   The benefits include
+   The benefits of `dvipng'/`dvigif' include
 
    * Speed. It is a very fast bitmap-rendering code for DVI files. On a
      fairly low-end laptop, it takes less than a second to generate 150

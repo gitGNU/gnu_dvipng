@@ -2,8 +2,8 @@
 ''' $RCSfile$$Revision$$Date$
 '''
 ''' $Log$
-''' Revision 1.8  2004/11/25 12:16:03  jalar
-''' Add some minor things
+''' Revision 1.9  2004/11/25 15:47:57  jalar
+''' Fix dvigif installation and docs
 '''
 '''
 .de Sh
@@ -197,9 +197,13 @@ dvipng [options] filename
 .PP
 dvipng [options] [filename] -
 .SH "DESCRIPTION"
-This program makes PNG graphics from DVI files as obtained from TeX
-and its relatives.
-The benefits include
+This program makes PNG and/or GIF graphics from DVI files as obtained
+from TeX and its relatives. 
+.PP
+If GIF support is enabled, GIF output is chosen by using the
+\fBdvigif\fR binary or with the \fB--gif\fR option.
+.PP
+The benefits of \fBdvipng\fR/\fBdvigif\fR include
 .Ip "\(bu" 4
 Speed. It is a very fast bitmap-rendering code for \s-1DVI\s0 files. On a
 fairly low-end laptop, it takes less than a second to generate 150

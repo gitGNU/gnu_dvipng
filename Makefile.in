@@ -57,7 +57,7 @@ objects = dvipng.o color.o draw.o dvi.o font.o misc.o pk.o \
 
 all: dvipng docs
 
-install: @INSTALL_BIN_TARGET@ install-docs
+install: @INSTALL_BIN_TARGET@   @INSTALL_BIN_TARGET@-docs
 
 ####################################### The program
 
@@ -71,9 +71,7 @@ install-dvipng: dvipng
 	$(INSTALL) dvipng $(DESTDIR)$(bindir)
 
 install-dvigif: install-dvipng
-	cd $(DESTDIR)$(bindir)
-	rm -f dvigif
-	$(LN_S) dvipng dvigif
+	(cd $(DESTDIR)$(bindir) && rm -f dvigif && $(LN_S) dvipng dvigif)
 
 ####################################### The documentation
 
@@ -125,6 +123,11 @@ install-docs: docs
 	-$(INSTALL_INFO) --info-dir=$(DESTDIR)$(infodir) dvipng.info
 	-$(MKINSTALLDIRS) $(DESTDIR)$(mandir)/man1
 	$(INSTALL_DATA) dvipng.1 $(DESTDIR)$(mandir)/man1
+
+install-dvipng-docs: install-docs
+
+install-dvigif-docs: install-docs
+	(cd $(DESTDIR)$(mandir)/man1 && rm -f dvigif.1 && $(LN_S) dvipng.1 dvigif.1)
 
 ####################################### The test
 
