@@ -1,21 +1,5 @@
 #include "dvipng.h"
 
-#if 0
-/*-->OpenFont*/
-/**********************************************************************/
-/**************************** OpenFont  *******************************/
-/**********************************************************************/
-void OpenFont(struct font_entry* tfontp)
-{
-  if (tfontp->filep != NULL)
-    return;         /* we need not have been called */
-  DEBUG_PRINT((DEBUG_DVI,"(OPEN %s) ", tfontp->name));
-  if ((tfontp->filep = fopen(tfontp->name,"rb")) == NULL) {
-    Warning("font file %s could not be opened", tfontp->name);
-  } 
-}
-#endif
-
 
 void CheckChecksum(uint32_t c1, uint32_t c2, const char* name)
 {
@@ -88,7 +72,8 @@ void FontDef(unsigned char* command, void* parent)
     DEBUG_PRINT((DEBUG_VF," %d %d '%.*s'",a,l,a+l,current+14));
 #ifdef DEBUG
   } else {
-    DEBUG_PRINT((DEBUG_DVI," %d %d %d %d %d %d '%.*s'",k,c,s,d,a,l,a+l,current+14));
+    DEBUG_PRINT((DEBUG_DVI," %d %d %d %d %d %d '%.*s'",k,c,s,d,a,l,
+		 a+l,current+14));
 #endif
   }
   if (a+l > STRSIZE-1)
@@ -175,39 +160,67 @@ void FontFind(struct font_entry * tfontptr)
 {
 #ifdef HAVE_LIBKPATHSEA
   kpse_glyph_file_type font_ret;
-  char *name;
+  char *name,*psfile;
   unsigned dpi;  
+#ifdef HAVE_FT2
+  FT_Matrix *transform=NULL;
+  char *encoding=NULL;
+#endif
 
   dpi = kpse_magstep_fix ((unsigned) (tfontptr->font_mag / 5.0 + .5),
 			resolution, NULL);
   tfontptr->font_mag = dpi * 5; /* save correct dpi */
   DEBUG_PRINT((DEBUG_DVI,"\n  FIND FONT:\t%s %d",tfontptr->n,dpi));
 
-  name = kpse_find_vf (tfontptr->n);
+#ifdef HAVE_FT2
+  psfile = FindPSFontMap(tfontptr->n, &encoding, &transform);
+  if (psfile!=NULL) {
+    name = kpse_find_file(psfile, kpse_type1_format, false);
+    free(psfile);
+  } else
+    name = kpse_find_file(tfontptr->n, kpse_type1_format, false);
+  if (name==NULL) {
+    name = kpse_find_file(tfontptr->n, kpse_truetype_format, false);
+  }
   if (name) {
     strcpy (tfontptr->name, name);
     free (name);
-    InitVF(tfontptr);
-  } else {
-    name = kpse_find_pk (tfontptr->n, dpi, &font_ret);
+    name = kpse_find_file(tfontptr->n, kpse_tfm_format, false);
+  }
+  if (name) {
+    InitFT(tfontptr,dpi,encoding,transform);
+    free(transform);
+    ReadTFM(tfontptr,name);
+    free(name);
+  } else 
+#endif
+    {
+    name = kpse_find_vf (tfontptr->n);
     if (name) {
       strcpy (tfontptr->name, name);
       free (name);
-      
-      if (!FILESTRCASEEQ (tfontptr->n, font_ret.name)) {
-	Warning("font %s not found, using %s at %d instead.\n",
-		tfontptr->n, font_ret.name, font_ret.dpi);
-	tfontptr->c = 0; /* no checksum warning */
-      } else if (!kpse_bitmap_tolerance ((double)font_ret.dpi, (double) dpi))
-	Warning("font %s at %d not found, using %d instead.\n",
-		tfontptr->name, dpi, font_ret.dpi);
-      InitPK(tfontptr);
+      InitVF(tfontptr);
     } else {
-      Warning("font %s at %u not found, characters will be left blank.\n",
-	      tfontptr->n, dpi);
-      tfontptr->filedes = 0;
-      tfontptr->magnification = 0;
-      tfontptr->designsize = 0;
+      name = kpse_find_pk (tfontptr->n, dpi, &font_ret);
+      if (name) {
+	strcpy (tfontptr->name, name);
+	free (name);
+	
+	if (!FILESTRCASEEQ (tfontptr->n, font_ret.name)) {
+	  Warning("font %s not found, using %s at %d instead.\n",
+		  tfontptr->n, font_ret.name, font_ret.dpi);
+	  tfontptr->c = 0; /* no checksum warning */
+	} else if (!kpse_bitmap_tolerance ((double)font_ret.dpi, (double) dpi))
+	  Warning("font %s at %d not found, using %d instead.\n",
+		  tfontptr->name, dpi, font_ret.dpi);
+	InitPK(tfontptr);
+      } else {
+	Warning("font %s at %u not found, characters will be left blank.\n",
+		tfontptr->n, dpi);
+	tfontptr->filedes = 0;
+	tfontptr->magnification = 0;
+	tfontptr->designsize = 0;
+      }
     }
   }
 #else /* not HAVE_LIBKPATHSEA */
