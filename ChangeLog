@@ -1,5 +1,14 @@
 2004-12-10  Jan-Ake Larsson  <jalar@mai.liu.se>
 
+	* Release 1.4
+
+	* RELEASE:
+	* configure.ac: 
+	* dvipng.1:
+	* dvipng.texi: Set version 1.4 
+
+	* README: Fix formatting
+
 	* misc.c: Use mmap test. Hopefully, it will fail on ULTRIX, mmap
 	only works on character special devices (and not on regular files)
 
