@@ -1,3 +1,15 @@
+2004-12-02  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* config.h.in:
+	* configure.ac:
+	* dvipng.h: Move int64_t and uint64_t tests entirely to autoconf
+
+	* dvi.c: Fix signedness 
+
+2004-11-30  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* misc.c: Fix NULL dereference.
+
 2004-11-25  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* Release 1.3	
