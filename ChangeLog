@@ -1,5 +1,7 @@
 2004-08-06  Jan-Åke Larsson  <jalar@mai.liu.se>
 
+	* dvipng.texi: Document --png, --gif, and --picky
+
 	* .cvsignore: Add *.gif 
 
 	* Makefile.in: Install 'dvigif' if we have GIF support 
