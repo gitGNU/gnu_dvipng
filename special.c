@@ -317,7 +317,7 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
   }
   if (strncmp(token,"src:",4)==0) { /* source special */
     if ( page_imagep != NULL )
-      Message(" at (%ld,%ld) source \\special{%.*s}",
+      Message(BE_NONQUIET," at (%ld,%ld) source \\special{%.*s}",
 	      hh, vv, length,special);
     return;
   }
