@@ -324,7 +324,7 @@ void EndVFMacro(void)
 }
 
 
-void DrawPage(hoffset,voffset) 
+void DrawPage(int32_t hoffset, int32_t voffset) 
      /* To be used after having read BOP and will exit cleanly when
       * encountering EOP.
       */
@@ -363,7 +363,7 @@ void DrawPages(void)
 	  x_min = y_min = INT32_MAX;
 	}
 	PassNo=PASS_BBOX;
-	DrawPage(0,0);
+	DrawPage((int32_t) 0, (int32_t) 0);
 	SeekPage(dvi,dvi_pos);
 	x_width = x_max-x_min;
 	y_width = y_max-y_min;
@@ -372,9 +372,9 @@ void DrawPages(void)
 	x_max = x_min = -x_offset_def; /* reset BBOX */
 	y_max = y_min = -y_offset_def;
       }
+#ifdef DEBUG
       DEBUG_PRINT((DEBUG_DVI,"\n  IMAGE:\t%dx%d",x_width,y_width));
       DEBUG_PRINT((DEBUG_DVI,"\n@%d PAGE START:\tBOP",dvi_pos->offset));
-#ifdef DEBUG
       { 
 	int i;
 	for (i=0;i<10;i++) 
