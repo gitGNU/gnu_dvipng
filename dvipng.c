@@ -62,7 +62,7 @@ int main(int argc, char ** argv)
     while(!feof(stdin)) {
       DecodeString(line);
       if (dvi!=NULL) {
-	DVIReInit(dvi);
+	DVIReOpen(dvi);
 	DoPages();
       }
       printf("%s> ",dvi!=NULL?dvi->name:"");
