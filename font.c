@@ -234,7 +234,7 @@ void FontFind(struct font_entry * tfontptr)
       InitPK(tfontptr);
     } else {
       flags |= PAGE_GAVE_WARN;
-      Warning("font %s at %u dpi not found, characters will be left blank.\n",
+      Warning("font %s at %d dpi not found, characters will be left blank.\n",
 	      tfontptr->n, tfontptr->dpi);
       strcpy (tfontptr->name, "None");
       tfontptr->filedes = 0;
