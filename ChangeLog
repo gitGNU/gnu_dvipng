@@ -413,4 +413,84 @@
 	* t1.c:
 	* misc.c: Add t1lib support
 
-For older changes, see ../ChangeLog.1
+2004-04-05  Jan-흆e Larsson  <jalar@mai.liu.se>
+
+	* dvipng.1: 
+	* readme.texi: 
+	* dvipng.texi:
+	* Makefile.in: Add man page 
+
+2004-03-27  Jan-흆e Larsson  <jalar@mai.liu.se>
+	
+	* dvipng.texi: Fix debug documentations
+
+	* dvipng.c: Dont fail on --mode without --bdpi, output a warning.
+
+2004-03-26  Jan-흆e Larsson  <jalar@mai.liu.se>
+
+	* papersiz.c: Remove compiler warning
+
+	* dvipng.texi: 
+	* misc.c: Change year
+
+2004-03-25  Jan-흆e Larsson  <jalar@mai.liu.se>
+
+	* special.c: Revert change, not only resolution but also
+	offset is needed when generating png from ps
+
+	* misc.c: Change helptext
+
+	* configure.ac: Change version number
+
+	* README: Checkin updated README 
+
+	* pk.c:
+	* ft.c: Speed up color cache
+
+	* dvipng.texi: Add info on resolution, change version number 
+
+2004-03-24  Jan-흆e Larsson  <jalar@mai.liu.se>
+
+	* special.c: Fix missing 'showpage' and a memory leak 
+
+	* font.c: Adjust error message 
+
+	* dvipng.h:
+	* ft.c:
+	* pk.c: Change ink darkness map
+
+	* draw.c: Output page numbers more often. If the user has a
+	slow terminal he's to blame himself, not me.
+
+	* tfm.c: Include alloca.h if present
+
+2004-03-23  Jan-흆e Larsson  <jalar@mai.liu.se>
+
+	* dvipng.texi: Adjust for the new -D option
+
+2004-03-19  dakas  <dakas@users.sourceforge.net>
+
+	* RELEASE: Remove spurious blanks.
+
+2004-03-19  Jan-흆e Larsson  <jalar@mai.liu.se>
+
+	* RELEASE: Update, shorten
+
+2004-03-18  Jan-흆e Larsson  <jalar@mai.liu.se>
+
+	* RELEASE:
+	* dvi.c:
+	* dvipng.c:
+	* dvipng.h:
+	* font.c:
+	* misc.c:
+	* papersiz.c:
+	* special.c: Change the behaviour of the -D switch 
+
+2004-03-08  Jan-흆e Larsson  <jalar@mai.liu.se>
+
+	* font.c: Don't retry on PK generation failure
+
+2004-03-02  David Kastrup  <dakas@users.sourceforge.net>
+
+	* dvi.c (DVIOpen): Fix a buffer overrun error.
