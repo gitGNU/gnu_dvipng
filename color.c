@@ -57,10 +57,6 @@ background(p)
 {
   stringrgb(p, &bRed, &bGreen, &bBlue);
   if (page_imagep) {
-    x_min=-x_goffset;
-    y_min=-y_goffset;
-    x_max=x_min+gdImageSX(page_imagep);
-    y_max=y_min+gdImageSY(page_imagep);
     DoBop(); 
     Warning("Setting background inside page will clear the image, sorry.");
     /*FSEEK(dvifp,cpagep,SEEK_SET);*/ /* Restart page output */
