@@ -232,7 +232,6 @@ dviunits SetGlyph(int32_t c, int32_t hh,int32_t vv)
       for( x=0; x<ptr->w; x++) {
 	if (ptr->data[pos]>0) {
 	  pixelgrey=gammatable[(int)ptr->data[pos]];
-	  DEBUG_PRINT(DEBUG_GLYPH,("\n  GAMMA GREYSCALE: %d -> %d ",ptr->data[pos],pixelgrey));
 	  bgColor = gdImageGetPixel(page_imagep, hh + x, vv + y);
 	  if (bgColor == Color[0]) {
 	    if  (Color[pixelgrey]==-1) {
