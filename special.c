@@ -315,6 +315,12 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 	      hh, vv, length,special);
     return;
   }
+  if (strncmp(token,"src:",4)==0) { /* source special */
+    if ( page_imagep != NULL )
+      Message(" at (%ld,%ld) source \\special{%.*s}",
+	      hh, vv, length,special);
+    return;
+  }
   if ( page_imagep != NULL || flags & NO_IMAGE_ON_WARN ) {
     Warning("at (%ld,%ld) unimplemented \\special{%.*s}.",
 	    hh, vv, length,special);
