@@ -62,7 +62,8 @@ typedef  int     bool;
 
 /*#define PIXROUND(x,c) ((((double)x+(double)(c>>1))/(double)c)+0.5)*/
 /*#define PIXROUND(x,c) (((x)+c)/(c))*/
-#define PIXROUND(x,c) ((x+c-1)/(c))
+/*#define PIXROUND(x,c) ((x+c-1)/(c))*/
+#define PIXROUND(x,c) ((x)/(c))
 
 /*************************************************************************/
 
