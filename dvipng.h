@@ -15,10 +15,7 @@
 /* Name of the program which is called to generate missing pk files */
 #define MAKETEXPK "mktexpk"
 
-#define ERR_STREAM stdout   /* ???? */
-
-#include <stdlib.h>
-#include <stdarg.h>
+#define ERR_STREAM stderr   /* ???? */
 
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
@@ -26,13 +23,16 @@
 #include <inttypes.h>
 #endif
 
+/* For some reason FreeBSD does not follow the C standard */
+/* It has int32_t but not INT32_MAX                       */
+#ifndef INT32_MIN
+#define INT32_MIN   (-2147483647-1)
+#endif
+#ifndef INT32_MAX
+#define INT32_MAX   (2147483647)
+#endif
+              
 #include <gd.h>
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h> // open/close
-
-#include <ctype.h> // isprint
 
 #ifdef HAVE_LIBKPATHSEA
 #include <kpathsea/kpathsea.h>
@@ -46,10 +46,10 @@ typedef  int     bool;
 #ifndef HAVE_VPRINTF
 # ifdef HAVE_DOPRNT
 #  define   vfprintf(stream, message, args)  _doprnt(message, args, stream)
+# else
+#  define vprintf vprintf_and_doprnt_missing
+   /* If we have neither, should fall back to fprintf with fixed args.  */
 # endif
-#else
-# define vprintf vprintf_and_doprnt_missing
-  /* If we have neither, should fall back to fprintf with fixed args.  */
 #endif
 
 /*************************************************************/
