@@ -35,7 +35,8 @@
 #endif
 
 #ifdef HAVE_FT2
-#include <freetype/freetype.h>
+#include <ft2build.h>  
+#include FT_FREETYPE_H
 FT_Library  libfreetype;
 #endif
 
