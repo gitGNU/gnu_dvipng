@@ -119,8 +119,9 @@ bool InitFT(struct font_entry * tfontp)
   } 
   if (FT_Set_Char_Size( tfontp->face, /* handle to face object           */
 			0,            /* char_width in 1/64th of points  */
-			(tfontp->d*64)/65536,
-			/* char_height in 1/64th of points */
+			((int64_t)tfontp->d*64*7200)/7227/65536,
+			/* char_height in 1/64th of _big_points, 
+			   not TeX points */
 			tfontp->dpi/shrinkfactor,   /* horizontal resolution */
 			tfontp->dpi/shrinkfactor )) /* vertical resolution   */ {
     Warning("unable to set font size for %s", tfontp->name);
