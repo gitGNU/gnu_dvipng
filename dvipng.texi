@@ -9,8 +9,8 @@ dvipng [options] [filename] -
 @c man end
 @end ifset
 
-@set version 1.2
-@set month-year August 2004
+@set version 1.3
+@set month-year October 2004
 
 @c Put everything in one index (arbitrarily chosen to be the concept index).
 @syncodeindex fn cp
@@ -197,10 +197,16 @@ Print a usage message and exit.
 Print the version number and exit.
 
 @item -bd @var{num}
+@item -bd @var{color_spec}
 @cindex transparent border width
+@cindex transparent border fallback color
 Set the pixel width of the transparent border (default 0). Using this
 option will make the image edges transparent, but it only affects pixels
-with the background color.
+with the background color. Giving a @var{color_spec} will set the
+fallback color, to be used in viewers that cannot handle transparency
+(the default is the background color). Setting the fallback color makes
+the default border width 1 px. Naturally, you can give both a width and
+a color spec, by using the option twice.
 
 @item --bdpi @var{num}
 @cindex base resolution, setting
@@ -222,10 +228,6 @@ Set the debug flags, showing what dvipng (thinks it) is doing. This will
 work unless dvipng has been compiled without the @samp{DEBUG} option
 (not recommended). Set the flags as you need them, use @samp{-d -1} as
 the first option for maximum output. @xref{Debug options}. 
-
-@item --dvinum*
-Set this option to make the output page number be the @TeX{} page
-numbers rather than the physical page number. See the @samp{-o} switch.
 
 @item -D @var{num}
 @cindex output resolution, setting
@@ -263,15 +265,9 @@ StyleSheets 1)
 The depth is a negative offset in this case, so the minus sign is
 necessary, and the unit is pixels (px).
 
-@item --gamma @var{num}
-@cindex gamma
-@cindex dark fonts
-@cindex light fonts
-@cindex fuzzy images
-Control the interpolation of colors in the greyscale anti-aliasing
-color palette.  Default value is 1.0.  For 0 < @var{num} < 1, the
-fonts will be lighter (more like the background), and for @var{num} >
-1, the fonts will be darker (more like the foreground).
+@item --dvinum*
+Set this option to make the output page number be the @TeX{} page
+numbers rather than the physical page number. See the @samp{-o} switch.
 
 @ignore
 @item -e @var{num}
@@ -341,6 +337,16 @@ Note that if you have both FreeType and T1lib on your system, FreeType
 will be preferred by dvipng. If you for some reason would want to use
 T1lib rendering, use this option.
 
+@item --gamma @var{num}
+@cindex gamma
+@cindex dark fonts
+@cindex light fonts
+@cindex fuzzy images
+Control the interpolation of colors in the greyscale anti-aliasing
+color palette.  Default value is 1.0.  For 0 < @var{num} < 1, the
+fonts will be lighter (more like the background), and for @var{num} >
+1, the fonts will be darker (more like the foreground).
+
 @item --gif*
 @cindex GIF image format
 The images are output in the GIF format, if GIF support is
@@ -405,16 +411,17 @@ configuration file value.
 @item --noghostscript*
 @cindex GhostScript, turning off
 This switch prohibits the internal call to GhostScript for displaying
-PostScript<tm> specials. --noghostscript0 turns the call back on.
+PostScript specials. @samp{--noghostscript0} turns the call back on.
 
 @item --nogssafer*
 @cindex GhostScript and -dSAFER
+@cindex -dSAFER
 Normally, if GhostScript is used to render PostScript specials, the
-GhostScript interpreter is run with the option -dSAFER.  The
--nogssafer option runs GhostScript without -dSAFER.  The -dSAFER
-option in Ghostscript disables PostScript operators such as
-deletefile, to prevent possibly malicious PostScript programs from
-having any effect.  
+GhostScript interpreter is run with the option @samp{-dSAFER}. The
+@samp{-nogssafer} option runs GhostScript without @samp{-dSAFER}. The
+@samp{-dSAFER} option in Ghostscript disables PostScript operators such
+as deletefile, to prevent possibly malicious PostScript programs from
+having any effect.
 
 @item -o @var{name}
 @cindex output, redirecting
@@ -494,7 +501,7 @@ output; report no warnings (only errors) to standard error.
 @cindex quality
 Set the quality to @var{num}. That is, choose the number of antialiasing
 levels for PK and T1lib rendering to be @var{num}*@var{num}. The default
-value is 3 which gives 9 levels of antialiasing for antialiased fonts
+value is 4 which gives 16 levels of antialiasing for antialiased fonts
 from these two. If FreeType is available, its rendering is unaffected by
 this option.
 
