@@ -1,3 +1,28 @@
+/* set.c */
+
+/************************************************************************
+
+  Part of the dvipng distribution
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+  02111-1307, USA.
+
+  Copyright © 2002-2004 Jan-Åke Larsson
+
+************************************************************************/
+
 #include "dvipng.h"
 #if HAVE_ALLOCA_H
 # include <alloca.h>
@@ -18,7 +43,8 @@ void CreateImage(pixels x_width,pixels y_width)
 #endif
     page_imagep=gdImageCreate(x_width,y_width);
   /* Set bg color */
-  Background = gdImageColorAllocate(page_imagep,bRed,bGreen,bBlue);
+  Background = gdImageColorAllocate(page_imagep,
+				    cstack[0].red,cstack[0].green,cstack[0].blue);
   if (borderwidth<0) {
     gdImageColorTransparent(page_imagep,Background); 
   }
@@ -32,7 +58,8 @@ void CreateImage(pixels x_width,pixels y_width)
     int Transparent;
     
     /* Set ANOTHER bg color, transparent this time */
-    Transparent = gdImageColorAllocate(page_imagep,bRed,bGreen,bBlue); 
+    Transparent = gdImageColorAllocate(page_imagep,
+				       cstack[0].red,cstack[0].green,cstack[0].blue); 
     gdImageColorTransparent(page_imagep,Transparent); 
     gdImageFilledRectangle(page_imagep,0,0,
 			   x_width-1,borderwidth-1,Transparent);
@@ -76,15 +103,76 @@ void WriteImage(char *pngname, int pagenum)
   page_imagep=NULL;
 }
 
+#define GREYS 255
+dviunits SetGlyph(int32_t c, int32_t hh,int32_t vv)
+{
+  register struct char_entry *ptr = currentfont->chr[c];
+                                      /* temporary char_entry pointer */
+  int red,green,blue;
+  int *Color=alloca(sizeof(int)*(GREYS+1));
+  int x,y;
+  int pos=0;
+  int bgColor,pixelcolor;
+  hh -= ptr->xOffset/shrinkfactor;
+  vv -= ptr->yOffset/shrinkfactor;
+  
+  Color[0] = gdImageColorResolve(page_imagep,
+				 cstack[0].red,cstack[0].green,cstack[0].blue);
+  for( x=1; x<=GREYS ; x++) 
+    Color[x] = -1;
+  for( y=0; y<ptr->h; y++) {
+    for( x=0; x<ptr->w; x++) {
+      if (ptr->data[pos]>0) {
+	bgColor = gdImageGetPixel(page_imagep, hh + x, vv + y);
+	if (bgColor == Color[0]) {
+	  /* Standard background: use cached value if present */
+	  pixelcolor=Color[(int)ptr->data[pos]];
+	  if (pixelcolor==-1) {
+	    red = cstack[0].red 
+	      - (cstack[0].red-cstack[csp].red)*ptr->data[pos]/GREYS;
+	    green = cstack[0].green
+	      - (cstack[0].green-cstack[csp].green)*ptr->data[pos]/GREYS;
+	    blue = cstack[0].blue
+	      - (cstack[0].blue-cstack[csp].blue)*ptr->data[pos]/GREYS;
+	    Color[ptr->data[pos]] = 
+	      gdImageColorResolve(page_imagep,red,green,blue);
+	    pixelcolor=Color[ptr->data[pos]];
+	  }
+	} else {
+	  /* Overstrike: No cache */
+	  red=gdImageRed(page_imagep, bgColor);
+	  green=gdImageGreen(page_imagep, bgColor);
+	  blue=gdImageBlue(page_imagep, bgColor);
+	  red = red-(red-cstack[csp].red)*ptr->data[pos]/GREYS;
+	  green = green-(green-cstack[csp].green)*ptr->data[pos]/GREYS;
+	  blue = blue-(blue-cstack[csp].blue)*ptr->data[pos]/GREYS;
+	  pixelcolor = gdImageColorResolve(page_imagep, red, green, blue);
+	}
+	gdImageSetPixel(page_imagep, hh + x, vv + y, pixelcolor);
+      }
+      pos++;
+    }
+  }
+  /* This code saved _no_ execution time, strangely.
+   *
+   * #ifdef HAVE_GDIMAGECREATETRUECOLOR 
+   *   if (truecolor) 
+   *     for( i=1; i<=ptr->glyph.nchars ; i++) {
+   *       Color = gdImageColorResolveAlpha(page_imagep,Red,Green,Blue,
+   *                                        128-128*i/ptr->glyph.nchars);
+   *       gdImageChar(page_imagep, &(ptr->glyph),
+   *	               hh - ptr->xOffset/shrinkfactor,
+   *		       vv - ptr->yOffset/shrinkfactor,
+   *	  	       i,Color);
+   *       }
+   *    else {
+   *  #endif */
+  return(ptr->tfmw);
+}
 
-
-/*-->SetRule*/
-/**********************************************************************/
-/*****************************  SetRule  ******************************/
-/**********************************************************************/
-/*   this routine will draw a rule */
 dviunits SetRule(dviunits a, dviunits b, subpixels hh,subpixels vv)
 {
+  /*                               This routine will draw a \rule */
   int Color;
   pixels    width=0, height=0;
 
@@ -96,9 +184,9 @@ dviunits SetRule(dviunits a, dviunits b, subpixels hh,subpixels vv)
   if (page_imagep != NULL) {
     if ((height>0) && (width>0)) {
       /* This code produces too dark rules. But what the hell. Grey
-       * rules look fuzzy.
-       */
-      Color = gdImageColorResolve(page_imagep, Red,Green,Blue);
+       * rules look fuzzy. */
+      Color = gdImageColorResolve(page_imagep, 
+				  cstack[csp].red,cstack[csp].green,cstack[csp].blue);
       /* +1 and -1 are because the Rectangle coords include last pixels */
       gdImageFilledRectangle(page_imagep,hh,vv-height+1,hh+width-1,vv,Color);
       DEBUG_PRINT(DEBUG_DVI,("\n  RULE \t%dx%d at (%d,%d)",

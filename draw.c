@@ -1,3 +1,28 @@
+/* draw.c */
+
+/************************************************************************
+
+  Part of the dvipng distribution
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+  02111-1307, USA.
+
+  Copyright © 2002-2004 Jan-Åke Larsson
+
+************************************************************************/
+
 #include "dvipng.h"
 
 //#define NO_DRIFT
@@ -70,87 +95,41 @@ subpixels   vv;                  /* current rounded vertical position       */
 
 dviunits SetChar(int32_t c)
 {
+  struct char_entry* ptr;
+
   if (currentfont==NULL) 
     Fatal("faulty DVI, trying to set character from null font");
+  ptr = currentfont->chr[c];
+#ifdef DEBUG
   switch (currentfont->type) {
-  case FONT_TYPE_VF:
-    DEBUG_PRINT(DEBUG_DVI,("\n  VF CHAR:\t"));
-    if (isprint(c))
-      DEBUG_PRINT(DEBUG_DVI,("'%c' ",c));
-    DEBUG_PRINT(DEBUG_DVI,("%d at (%d,%d) tfmw %d", c,hh,vv,
-		 ((struct vf_char*)currentfont->chr[c])->tfmw));
-    return(SetVF(c));
-    break;
-  case FONT_TYPE_PK: {
-    struct pk_char* ptr = currentfont->chr[c];
-    if (ptr) {
-      if (ptr->data == NULL) 
-	LoadPK(c, ptr);
-      DEBUG_PRINT(DEBUG_DVI,("\n  PK CHAR:\t"));
-      if (isprint(c))
-	DEBUG_PRINT(DEBUG_DVI,("'%c' ",c));
-      DEBUG_PRINT(DEBUG_DVI,("%d at (%d,%d) tfmw %d", c,hh,vv,
-		   ptr->tfmw));
-      if (page_imagep != NULL)
-	return(SetPK(c, hh, vv));
-      else {
-	/* Expand bounding box if necessary */
-	min(x_min,hh - ptr->xOffset/shrinkfactor);
-	min(y_min,vv - ptr->yOffset/shrinkfactor);
-	max(x_max,hh - ptr->xOffset/shrinkfactor + ptr->w);
-	max(y_max,vv - ptr->yOffset/shrinkfactor + ptr->h);
-	return(ptr->tfmw);
-      }
-    }
+  case FONT_TYPE_VF: DEBUG_PRINT(DEBUG_DVI,("\n  VF CHAR:\t")); break;
+  case FONT_TYPE_PK: DEBUG_PRINT(DEBUG_DVI,("\n  PK CHAR:\t")); break;
+  case FONT_TYPE_T1: DEBUG_PRINT(DEBUG_DVI,("\n  T1 CHAR:\t")); break;
+  case FONT_TYPE_FT: DEBUG_PRINT(DEBUG_DVI,("\n  FT CHAR:\t")); break;
   }
-    break;
-#ifdef HAVE_FT2
-  case FONT_TYPE_FT: {
-    struct ft_char* ptr = currentfont->chr[c];
-    if (ptr->data == NULL) 
-      LoadFT(c, ptr);
-    DEBUG_PRINT(DEBUG_DVI,("\n  FT CHAR:\t"));
-    if (isprint(c))
-      DEBUG_PRINT(DEBUG_DVI,("'%c' ",c));
-    DEBUG_PRINT(DEBUG_DVI,("%d at (%d,%d) tfmw %d", c,hh,vv,ptr->tfmw));
-    if (page_imagep != NULL) 
-      return(SetFT(c, hh, vv));
-    else {
-      /* Expand bounding box if necessary */
-      min(x_min,hh - ptr->xOffset);
-      min(y_min,vv - ptr->yOffset);
-      max(x_max,hh - ptr->xOffset + ptr->w);
-      max(y_max,vv - ptr->yOffset + ptr->h);
-    }
-    return(ptr->tfmw);
-  }
-    break;
+  if (isprint(c))
+    DEBUG_PRINT(DEBUG_DVI,("'%c' ",c));
+  DEBUG_PRINT(DEBUG_DVI,("%d at (%d,%d) tfmw %d", c,hh,vv,ptr->tfmw));
 #endif
-#ifdef HAVE_LIBT1
-  case FONT_TYPE_T1: {
-    struct t1_char* ptr = currentfont->chr[c];
+  if (currentfont->type==FONT_TYPE_VF) {
+    return(SetVF(c));
+  } else if (ptr) {
     if (ptr->data == NULL) 
-      LoadT1(c, ptr);
-    DEBUG_PRINT(DEBUG_DVI,("\n  T1 CHAR:\t"));
-    if (isprint(c))
-      DEBUG_PRINT(DEBUG_DVI,("'%c' ",c));
-    DEBUG_PRINT(DEBUG_DVI,("%d at (%d,%d) tfmw %d", c,hh,vv,ptr->tfmw));
-    if (page_imagep != NULL) 
-      return(SetT1(c, hh, vv));
+      switch(currentfont->type) {
+      case FONT_TYPE_PK:	LoadPK(c, ptr); break;
+      case FONT_TYPE_T1:	LoadT1(c, ptr); break;
+      case FONT_TYPE_FT:	LoadFT(c, ptr); break;
+      }
+    if (page_imagep != NULL)
+      return(SetGlyph(c, hh, vv));
     else {
       /* Expand bounding box if necessary */
-      //printf("BBOX: %d %d %d %d\n",ptr->xOffset,ptr->yOffset,ptr->w,ptr->h);
       min(x_min,hh - ptr->xOffset/shrinkfactor);
       min(y_min,vv - ptr->yOffset/shrinkfactor);
       max(x_max,hh - ptr->xOffset/shrinkfactor + ptr->w);
       max(y_max,vv - ptr->yOffset/shrinkfactor + ptr->h);
+      return(ptr->tfmw);
     }
-    return(ptr->tfmw);
-  }
-    break;
-#endif
-  default:
-    break;
   }
   return(0);
 }
@@ -382,6 +361,10 @@ void DrawPages(void)
       x_max = y_max = INT32_MIN;
       x_min = y_min = INT32_MAX;
       DrawPage((dviunits)0,(dviunits)0);
+      /* Store background color. Background color of a page is given
+	 by the color at EOP rather than the color at BOP. */
+      StoreBackgroundColor(dvi_pos);
+      /* Store pagesize */
       if (flags & PREVIEW_LATEX_TIGHTPAGE) {
 	x_width_def=x_width_tightpage;
 	y_width_def=y_width_tightpage;
@@ -404,20 +387,20 @@ void DrawPages(void)
 	y_width=y_width_def;
 	x_offset=x_offset_def;
 	y_offset=y_offset_def;
-      } 
-      SeekPage(dvi,dvi_pos);
-#ifdef DEBUG
-      DEBUG_PRINT(DEBUG_DVI,("\n  IMAGE:\t%dx%d",x_width,y_width));
-      DEBUG_PRINT(DEBUG_DVI,("\n@%d PAGE START:\tBOP",dvi_pos->offset));
-      { 
-	int i;
-	for (i=0;i<10;i++) 
-	  DEBUG_PRINT(DEBUG_DVI,(" %d",dvi_pos->count[i]));
-	DEBUG_PRINT(DEBUG_DVI,(" (%d)\n",dvi_pos->count[10]));
       }
-#endif
+      DEBUG_PRINT(DEBUG_DVI,("\n  IMAGE:\t%dx%d",x_width,y_width));
       if ( ! (flags & NO_IMAGE_ON_WARN && flags & PAGE_GAVE_WARN )) {
+	SeekPage(dvi,dvi_pos);
 	CreateImage(x_width,y_width);
+#ifdef DEBUG
+	DEBUG_PRINT(DEBUG_DVI,("\n@%d PAGE START:\tBOP",dvi_pos->offset));
+	{
+	  int i;
+	  for (i=0;i<10;i++) 
+	    DEBUG_PRINT(DEBUG_DVI,(" %d",dvi_pos->count[i]));
+	  DEBUG_PRINT(DEBUG_DVI,(" (%d)\n",dvi_pos->count[10]));
+	}
+#endif
 	Message(BE_NONQUIET,"[%d", dvi_pos->count[(flags & DVI_PAGENUM)?0:10]);
 	if (dvi_pos->count[(flags & DVI_PAGENUM)?0:10]!=dvi_pos->count[0])
 	  Message(BE_NONQUIET," (%d)", dvi_pos->count[0]);
@@ -432,6 +415,10 @@ void DrawPages(void)
 	Message(BE_NONQUIET,"] ");
 	fflush(stdout);
       }
+#ifdef DEBUG
+      else
+	DEBUG_PRINT(DEBUG_DVI,("\n  NOT RENDERED, there was a warning"));
+#endif
       flags &= ~PAGE_GAVE_WARN;
       dvi_pos=NextPPage(dvi,dvi_pos);
     }
