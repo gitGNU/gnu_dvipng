@@ -206,7 +206,7 @@ work unless dvipng has been compiled without the @samp{DEBUG} option (not
 recommended).  @xref{Debug options}, for the possible values of
 @var{num}.  Use @samp{-d -1} as the first option for maximum output.
 
-@item -depth*
+@item --depth*
 @cindex baseline reporting
 @cindex depth reporting
 Report the depth of the image. This only works reliably when the
@@ -222,12 +222,11 @@ The depth is a negative offset in this case, so the minus sign is
 necessary, and the unit is pixels (px).
 
 @item -D @var{num}
-@cindex resolution, setting
-Set both the horizontal and vertical resolution to @var{num}, given in
-dpi (dots per inch). The @samp{-Q} quality switch will affect the
-resolution in that everything will be shrunk according to that option,
-see below. The default resolution is 300 dpi, and the value must be
-between 10 and 10000. This affects the choice of bitmap fonts that are
+@cindex base resolution, setting
+Set the base (metafont) resolution, both horizontal and vertical, to
+@var{num} dpi (dots per inch). The @samp{-Q}, ``quality'', switch will
+shrink the image by that factor (default 3), see below. The default base
+resolution is 300 dpi. This affects the choice of PK fonts that are
 loaded, see the file @url{ftp://ftp.tug.org/tex/modes.mf} for a list of
 resolutions and mode names for most devices.
 
@@ -295,6 +294,15 @@ rendering the fonts. If you have PostScript versons of Computer Modern
 installed, there will be no need to generate bitmapped variants on disk
 of these. Then, you can render images at different (and unusual)
 resolutions without cluttering the disk with lots of bitmapped fonts.
+
+@item --height*
+@cindex baseline reporting
+@cindex height reporting
+Report the height of the image. This only works reliably when the
+@LaTeX{} style @samp{preview.sty} from @previewlatex{} is used. It
+reports the number of pixels from the top of the image to the
+baseline of the image. The total height of the image is obtained as the
+sum of the values reported from --height and the --depth.
 
 @item -l [=]@var{num}
 @cindex last page printed

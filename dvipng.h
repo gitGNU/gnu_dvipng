@@ -316,7 +316,8 @@ EXTERN struct internal_state {
 #define BE_NONQUIET     1
 #define BE_VERBOSE      2
 #define PARSE_STDIN     4
-#define REPORT_DEPTH    8
+#define REPORT_HEIGHT   8
+#define REPORT_DEPTH    16
 #define LASTFLAG        REPORT_DEPTH
 
 #ifdef DEBUG

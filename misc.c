@@ -99,7 +99,18 @@ bool DecodeArgs(int argc, char ** argv)
       case 'h':
 	if (strcmp(p,"elp") == 0 ) {
 	  break;
-	} 
+	} else if (strncmp(p,"eight",5) == 0 ) { /* Height reporting */ 
+	  if (p[8] != '0')
+	    flags |= REPORT_HEIGHT;
+	  else
+	    flags &= !REPORT_HEIGHT;
+	  break;
+	  if (flags & REPORT_HEIGHT )
+	    Message(PARSE_STDIN,"Height reporting on\n",p);
+	  else 
+	    Message(PARSE_STDIN,"Height reporting off\n");
+	  break;
+	}
 	goto DEFAULT;
 #endif /* MAKETEXPK */
       case 'O' : /* Offset */
