@@ -5,8 +5,10 @@ struct stack_entry {
 } stack[STACK_SIZE];           /* stack                                 */
 int       sp = 0;              /* stack pointer                         */
 
+#define MoveOver(b)  h += (int32_t) b
+#define MoveDown(a)  v += (int32_t) a
 #define DO_VFCONV(a) (parent->type==DVI_TYPE)?a:\
-    (int32_t)((int64_t) a * parent->d / 65535l)
+    (int32_t)((int64_t) a * parent->s / (1 << 20))
 
 void DrawCommand(unsigned char* command, int PassNo, 
 		 struct dvi_vf_entry* parent)
@@ -81,7 +83,7 @@ void DrawCommand(unsigned char* command, int PassNo,
     DEBUG_PRINTF(DEBUG_DVI," %d",w);
   case W0:
     MoveOver(DO_VFCONV(w));
-      break;
+    break;
   case X1: case X2: case X3: case X4:
     x = SNumRead(command+1, dvi_commandlength[*command]-1);
     DEBUG_PRINTF(DEBUG_DVI," %d",x);
@@ -174,8 +176,8 @@ void DoPages(void)
 	y_offset = -y_min; 
 	x_max = x_min = -x_offset_def; /* reset BBOX */
 	y_max = y_min = -y_offset_def;
-	DEBUG_PRINTF2(DEBUG_DVI,"\n  IMAGE:\t%dx%d",x_width,y_width);
       }
+      DEBUG_PRINTF2(DEBUG_DVI,"\n  IMAGE:\t%dx%d",x_width,y_width);
       DEBUG_PRINTF(DEBUG_DVI,"\n@%d PAGE START:\tBOP",tpagelistp->offset);
 #ifdef DEBUG
       {int i; for (i=0;i<10;i++) 
@@ -183,15 +185,15 @@ void DoPages(void)
       DEBUG_PRINTF(DEBUG_DVI," (%d)\n",tpagelistp->count[10]);}
 #endif
       DoBop();
-      qfprintf(ERR_STREAM,"[%d",  tpagelistp->count[0]);
+      Message(BE_NONQUIET,"[%d",  tpagelistp->count[0]);
       DrawPage(PASS_DRAW);
       FormFeed(dvi,tpagelistp->count[0]);
 #ifdef TIMING
       ++ndone;
 #endif
-      qfprintf(ERR_STREAM,"] ");
+      Message(BE_NONQUIET,"] ");
       tpagelistp=FindQdPage();
     }
-    qfprintf(ERR_STREAM,"\n");
+    Message(BE_NONQUIET,"\n");
   }
 }
