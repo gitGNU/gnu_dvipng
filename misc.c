@@ -39,18 +39,20 @@ named COPYING and dvipng.c.");
 	printf("Debug output enabled\n");
         break;
 #endif
-	/*      case 'o':       *//* Output file is specified */
-	/*	if (*p == 0 && argv[i+1])
+#if 0 /* -o disabled for now. rootname is dvi->outname nowadays */
+      case 'o':       /* Output file is specified */
+	if (*p == 0 && argv[i+1])
 	  p = argv[++i] ;
         (void) strcpy(rootname, p);
-        *//* remove .png extension */
-        /*p1 = strrchr(rootname, '.');
+        /* remove .png extension */
+        p1 = strrchr(rootname, '.');
         if (p1 != NULL && strcmp(p1,".png") == 0 ) {
 	  *p1='\0';
         }
 	if (ParseStdin)
-	  printf("Output file: %s.png\n",rootname);
-        break;*/
+	  printf("Output file: %s#.png (#=page number)\n",rootname);
+        break;
+#endif
 #ifdef MAKETEXPK
       case 'M':
         /* -M, -M1 => don't make font; -M0 => do.  */
@@ -69,7 +71,6 @@ named COPYING and dvipng.c.");
 	if (strcmp(p,"ode") == 0 ) {
 	  if (argv[i+1])
 	    MFMODE = argv[++i] ;
-	  (void) strcpy(rootname, p);
 	  if (ParseStdin)
 	    printf("MetaFont mode: %s\n",MFMODE);
 	  break ;
@@ -261,7 +262,7 @@ named COPYING and dvipng.c.");
         Warning("%c is not a valid flag\n", c);
       }
     } else {
-      if (dvi != NULL && dvi->filep != FPNULL) {
+      if (dvi != NULL && dvi->filep != NULL) {
 	DVIClose(dvi);
       }
       dvi=DVIOpen(argv[i]);
@@ -270,10 +271,10 @@ named COPYING and dvipng.c.");
     }
   }
 
-  if (dvi->filep == FPNULL) {
-    fprintf(ERR_STREAM,"\nThis is the DVI to PNG converter version %s",
+  if (dvi->filep == NULL) {
+    fprintf(ERR_STREAM,"\nThis is the DVI to PNG converter version %s\n",
              VERSION);
-    fprintf(ERR_STREAM," (%s)\n", OS);
+    /*fprintf(ERR_STREAM," (%s)\n", OS);*/
     fprintf(ERR_STREAM,"usage: %s [OPTION]... DVIFILE\n", G_progname);
 
     fprintf(ERR_STREAM,"OPTIONS are:\n");
@@ -323,21 +324,6 @@ named COPYING and dvipng.c.");
     exit(1);
   }
 }
-
-/*-->DoConv*/
-/*********************************************************************/
-/********************************  DoConv  ***************************/
-/*********************************************************************/
-uint32_t DoConv P3C(uint32_t, num, uint32_t, den, int, convResolution)
-{
-  /*register*/ double conv;
-  conv = ((double)num / (double)den) *
-    ((double)mag / 1000.0) *
-    ((double)convResolution/254000.0);
-
-  return((uint32_t)((1.0/conv)+0.5));
-}
-
 
 /*
 char * xmalloc P1C(unsigned, size)
