@@ -107,16 +107,25 @@ AC_ARG_ENABLE(selfauto-set,
   [AC_MSG_CHECKING([for texmf.cnf])
   TEXMF_CNF=`kpsewhich texmf.cnf`
   AC_MSG_RESULT([$TEXMF_CNF])
-  AC_MSG_CHECKING([for \$SELFAUTO in texmf.cnf])
-  if grep SELFAUTO "$TEXMF_CNF" > /dev/null 2> /dev/null; then
-    AC_MSG_RESULT([yes
-***************************************************************
-texmf.cnf is using \$SELFAUTO... variables. If you are going to 
-install dvipng outside the texmf tree, you may need to use
---enable-selfauto-set, type ./configure --help for help
-***************************************************************])
+  AC_MSG_CHECKING([for psfonts.map])
+  cp `which kpsewhich` .
+  PSFONT_MAP=`./kpsewhich psfonts.map`
+  rm ./kpsewhich
+  if test -n "$PSFONT_MAP"; then
+    AC_MSG_RESULT([yes])
   else
-    AC_MSG_RESULT([no])
+    AC_MSG_RESULT([not from outside the texmf tree])
+    AC_MSG_CHECKING([for \$SELFAUTO in texmf.cnf])
+    if grep SELFAUTO "$TEXMF_CNF" > /dev/null 2> /dev/null; then
+      AC_MSG_RESULT([yes
+***************************************************************
+texmf.cnf is using \$SELFAUTO... variables. If you are going to
+install dvipng outside the texmf tree, you may need to use 
+--enable-selfauto-set, type ./configure --help for help.
+***************************************************************])
+    else
+      AC_MSG_RESULT([no])
+    fi
   fi])
 
 AC_MSG_RESULT([
