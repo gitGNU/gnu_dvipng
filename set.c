@@ -63,22 +63,22 @@ int32_t SetRule(int32_t a, int32_t b, int32_t h,int32_t v,int PassNo)
   switch(PassNo) {
   case PASS_BBOX:
     min(x_min,PIXROUND(h, dvi->conv*shrinkfactor)-1);
-    min(y_min,PIXROUND(v, dvi->conv*shrinkfactor)-yy+1-1);
+    min(y_min,PIXROUND(v, dvi->conv*shrinkfactor)-yy-1);
     max(x_max,PIXROUND(h, dvi->conv*shrinkfactor)+xx-1-1);
-    max(y_max,PIXROUND(v, dvi->conv*shrinkfactor)-1);
+    max(y_max,PIXROUND(v, dvi->conv*shrinkfactor)-1-1);
     break;
   case PASS_DRAW:
     if ((yy>0) && (xx>0)) {
       /*
 	Oh, bugger. Shrink rule properly. Currently produces too dark
-	rules, but...  Why do I need the -1's? Beats me.
+	rules, but...  Why do I need the -1's? Possible cause: PIXROUND.
       */
       Color = gdImageColorResolve(page_imagep, Red,Green,Blue);
       gdImageFilledRectangle(page_imagep,
 			     PIXROUND(h, dvi->conv*shrinkfactor)+x_offset-1,
-			     PIXROUND(v, dvi->conv*shrinkfactor)-yy+1+y_offset-1,
+			     PIXROUND(v, dvi->conv*shrinkfactor)-yy+y_offset-1,
 			     PIXROUND(h, dvi->conv*shrinkfactor)+xx-1+x_offset-1,
-			     PIXROUND(v, dvi->conv*shrinkfactor)+y_offset-1,
+			     PIXROUND(v, dvi->conv*shrinkfactor)-1+y_offset-1,
 			     Color);
       DEBUG_PRINTF2(DEBUG_DVI,"\n  RULE \t(%d,%d)", xx, yy);
       DEBUG_PRINTF2(DEBUG_DVI," at (%d,%d)", 
