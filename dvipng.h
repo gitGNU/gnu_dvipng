@@ -59,11 +59,26 @@ typedef unsigned long long      uint64_t;
 #ifndef INT32_MAX
 #define INT32_MAX   (2147483647)
 #endif
-              
+
+#ifdef HAVE_STDBOOL_H
+#include <stdbool.h>
+#endif
+
 #include <gd.h>
 
 #ifdef HAVE_LIBKPATHSEA
-#include <kpathsea/kpathsea.h>
+# include <kpathsea/kpathsea.h>
+/* boolean is an enum type from kpathsea/types.h loaded in
+   kpathsea/kpathsea.h, use it as fallback */
+# ifndef __bool_true_false_are_defined
+#  define bool boolean
+# endif
+#else
+/* This is really insufficient, currently no path searches will work
+   without kpathsea anyway */
+typedef int bool;
+# define true (bool) 1
+# define false (bool) 0
 #endif
 
 #ifdef HAVE_FT2
@@ -75,14 +90,6 @@ typedef unsigned long long      uint64_t;
 #ifdef HAVE_LIBT1
 #define HAVE_FT2_OR_LIBT1
 #include <t1lib.h>
-#endif
-
-#ifdef HAVE_STDBOOL_H
-#include <stdbool.h>
-#else
-typedef  int     bool;
-#define  true      (bool) 1
-#define  false     (bool) 0
 #endif
 
 #ifndef HAVE_VPRINTF
