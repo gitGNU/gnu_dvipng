@@ -24,11 +24,14 @@
 ************************************************************************/
 
 #include "dvipng.h"
-#include <libgen.h>
+#ifdef HAVE_LIBGEN_H
+# include <libgen.h>
+#else
+#define basename xbasename
+#endif
 #include <fcntl.h> // open/close
 #include <sys/mman.h>
 #include <sys/stat.h>
-
 
 static char *programname;
 
@@ -43,6 +46,15 @@ bool DecodeArgs(int argc, char ** argv)
   char *dviname=NULL;        /* Name of dvi file               */
   char *outname=NULL;        /* Name of output file            */
 
+#ifdef HAVE_GDIMAGEGIF
+  programname=strrchr(argv[0],'/');
+  if (programname!=NULL)
+    programname++;
+  else
+    programname=argv[0];
+  if (strncmp(programname,"dvigif",6)==0)
+    flags |= GIF_OUTPUT;
+#endif
   programname=argv[0];
 
   for (i=1; i<argc; i++) {
@@ -54,18 +66,6 @@ bool DecodeArgs(int argc, char ** argv)
 	c=argv[i][2];
       }
       switch (c) {
-      case 'n':       /* no-image-on-warn */
-	if (strncmp(p,"o-image-on-warn",18)==0) { 
-	  if (p[9] != '0') {
-	    flags |= NO_IMAGE_ON_WARN;
-	    Message(PARSE_STDIN,"No images output for pages with warnings\n",p);
-	  } else {
-	    flags &= ~NO_IMAGE_ON_WARN;
-	    Message(PARSE_STDIN,"Images output even for pages with warnings\n");
-	  }
-	  break;
-	}
-	goto DEFAULT;
       case 'd':       /* selects Debug output */
 	if (*p>'9' && *p!='-') {
 	  if (strncmp(p,"vinum",8)==0) { 
@@ -309,6 +309,14 @@ bool DecodeArgs(int argc, char ** argv)
 	Message(PARSE_STDIN,"Magstep: %d\n",usermag);
 	/*overridemag = (c == 'x' ? 1 : -1) ;*/
 	break ;
+#ifdef HAVE_GDIMAGEGIF
+      case 'g' :
+	if (strncmp(p,"if",2)==0) { /* --gif output */ 
+	  flags |= GIF_OUTPUT;
+	  Message(PARSE_STDIN,"GIF output\n");
+	}
+	break;
+#endif
       case 'p' :
 	if (*p == 'p') {  /* a -pp specifier for a page list */
 	  ppused=true;
@@ -318,6 +326,17 @@ bool DecodeArgs(int argc, char ** argv)
 	  Message(PARSE_STDIN,"Page list: %s\n",p);
 	  if (ParsePages(p))
 	    Fatal("bad page list specifier (-pp).");
+	} else if (strncmp(p,"ng",2)==0) { /* --png output */ 
+	  flags &= ~GIF_OUTPUT;
+	  Message(PARSE_STDIN,"PNG output\n");
+	} else if (strncmp(p,"icky",4)==0) { 
+	  if (p[9] != '0') {
+	    flags |= NO_IMAGE_ON_WARN;
+	    Message(PARSE_STDIN,"No images output for pages with warnings\n",p);
+	  } else {
+	    flags &= ~NO_IMAGE_ON_WARN;
+	    Message(PARSE_STDIN,"Images output even for pages with warnings\n");
+	  }
 	} else {   /* a -p specifier for first page */
 	  int32_t firstpage;
 	  bool abspage=false;
@@ -398,7 +417,7 @@ named COPYING and dvipng.c.");
 	if (*p == 0 && argv[i+1])
 	  p = argv[++i] ;
         shrinkfactor = atoi(p);
-	Message(PARSE_STDIN,"Shrinkfactor: %d\n",shrinkfactor);
+	Message(PARSE_STDIN,"Quality: %d\n",shrinkfactor);
 	break;
 #ifdef HAVE_GDIMAGEPNGEX
       case 'z':
@@ -418,10 +437,13 @@ named COPYING and dvipng.c.");
     }
   }
 
-  if (programname)
-    Message(BE_NONQUIET,"This is %s Copyright 2002-2004 Jan-Åke Larsson\n",
-	    PACKAGE_STRING);
-
+  if (programname) {
+    Message(BE_NONQUIET,"This is %s",programname);
+    if (strcmp(basename(programname),PACKAGE_NAME)!=0)
+      Message(BE_NONQUIET," (%s)", PACKAGE_NAME);
+    Message(BE_NONQUIET," %s Copyright 2002-2004 Jan-Åke Larsson\n",
+	    PACKAGE_VERSION);
+  }
   if (dviname != NULL) {
     if (dvi != NULL && dvi->filep != NULL) 
       DVIClose(dvi);
@@ -460,7 +482,13 @@ named COPYING and dvipng.c.");
 #ifdef HAVE_FT2
     fprintf(stdout,"  --freetype*  FreeType font rendering (default on)\n");
 #endif
+#ifdef HAVE_GDIMAGEGIF
+    fprintf(stdout,"  --gif        Output GIF images (dvigif default)\n");
+#endif
     fprintf(stdout,"  --height*    Output the image height on stdout\n");
+#ifdef HAVE_GDIMAGEGIF
+    fprintf(stdout,"  --png        Output PNG images (dvipng default)\n");
+#endif
 #ifdef HAVE_LIBT1
     fprintf(stdout,"  --t1lib*     T1lib font rendering (default on)\n");
 #endif
