@@ -45,7 +45,7 @@ AC_CHECK_HEADERS([gd.h png.h kpathsea/kpathsea.h],,
 		 [AC_MSG_ERROR([cannot find/use $ac_header])])
 AC_CHECK_FT2(,[CFLAGS="$FT2_CFLAGS $CFLAGS"
 	LIBS="$FT2_LIBS $LIBS"
-	FT_O="ft.o tfm.o psfontmap.o enc.o"	
+	FT_O="ft.o enc.o fontmap.o tfm.o"	
 	AC_DEFINE(HAVE_FT2, 1, [Define to 1 if you have freetype2])],
 	[FT_O=""])
 AC_SUBST(FT_O)
