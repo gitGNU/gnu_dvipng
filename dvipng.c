@@ -43,12 +43,10 @@ char    *argv[];
   short   command;           /* current command                         */
   long4   count[10];         /* the 10 counters at begining of each page*/
   long4   cpagep = 0;        /* current page pointer                    */
-  bool    Emitting = _FALSE; /* outputting typsetting instructions?     */
   int     i;                 /* command parameter; loop index           */
   int     k;                 /* temporary parameter                     */
   char    n[STRSIZE];        /* command parameter                       */
   int     PassNo = 0;        /* which pass over the DVI page are we on? */
-  bool    SkipMode = _FALSE; /* in skip mode flag                       */
   int     sp = 0;            /* stack pointer                           */
   struct  stack_entry stack[STACK_SIZE];  /* stack                      */
   char    SpecialStr[STRSIZE]; /* "\special" strings                    */
@@ -123,24 +121,24 @@ char    *argv[];
       printf("CMD@%ld:\t%d\n", (long) ftell(dvifp) - 1, command);
 #endif
     if (/*command >= SETC_000 &&*/ command <= SETC_127) {
-      SetChar(command, command, PassNo);
+      h += SetChar(command, PassNo);
     } else if (command >= FONT_00 && command <= FONT_63) {
       if ( PassNo != PASS_SKIP )
-	SetFntNum((long4)command - FONT_00, Emitting);
+	SetFntNum((long4)command - FONT_00);
     } else switch (command)  {
     case PUT1:
     case PUT2:
     case PUT3:
     case PUT4:
       val = NoSignExtend(dvifp, (int)command - PUT1 + 1);
-      SetChar(val, command, PassNo);
+      (void) SetChar(val, PassNo);
       break;
     case SET1:
     case SET2:
     case SET3:
     case SET4:
       val = NoSignExtend(dvifp, (int)command - SET1 + 1);
-      SetChar(val, command, PassNo);
+      h += SetChar(val, PassNo);
       break;
     case SET_RULE:
       val = NoSignExtend(dvifp, 4);
@@ -272,9 +270,8 @@ char    *argv[];
     case FNT3:
     case FNT4:
       k = NoSignExtend(dvifp, (int) command - FNT1 + 1);
-      if ( PassNo != PASS_SKIP ) {
-        SetFntNum(k, Emitting);
-      }
+      if ( PassNo != PASS_SKIP ) 
+        SetFntNum(k);
       break;
     case XXX1:
     case XXX2:

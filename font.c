@@ -1,13 +1,10 @@
 #include "dvipng.h"
+
 /*-->GetFontDef*/
 /**********************************************************************/
 /**************************** GetFontDef  *****************************/
 /**********************************************************************/
-#if NeedFunctionPrototypes
-void GetFontDef(void)
-#else
-void GetFontDef()
-#endif
+void GetFontDef P1H(void)
 /***********************************************************************
    Read the font  definitions as they  are in the  postamble of the  DVI
    file.
@@ -47,11 +44,7 @@ void GetFontDef()
 /**********************************************************************/
 /************************** OpenFontFile  *****************************/
 /**********************************************************************/
-#if NeedFunctionPrototypes
-void OpenFontFile(void)
-#else
-void OpenFontFile()
-#endif
+void OpenFontFile P1H(void)
 /***********************************************************************
     The original version of this dvi driver reopened the font file  each
     time the font changed, resulting in an enormous number of relatively
@@ -105,6 +98,7 @@ void OpenFontFile()
   } else {
     /*
     fprintf(ERR_STREAM,"Really open font file %s\n", fontptr->name);
+    */
     /* file not in open list          */
     if (nopen < MAXOPEN)    /* just add it to list    */
       current = ++nopen;
@@ -191,12 +185,7 @@ void OpenFontFile()
 /**********************************************************************/
 /****************************  ReadFontDef  ***************************/
 /**********************************************************************/
-
-#if NeedFunctionPrototypes
-unsigned char skip_specials(void)
-#else
-unsigned char skip_specials()
-#endif
+unsigned char skip_specials P1H(void)
 {
   long4    i, j;
   register unsigned char  flag_byte;
@@ -246,9 +235,7 @@ unsigned char skip_specials()
    the user hasn't turned it off.  */
 
 static void
-check_checksum (c1, c2, name)
-    unsigned c1, c2;
-    const char *name;
+check_checksum P3C(unsigned, c1, unsigned, c2, const char*, name)
 {
   if (c1 && c2 && c1 != c2
 #ifdef KPATHSEA
@@ -261,12 +248,7 @@ check_checksum (c1, c2, name)
 
 
 
-#if NeedFunctionPrototypes
-void ReadFontDef(long4 k)
-#else
-void ReadFontDef(k)
-long4    k;
-#endif
+void ReadFontDef P1C(long4, k)
 {
   long4    t;
   unsigned short i;
@@ -274,7 +256,7 @@ long4    k;
   struct char_entry *tcharptr; /* temporary char_entry pointer  */
   static int      plusid = 0;
   bool font_found = _FALSE;
-  int depth, max_depth;
+  /*int depth, max_depth;*/
 
 #ifdef DEBUG
   if (Debug)
@@ -297,8 +279,8 @@ long4    k;
   tfontptr->a = (int)NoSignExtend(dvifp, 1); /* length for font name */
   tfontptr->l = (int)NoSignExtend(dvifp, 1); /* device length */
 
-  tfontptr->max_width = tfontptr->max_height = tfontptr->max_yoff =
-    max_depth = 0;
+  /*tfontptr->max_width = tfontptr->max_height = tfontptr->max_yoff =
+    max_depth = 0;*/
 
   GetBytes(dvifp, tfontptr->n, tfontptr->a + tfontptr->l);
   tfontptr->n[tfontptr->a+tfontptr->l] = '\0';
@@ -410,13 +392,13 @@ printf("[%ld]=%lf * %lf * %lf + 0.5 = %ld\n",
     Fatal("unknown font format in file <%s> !\n",fontptr->name);
 
   { /* PK 89 format */
-    unsigned char   temp_byte;
+    /*    unsigned char   temp_byte;*/
     register unsigned char  flag_byte;
     long4    hppp, vppp, packet_length;
     int     car, ii;
 
     /* read comment */
-    for ( ii = temp_byte = (unsigned char)NoSignExtend(pxlfp, 1);
+    for ( ii /*= temp_byte*/ = (unsigned char)NoSignExtend(pxlfp, 1);
 	  ii>0; ii--) {
       flag_byte = (unsigned char) NoSignExtend(pxlfp, 1);
 #ifdef DEBUG
@@ -462,11 +444,11 @@ printf("[%ld]=%lf * %lf * %lf + 0.5 = %ld\n",
       flag_byte = skip_specials();
 
     } /* end of while */
-    tfontptr->max_height = max_depth ? tfontptr->max_yoff+max_depth :
-      tfontptr->max_yoff+1;
+    /*tfontptr->max_height = max_depth ? tfontptr->max_yoff+max_depth :
+      tfontptr->max_yoff+1;*/
 
     /*
-printf("fontid=%d: max_width=%u, max_height=%d, max_yoff=%u\n",
+      printf("fontid=%d: max_width=%u, max_height=%d, max_yoff=%u\n",
         tfontptr->plusid, tfontptr->max_width,
         tfontptr->max_height, tfontptr->max_yoff);
         */
@@ -475,67 +457,27 @@ printf("fontid=%d: max_width=%u, max_height=%d, max_yoff=%u\n",
 }
 
 
-
-
-
 /*-->SetFntNum*/
 /**********************************************************************/
 /****************************  SetFntNum  *****************************/
 /**********************************************************************/
-#if NeedFunctionPrototypes
-void SetFntNum(long4 k, bool Emitting)
-#else
-void SetFntNum(k, Emitting)
-long4    k;
-bool Emitting;
-#endif
+void SetFntNum P1C(long4, k)
 /*  this routine is used to specify the font to be used in printing future
     characters */
 {
-#ifdef LJ
-  static unsigned short plusid = 0;
-#endif
   fontptr = hfontptr;
   while ((fontptr != NULL) && (fontptr->k != k))
     fontptr = fontptr->next;
   if (fontptr == NULL)
     Fatal("font %ld undefined", (long)k);
-  /*  if (Emitting && fontptr->font_file_id != NO_FILE) {
-    if (!fontptr->used_on_this_page) {
-      fontptr->used_on_this_page = _TRUE;
-    }
-#ifdef DEBUG
-    if (Debug)
-      fprintf(ERR_STREAM, "Switching to font #%ld (%s).\n", k, fontptr->n);
-#endif
-    /* activate font *
-  }*/
-#ifdef LJ    /* reassignment of printer font id  0.48 */
-  else if (fontptr->font_file_id != NO_FILE) {
-    if (fontptr->ncdl == 0) {
-#ifdef DEBUG
-      if (Debug)
-        fprintf(ERR_STREAM, "Changing plusid from %d to %d\n",
-                fontptr->plusid, (int)plusid);
-#endif
-      fontptr->plusid = plusid;
-      plusid ++;
-    }
-  }
-#endif
 }
-
 
 
 /*-->SkipFontDef*/
 /**********************************************************************/
 /****************************  SkipFontDef  ***************************/
 /**********************************************************************/
-#if NeedFunctionPrototypes
-void SkipFontDef(void)
-#else
-void SkipFontDef()
-#endif
+void SkipFontDef P1H(void)
 {
   int     a, l;
   char    n[STRSIZE];
