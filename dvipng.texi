@@ -2,8 +2,8 @@
 @setfilename dvipng.info
 @settitle dvipng: A DVI driver
 
-@set version 0.2
-@set month-year April 2003
+@set version 0.3
+@set month-year June 2003
 
 @c Put everything in one index (arbitrarily chosen to be the concept index).
 @syncodeindex fn cp
@@ -70,8 +70,9 @@ Independent) file into PNG (Portable Network Graphics).
 
 This file documents dvipng version @value{version}
 
-This documentation should cover most important points.  However,
-corrections or perhaps rewrites of sections are @emph{very welcome}.
+This documentation is @emph{preliminary}, but should cover most
+important points. Corrections or perhaps rewrites of sections are
+@emph{very welcome}.
 
 Jan-@AA{}ke Larsson
 
@@ -1275,33 +1276,31 @@ Some of these debugging options are actually provided by Kpathsea
 The classes are:
 @table @asis
 @item 1 
-specials
+normal dvi op-codes
 @item 2
-paths
+virtual fonts
 @item 4
-fonts
+pk fonts
 @item 8
-pages
+glyph rendering
 @item 16
-headers
+ghostscript specials
 @item 32
-font compression
-@item 64
-files
-@item 128
-config files
-@item 256
-Partial Type 1 font encoding vectors
-@item 512
-Partial Type 1 subr calls
-@item 1024
 Kpathsea @code{stat} calls
-@item 2048
+@item 64
 Kpathsea hash table lookups
-@item 4096
+@item 128
 Kpathsea path element expansion
-@item 8192
+@item 256
 Kpathsea path searches
+@ignore
+@item 512
+@item 1024
+@item 2048
+@item 4096
+@item 8192
+@end ignore
+
 @end table
 
 @node Including graphics fails,  , Debug options, Diagnosing problems

@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT([dvipng], [0.2], [preview-latex-bugs@lists.sf.net])
+AC_INIT([dvipng], [0.3], [preview-latex-bugs@lists.sf.net])
 AC_CONFIG_SRCDIR([dvipng.c])
 AC_CONFIG_HEADER([config.h])
 
