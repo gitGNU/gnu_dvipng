@@ -147,7 +147,7 @@ void FontDef(unsigned char* command, struct dvi_vf_entry* parent)
 
   DEBUG_PRINTF(DEBUG_DVI,"\n  FONT %d:\tNew entry created",k);
   /* No fitting font found, create new entry. */
-  if ((tfontptr = NEW(struct font_entry )) == NULL)
+  if ((tfontptr = malloc(sizeof(struct font_entry))) == NULL)
     Fatal("can't malloc space for font_entry");
   tfontptr->next = hfontptr;
   hfontptr = tfontptr;

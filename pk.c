@@ -408,7 +408,7 @@ void InitPK(struct font_entry * tfontp)
   while (*position != PK_POST) {
     DEBUG_PRINTF2(DEBUG_PK,"\n  @%ld PK CHAR:\t%d",
 		  (long)(position - tfontp->mmap), *position);
-    if ((tcharptr = NEW(struct pk_char)) == NULL)
+    if ((tcharptr = malloc(sizeof(struct pk_char))) == NULL)
       Fatal("can't malloc space for pk_char");
     tcharptr->flag_byte = *position;
     tcharptr->glyph.data = NULL;
