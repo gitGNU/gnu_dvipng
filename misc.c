@@ -1,3 +1,28 @@
+/* misc.c */
+
+/************************************************************************
+
+  Part of the dvipng distribution
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+  02111-1307, USA.
+
+  Copyright © 2002-2004 Jan-Åke Larsson
+
+************************************************************************/
+
 #include "dvipng.h"
 #include <libgen.h>
 
@@ -10,7 +35,7 @@ static char *programname;
 bool DecodeArgs(int argc, char ** argv)
 {
   int     i;                 /* argument index for options     */
-  bool ppused=_FALSE;        /* Flag when -pp is used          */
+  bool ppused=false;        /* Flag when -pp is used          */
   char *dviname=NULL;        /* Name of dvi file               */
   char *outname=NULL;        /* Name of output file            */
 
@@ -220,10 +245,10 @@ bool DecodeArgs(int argc, char ** argv)
 	    background(p);
 	  if (borderwidth>=0) 
 	    Message(PARSE_STDIN,"Background: rgb %d,%d,%d\n",
-		    bRed,bGreen,bBlue);
+		    cstack[0].red,cstack[0].green,cstack[0].blue);
 	  else 
 	    Message(PARSE_STDIN,"Transp. background (fallback rgb %d,%d,%d)\n",
-		    bRed,bGreen,bBlue);
+		    cstack[0].red,cstack[0].green,cstack[0].blue);
 	  break;
 	} else if (strcmp(p, "dpi")==0) {
 	  p+=3;
@@ -249,7 +274,8 @@ bool DecodeArgs(int argc, char ** argv)
 	  if (*p == 0 && argv[i+1])
 	    p = argv[++i] ;
 	  resetcolorstack(p);
-	  Message(PARSE_STDIN,"Foreground: rgb %d,%d,%d\n",Red,Green,Blue);
+	  Message(PARSE_STDIN,"Foreground: rgb %d,%d,%d\n",
+		  cstack[1].red,cstack[1].green,cstack[1].blue);
 	  break;
 #ifdef HAVE_FT2
 	} else if ( strncmp(p,"reetype",7) == 0 ) { /* -freetype activation */
@@ -281,7 +307,7 @@ bool DecodeArgs(int argc, char ** argv)
 	break ;
       case 'p' :
 	if (*p == 'p') {  /* a -pp specifier for a page list */
-	  ppused=_TRUE;
+	  ppused=true;
 	  p++ ;
 	  if (*p == 0 && argv[i+1])
 	    p = argv[++i];
@@ -290,12 +316,12 @@ bool DecodeArgs(int argc, char ** argv)
 	    Fatal("bad page list specifier (-pp).");
 	} else {   /* a -p specifier for first page */
 	  int32_t firstpage;
-	  bool abspage=_FALSE;
+	  bool abspage=false;
 
 	  if (*p == 0 && argv[i+1])
 	    p = argv[++i] ;
 	  if (*p == '=') {
-	    abspage=_TRUE;
+	    abspage=true;
 	    p++ ;
 	  }
 	  firstpage = atoi(p);
@@ -306,12 +332,12 @@ bool DecodeArgs(int argc, char ** argv)
       case 'l':
 	{
 	  int32_t lastpage;
-	  bool abspage=_FALSE;
+	  bool abspage=false;
 
 	  if (*p == 0 && argv[i+1])
 	    p = argv[++i] ;
 	  if (*p == '=') {
-	    abspage=_TRUE;
+	    abspage=true;
 	    p++ ;
 	  } 
 	  lastpage = atoi(p);
@@ -326,10 +352,13 @@ bool DecodeArgs(int argc, char ** argv)
 	  flags |= BE_NONQUIET;
 	break;
       case 'r':       /* process pages in reverse order */
-	if (*p != '0') 
+	if (*p != '0') {
 	  Message(PARSE_STDIN,"Reverse order\n");
-	else
+	  Reverse(true);
+	} else {
 	  Message(PARSE_STDIN,"Normal order\n");
+	  Reverse(false);
+	}
         break;
       case 'v':    /* verbatim mode */
 	if (strcmp(p, "ersion")==0) {
@@ -456,16 +485,6 @@ named COPYING and dvipng.c.");
     ParsePages("-");
   return((flags & PARSE_STDIN) != 0);
 }
-/*
-char * xmalloc(unsigned size)
-{
-  char *mem;
-  
-  if ((mem = malloc(size)) == NULL)
-    Fatal("cannot allocate %d bytes", size);
-  return mem;
-}
-*/
 
 void DecodeString(char *string)
 {
