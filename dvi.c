@@ -28,7 +28,11 @@
 # include <gnu-miktex.h>
 # define SLEEP    Sleep(1000)
 #else  /* MIKTEX */
-# include <libgen.h>
+# ifdef HAVE_LIBGEN_H
+#  include <libgen.h>
+# else
+# define basename xbasename
+#endif
 # define SLEEP    sleep(1)
 #endif	/* MIKTEX */
 #include <sys/stat.h>
