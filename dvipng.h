@@ -46,122 +46,40 @@
 #include <limits.h>
 #endif
 
-#include "config.h"
+/*#include "config.h"*/
+#define  STRSIZE         255     /* stringsize for file specifications  */
 
 #define  FIRSTFNTCHAR  0
+#define  LASTFNTCHAR  255
 
-#define  NFNTCHARS       LASTFNTCHAR+1
-#define  STACK_SIZE      100     /* DVI-stack size                     */
-#define  NONEXISTANT     -1      /* offset for PXL files not found     */
-#ifdef RISC_USE_OSL
-# define  NO_FILE        (FPNULL-1)
+typedef  int     bool;
+#define  _TRUE      (bool) 1
+#define  _FALSE     (bool) 0
+#define  UNKNOWN     -1
+
+/* name of the program which is called to generate missing pk files */
+#define MAKETEXPK "mktexpk"
+
+# define ERR_STREAM stdout   /* ???? */
+
+/* end of "config.h" */
+
+/*************************************************************/
+/*************************  protos.h  ************************/
+/*************************************************************/
+
+#ifdef __STDC__
+#define NeedFunctionPrototypes 1
+#include <stdarg.h>
 #else
-# define  NO_FILE        ((FILE *)-1)
+#define NeedFunctionPrototypes 0
+#include <varargs.h>
 #endif
-#define  NEW(A) ((A *)  malloc(sizeof(A)))
-#define  EQ(a,b)        (strcmp(a,b)==0)
-#define  MM_TO_PXL(x)   (int)(((x)*resolution*10)/254)
-#define  PT_TO_PXL(x)   (int)((int32_t)((x)*resolution*100l)/7224)
-#define  PT_TO_DVI(x)   (int32_t)((x)*65536l)
 
-/*#define PIXROUND(x,c) ((((double)x+(double)(c>>1))/(double)c)+0.5)*/
-/*#define PIXROUND(x,c) (((x)+c)/(c))*/
-#define PIXROUND(x,c) ((x+c-1)/(c))
+#if NeedFunctionPrototypes
+#define NeedVarargsPrototypes 1
+#endif
 
-/*************************************************************************/
-
-#define  MoveOver(b)  h += (int32_t) b
-#define  MoveDown(a)  v += (int32_t) a
-#define  qfprintf if (!G_quiet) fprintf
-#define  qprintf  if (!G_quiet) printf
-
-#define GetBytes(fp,buf,n) read_multi(buf,1,n,fp) /* used to be a function */
-
-/**********************************************************************/
-/********************** Special Data Structures ***********************/
-/**********************************************************************/
-
-typedef enum  { None, String, Integer /*, Number, Dimension*/ } ValTyp;
-
-typedef struct {
-  char    *Key;       /* the keyword string */
-  char    *Val;       /* the value string */
-  ValTyp  vt;         /* the value type */
-  union {         /* the decoded value */
-    int     i;
-    float   n;
-  } v;
-} KeyWord;
-
-typedef struct {
-  char    *Entry;
-  ValTyp  Typ;
-} KeyDesc;
-
-/**********************************************************************/
-/***********************  Font Data Structures  ***********************/
-/**********************************************************************/
-
-struct char_entry {             /* character entry */
-  gdFont  glyph;     /* contains width and height in pixels, number of
-		      * greylevels and the bitmaps for the greylevels
-		      */
-  short       xOffset, yOffset;    /* x offset and y offset in pixels   */
-  bool        isloaded;
-  int         fileOffset;
-  int32_t     tfmw;                /* TFM width                         */
-  unsigned char   flag_byte;       /* PK flagbyte                       */
-};
-
-struct vf_char {            /* VF character                            */
-  int            macro_length;
-  unsigned char* macro;     /* Points to beginning of VF macro         */
-  bool           free_me;   /* True if this macro is first in a 'batch'*/
-  int32_t        tfmw;      /* TFM width                               */
-};
-
-struct font_entry {    /* font entry */
-  struct font_entry *next;
-  uint32_t     c, s, d;
-  uint8_t      a, l;
-  char         n[STRSIZE];      /* FNT_DEF command parameters               */
-  uint32_t     font_mag;        /* computed from FNT_DEF s and d parameters */
-  char         name[STRSIZE];   /* full name of PK/VF file                  */
-  FILE *       filep;           /* file identifier (NO_FILE if none)        */
-  uint32_t     magnification;   /* magnification read from font file        */
-  uint32_t     designsize;      /* design size read from font file          */
-  bool      is_vf;              /* _TRUE for VF font                        */
-  void      *ch[NFNTCHARS];  /* character information 
-			      * PK: points to struct char_entry 
-			      * VF: points to struct vf_char             */
-  struct font_num *hfontnump; /* VF local font numbering                 */
-};
-
-struct font_num {    /* Font number. Different for VF/DVI, and several
-			font_num can point to one font_entry */
-  struct font_num   *next;
-  int32_t            k;
-  struct font_entry *fontp;
-};
-
-/**********************************************************************/
-/***********************  Page Data Structures  ***********************/
-/**********************************************************************/
-
-struct page_list {
-  struct page_list* next;
-  int     offset;           /* file offset to BOP */
-  int32_t count[11];        /* 10 dvi counters + absolute pagenum in file */
-};
-
-/**********************************************************************/
-/*************************  Global Procedures  ************************/
-/**********************************************************************/
-/* Note: Global procedures are declared here in alphabetical order, with
-   those which do not return values typed "void".  The names are
-   kept unique in the first 6 characters for portability. */
-
- /* To Prototype or not to prototype ? */
 #ifdef NeedFunctionPrototypes
 
 #define AA(args) args /* For an arbitrary number; ARGS must be in parens.  */
@@ -211,9 +129,149 @@ struct page_list {
 
 #endif /* function prototypes */
 
+
+#define  NFNTCHARS       LASTFNTCHAR+1
+#define  STACK_SIZE      100     /* DVI-stack size                     */
+#define  NONEXISTANT     -1      /* offset for PXL files not found     */
+#ifdef RISC_USE_OSL
+# define  NO_FILE        (FPNULL-1)
+#else
+# define  NO_FILE        ((FILE *)-1)
+#endif
+#define  NEW(A) ((A *)  malloc(sizeof(A)))
+#define  EQ(a,b)        (strcmp(a,b)==0)
+#define  MM_TO_PXL(x)   (int)(((x)*resolution*10)/254)
+#define  PT_TO_PXL(x)   (int)((int32_t)((x)*resolution*100l)/7224)
+#define  PT_TO_DVI(x)   (int32_t)((x)*65536l)
+
+/*#define PIXROUND(x,c) ((((double)x+(double)(c>>1))/(double)c)+0.5)*/
+/*#define PIXROUND(x,c) (((x)+c)/(c))*/
+#define PIXROUND(x,c) ((x+c-1)/(c))
+
+/*************************************************************************/
+
+#define  MoveOver(b)  h += (int32_t) b
+#define  MoveDown(a)  v += (int32_t) a
+#define  qfprintf if (!G_quiet) fprintf
+#define  qprintf  if (!G_quiet) printf
+
+/********************************************************/
+/********************** special.h ***********************/
+/********************************************************/
+
+typedef enum  { None, String, Integer /*, Number, Dimension*/ } ValTyp;
+
+typedef struct {
+  char    *Key;       /* the keyword string */
+  char    *Val;       /* the value string */
+  ValTyp  vt;         /* the value type */
+  union {         /* the decoded value */
+    int     i;
+    float   n;
+  } v;
+} KeyWord;
+
+typedef struct {
+  char    *Entry;
+  ValTyp  Typ;
+} KeyDesc;
+
+void    DoSpecial AA((char *, int));
+
+/********************************************************/
+/***********************  font.h  ***********************/
+/********************************************************/
+
+#define FONT_TYPE_PK            1
+struct pk_char {                   /* PK character */
+  unsigned char* mmap;             /* Points to beginning of PK data    */
+  uint32_t       length;           /* Length of PK data                 */
+  int32_t        tfmw;             /* TFM width                         */
+  unsigned char  flag_byte;        /* PK flagbyte                       */
+  gdFont         glyph;            /* contains width and height in
+		                    * pixels, number of greylevels and
+		                    * the bitmaps for the greylevels
+				    */
+  short          xOffset, yOffset; /* x offset and y offset in pixels   */
+};
+
+#define FONT_TYPE_VF            2
+struct vf_char {                   /* VF character                     */
+  unsigned char* mmap;             /* Points to beginning of VF macro  */
+  uint32_t       length;           /* Length of VF macro               */
+  int32_t        tfmw;             /* TFM width                        */
+};
+
+struct font_entry {    /* font entry */
+  int          type;            /* PK/VF/Type1 ...                   */
+  struct font_entry *next;
+  uint32_t     c, s, d;                                                
+  uint8_t      a, l;                                                   
+  char         n[STRSIZE];      /* FNT_DEF command parameters        */
+  uint32_t     font_mag;        /* computed from s and d             */
+  char         name[STRSIZE];   /* full name of PK/VF file           */
+  int          filedes;         /* file descriptor                   */
+  unsigned char* mmap;          /* memory map                        */
+  uint32_t     magnification;   /* magnification read from font file */
+  uint32_t     designsize;      /* design size read from font file   */
+  union {                       /* character information             */ 
+    struct pk_char *pk_ch[NFNTCHARS];  
+    struct vf_char *vf_ch[NFNTCHARS]; 
+  };
+  struct font_num *vffontnump;  /* VF local font numbering           */
+  int32_t      defaultfont;     /* VF default font number            */
+};
+
+struct font_num {    /* Font number. Different for VF/DVI, and several
+			font_num can point to one font_entry */
+  struct font_num   *next;
+  int32_t            k;
+  struct font_entry *fontp;
+};
+
 void    CheckChecksum AA((unsigned, unsigned, const char*));
+void    InitPK  AA((struct font_entry *));
+void    InitVF  AA((struct font_entry *));
+
+/********************************************************/
+/***********************  dvi.h  ************************/
+/********************************************************/
+
+#define DVI_TYPE            0
+struct dvi_data {    /* dvi entry */
+  int          type;            /* This is a DVI                    */
+  struct dvi_data *next;
+  uint32_t     num, den, mag;   /* PRE command parameters            */
+  int32_t     conv;             /* computed from num and den         */
+  char         name[STRSIZE];   /* full name of DVI file             */
+  char         outname[STRSIZE];/* output filename (basename)        */
+  FILE *       filep;           /* file pointer                      */
+  struct font_num  *fontnump;   /* DVI font numbering                */
+  struct page_list *pagelistp;  /* DVI page list                     */
+};
+
+struct dvi_vf_entry {
+  union {
+    struct dvi_data;
+    struct font_entry;
+  };
+};
+
+struct page_list {
+  struct page_list* next;
+  int     offset;           /* file offset to BOP */
+  int32_t count[11];        /* 10 dvi counters + absolute pagenum in file */
+};
+
+uint32_t         CommandLength AA((unsigned char*)); 
+struct dvi_data* DVIOpen AA((char*));
+unsigned char*   DVIGetCommand AA((struct dvi_data*));
+void             DVIClose AA((struct dvi_data*));
+
+
+/***************** general crap ******************/
+
 void    CloseFiles AA((void));
-uint32_t   CommandLength AA((unsigned char*)); /* generally 2^32+5 bytes max */
 void    DecodeArgs AA((int, char *[]));
 /*#ifdef __riscos
 void    diagram AA((char *, diagtrafo *));
@@ -221,34 +279,27 @@ void   *xosfile_set_type AA((char *, int));
 void    MakeMetafontFile AA((char *, char *, int));
 #endif*/
 void    DoBop AA((void));
-void    DrawCommand AA((unsigned char*, int));
-struct font_entry* DVIOpen AA((char*));
-unsigned char* DVIGetCommand AA((struct font_entry*));
-uint32_t   DoConv AA((uint32_t, uint32_t, int));
+void    DrawCommand AA((unsigned char*, int, struct dvi_vf_entry*));
 void    DoPages AA((void));
-void    DoSpecial AA((char *, int));
-void    DelPageList AA((void));
 void    Fatal VA();
 struct page_list *FindPage AA((int32_t));
-void    FormFeed AA((struct font_entry*,int));
-void    FontDef AA((unsigned char*, struct font_entry*));
+void    FormFeed AA((struct dvi_data*,int));
+void    FontDef AA((unsigned char*, struct dvi_vf_entry*));
 void    FontFind AA((struct font_entry *));
 void    GetFontDef AA((void));
 struct page_list *InitPage AA((void));
-void    InitPK  AA((struct font_entry *));
-void    InitVF  AA((struct font_entry *));
-void    LoadAChar AA((int32_t, register struct char_entry *));
-uint32_t   NoSignExtend AA((FILEPTR, int));
-void    OpenFont AA((struct font_entry *));
-bool    QueueParse AA((char*,bool));
-bool    QueueEmpty AA((void));
-void    QueuePage AA((int,int,bool));
-int32_t   SetChar AA((int32_t, int));
-int32_t   SetPK AA((int32_t, int));
-int32_t   SetVF AA((int32_t, int));
-void    SetFntNum AA((int32_t));
+void    LoadAChar AA((int32_t, register struct pk_char *));
+uint32_t   NoSignExtend AA((FILE*, int));
+void       OpenFont AA((struct font_entry *));
+bool       QueueParse AA((char*,bool));
+bool       QueueEmpty AA((void));
+void       QueuePage AA((int,int,bool));
+int32_t    SetChar AA((int32_t, int));
+int32_t    SetPK AA((int32_t, int));
+int32_t    SetVF AA((int32_t, int));
+void    SetFntNum AA((int32_t, struct dvi_vf_entry*));
 int32_t   SetRule AA((int32_t, int32_t, int));
-int32_t   SignExtend AA((FILEPTR, int));
+int32_t   SignExtend AA((FILE*, int));
 void    SkipPage AA((void));
 int32_t   SNumRead AA((unsigned char*, register int));
 int32_t   TodoPage AA((void));
@@ -287,9 +338,6 @@ EXTERN bool    LastPageSpecified INIT(_FALSE);
 EXTERN char   *PXLpath INIT(FONTAREA);
 #endif
 EXTERN char    G_progname[STRSIZE];     /* program name                     */
-EXTERN char    rootname[STRSIZE];       /* DVI filename without extension   */
-EXTERN char    pngname[STRSIZE];        /* current PNG filename             */
-
 EXTERN bool    Reverse INIT(_FALSE);    /* process DVI in reverse order?    */
 EXTERN bool    Landscape INIT(_FALSE);  /* print document in ladscape mode  */
 EXTERN bool    Abspage INIT(_FALSE);    /* use absolute page numbers        */
@@ -307,18 +355,19 @@ EXTERN short   G_errenc INIT(0);        /* has an error been encountered?  */
 EXTERN bool    G_quiet INIT(_FALSE);    /* for quiet operation             */
 EXTERN bool    G_verbose INIT(_FALSE);  /* inform user about pxl-files used*/
 EXTERN bool    G_nowarn INIT(_FALSE);   /* don't print out warnings        */
-EXTERN int32_t     conv;                /* converts DVI units to pixels    */
-EXTERN uint32_t    den;                 /* denominator specified in preamble*/
-EXTERN uint32_t    num;                 /* numerator specified in preamble */
 EXTERN int32_t     h;                   /* current horizontal position     */
 EXTERN int32_t     v;                   /* current vertical position       */
 EXTERN int32_t     w INIT(0);           /* current horizontal spacing      */
 EXTERN int32_t     x INIT(0);           /* current horizontal spacing      */
 EXTERN int32_t     y INIT(0);           /* current vertical spacing        */
 EXTERN int32_t     z INIT(0);           /* current vertical spacing        */
-EXTERN uint32_t    mag;                 /* magstep specified in preamble   */
 EXTERN uint32_t    usermag INIT(0);     /* user specified magstep          */
 EXTERN struct font_entry *hfontptr INIT(NULL); /* font list pointer        */
+
+EXTERN struct internal_state {
+  struct font_entry* currentfont;
+  int                passno;
+} current_state;
 
 #ifdef DEBUG
 EXTERN int Debug INIT(0);
@@ -405,10 +454,7 @@ EXTERN bool ParseStdin INIT(_FALSE);
 EXTERN struct page_list* hpagelistp INIT(NULL);
 EXTERN uint32_t abspagenumber INIT(0);
 
-/* Virtual fonts */
-EXTERN struct font_entry* vfstack[100];
-EXTERN int vfstackptr INIT(1);
-
-EXTERN struct font_entry* dvi INIT(NULL);
+EXTERN struct font_entry* currentfont;
+EXTERN struct dvi_data* dvi INIT(NULL);
 
 #endif /* DVIPNG_H */
