@@ -71,6 +71,8 @@ int PassNo;
 
 int32_t SetChar(int32_t c)
 {
+  if (currentfont==NULL) 
+    Fatal("faulty DVI, trying to set character from null font");
   switch (currentfont->type) {
   case FONT_TYPE_VF:
     DEBUG_PRINT((DEBUG_DVI,"\n  VF CHAR:\t"));
