@@ -79,12 +79,12 @@ install-docs: docs
 ####################################### The test
 
 test: test_dvipng.dvi dvipng
-	./dvipng test_dvipng
-	echo Do xv test_dvipng\*.png or suchlike
+	./dvipng -v test_dvipng
+	echo View the result e.g. with xv test_dvipng\*.png
 
 tighttest: test_dvipng.dvi dvipng
 	./dvipng -T tight test_dvipng
-	echo Do xv test_dvipng\*.png or suchlike
+	echo View the result e.g. with xv test_dvipng\*.png
 
 test_dvipng.dvi: test_dvipng.tex
 	latex test_dvipng
