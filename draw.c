@@ -117,8 +117,14 @@ dviunits SetChar(int32_t c)
     if (ptr->data == NULL) 
       switch(currentfont->type) {
       case FONT_TYPE_PK:	LoadPK(c, ptr); break;
+#ifdef HAVE_LIBT1
       case FONT_TYPE_T1:	LoadT1(c, ptr); break;
+#endif
+#define HAVE_FT2
       case FONT_TYPE_FT:	LoadFT(c, ptr); break;
+#endif
+      default:
+	Fatal("undefined fonttype %d",currentfont->type);
       }
     if (page_imagep != NULL)
       return(SetGlyph(c, hh, vv));
