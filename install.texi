@@ -37,6 +37,17 @@ it may happen that ./configure does not find it; see below. If you have
 not got it, download it from @uref{http://www.ctan.org} and compile it.
 I have no experience with this, so I cannot help much here.
 
+@item FreeType 2
+
+While not strictly necessary, you may want to have FreeType 2
+available. Its presence will enable direct support for PostScript fonts
+in dvipng, rather than using @samp{gsftopk} for rendering the
+fonts. There are PostScript versons of Computer Modern around, and if
+you have them installed also, there will be no need to generate
+bitmapped variants on disk of these. Then, you can render images at
+different (and unusual) resolutions without cluttering the disk wit lots
+of bitmapped fonts.
+
 @item libpng and libz
 
 To be able to compress and write PNG files to disk, dvipng (or really

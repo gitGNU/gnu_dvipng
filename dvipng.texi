@@ -2,8 +2,8 @@
 @setfilename dvipng.info
 @settitle dvipng: A DVI driver
 
-@set version 0.6
-@set month-year August 2003
+@set version 0.7
+@set month-year October 2003
 
 @c Put everything in one index (arbitrarily chosen to be the concept index).
 @syncodeindex fn cp
@@ -121,13 +121,14 @@ PNG format. If there are four pages in @file{foo.dvi}, those pages will
 be output as @file{foo1.png}, @file{foo2.png}, @file{foo3.png}, and
 @file{foo4.png}, respectively.
 
-If you use fonts that have not been used on your system before, they may
-be automatically generated; this process can take a few minutes, so
-progress reports appear by default.  The next time that document is
-printed, these fonts will have been saved in the proper directories, so
-printing will go much faster.  (If dvipng tries to endlessly generate the
-same fonts over and over again, something is wrong.
-@xref{Unable to generate fonts,,, kpathsea, Kpathsea}.)
+If you have enabled the PostScript font support (via FreeType), fonts
+will be rendered as they are needed. Otherwise, if you use fonts that
+have not been used on your system before, they may be automatically
+generated; this process can take a few minutes, so progress reports
+appear by default.  The next time the same font is used, it will have
+been saved on disk, so rendering will go much faster.  (If dvipng tries
+to endlessly generate the same fonts over and over again, something is
+wrong.  @xref{Unable to generate fonts,,, kpathsea, Kpathsea}.)
 
 Many options are available (see the next section).  For a brief summary
 of available options, just type
@@ -198,6 +199,13 @@ Choose background color for the images. This option will be ignored if
 there is a background color \special in the DVI. The color spec should
 be in @TeX{} syntax, e.g., 'rgb 1.0 0.0 0.0'. See @xref{Color}.
 
+@item -baseline*
+@cindex baseline reporting
+Report baseline of the image. This only works reliably when the @LaTeX{}
+style @samp{preview.sty} from @previewlatex{} is used. It reports the
+y-coordinate of the baseline, starting from 0 at the top and increasing
+downwards.
+
 @item -d @var{num}
 @cindex debugging
 Set the debug flags, showing what dvipng (thinks it) is doing.  This will
@@ -261,7 +269,7 @@ Choose foreground color for the images. This option will be ignored if
 there is a foreground color \special in the DVI. The color spec should
 be in @TeX{} syntax, e.g., 'rgb 1.0 0.0 0.0'. See @xref{Color}.
 
-@item -follow
+@item -follow*
 @cindex follow mode
 Enable follow mode. One of the benefits of dvipng is that it does not
 read the postamble, so it can be started before @TeX{} finishes. This
@@ -298,7 +306,9 @@ kpathsea, Kpathsea}.
 @cindex font generation, avoiding
 @pindex mktexpk@r{, avoiding}
 @comment this description repeated in kpathsea.texi
-Turns off automatic font generation (@file{mktexpk}).  
+Turns off automatic font generation (@file{mktexpk}). This will have no
+effect when using PostScript fonts, since no font generation will be
+done anyway.
 @ignore
 @flindex missfont.log
 If @code{mktexpk}, the invocation is appended to a file
@@ -318,8 +328,9 @@ configuration file value.
 @cindex output, redirecting
 @cindex standard output, output to
 Send output to the file @var{name}. A single occurrence of @samp{%d} or
-@samp{%03d} will be exchanged for the @TeX{} page number. The default is
-@samp{@var{file}%d.png} where the input DVI file was @samp{@var{file}.dvi}.
+@samp{%03d} will be exchanged for the @TeX{} page number. The default
+output filename is @samp{@var{file}%d.png} where the input DVI file was
+@samp{@var{file}.dvi}.
 
 @ignore
 @findex popen @r{for output}
@@ -436,6 +447,14 @@ of dimensions such as @samp{.1in,-.3cm}.
 @c (@pxref{papersize special}).  
 It overrides any paper size special in the DVI file.
 
+@item -truecolor*
+@cindex truecolor output
+On systems with a fairly new @samp{libgd}, one can choose to generate
+truecolor output. This will not be necessary in general unless you
+include truecolor images via a GhostScript special (i.e., the
+@samp{graphics} or @samp{graphicx} package). It will lead to longer
+execution time, mostly because more data is written to disk.
+ 
 @item -v* 
 Enable verbose operation. This will currently indicate what fonts is
 used, in addition to the usual output.
@@ -448,6 +467,23 @@ the magnification specified in the DVI file.  Must be between 10 and
 1200, 1440, 1728, 2074, 2488, 2986, and so on) to help reduce the total
 number of PK files generated.  @var{num} may be a real number, not an
 integer, for increased precision.
+
+@item -z @var{num}
+@cindex compression
+Set the PNG compression level to @var{num}. This option is enabled if
+your @samp{libgd} is new enough. The default compression level is 1,
+wich selects maximum speed and gives slightly larger PNGs. For an older
+@samp{libgd}, the hard-soldered value 5 is used. The include file
+@samp{png.h} says 
+@quotation
+Currently, valid values range from 0 - 9,
+corresponding directly to the zlib compression levels 0 - 9 (0 - no
+compression, 9 - "maximal" compression).  Note that tests have shown
+that zlib compression levels 3-6 usually perform as well as level 9 for
+PNG images, and do considerably fewer calculations.  In the future,
+these values may not correspond directly to the zlib compression
+levels.
+@end quotation
 @end table
 
 @ignore
@@ -1259,27 +1295,30 @@ Some of these debugging options are actually provided by Kpathsea
 The classes are:
 @table @asis
 @item 1 
-normal dvi op-codes
+Normal dvi op-codes
 @item 2
-virtual fonts
+Virtual fonts
 @item 4
-pk fonts
+PK fonts
 @item 8
-glyph rendering
+TFM files
 @item 16
-ghostscript specials
+Glyph rendering
 @item 32
-Kpathsea @code{stat} calls
+FreeType calls
 @item 64
-Kpathsea hash table lookups
+Encoding loads
 @item 128
-Kpathsea path element expansion
+GhostScript specials
 @item 256
+Kpathsea @code{stat} calls
+@item 512
+Kpathsea hash table lookups
+@item 1024
+Kpathsea path element expansion
+@item 2048
 Kpathsea path searches
 @ignore
-@item 512
-@item 1024
-@item 2048
 @item 4096
 @item 8192
 @end ignore
