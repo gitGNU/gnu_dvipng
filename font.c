@@ -273,9 +273,11 @@ void DoneFont(struct font_entry *tfontp)
   case FONT_TYPE_VF:
     DoneVF(tfontp);
     break;
+#ifdef HAVE_FT2
   case FONT_TYPE_FT:
     DoneFT(tfontp);
     break;
+#endif
   }
 }
 
