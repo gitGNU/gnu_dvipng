@@ -1,12 +1,34 @@
 #ifndef DVIPNG_H
 #define DVIPNG_H
+#include "config.h"
 
 #define VERSION "dvipng(k) 0.1"
 #define TIMING
 
+#define  STRSIZE         255     /* stringsize for file specifications  */
+
+#define  FIRSTFNTCHAR  0
+#define  LASTFNTCHAR   255
+#define  NFNTCHARS     LASTFNTCHAR+1
+
+#define  STACK_SIZE      100     /* DVI-stack size                     */
+
+/* Name of the program which is called to generate missing pk files */
+#define MAKETEXPK "mktexpk"
+
+#define ERR_STREAM stdout   /* ???? */
+
 #include <stdint.h>
 
-#ifdef KPATHSEA
+#include <gd.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h> // open/close
+
+#include <ctype.h> // isprint
+
+#ifdef HAVE_LIBKPATHSEA
 #include <kpathsea/config.h>
 #include <kpathsea/c-auto.h>
 #include <kpathsea/c-limits.h>
@@ -18,53 +40,21 @@
 #include <kpathsea/tex-hush.h>
 #include <kpathsea/tex-make.h>
 #include <kpathsea/c-vararg.h>
-#else
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#ifdef  unix
-#include <limits.h>
 #endif
-#endif
-
-#include <gd.h>
-
-#include <signal.h>
-#include <ctype.h>
-#ifdef vms
-#include <file.h>
-#else
-# ifndef __riscos
-# include <fcntl.h>
-# endif
-#endif
-#ifdef MSC5
-#include <dos.h>     /* only for binaryopen on device  */
-#endif
-#if defined (unix) && !defined (KPATHSEA)
-#include <limits.h>
-#endif
-
-/*#include "config.h"*/
-#define  STRSIZE         255     /* stringsize for file specifications  */
-
-#define  FIRSTFNTCHAR  0
-#define  LASTFNTCHAR  255
-#define  NFNTCHARS       LASTFNTCHAR+1
-
-#define  STACK_SIZE      100     /* DVI-stack size                     */
 
 typedef  int     bool;
 #define  _TRUE      (bool) 1
 #define  _FALSE     (bool) 0
 #define  UNKNOWN     -1
 
-/* name of the program which is called to generate missing pk files */
-#define MAKETEXPK "mktexpk"
-
-# define ERR_STREAM stdout   /* ???? */
-
-/* end of "config.h" */
+#ifndef HAVE_VPRINTF
+# ifdef HAVE_DOPRNT
+#  define   vfprintf(stream, message, args)  _doprnt(message, args, stream)
+# endif
+#else
+# define vprintf vprintf_and_doprnt_missing
+  /* If we have neither, should fall back to fprintf with fixed args.  */
+#endif
 
 /*************************************************************/
 /*************************  protos.h  ************************/
@@ -136,10 +126,10 @@ struct page_list {
 struct dvi_data* DVIOpen(char*,char*);
 void             DVIClose(struct dvi_data*);
 void             DVIReOpen(struct dvi_data*);
-struct page_list*FindPage(int32_t, bool);
-struct page_list*NextPage(struct page_list*);
-struct page_list*PrevPage(struct page_list*);
-void             SeekPage(struct page_list*);
+struct page_list*FindPage(struct dvi_data*, int32_t, bool);
+struct page_list*NextPage(struct dvi_data*, struct page_list*);
+struct page_list*PrevPage(struct dvi_data*, struct page_list*);
+int              SeekPage(struct dvi_data*, struct page_list*);
 unsigned char*   DVIGetCommand(struct dvi_data*);
 uint32_t         CommandLength(unsigned char*); 
 
@@ -198,15 +188,8 @@ void    CheckChecksum(unsigned, unsigned, const char*);
 void    InitPK (struct font_entry *);
 void    InitVF (struct font_entry *);
 
-struct dvi_vf_entry {
-  union {
-    struct dvi_data;
-    struct font_entry;
-  };
-};
-
-void    FontDef(unsigned char*, struct dvi_vf_entry*);
-void    SetFntNum(int32_t, struct dvi_vf_entry*);
+void    FontDef(unsigned char*, void* /* dvi/vf */);
+void    SetFntNum(int32_t, void* /* dvi/vf */);      
 
 /********************************************************/
 /*********************  pplist.h  ***********************/
@@ -217,7 +200,7 @@ void    FirstPage(int32_t,bool);
 void    LastPage(int32_t,bool);
 void    ClearPpList(void);
 bool    Reverse(void);
-struct page_list*   NextPPage(struct page_list*);
+struct page_list*   NextPPage(void* /* dvi */, struct page_list*);
 
 /********************************************************/
 /**********************  misc.h  ************************/
@@ -233,9 +216,6 @@ void    Fatal(char *fmt, ...);
 int32_t   SNumRead(unsigned char*, register int);
 uint32_t   UNumRead(unsigned char*, register int);
 
-/********************************************************/
-/***********************  set.h  ************************/
-/********************************************************/
 #ifdef MAIN
 #define EXTERN
 #define INIT(x) =x
@@ -244,6 +224,9 @@ uint32_t   UNumRead(unsigned char*, register int);
 #define INIT(x)
 #endif
 
+/********************************************************/
+/**********************  draw.h  ************************/
+/********************************************************/
 #include "commands.h"
 
 EXTERN int32_t     h;                   /* current horizontal position     */
@@ -253,10 +236,10 @@ EXTERN int32_t     x INIT(0);           /* current horizontal spacing      */
 EXTERN int32_t     y INIT(0);           /* current vertical spacing        */
 EXTERN int32_t     z INIT(0);           /* current vertical spacing        */
 
-void      DoBop(void);
-void      DrawCommand(unsigned char*, int, struct dvi_vf_entry*);
+void      CreateImage(void);
+void      DrawCommand(unsigned char*, int, void* /* dvi/vf */); 
 void      DoPages(void);
-void      FormFeed(struct dvi_data*,int);
+void      WriteImage(char*, int);
 int32_t   SetChar(int32_t, int);
 int32_t   SetPK(int32_t, int);
 int32_t   SetVF(int32_t, int);
@@ -277,7 +260,7 @@ void resetcolorstack(char *);
 /**********************************************************************/
 
 #ifdef MAKETEXPK
-#ifdef KPATHSEA
+#ifdef HAVE_LIBKPATHSEA
 EXTERN bool    makeTexPK INIT(MAKE_TEX_PK_BY_DEFAULT);
 #else
 EXTERN bool    makeTexPK INIT(_TRUE);
