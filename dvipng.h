@@ -212,12 +212,8 @@ struct font_entry {    /* font entry */
     long4    designsize;       /* design size read from PXL file            */
     struct char_entry ch[NFNTCHARS];   /* character information            */
     struct font_entry *next;
-    unsigned short ncdl;      /* #of different chars actually downloaded   */
-    unsigned short plusid;    /* Font id in Printer                        */
-    bool used_on_this_page;
-    enum PxlId {
+  enum PxlId {
         id1001, id1002, pk89    } id;
-    unsigned short max_width, max_height, max_yoff;
 };
 
 
@@ -237,6 +233,15 @@ typedef struct {
 } diagtrafo;                  /* to be passed to diagrams */
 #endif
 
+/**********************************************************************/
+/***********************  Page Data Structures  ***********************/
+/**********************************************************************/
+
+struct page_list {
+  struct page_list* next;
+  long4 offset;            /* file offset to BOP */
+  long4 count[11];        /* 10 dvi counters + absolute pagenum in file */
+};
 
 /**********************************************************************/
 /*************************  Global Procedures  ************************/
@@ -321,9 +326,11 @@ long4   NoSignExtend AA((FILEPTR, int));
 void    OpenFontFile AA((void));
 void    ReadFontDef AA((long4));
 void    ReadPostAmble AA((bool));
+/*long4   SetChar AA((long4, int));*/
 long4   SetChar AA((long4, int));
 void    SetFntNum AA((long4));
-void    SetRule AA((long4, long4, int, int));
+/*void    SetRule AA((long4, long4, int, int));*/
+long4   SetRule AA((long4, long4, int));
 long4   SignExtend AA((FILEPTR, int));
 void    SkipFontDef AA((void));
 void    Warning VA();
@@ -488,10 +495,6 @@ EXTERN  int borderwidth INIT(0);
 
 EXTERN gdImagePtr page_imagep INIT(NULL);
 EXTERN int shrinkfactor INIT(3);
-struct dvi_page {
-  struct dvi_page* next;
-  int              filepos;
-};
 EXTERN char TeXcomment[STRSIZE];  
 
 EXTERN int Red    INIT(0);
@@ -505,5 +508,11 @@ EXTERN int bBlue  INIT(255);
 #define PASS_BBOX 1
 #define PASS_DRAW 2
 EXTERN int PassDefault INIT(PASS_BBOX);
+
+EXTERN bool ParseStdin INIT(_FALSE);
+
+EXTERN struct page_list* hpagelistp INIT(NULL);
+
+#define MAXPAGE (1000000000) /* assume no pages out of this range */
 
 #endif /* DVIPNG_H */
