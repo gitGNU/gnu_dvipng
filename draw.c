@@ -174,8 +174,8 @@ void DoPages(void)
 	SeekPage(dvi,dvi_pos);
 	x_width = x_max-x_min;
 	y_width = y_max-y_min;
-	h = -x_min; /* offset by moving topleft corner */
-	v = -y_min; 
+	x_offset = -x_min; /* offset by moving topleft corner */ 
+	y_offset = -y_min; /* offset by moving topleft corner */
 	x_max = x_min = -x_offset_def; /* reset BBOX */
 	y_max = y_min = -y_offset_def;
       }
