@@ -395,36 +395,33 @@ void DrawPages(void)
 	y_offset=y_offset_def;
       }
       DEBUG_PRINT(DEBUG_DVI,("\n  IMAGE:\t%dx%d",x_width,y_width));
-      if ( ! (flags & NO_IMAGE_ON_WARN && flags & PAGE_GAVE_WARN )) {
-	SeekPage(dvi,dvi_pos);
-	CreateImage(x_width,y_width);
+      SeekPage(dvi,dvi_pos);
+      CreateImage(x_width,y_width);
 #ifdef DEBUG
-	DEBUG_PRINT(DEBUG_DVI,("\n@%d PAGE START:\tBOP",dvi_pos->offset));
-	{
-	  int i;
-	  for (i=0;i<10;i++) 
-	    DEBUG_PRINT(DEBUG_DVI,(" %d",dvi_pos->count[i]));
-	  DEBUG_PRINT(DEBUG_DVI,(" (%d)\n",dvi_pos->count[10]));
-	}
+      DEBUG_PRINT(DEBUG_DVI,("\n@%d PAGE START:\tBOP",dvi_pos->offset));
+      {
+	int i;
+	for (i=0;i<10;i++) 
+	  DEBUG_PRINT(DEBUG_DVI,(" %d",dvi_pos->count[i]));
+	DEBUG_PRINT(DEBUG_DVI,(" (%d)\n",dvi_pos->count[10]));
+      }
 #endif
-	Message(BE_NONQUIET,"[%d", dvi_pos->count[(flags & DVI_PAGENUM)?0:10]);
-	if (dvi_pos->count[(flags & DVI_PAGENUM)?0:10]!=dvi_pos->count[0])
-	  Message(BE_NONQUIET," (%d)", dvi_pos->count[0]);
-	Message(REPORT_DEPTH," depth=%d", y_width-y_offset-1);
-	Message(REPORT_HEIGHT," height=%d", y_offset+1);
-	DrawPage(x_offset*dvi->conv*shrinkfactor,
-		 y_offset*dvi->conv*shrinkfactor);
+      Message(BE_NONQUIET,"[%d", dvi_pos->count[(flags & DVI_PAGENUM)?0:10]);
+      if (dvi_pos->count[(flags & DVI_PAGENUM)?0:10]!=dvi_pos->count[0])
+	Message(BE_NONQUIET," (%d)", dvi_pos->count[0]);
+      Message(REPORT_DEPTH," depth=%d", y_width-y_offset-1);
+      Message(REPORT_HEIGHT," height=%d", y_offset+1);
+      DrawPage(x_offset*dvi->conv*shrinkfactor,
+	       y_offset*dvi->conv*shrinkfactor);
+      if ( ! (flags & NO_IMAGE_ON_WARN && flags & PAGE_GAVE_WARN )) {
 	WriteImage(dvi->outname,dvi_pos->count[(flags & DVI_PAGENUM)?0:10]);
 #ifdef TIMING
 	++ndone;
 #endif
-	Message(BE_NONQUIET,"] ");
-	fflush(stdout);
-      }
-#ifdef DEBUG
-      else
-	DEBUG_PRINT(DEBUG_DVI,("\n  NOT RENDERED, there was a warning"));
-#endif
+      } else 
+	Message(BE_NONQUIET," not rendered");
+      Message(BE_NONQUIET,"] ");
+      fflush(stdout);
       flags &= ~PAGE_GAVE_WARN;
       dvi_pos=NextPPage(dvi,dvi_pos);
     }
