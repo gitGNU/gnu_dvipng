@@ -1,5 +1,16 @@
 2005-04-04  Jan-Ake Larsson  <jalar@mai.liu.se>
 
+	* configure.ac: 
+	* dvipng.texi: 
+	* miktex.h: Update version info
+
+	* configure.ac: 
+	* dvipng.texi: 
+	* README: 
+	* readme.texi: Update mailing list address
+
+	* configure.ac: 
+	* config.h.in: 
 	* special.c: Simplify string search
 
 2005-04-03  Jan-Ake Larsson  <jalar@mai.liu.se>
