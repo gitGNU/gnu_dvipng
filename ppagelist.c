@@ -34,28 +34,28 @@ bool Reverse(void)
 /* (Implicitly, PAGE_POST is never in the pagelist) */
 bool InPageList(int32_t i);
 
-struct page_list* NextPPage(struct page_list* page)
+struct page_list* NextPPage(void* dvi, struct page_list* page)
 {
   if (! reverse) { /*********** normal order */
     if (page == NULL) { /* first call: find first page */ 
       if (no_ppage)
 	return(NULL);
-      page=FindPage(first,abspage);
+      page=FindPage(dvi,first,abspage);
     } else              /* later calls: count up, except "last" page */ 
-      page=(last==page->count[abspage ? 0 : 10]) ? NULL : NextPage(page);
+      page=(last==page->count[abspage ? 0 : 10]) ? NULL : NextPage(dvi,page);
     /* seek for pages in pagelist */ 
     while (page!=NULL && ! InPageList(page->count[0]))
-      page=(last==page->count[abspage ? 0 : 10]) ? NULL : NextPage(page);
+      page=(last==page->count[abspage ? 0 : 10]) ? NULL : NextPage(dvi,page);
   } else { /******************** reverse order */
     if (page == NULL) { /* first call: find "last" page */ 
       if (no_ppage)
 	return(NULL);
-      page=FindPage(last,abspage);
+      page=FindPage(dvi,last,abspage);
     } else              /* later calls: count down, except "first" page */
-      page=(first==page->count[abspage ? 0 : 10]) ? NULL : PrevPage(page);
+      page=(first==page->count[abspage ? 0 : 10]) ? NULL : PrevPage(dvi,page);
     /* seek for pages in pagelist */ 
     while (page!=NULL && ! InPageList(page->count[0])) 
-      page=(first==page->count[abspage ? 0 : 10]) ? NULL : PrevPage(page);
+      page=(first==page->count[abspage ? 0 : 10]) ? NULL : PrevPage(dvi,page);
   }
   return(page);
 }

@@ -153,7 +153,7 @@ uint32_t CommandLength(unsigned char* command)
   return(length);
 }
 
-void SkipPage(void)
+void SkipPage(struct dvi_data* dvi)
 { 
   /* Skip present page */
   unsigned char* command;           
@@ -163,7 +163,7 @@ void SkipPage(void)
     switch (*command)  {
     case FNT_DEF1: case FNT_DEF2: case FNT_DEF3: case FNT_DEF4:
       DEBUG_PRINTF(DEBUG_DVI,"NOSKIP CMD:\t%s", dvi_commands[*command]);
-      FontDef(command,(struct dvi_vf_entry*)dvi);
+      FontDef(command,dvi);
       break;
     case BOP: case PRE: case POST: case POST_POST:
       Fatal("%s occurs within page", dvi_commands[*command]);
@@ -178,7 +178,7 @@ void SkipPage(void)
   DEBUG_PRINTF(DEBUG_DVI,"SKIP CMD:\t%s", dvi_commands[*command]);
 }
 
-struct page_list* InitPage(void)
+struct page_list* InitPage(struct dvi_data* dvi)
 {
   /* Find page start, return pointer to page_list entry if found */
   struct page_list* tpagelistp=NULL;
@@ -190,7 +190,7 @@ struct page_list* InitPage(void)
     switch(*command) {
     case FNT_DEF1: case FNT_DEF2: case FNT_DEF3: case FNT_DEF4:
       DEBUG_PRINTF(DEBUG_DVI,"NOPAGE CMD:\t%s", dvi_commands[*command]);
-      FontDef(command,(struct dvi_vf_entry*)dvi);
+      FontDef(command,dvi);
       break;
     case NOP:
       DEBUG_PUTS(DEBUG_DVI,"NOPAGE CMD:\tNOP");
@@ -224,16 +224,14 @@ struct page_list* InitPage(void)
   return(tpagelistp);
 }
 
-void SeekPage(struct page_list* page)
+int SeekPage(struct dvi_data* dvi, struct page_list* page)
 {
-  if (page->count[0]==PAGE_POST) {
-    fseek(dvi->filep, page->offset+1L, SEEK_SET);
-  } else {
-    fseek(dvi->filep, page->offset+45L, SEEK_SET);
-  }
+  return(fseek(dvi->filep, 
+	       page->offset+((page->count[0]==PAGE_POST) ? 1L : 45L),
+	       SEEK_SET));
 }
 
-struct page_list* NextPage(struct page_list* page)
+struct page_list* NextPage(struct dvi_data* dvi, struct page_list* page)
 {
   struct page_list* tpagelistp;
 
@@ -244,10 +242,10 @@ struct page_list* NextPage(struct page_list* page)
   /* If we have read past the last page in our current list or the
    *  list is empty, sneak a look at the next page
    */
-  if (dvi->pagelistp==NULL 
+  if (dvi->pagelistp==NULL
       || dvi->pagelistp->offset+45L < ftell(dvi->filep)) {
     tpagelistp=dvi->pagelistp;
-    if ((dvi->pagelistp=InitPage())==NULL)    
+    if ((dvi->pagelistp=InitPage(dvi))==NULL)    
       Fatal("no pages in %s",dvi->name);
     dvi->pagelistp->next=tpagelistp;
   }
@@ -262,37 +260,37 @@ struct page_list* NextPage(struct page_list* page)
      * the last page that we know where it is, so to speak
      * So look at the next
      */
-    SeekPage(dvi->pagelistp);
-    SkipPage();
+    (void)SeekPage(dvi,dvi->pagelistp);
+    SkipPage(dvi);
     tpagelistp=dvi->pagelistp;
-    dvi->pagelistp=InitPage();
+    dvi->pagelistp=InitPage(dvi);
     dvi->pagelistp->next=tpagelistp;
     tpagelistp=dvi->pagelistp;
   }
   return(tpagelistp);
 }
 
-struct page_list* PrevPage(struct page_list* page)
+struct page_list* PrevPage(struct dvi_data* dvi, struct page_list* page)
 {
   return(page->next);
 }
 
 
-struct page_list* FindPage(int32_t pagenum, bool abspage)
+struct page_list* FindPage(struct dvi_data* dvi, int32_t pagenum, bool abspage)
      /* Find first page of certain number, 
 	absolute number if abspage is set */
 {
-  struct page_list* page=NextPage(NULL);
+  struct page_list* page=NextPage(dvi, NULL);
   
   if (pagenum==PAGE_LASTPAGE || pagenum==PAGE_POST) {
     while(page!=NULL && page->count[0]!=PAGE_POST)
-      page=NextPage(page);
+      page=NextPage(dvi,page);
     if (pagenum==PAGE_LASTPAGE)
-      page=PrevPage(page);
+      page=PrevPage(dvi,page);
   } else
     if (pagenum!=PAGE_FIRSTPAGE) 
       while(page != NULL && pagenum != page->count[abspage ? 0 : 10])
-	page=NextPage(page);
+	page=NextPage(dvi,page);
   return(page);
 }
 
