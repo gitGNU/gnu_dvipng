@@ -2,8 +2,8 @@
 ''' $RCSfile$$Revision$$Date$
 '''
 ''' $Log$
-''' Revision 1.2  2004/05/09 20:19:09  jalar
-''' Add documentation, and spellcheck
+''' Revision 1.3  2004/05/14 08:13:52  jalar
+''' Add documentation
 '''
 '''
 .de Sh
@@ -96,7 +96,7 @@
 .nr % 0
 .rr F
 .\}
-.TH DVIPNG 1 "dvipng 1.0" "9/May/2004" "User commands"
+.TH DVIPNG 1 "dvipng 1.0" "14/May/2004" "User commands"
 .UC
 .if n .hy 0
 .if n .na
@@ -374,8 +374,10 @@ Run quietly.  Don't chatter about pages converted, etc. to standard
 output; report no warnings (only errors) to standard error.
 .Ip "\fB\-Q\fR \fInum\fR" 4
 Set the quality to \fInum\fR. That is, choose the number of antialiasing
-levels for \s-1PK\s0 fonts to be \fInum\fR*\fInum\fR. The default value is 3
-which gives 9 levels of antialiasing for antialiased \s-1PK\s0 fonts.
+levels for \s-1PK\s0 and T1lib rendering to be \fInum\fR*\fInum\fR. The default
+value is 3 which gives 9 levels of antialiasing for antialiased fonts
+from these two. If FreeType is available, its rendering is unaffected by
+this option.
 .Ip "\fB\-r*\fR" 4
 Toggle output of pages in reverse/forward order. By default, the first
 page in the \s-1DVI\s0 is output first.
