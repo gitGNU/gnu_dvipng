@@ -14,8 +14,8 @@
 *.toc
 *.tp
 *.vr
-README
-INSTALL
+*.eps
+*.m4
 Makefile
 config.cache
 config.h
