@@ -1,7 +1,9 @@
 #include "dvipng.h"
 #include <libgen.h>
 
-#define dvi_data font_entry
+
+
+
 
 struct dvi_data* DVIOpen P1C(char*, dviname)
 {
@@ -13,25 +15,25 @@ struct dvi_data* DVIOpen P1C(char*, dviname)
   if ((dvi = malloc(sizeof(struct dvi_data)))==NULL)
     Fatal("cannot allocate memory for dvi struct");
 
-  dvi->d = 65536; /* Natural scaling on dvi lengths */
-  dvi->hfontnump=NULL;
+  dvi->type = DVI_TYPE;
+  dvi->fontnump=NULL;
 
   strcpy(dvi->name,dviname);
 
   /* split into file name + extension */
-  strcpy(dvi->n,basename(dviname));
-  tmpstring = strrchr(dvi->n, '.');
+  strcpy(dvi->outname,basename(dviname));
+  tmpstring = strrchr(dvi->outname, '.');
   if (tmpstring == NULL) {
     strcat(dvi->name, ".dvi");
   } else {
     *tmpstring='\0';
   }
 
-  if ((dvi->filep = BINOPEN(dvi->name)) == FPNULL) {
+  if ((dvi->filep = fopen(dvi->name,"rb")) == NULL) {
     /* do not insist on .dvi */
     tmpstring = strrchr(dvi->name, '.');
     *tmpstring='\0';
-    if ((dvi->filep = BINOPEN(dvi->name)) == FPNULL) {
+    if ((dvi->filep = fopen(dvi->name,"rb")) == NULL) {
       perror(dvi->name);
       exit (EXIT_FAILURE);
     }
@@ -55,15 +57,22 @@ struct dvi_data* DVIOpen P1C(char*, dviname)
     Fatal("DVI format = %d, can only process DVI format %d files\n\n",
 	  k, DVIFORMAT);
   }
-  num = UNumRead(pre+2, 4);
-  den = UNumRead(pre+6, 4);
-  mag = UNumRead(pre+10, 4);
-  if ( usermag > 0 && usermag != mag )
+  dvi->num = UNumRead(pre+2, 4);
+  dvi->den = UNumRead(pre+6, 4);
+  dvi->mag = UNumRead(pre+10, 4); /*FIXME, see font.c*/
+  if ( usermag > 0 && usermag != dvi->mag ) {
     Warning("DVI magnification of %d over-ridden by user (%ld)",
-	    (long)mag, usermag );
-  if ( usermag > 0 )
-    mag = usermag;
-  conv = DoConv(num, den, resolution);
+	    (long)dvi->mag, usermag );
+    dvi->mag = usermag;
+  }
+  dvi->conv = (1.0/(((double)dvi->num / (double)dvi->den) *
+		    ((double)dvi->mag / 1000.0) *
+		    ((double)resolution/254000.0)))+0.5;
+
+#ifdef DEBUG
+  if (Debug)
+    printf("(%d) ",dvi->conv);
+#endif
   
   k = UNumRead(pre+14,1);
 #ifdef DEBUG
@@ -71,13 +80,14 @@ struct dvi_data* DVIOpen P1C(char*, dviname)
     printf("'%.*s'\n",k,pre+15);
 #endif
   if (G_verbose)
-    printf("'%.*s' -> %s#.png\n",k,pre+15,dvi->n);
+    printf("'%.*s' -> %s#.png\n",k,pre+15,dvi->outname);
 
   return(dvi);
 }
 
 unsigned char* DVIGetCommand P1C(struct dvi_data*, dvi)
      /* This function reads in and stores the next dvi command. */
+     /* Perhaps mmap would be appropriate here */
 { 
   static unsigned char command[STRSIZE];
   static unsigned char* lcommand = command;
@@ -86,7 +96,7 @@ unsigned char* DVIGetCommand P1C(struct dvi_data*, dvi)
 
 #ifdef DEBUG
   if (Debug)
-    printf("@%ld ", ftell(dvi->filep));
+    printf("\n@%ld ", ftell(dvi->filep));
 #endif
 
   *command = fgetc(dvi->filep);
@@ -134,6 +144,7 @@ unsigned char* DVIGetCommand P1C(struct dvi_data*, dvi)
 
 uint32_t CommandLength P1C(unsigned char*, command)
 { 
+  /* generally 2^32+5 bytes max, but in practice 32 bit numbers suffice */
   unsigned char*   current;           
   uint32_t length=0;
 
@@ -167,7 +178,7 @@ void SkipPage P1H(void)
       if (Debug)
 	printf("NOSKIP CMD:\t%s", dvi_commands[*command]);
 #endif
-      FontDef(command,dvi);
+      FontDef(command,(struct dvi_vf_entry*)dvi);
 #ifdef DEBUG
       if (Debug)
 	printf("\n");
@@ -205,7 +216,7 @@ struct page_list* InitPage P1H(void)
       if (Debug)
 	printf("NOPAGE CMD:\t%s ", dvi_commands[*command]);
 #endif
-      FontDef(command,dvi);
+      FontDef(command,(struct dvi_vf_entry*)dvi);
 #ifdef DEBUG
       if (Debug)
 	printf("\n");
@@ -231,7 +242,7 @@ struct page_list* InitPage P1H(void)
     if (Debug)
       printf("PAGE START:\tBOP ");
 #endif
-    tpagelistp->offset = FTELL(dvi->filep)-45;
+    tpagelistp->offset = ftell(dvi->filep)-45;
     for (i = 0; i <= 9; i++) {
       tpagelistp->count[i] = UNumRead(command + 1 + i*4, 4);
     }
@@ -245,7 +256,7 @@ struct page_list* InitPage P1H(void)
     if (Debug)
       printf("DVI END:\tPOST\n");
 #endif
-    tpagelistp->offset = FTELL(dvi->filep)-1;
+    tpagelistp->offset = ftell(dvi->filep)-1;
     tpagelistp->count[10] = -1; /* POST */
   }
   return(tpagelistp);
