@@ -11,6 +11,7 @@ prefix = @prefix@
 exec_prefix = @exec_prefix@
 bindir = @bindir@
 infodir = @infodir@
+mandir = @mandir@
 DESTDIR=
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
@@ -83,7 +84,8 @@ install-docs: docs
 		$(INSTALL_DATA) $$x $(DESTDIR)$(infodir) ; \
 	done
 	-$(INSTALL_INFO) --info-dir=$(DESTDIR)$(infodir) dvipng.info
-
+	-$(MKINSTALLDIRS) $(DESTDIR)$(mandir)/man1
+	$(INSTALL_DATA) dvipng.1 $(DESTDIR)$(mandir)/man1
 
 ####################################### The test
 
