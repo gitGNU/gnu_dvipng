@@ -45,9 +45,9 @@ int main(int argc, char ** argv)
 #ifdef HAVE_LIBKPATHSEA
   /* Use extra paths as used by dvips */
   kpse_set_program_name(argv[0],"dvips");
-  /* If dvipng is not installed in the texmf tree, and SELFAUTO...
-   * is used in texmf.cnf, kpathsea will not find a) Virtual fonts
-   * b) ps2pk.map or psfonts.map c) PostScript fonts
+  /* If dvipng is not installed in the texmf tree, and _only_
+   * SELFAUTO...  is used in texmf.cnf, kpathsea will not find a)
+   * Virtual fonts b) ps2pk.map or psfonts.map c) PostScript fonts
    *
    * We adjust these things here
    */
