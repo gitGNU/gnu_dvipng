@@ -1,3 +1,28 @@
+/* enc.c */
+
+/************************************************************************
+
+  Part of the dvipng distribution
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+  02111-1307, USA.
+
+  Copyright © 2002-2004 Jan-Åke Larsson
+
+************************************************************************/
+
 #include "dvipng.h"
 #include <fcntl.h> // open/close
 #include <sys/mman.h>
@@ -7,33 +32,44 @@ struct encoding* encodingp=NULL;
 
 struct encoding* InitEncoding(char* encoding) 
 {
-  char *pos,*max,*buf,*enc_file =
-#ifdef HAVE_KPSE_ENC_FORMATS
-    kpse_find_file(encoding,kpse_enc_format,false);
-#else
-    kpse_find_file(encoding,kpse_tex_ps_header_format,false);
-#endif
+  char *pos,*max,*buf,*enc_file;
   int encfd,i;
   struct encoding* encp=NULL;
   struct stat stat;
   unsigned char* encmmap;
   
-  if (enc_file == NULL)
+#ifdef HAVE_KPSE_ENC_FORMATS
+  TEMPSTR(enc_file,kpse_find_file(encoding,kpse_enc_format,false));
+#else
+  TEMPSTR(enc_file,kpse_find_file(encoding,kpse_tex_ps_header_format,false));
+#endif
+  if (enc_file == NULL) {
     Warning("encoding file %s could not be found",encoding);
+    return(NULL);
+  }
   DEBUG_PRINT((DEBUG_FT|DEBUG_ENC),("\n  OPEN ENCODING:\t'%s'", enc_file));
   if ((encfd = open(enc_file,O_RDONLY)) == -1) {
     Warning("encoding file %s could not be opened", enc_file);
+    //    free(enc_file);
     return(NULL);
   }
   fstat(encfd,&stat);
   encmmap = mmap(NULL,stat.st_size, PROT_READ, MAP_SHARED,encfd,0);
   if (encmmap == (unsigned char *)-1) {
     Warning("cannot mmap encoding <%s> !\n",enc_file);
+    if (close(encfd))
+      Warning("cannot close encoding file %s!?\n",enc_file);
+    //free(enc_file);
     return(NULL);
   }
   if ((encp = calloc(sizeof(struct encoding)+strlen(encoding)+1
 		     +stat.st_size,1))==NULL) {
     Warning("cannot alloc space for encoding",enc_file);
+    if (munmap(encmmap,stat.st_size))
+      Warning("cannot munmap encoding %s!?\n",enc_file);
+    if (close(encfd))
+      Warning("cannot close encoding file %s!?\n",enc_file);
+    //free(enc_file);
     return(NULL);
   }
   encp->name=(char*)encp+sizeof(struct encoding);
@@ -80,6 +116,7 @@ struct encoding* InitEncoding(char* encoding)
     Warning("cannot munmap encoding %s!?\n",enc_file);
   if (close(encfd))
     Warning("cannot close encoding file %s!?\n",enc_file);
+  //  free(enc_file);
   return(encp);
 }
 
@@ -99,4 +136,15 @@ struct encoding* FindEncoding(char* encoding)
     }
   }
   return(temp);
+}
+
+void ClearEncoding(void)
+{
+  struct encoding *temp=encodingp;
+
+  while(temp!=NULL) {
+    encodingp=encodingp->next;
+    free(temp);
+    temp=encodingp;
+  }
 }

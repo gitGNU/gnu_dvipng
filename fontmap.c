@@ -1,3 +1,28 @@
+/* fontmap.c */
+
+/************************************************************************
+
+  Part of the dvipng distribution
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+  02111-1307, USA.
+
+  Copyright © 2002-2004 Jan-Åke Larsson
+
+************************************************************************/
+
 #include "dvipng.h"
 #include <fcntl.h> // open/close
 #include <sys/mman.h>
@@ -35,11 +60,12 @@ char* find_format(char* name)
 
 void InitPSFontMap(void)
 {
-  char *pos,*end,*psfont_name = find_format("ps2pk.map");
+  char *pos,*end,*psfont_name;
   struct psfontmap *entry;
 
+  TEMPSTR(psfont_name,find_format("ps2pk.map"));
   if (psfont_name==NULL)
-    psfont_name = find_format("psfonts.map");
+    TEMPSTR(psfont_name,find_format("psfonts.map"));
 
   if (psfont_name==NULL) {
     Warning("cannot find ps2pk.map, nor psfonts.map");
@@ -80,6 +106,7 @@ void InitPSFontMap(void)
  	entry->tfmname = newword(&pos,end);
 	entry->psfile = NULL;
 	entry->encname = NULL;
+	entry->encoding = NULL;
 	while(pos < end && *pos!='\n') pos++;
 	entry->end = pos;
 	entry->next=psfontmap;
@@ -88,9 +115,24 @@ void InitPSFontMap(void)
       pos++;
     }
   }
+  //free(psfont_name);
 }
 
+void ClearPSFontMap(void)
+{
+  struct psfontmap *entry;
 
+  while(psfontmap!=NULL) {
+    entry=psfontmap;
+    psfontmap=psfontmap->next;
+    free(entry->tfmname);
+    if (entry->psfile!=NULL)
+      free(entry->psfile);
+    if (entry->encname!=NULL)
+      free(entry->encname);
+    free(entry);
+  }
+}
 struct psfontmap* FindPSFontMap(char* fontname)
 {
   char *pos,*tfmname,*psname;
@@ -212,3 +254,4 @@ struct psfontmap* FindPSFontMap(char* fontname)
   
   return(entry);
 }
+

@@ -1,4 +1,28 @@
 /* dvipng.c */
+
+/************************************************************************
+
+  Part of the dvipng distribution
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+  02111-1307, USA.
+
+  Copyright © 2002-2004 Jan-Åke Larsson
+
+************************************************************************/
+
 /**********************************************************************
  ****************************  Intro  *********************************
  **********************************************************************
@@ -65,7 +89,7 @@ int main(int argc, char ** argv)
     if (user_bdpi)
       kpse_init_prog("DVIPNG", user_bdpi, user_mfmode, "cmr10");
     else {
-      Warning("--mfmode given without --bdpi. Note that the -D option has changed\nfrom (0.x) base resolution to (1.x) _output_ resolution. Read the file RELEASE.");
+      Warning("--mfmode given without --bdpi.");
       /* this will give a lot of warnings but... */
       kpse_init_prog("DVIPNG", 300, user_mfmode, "cmr10");
     }
@@ -118,6 +142,10 @@ int main(int argc, char ** argv)
 #endif
 
   ClearFonts();
+  DVIClose(dvi);
+  ClearDvipsNam();
+  ClearPSFontMap();
+  ClearEncoding();
 #ifdef HAVE_FT2
   if (libfreetype!=NULL && FT_Done_FreeType(libfreetype)) 
     Fatal("an error occured during freetype destruction"); 
