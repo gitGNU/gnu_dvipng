@@ -1,37 +1,5 @@
 #include "dvipng.h"
 
-/*-->ActualFactor*/
-/**********************************************************************/
-/**************************  ActualFactor  ****************************/
-/**********************************************************************/
-double  /* compute the actual size factor given the approximation */
-#if NeedFunctionPrototypes
-ActualFactor(long4 unmodsize)
-#else
-ActualFactor(unmodsize)
-long4    unmodsize;                 /* actually factor * 1000 */
-#endif
-{
-  double  realsize;     /* the actual magnification factor */
-  realsize = (double)unmodsize / 1000.0;
-  if (abs((int)(unmodsize - 1095l))<2)
-    realsize = 1.095445115; /*stephalf*/
-  else if (abs((int)(unmodsize - 1315l))<2)
-    realsize = 1.31453414; /*stepihalf*/
-  else if (abs((int)(unmodsize - 1577l))<2)
-    realsize = 1.57744097; /*stepiihalf*/
-  else if (abs((int)(unmodsize - 1893l))<2)
-    realsize = 1.89292916; /*stepiiihalf*/
-  else if (abs((int)(unmodsize - 2074l))<2)
-    realsize = 2.0736;   /*stepiv*/
-  else if (abs((int)(unmodsize - 2488l))<2)
-    realsize = 2.48832;  /*stepv*/
-  else if (abs((int)(unmodsize - 2986l))<2)
-    realsize = 2.985984; /*stepvi*/
-  /* the remaining magnification steps are represented with sufficient
-     accuracy already */
-  return(realsize);
-}
 
 /*-->DecodeArgs*/
 /*********************************************************************/
@@ -138,13 +106,13 @@ named COPYING and dvipng.c.");
 	if (*p == 0 && argv[i+1])
 	  p = argv[++i] ;
 	if (strcmp(p,"a4")) {
-	  handlepapersize("210mm,297mm",x_pwidth,y_pwidth);
+	  handlepapersize("210mm,297mm",&x_pwidth,&y_pwidth);
 	} else if (strcmp(p,"letter")) {
-	  handlepapersize("8.5in,11in",x_pwidth,y_pwidth);
+	  handlepapersize("8.5in,11in",&x_pwidth,&y_pwidth);
 	} else if (strcmp(p,"legal")) {
-	  handlepapersize("8.5in,14in",x_pwidth,y_pwidth);
+	  handlepapersize("8.5in,14in",&x_pwidth,&y_pwidth);
 	} else if (strcmp(p,"executive")) {
-	  handlepapersize("7.25in,10.5in",x_pwidth,y_pwidth);
+	  handlepapersize("7.25in,10.5in",&x_pwidth,&y_pwidth);
 	} else if (strcmp(p,"landscape")) {
 	  /* Bug out on both papersize and Landscape? */
 	  Landscape = _TRUE;
@@ -211,9 +179,8 @@ named COPYING and dvipng.c.");
 	    Abspage = _TRUE ;
 	    p++ ;
 	  }
-	  if (ParsePages(p,Abspage))
+	  if (QueueParse(p,Abspage))
 	    Fatal("bad page list specifier (-pp).") ;
-	  Pagelist = _TRUE ;
 	  break ;
 	}
 	if (*p == 0 && argv[i+1])
@@ -222,13 +189,7 @@ named COPYING and dvipng.c.");
 	  Abspage = _TRUE ;
 	  p++ ;
 	}
-	switch(sscanf(p,
-#ifdef SHORTINT
-		      "%ld.%ld",
-#else        /* ~SHORTINT */
-		      "%d.%d",
-#endif        /* ~SHORTINT */
-		      &FirstPage, &Firstseq)) {
+	switch(sscanf(p, "%ld.%d", &FirstPage, &Firstseq)) {
 	case 1:           Firstseq = 0 ;
 	case 2:           break ;
 	default:     	  Fatal("bad first page option (-p %s).",p) ;
@@ -241,13 +202,7 @@ named COPYING and dvipng.c.");
 	  Abspage = _TRUE ;
 	  p++ ;
 	}
-	switch(sscanf(p, 
-#ifdef SHORTINT
-		      "%ld.%ld",
-#else        /* ~SHORTINT */
-		      "%d.%d",
-#endif        /* ~SHORTINT */
-		      &LastPage, &Lastseq)) {
+	switch(sscanf(p, "%ld.%d", &LastPage, &Lastseq)) {
 	case 1:           Lastseq = 0 ;
 	case 2:           break ;
 	default:	  Fatal("bad last page option (-l %s).",p);
@@ -330,7 +285,7 @@ named COPYING and dvipng.c.");
       (void) strcat(filename, curname);
       
       if (dvifp != FPNULL) {
-	EmptyPageList();
+	DelPageList();
 	fclose(dvifp);
       }
 
@@ -456,48 +411,6 @@ long4 DoConv P3C(long4, num, long4, den, int, convResolution)
   return((long4)((1.0/conv)+0.5));
 }
 
-
-/*-->AllDone*/
-/**********************************************************************/
-/****************************** AllDone  ******************************/
-/**********************************************************************/
-void AllDone P1C(bool, PFlag)
-{
-#ifdef TIMING
-  double  time;
-#endif
-
-#ifdef DEBUG
-  if (Debug) {
-    fprintf(ERR_STREAM,"\nDynamically allocated storage: %ld Bytes \n",
-            (long)allocated_storage);
-    fprintf(ERR_STREAM,"%d characters downloaded as soft fonts\n", G_ncdl);
-  }
-#endif
-
-#ifdef TIMING
-#ifdef BSD_TIME_CALLS
-  ftime(&timebuffer);
-  time = (timebuffer.time + (float)(timebuffer.millitm)/1000.0) - start_time;
-#else
-  gettimeofday(&Tp, NULL);
-  time = (Tp.tv_sec + (float)(Tp.tv_usec)/1000000.0) - start_time;
-#endif
-  
-  if (ndone > 0) {
-    fprintf(ERR_STREAM,
-	    "Time of complete run: %.2f s, %d page(s), %.2f s/page.\n",
-	    time, ndone, time / ndone);
-  }
-  if (my_toc >= 0.01) {
-    fprintf(ERR_STREAM,
-	    "Thereof in TIC/TOC region %.2f s.\n",my_toc);
-  }
-#endif
-
-  CloseFiles();
-  exit(G_errenc);
-}
 
 /*-->Fatal*/
 /**********************************************************************/
