@@ -1,5 +1,7 @@
 2004-05-09  Jan-Åke Larsson  <jalar@mai.liu.se>
 
+	* install.texi: T1lib docs 
+
 	* dvipng.1:
 	* dvipng.texi: Add documentation, and spellcheck 
 
