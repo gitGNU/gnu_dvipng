@@ -58,14 +58,7 @@ KeyDesc KeyTab[] = {
 /* Compare two strings, ignoring case;
    s1 pointer to null-terminated keyword, s2 pointer to parseline;
    returns (if successful) pointer to character following keyword in s2 */
-#if NeedFunctionPrototypes
-bool StrCompare(char *s1, char *s2, char **end)
-#else
-bool StrCompare(s1, s2, end)
-char *s1;
-char *s2;
-char **end;
-#endif
+bool StrCompare P3C(char *,s1, char *,s2, char **,end)
 {
   char *a,*b;
   
@@ -83,15 +76,7 @@ char **end;
 /* Read <number> integer values from string and store results in
    <result>. Returns number + of arguments actually read, end =
    pointer to char following last number */
-#if NeedFunctionPrototypes
-int ParseNumbers(char *str, int *result, int number, char **end)
-#else
-int ParseNumbers(str, result, number, end)
-char *str;
-int *result;
-int number;
-char **end;
-#endif
+int ParseNumbers P4C(char *,str, int *,result, int ,number, char **,end)
 {
   char *s;
   int count = 0;
@@ -110,15 +95,10 @@ char **end;
   return(count);
 }
 
-
+#if 0
 /* Diagram commands are parsed separately since the format varies from the one
 +    used by the other special commands */
-#if NeedFunctionPrototypes
-bool ParseDiagram(char *str)
-#else
-bool ParseDiagram(str)
-char *str;
-#endif
+bool ParseDiagram P1C(char *,str)
 {
   diagtrafo dt;
   char *s,*sh;
@@ -186,6 +166,7 @@ char *str;
   else 
     return(_FALSE);
 }
+#endif /*0*/
 # endif /* LJ */
 #endif /* __riscos */
 
@@ -196,10 +177,7 @@ void DoSpecial P2C(char *,str, int, n)
 {
   char *p;
 
-#ifdef DEBUG
-  if (Debug)
-    printf("'%.*s' ",n,str);
-#endif
+  DEBUG_PRINTF2(DEBUG_DVI,"'%.*s' ",n,str);
 
   p=str;
   while(*p==' ') p++;
@@ -237,8 +215,8 @@ void DoSpecial P2C(char *,str, int, n)
 }
 
 
-
-  /*  char    spbuf[STRSIZE], xs[STRSIZE], ys[STRSIZE];
+#if 0
+  char    spbuf[STRSIZE], xs[STRSIZE], ys[STRSIZE];
   char    *psfile = NULL;
   float   x,y;
   long4   x_pos, y_pos;
@@ -263,10 +241,10 @@ void DoSpecial P2C(char *,str, int, n)
 #endif
 #endif
  
-while ( (str = GetKeyStr(str, &k)) != NULL ) {*/
+  while ( (str = GetKeyStr(str, &k)) != NULL ) {
     /* get all keyword-value pairs */
     /* for compatibility, single words are taken as file names */
-/*    if ( GetKeyVal( &k, KeyTab, NKEYS, &i ) && i != -1 )
+    if ( GetKeyVal( &k, KeyTab, NKEYS, &i ) && i != -1 )
       switch (i) {
       case PSFILE:
         (void) strcpy(spbuf, k.Val);
@@ -275,13 +253,13 @@ while ( (str = GetKeyStr(str, &k)) != NULL ) {*/
         
       case ORIENTATION:
 #ifdef LJ
-if ((k.v.i >= 0) && (k.v.i < 2)) {*/
-          /*EMIT2("\033&l%dO\033*rF", (unsigned char)k.v.i);*/
-/*        }
-	  #endif*/
-	/*        else*/
-/*#ifdef KPATHSEA
-           if (!kpse_tex_hush ("special"))
+	if ((k.v.i >= 0) && (k.v.i < 2)) {
+	  EMIT2("\033&l%dO\033*rF", (unsigned char)k.v.i);
+        }
+#endif
+	else
+#ifdef KPATHSEA
+	  if (!kpse_tex_hush ("special"))
 #endif
           Warning( "Invalid orientation (%d)given; ignored.", k.v.i);
         break;
@@ -321,17 +299,17 @@ if ((k.v.i >= 0) && (k.v.i < 2)) {*/
         (void) strcpy(spbuf, k.Val);
         i = sscanf(spbuf,"%d/%d %s",&j,&j1,xs);
         if (i>1) {
-	#ifdef LJ*/
-	  /*          SetPosn(p_x[j], p_y[j]); */
-/*          x_pos = (long4)PIXROUND(p_x[j1]-p_x[j], dvi->conv*shrinkfactor);
+	#ifdef LJ
+	  SetPosn(p_x[j], p_y[j]);
+          x_pos = (long4)PIXROUND(p_x[j1]-p_x[j], dvi->conv*shrinkfactor);
           y_pos = (long4)PIXROUND(p_y[j1]-p_y[j], dvi->conv*shrinkfactor);
           if (labs(x_pos)<labs(y_pos)) x_pos = x_pos+3;
           else                         y_pos = y_pos+3;
-          if (GrayFill) {*/
-	    /*  EMIT4("\033*c%lda%ldb%dg2P", x_pos, y_pos, GrayScale);
+          if (GrayFill) {
+	    EMIT4("\033*c%lda%ldb%dg2P", x_pos, y_pos, GrayScale);
           } else {
-	  EMIT4("\033*c%lda%ldb%dg3P", x_pos, y_pos, Pattern);*/
-/*        }
+	    EMIT4("\033*c%lda%ldb%dg3P", x_pos, y_pos, Pattern);
+	  }
 #endif
         }
         break;
@@ -372,25 +350,23 @@ if ((k.v.i >= 0) && (k.v.i < 2)) {*/
         Warning("Can't handle %s=%s command; ignored.", k.Key, k.Val);
         break;
       }
-      
+    
     else
 #ifdef KPATHSEA
-           if (!kpse_tex_hush ("special"))
+      if (!kpse_tex_hush ("special"))
 #endif
-      Warning("Invalid keyword or value in \\special - <%s> ignored", k.Key);
+	Warning("Invalid keyword or value in \\special - <%s> ignored", k.Key);
   }
 #ifdef LJ
-if (psfile) {*/
-        /* int height = rwi * (urx - llx) / (ury - lly);*/
-/*      int width  = urx - llx;
+      if (psfile) {
+        int height = rwi * (urx - llx) / (ury - lly);*/
+        int width  = urx - llx;
         int height = ury - lly;
         char cmd[255];
         int scale_factor    = 3000 * width / rwi;
         int adjusted_height = height * 300/scale_factor;
         int adjusted_llx    = llx    * 300/scale_factor;
-        char *printer = "ljetplus"; *//* use the most stupid one */
-
-/*
+        char *printer = "ljetplus"; /* use the most stupid one */
         char scale_file_name[255];
         char *scale_file = tmpnam(scale_file_name);
         char *pcl_file = tmpnam(NULL);  
@@ -432,22 +408,21 @@ if (psfile) {*/
                   (int)PIXROUND(h, dvi->conv*shrinkfactor) + x_goffset,
                   (int)PIXROUND(v, dvi->conv*shrinkfactor) + y_goffset);
 #endif  
-          v -= 65536l*adjusted_height;*/ /**300/scale_factor;*/
-/*        h -= 65536l*adjusted_llx; *//* *300/scale_factor;*/
-	  /* SetPosn(h, v);*/
-/*#ifdef DEBUGGS   
+          v -= 65536l*adjusted_height; /**300/scale_factor;*/
+	  h -= 65536l*adjusted_llx; /* *300/scale_factor;*/
+	  SetPosn(h, v);
+#ifdef DEBUGGS   
           fprintf(stderr, "NEW x=%d, y=%d\n", 
                   (int)PIXROUND(h, dvi->conv*shrinkfactor) + x_goffset,
                   (int)PIXROUND(v, dvi->conv*shrinkfactor) + y_goffset);
 #endif
-*/
-          /*CopyHPFile( pcl_file );*/
-          /* unlink(pcl_file); */
-          /* unlink(scale_file); */
-/*      }
+          CopyHPFile( pcl_file );
+          unlink(pcl_file);
+          unlink(scale_file);
+        }
       }
-#endif*/ /* LJ */
-/*}*/
+#endif /* LJ */
+}
 
 /*-->GetKeyStr*/
 /**********************************************************************/
@@ -459,13 +434,7 @@ if (psfile) {*/
  */
 char    KeyStr[STRSIZE];
 char    ValStr[STRSIZE];
-#if NeedFunctionPrototypes
-char *GetKeyStr(char *str, KeyWord *kw )
-#else
-char    *GetKeyStr( str, kw )
-char    *str;
-KeyWord *kw;
-#endif
+char *GetKeyStr P2C(char *,str, KeyWord *,kw )
 {
   char    *s, *k, *v, t;
   if ( !str )
@@ -510,12 +479,7 @@ KeyWord *kw;
 /*******************************  IsSame  *****************************/
 /**********************************************************************/
 /* compare strings, ignore case */
-#if NeedFunctionPrototypes
-bool IsSame(char *a, char *b)
-#else
-bool IsSame(a, b)
-char    *a, *b;
-#endif
+bool IsSame(char *,a, char *,b)
 {
   char *x, *y;
   
@@ -532,15 +496,7 @@ char    *a, *b;
 /*****************************  GetKeyVal  ****************************/
 /**********************************************************************/
 /* get next keyword-value pair decode value according to table entry  */
-#if NeedFunctionPrototypes
-bool GetKeyVal(KeyWord *kw, KeyDesc tab[], int nt, int *tno)
-#else
-bool    GetKeyVal( kw, tab, nt, tno)
-KeyWord *kw;
-KeyDesc tab[];
-int     nt;
-int     *tno;
-#endif
+bool GetKeyVal P4C(KeyWord *,kw, KeyDesc ,tab[], int ,nt, int *,tno)
 {
   int     i;
   char    c = '\0';
@@ -569,3 +525,4 @@ int     *tno;
     }
   return( _TRUE );
 }
+#endif /* 0 */
