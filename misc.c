@@ -144,15 +144,21 @@ named COPYING and dvipng.c.");
 	  Fatal("The papersize %s is not implemented, sorry.\n",p);
         break;
       case 'b':
-	if ( *p == 'g' ) {
+	if ( *p == 'g' ) { /* -bg background color */
 	  p++;
 	  if (*p == 0 && argv[i+1])
 	    p = argv[++i] ;
 	  background(p);
+	} else if ( *p == 'd' ) { /* -bd border width */
+	  p++;
+	  if (*p == 0 && argv[i+1])
+	    p = argv[++i] ;
+	  if ( sscanf(p, "%d", &borderwidth) != 1 )
+	    Fatal("argument of -bd is not a valid integer\n");
 	}
 	break;
       case 'f':
-	if ( *p == 'g' ) {
+	if ( *p == 'g' ) { /* -fg foreground color */
 	  p++;
 	  if (*p == 0 && argv[i+1])
 	    p = argv[++i] ;
@@ -424,7 +430,7 @@ bool PFlag;
 	    "Time of complete run: %.2f s, %d page(s), %.2f s/page.\n",
 	    time, ndone, time / ndone);
   }
-  if (my_toc > 0) {
+  if (my_toc >= 0.01) {
     fprintf(ERR_STREAM,
 	    "Thereof in TIC/TOC region %.2f s.\n",my_toc);
   }
