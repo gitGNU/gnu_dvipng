@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT([dvipng], [0.3], [preview-latex-bugs@lists.sf.net])
+AC_INIT([dvipng], [0.4], [preview-latex-bugs@lists.sf.net])
 AC_CONFIG_SRCDIR([dvipng.c])
 AC_CONFIG_HEADER([config.h])
 
@@ -37,19 +37,23 @@ AC_CHECK_LIB([kpathsea], [kpse_set_progname],,
 # Checks for header files. 
 AC_CHECK_HEADERS([gd.h png.h kpathsea/kpathsea.h],,
 		 [AC_MSG_ERROR([cannot find/use $ac_header])])
+AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS([fcntl.h sys/time.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
+AC_TYPE_PID_T
 AC_HEADER_TIME
 
 # Checks for library functions.
+AC_FUNC_ALLOCA
+AC_FUNC_FORK
 AC_FUNC_MALLOC
 AC_HEADER_STDC
 AC_FUNC_MMAP
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([ftime gettimeofday strrchr])
+AC_CHECK_FUNCS([dup2 ftime gettimeofday strchr strrchr])
 
 # Documentation-related checks
 AC_PATH_PROG(MAKEINFO, makeinfo, :)
