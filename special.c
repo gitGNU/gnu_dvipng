@@ -104,21 +104,24 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv,
   buffer[length]='\0';
 
   token = strtok(buffer," ");
-
   /********************** Color specials ***********************/
   if (strcmp(token,"background")==0) {
-    background(token+11);
+    token = strtok(NULL," ");
+    if (PassNo!=PASS_DRAW)
+      background(token);
     return;
   }
   if (strcmp(token,"color")==0) {
     token = strtok(NULL," ");
-    if (strcmp(token,"push")==0)
-      pushcolor(token+5);
-    else 
+    if (strcmp(token,"push")==0) {
+      token = strtok(NULL," ");
+      pushcolor(token);
+    } else {
       if (strcmp(token,"pop")==0)
 	popcolor();
       else 
 	resetcolorstack(token);
+    }
     return;
   }
 
