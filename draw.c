@@ -1,11 +1,16 @@
 #include "dvipng.h"
 
+//#define NO_DRIFT
+
 #ifdef DEBUG
 #include <ctype.h> // isprint
 #endif
 
 struct stack_entry {  
   int32_t    h, v, w, x, y, z; /* stack entry                           */
+#ifndef NO_DRIFT
+  int32_t    hh,vv;
+#endif
 } stack[STACK_SIZE];           /* stack                                 */
 int       sp = 0;              /* stack pointer                         */
 
@@ -15,13 +20,50 @@ int32_t     w INIT(0);           /* current horizontal spacing      */
 int32_t     x INIT(0);           /* current horizontal spacing      */
 int32_t     y INIT(0);           /* current vertical spacing        */
 int32_t     z INIT(0);           /* current vertical spacing        */
-
+#ifndef NO_DRIFT
+int32_t     hh;                  /* current rounded horizontal position     */
+int32_t     vv;                  /* current rounded vertical position       */
+#endif
 int PassNo;
 
+
+#ifndef NO_DRIFT
+#define MAXDRIFT 1
+#define CHECK_MAXDRIFT(x,xx) if ( xx-PIXROUND(x,dvi->conv*shrinkfactor) < -MAXDRIFT ) { \
+                               DEBUG_PRINT((DEBUG_DVI, " add 1 to")); \
+			       xx += 1; \
+                             } \
+                             if ( xx-PIXROUND(x,dvi->conv*shrinkfactor) > MAXDRIFT ) { \
+                               DEBUG_PRINT((DEBUG_DVI, " sub 1 to")); \
+			       xx -= 1; \
+                             } \
+                             if (PIXROUND(h,dvi->conv*shrinkfactor) != hh \
+                                 || PIXROUND(v,dvi->conv*shrinkfactor) != vv) \
+                                DEBUG_PRINT((DEBUG_DVI, " drift (%d,%d)", \
+                                             hh-PIXROUND(h,dvi->conv*shrinkfactor), \
+                                             vv-PIXROUND(v,dvi->conv*shrinkfactor))); 
+#define MoveRight(x)  temp=x; h += temp; \
+                      if ( currentfont==NULL \
+                           || temp > currentfont->s/6 || temp < -currentfont->s/6*4 ) \
+                        hh = PIXROUND(h,dvi->conv*shrinkfactor); \
+                      else \
+                        hh += PIXROUND( temp,dvi->conv*shrinkfactor ); \
+                      CHECK_MAXDRIFT(h,hh)
+#define MoveDown(x)   temp=x; v += temp; \
+                      if ( currentfont==NULL \
+                           || temp > currentfont->s/6*5 || temp < currentfont->s/6*(-5) ) \
+                        vv = PIXROUND(v,dvi->conv*shrinkfactor); \
+                      else \
+		        vv += PIXROUND( temp,dvi->conv*shrinkfactor ); \
+                      CHECK_MAXDRIFT(v,vv)
+#else
 #define MoveRight(b)  h += (int32_t) b
 #define MoveDown(a)   v += (int32_t) a
-#define DO_VFCONV(a) (((struct font_entry*) parent)->type==DVI_TYPE)?a:\
-    (int32_t)((int64_t) a *  ((struct font_entry*) parent)->s / (1 << 20))
+#endif
+
+
+#define DO_VFCONV(a) ((((struct font_entry*) parent)->type==DVI_TYPE)?a:\
+    (int32_t)((int64_t) a *  ((struct font_entry*) parent)->s / (1 << 20)))
 
 
 int32_t SetChar(int32_t c)
@@ -33,11 +75,13 @@ int32_t SetChar(int32_t c)
     DEBUG_PRINT((DEBUG_DVI,"\n  PK CHAR:\t"));
   if (isprint(c))
     DEBUG_PRINT((DEBUG_DVI,"'%c' ",c));
-  DEBUG_PRINT((DEBUG_DVI,"%d at (%d,%d) offset (%d,%d)",
-	       (int)c, 
-	       PIXROUND(h, dvi->conv*shrinkfactor),
-	       PIXROUND(v, dvi->conv*shrinkfactor),
-	       x_offset,y_offset));
+  DEBUG_PRINT((DEBUG_DVI,"%d ", (int)c));
+#ifndef NO_DRIFT
+  DEBUG_PRINT((DEBUG_DVI,"at (%d,%d) ", hh,vv));
+#else
+  DEBUG_PRINT((DEBUG_DVI,"at (%d,%d) ", 
+	       PIXROUND(h,dvi->conv*shrinkfactor), PIXROUND(v,dvi->conv*shrinkfactor)));
+#endif
 #endif
 
   if (currentfont->type==FONT_TYPE_VF) { 
@@ -50,22 +94,29 @@ int32_t SetChar(int32_t c)
       if (ptr->glyph.data == NULL) 
 	LoadAChar(c, ptr);
       DEBUG_PRINT((DEBUG_DVI," tfmw %d", ptr->tfmw));
+#ifndef NO_DRIFT
       if (PassNo==PASS_DRAW)
-	return(SetPK(c, h, v));
+	return(SetPK(c, hh, vv));
       else {
 	/* Expand bounding box if necessary */
-	min(x_min,PIXROUND(h, dvi->conv*shrinkfactor)
-	    -PIXROUND(ptr->xOffset,shrinkfactor));
-	min(y_min,PIXROUND(v, dvi->conv*shrinkfactor)
-	    -PIXROUND(ptr->yOffset,shrinkfactor));
-	max(x_max,PIXROUND(h, dvi->conv*shrinkfactor)
-	    -PIXROUND(ptr->xOffset,shrinkfactor)
-	    +ptr->glyph.w);
-	max(y_max,PIXROUND(v, dvi->conv*shrinkfactor)
-	    -PIXROUND(ptr->yOffset,shrinkfactor)
-	    +ptr->glyph.h);
+	min(x_min,hh - PIXROUND(ptr->xOffset,shrinkfactor));
+	min(y_min,vv - PIXROUND(ptr->yOffset,shrinkfactor));
+	max(x_max,hh - PIXROUND(ptr->xOffset,shrinkfactor)+ptr->glyph.w);
+	max(y_max,vv - PIXROUND(ptr->yOffset,shrinkfactor)+ptr->glyph.h);
 	return(ptr->tfmw);
       }
+#else
+      if (PassNo==PASS_DRAW)
+	return(SetPK(c, PIXROUND(h,dvi->conv*shrinkfactor), PIXROUND(v,dvi->conv*shrinkfactor)));
+      else {
+	/* Expand bounding box if necessary */
+	min(x_min,PIXROUND(PIXROUND(h,dvi->conv) - ptr->xOffset,shrinkfactor));
+	min(y_min,PIXROUND(PIXROUND(v,dvi->conv) - ptr->yOffset,shrinkfactor));
+	max(x_max,PIXROUND(PIXROUND(h,dvi->conv) - ptr->xOffset,shrinkfactor)+ptr->glyph.w);
+	max(y_max,PIXROUND(PIXROUND(v,dvi->conv) - ptr->yOffset,shrinkfactor)+ptr->glyph.h);
+	return(ptr->tfmw);
+      }
+#endif
     }
   }
   return(0);
@@ -74,8 +125,15 @@ int32_t SetChar(int32_t c)
 void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
      /* To be used both in plain DVI drawing and VF drawing */
 {
+  int32_t temp;
+
   if (/*command >= SETC_000 &&*/ *command <= SETC_127) {
-    MoveRight(SetChar((int32_t)*command));
+    temp = SetChar((int32_t)*command);
+    h += temp;
+#ifndef NO_DRIFT
+    hh += PIXROUND(temp,dvi->conv*shrinkfactor);
+    CHECK_MAXDRIFT(h,hh);
+#endif
   } else if (*command >= FONT_00 && *command <= FONT_63) {
     SetFntNum((int32_t)*command - FONT_00,parent);
   } else switch (*command)  {
@@ -87,7 +145,14 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
   case SET1: case SET2: case SET3: case SET4:
     DEBUG_PRINT((DEBUG_DVI," %d",
 		 UNumRead(command+1, dvi_commandlength[*command]-1)));
-    MoveRight(SetChar(UNumRead(command+1, dvi_commandlength[*command]-1)));
+    {
+      temp = SetChar(UNumRead(command+1, dvi_commandlength[*command]-1));
+      h += temp;
+#ifndef NO_DRIFT
+      hh += PIXROUND(temp,dvi->conv*shrinkfactor);
+      CHECK_MAXDRIFT(h,hh);
+#endif
+    }    
     break;
   case SET_RULE:
     DEBUG_PRINT((DEBUG_DVI," %d %d",
@@ -117,6 +182,10 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
     stack[sp].x = x;
     stack[sp].y = y;
     stack[sp].z = z;
+#ifndef NO_DRIFT
+    stack[sp].hh = hh;
+    stack[sp].vv = vv;
+#endif
     sp++;
     break;
   case POP:
@@ -129,6 +198,10 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
     x = stack[sp].x;
     y = stack[sp].y;
     z = stack[sp].z;
+#ifndef NO_DRIFT
+    hh = stack[sp].hh;
+    vv = stack[sp].vv;
+#endif
     break;
   case RIGHT1: case RIGHT2: case RIGHT3: case RIGHT4:
     DEBUG_PRINT((DEBUG_DVI," %d",
@@ -194,14 +267,59 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
   }
 }
 
-void DrawPage(void) 
+void BeginVFMacro(struct font_entry* currentvf)
+{
+  if (sp >= STACK_SIZE)
+    Fatal("stack overflow");
+  stack[sp].h = h;
+  stack[sp].v = v;
+  stack[sp].w = w;
+  stack[sp].x = x;
+  stack[sp].y = y;
+  stack[sp].z = z;
+#ifndef NO_DRIFT
+  stack[sp].hh = hh;
+  stack[sp].vv = vv;
+#endif
+  sp++;
+  w = x = y = z = 0;
+  DEBUG_PRINT((DEBUG_DVI,"\n  START VF:\tPUSH, W = X = Y = Z = 0"));
+  SetFntNum(currentvf->defaultfont,currentvf);
+}
+
+void EndVFMacro(struct font_entry* currentvf)
+{
+  --sp;
+  if (sp < 0)
+    Fatal("stack underflow");
+  h = stack[sp].h;
+  v = stack[sp].v;
+  w = stack[sp].w;
+  x = stack[sp].x;
+  y = stack[sp].y;
+  z = stack[sp].z;
+#ifndef NO_DRIFT
+  hh = stack[sp].hh;
+  vv = stack[sp].vv;
+#endif
+  DEBUG_PRINT((DEBUG_DVI,"\n  END VF:\tPOP                                  "));
+}
+
+
+void DrawPage(hoffset,voffset) 
      /* To be used after having read BOP and will exit cleanly when
       * encountering EOP.
       */
 {
   unsigned char*  command;  /* current command                  */
 
-  h = v = w = x = y = z = 0;
+  h = hoffset;
+  v = voffset;
+  w = x = y = z = 0;
+#ifndef NO_DRIFT
+  hh = PIXROUND( h , dvi->conv*shrinkfactor );
+  vv = PIXROUND( v , dvi->conv*shrinkfactor );
+#endif
   currentfont = NULL;    /* No default font                  */
 
   command=DVIGetCommand(dvi);
@@ -249,7 +367,7 @@ void DrawPages(void)
       CreateImage();
       Message(BE_NONQUIET,"[%d", dvi_pos->count[0]);
       PassNo=PASS_DRAW;
-      DrawPage();
+      DrawPage(x_offset*dvi->conv*shrinkfactor,y_offset*dvi->conv*shrinkfactor);
       WriteImage(dvi->outname,dvi_pos->count[0]);
 #ifdef TIMING
       ++ndone;
