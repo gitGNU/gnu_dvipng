@@ -69,29 +69,31 @@ void FontDef(unsigned char* command, struct dvi_vf_entry* parent)
 
   current = command + 1;
   k = UNumRead(current, (int)*command - FNT_DEF1 + 1);
-  DEBUG_PRINTF(DEBUG_DVI," %d",k)
   current += (int)*command - FNT_DEF1 + 1;
   c = UNumRead(current, 4); /* checksum */
-  DEBUG_PRINTF(DEBUG_DVI," %d",c)
   s = UNumRead(current+4, 4); /* space size */
-  DEBUG_PRINTF(DEBUG_DVI," %d",s)
-  if (parent->type==FONT_TYPE_VF) {
-    s = (uint32_t)((uint64_t) s * parent->d / 65536);
-    DEBUG_PRINTF(DEBUG_DVI," (%d)",s)
-    /* 
-     * According to some docs I read it should be d / (1 << 20) ?
-     * Whatever. Can anyone inform me how this is _really_ calculated?
-     * designsize / (1 << 20) seems to work also, but I have a feeling
-     * the sizing should be guided by the size in which the virtual
-     * font is actually used, not the designsize.
-    */
-  }
   d = UNumRead(current+8, 4); /* design size */
-  DEBUG_PRINTF(DEBUG_DVI," %d",d)
   a = UNumRead(current+12, 1); /* length for font name */
   l = UNumRead(current+13, 1); /* device length */
-  DEBUG_PRINTF2(DEBUG_DVI," %d %d",a,l)
-  DEBUG_PRINTF2(DEBUG_DVI," '%.*s'",a+l,current+14);
+  if (parent->type==FONT_TYPE_VF) {
+    DEBUG_PRINTF2(DEBUG_VF," %d %d",k,c);
+    DEBUG_PRINTF(DEBUG_VF," %d",s);
+    /* Rescale. s is relative to the actual scale /(1<<20) */
+    s = (uint32_t)((uint64_t) s * parent->s / (1<<20));
+    DEBUG_PRINTF2(DEBUG_VF," (%d) %d",s,d);
+    /* Oddly, d differs in the DVI and the VF that my system produces */
+    d = (uint32_t)((uint64_t) d * parent->d / parent->designsize);
+    DEBUG_PRINTF(DEBUG_VF," (%d)",d);
+    DEBUG_PRINTF2(DEBUG_VF," %d %d",a,l);
+    DEBUG_PRINTF2(DEBUG_VF," '%.*s'",a+l,current+14);
+#ifdef DEBUG
+  } else {
+    DEBUG_PRINTF2(DEBUG_DVI," %d %d",k,c);
+    DEBUG_PRINTF2(DEBUG_DVI," %d %d",s,d);
+    DEBUG_PRINTF2(DEBUG_DVI," %d %d",a,l);
+    DEBUG_PRINTF2(DEBUG_DVI," '%.*s'",a+l,current+14);
+#endif
+  }
   if (a+l > STRSIZE-1)
     Fatal("too long font name for font %ld\n",k);
 
@@ -111,7 +113,7 @@ void FontDef(unsigned char* command, struct dvi_vf_entry* parent)
       && tfontnump->fontp->s == s 
       && tfontnump->fontp->d == d 
       && strncmp(tfontnump->fontp->n,current+14,a+l) == 0) {
-    DEBUG_PRINTF(DEBUG_DVI,"\n  FONT %d:\tMatch found",k)
+    DEBUG_PRINTF(DEBUG_DVI|DEBUG_VF,"\n  FONT %d:\tMatch found",k);
     return;
   }
   /* If not found, create new */
@@ -140,12 +142,12 @@ void FontDef(unsigned char* command, struct dvi_vf_entry* parent)
   }
   /* If found, set its number and return */
   if (tfontptr!=NULL) {
-    DEBUG_PRINTF(DEBUG_DVI,"\n  FONT %d:\tFound in unused list",k);
+    DEBUG_PRINTF(DEBUG_DVI|DEBUG_VF,"\n  FONT %d:\tMatch found, number set",k);
     tfontnump->fontp = tfontptr; 
     return;
   }
 
-  DEBUG_PRINTF(DEBUG_DVI,"\n  FONT %d:\tNew entry created",k);
+  DEBUG_PRINTF(DEBUG_DVI|DEBUG_VF,"\n  FONT %d:\tNew entry created",k);
   /* No fitting font found, create new entry. */
   if ((tfontptr = malloc(sizeof(struct font_entry))) == NULL)
     Fatal("can't malloc space for font_entry");
@@ -201,9 +203,6 @@ void FontFind(struct font_entry * tfontptr)
       } else if (!kpse_bitmap_tolerance ((double)font_ret.dpi, (double) dpi))
 	Warning("font %s at %d not found, using %d instead.\n",
 		tfontptr->name, dpi, font_ret.dpi);
-      if (G_verbose)
-	printf("Using font <%s>\n",tfontptr->name);
-      
       InitPK(tfontptr);
     } else {
       Warning("font %s at %u not found, characters will be left blank.\n",
@@ -227,9 +226,6 @@ void FontFind(struct font_entry * tfontptr)
 #ifdef __riscos
     MakeMetafontFile(PXLpath, tfontptr->n, tfontptr->font_mag);
 #endif
-  } else {
-    if (G_verbose)
-      printf("Using font <%s>\n", tfontptr->name);
   }
 #endif 
 }
