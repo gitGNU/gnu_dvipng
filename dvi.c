@@ -61,8 +61,7 @@ struct dvi_data* DVIOpen(char* dviname)
   DEBUG_PRINTF(DEBUG_DVI," (%d)",dvi->conv);
   k = UNumRead(pre+14,1);
   DEBUG_PRINTF2(DEBUG_DVI," '%.*s'",k,pre+15);
-  if (G_verbose)
-    printf("'%.*s' -> %s#.png\n",k,pre+15,dvi->outname);
+  Message(BE_VERBOSE,"'%.*s' -> %s#.png\n",k,pre+15,dvi->outname);
   return(dvi);
 }
 
