@@ -7,11 +7,11 @@ int       sp = 0;              /* stack pointer                         */
 
 #define MoveOver(b)  h += (int32_t) b
 #define MoveDown(a)  v += (int32_t) a
-#define DO_VFCONV(a) (parent->type==DVI_TYPE)?a:\
-    (int32_t)((int64_t) a * parent->s / (1 << 20))
+#define DO_VFCONV(a) (((struct font_entry*) parent)->type==DVI_TYPE)?a:\
+    (int32_t)((int64_t) a *  ((struct font_entry*) parent)->s / (1 << 20))
 
 void DrawCommand(unsigned char* command, int PassNo, 
-		 struct dvi_vf_entry* parent)
+		 void* parent /* dvi/vf */)
      /* To be used both in plain DVI drawing and VF drawing */
 {
   int32_t   val, val2;       /* temporarys to hold command information  */
@@ -119,10 +119,11 @@ void DrawCommand(unsigned char* command, int PassNo,
       DoSpecial(command + dvi_commandlength[*command], val);
     break;
   case FNT_DEF1: case FNT_DEF2: case FNT_DEF3: case FNT_DEF4:
-    if (parent->type==DVI_TYPE) {
+    if (((struct font_entry*)parent)->type==DVI_TYPE) {
       FontDef(command, parent); 
     } else {
-      Fatal("%s within VF macro from %s",dvi_commands[*command],parent->name);
+      Fatal("%s within VF macro from %s",dvi_commands[*command],
+	    ((struct font_entry*)parent)->name);
     }
     break;
   case PRE: case POST: case POST_POST:
@@ -144,12 +145,12 @@ void DrawPage(int PassNo)
   unsigned char*  command;  /* current command                  */
 
   h = v = w = x = y = z = 0;
-  currentfont = NULL;                /* No default font                  */
+  currentfont = NULL;    /* No default font                  */
 
   command=DVIGetCommand(dvi);
   DEBUG_PRINTF(DEBUG_DVI,"DRAW CMD:\t%s", dvi_commands[*command]);
   while (*command != EOP)  {
-    DrawCommand(command,PassNo,(struct dvi_vf_entry*)dvi);
+    DrawCommand(command,PassNo,dvi);
     command=DVIGetCommand(dvi);
     DEBUG_PRINTF(DEBUG_DVI,"DRAW CMD:\t%s", dvi_commands[*command]);
   } 
@@ -157,43 +158,46 @@ void DrawPage(int PassNo)
 
 void DoPages(void)
 {
-  struct page_list *page;
+  struct page_list *dvi_pos;
   
-  page=NextPPage(NULL);
+  dvi_pos=NextPPage(dvi,NULL);
   
-  if (page!=NULL) {
-    while(page!=NULL) {
-      SeekPage(page);
+  if (dvi_pos!=NULL) {
+    while(dvi_pos!=NULL) {
+      SeekPage(dvi,dvi_pos);
       if (PassDefault == PASS_BBOX || PassDefault == PASS_TIGHT_BBOX) {
 	if (PassDefault == PASS_TIGHT_BBOX) {
 	  x_max = y_max = INT32_MIN;
 	  x_min = y_min = INT32_MAX;
 	}
 	DrawPage(PASS_BBOX);
-	SeekPage(page);
+	SeekPage(dvi,dvi_pos);
 	x_width = x_max-x_min;
 	y_width = y_max-y_min;
-	x_offset = -x_min; /* offset by moving topleft corner */
-	y_offset = -y_min; 
+	h = -x_min; /* offset by moving topleft corner */
+	v = -y_min; 
 	x_max = x_min = -x_offset_def; /* reset BBOX */
 	y_max = y_min = -y_offset_def;
       }
       DEBUG_PRINTF2(DEBUG_DVI,"\n  IMAGE:\t%dx%d",x_width,y_width);
-      DEBUG_PRINTF(DEBUG_DVI,"\n@%d PAGE START:\tBOP",page->offset);
+      DEBUG_PRINTF(DEBUG_DVI,"\n@%d PAGE START:\tBOP",dvi_pos->offset);
 #ifdef DEBUG
-      {int i; for (i=0;i<10;i++) 
-	DEBUG_PRINTF(DEBUG_DVI," %d",page->count[i]);
-      DEBUG_PRINTF(DEBUG_DVI," (%d)\n",page->count[10]);}
+      { 
+	int i;
+	for (i=0;i<10;i++) 
+	  DEBUG_PRINTF(DEBUG_DVI," %d",dvi_pos->count[i]);
+	DEBUG_PRINTF(DEBUG_DVI," (%d)\n",dvi_pos->count[10]);
+      }
 #endif
-      DoBop();
-      Message(BE_NONQUIET,"[%d",  page->count[0]);
+      CreateImage();
+      Message(BE_NONQUIET,"[%d", dvi_pos->count[0]);
       DrawPage(PASS_DRAW);
-      FormFeed(dvi,page->count[0]);
+      WriteImage(dvi->outname,dvi_pos->count[0]);
 #ifdef TIMING
       ++ndone;
 #endif
       Message(BE_NONQUIET,"] ");
-      page=NextPPage(page);
+      dvi_pos=NextPPage(dvi,dvi_pos);
     }
     Message(BE_NONQUIET,"\n");
     ClearPpList();
