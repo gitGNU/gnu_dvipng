@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT([dvipng], [0.8], [preview-latex-bugs@lists.sf.net])
+AC_INIT([dvipng], [0.9], [preview-latex-bugs@lists.sf.net])
 AC_CONFIG_SRCDIR([dvipng.c])
 
 AC_ARG_ENABLE(debug, 
@@ -110,7 +110,7 @@ AC_ARG_ENABLE(selfauto-set,
   AC_MSG_CHECKING([for psfonts.map])
   cp `which kpsewhich` .
   PSFONTS_MAP=`./kpsewhich psfonts.map`
-  rm ./kpsewhich
+  rm -f ./kpsewhich
   if test -n "$PSFONTS_MAP"; then
     AC_MSG_RESULT([$PSFONTS_MAP])
   else
