@@ -71,19 +71,29 @@ struct dvi_data* DVIOpen(char* dviname,char* outname)
   dvi->type = DVI_TYPE;
   dvi->fontnump=NULL;
 
-  strcpy(dvi->name,dviname);
+  dvi->name = malloc(strlen(dviname)+4);
+  if (dvi->name==NULL)
+    Fatal("cannot allocate space for DVI filename");
+  strcpy(dvi->name, dviname);
   tmpstring = strrchr(dvi->name, '.');
   if (tmpstring == NULL) 
     strcat(dvi->name, ".dvi");
-
-  /* split into file name + extension */
-  if (outname==NULL) 
+  
+  if (outname==NULL) { 
+    dvi->outname = malloc(strlen(basename(dviname))+6);
+    if (dvi->outname==NULL)
+      Fatal("cannot allocate space for output filename");
     strcpy(dvi->outname,basename(dviname));
-  else
-    strcpy(dvi->outname,basename(outname));
-  tmpstring = strrchr(dvi->outname, '.');
-  if (tmpstring != NULL) 
-    *tmpstring='\0';
+    tmpstring = strrchr(dvi->outname, '.');
+    if (tmpstring != NULL) 
+      *tmpstring = '\0';
+    strcat(dvi->outname, "%d.png");
+  } else {
+    dvi->outname = malloc(strlen(outname));
+    if (dvi->outname==NULL)
+      Fatal("cannot allocate space for output filename");
+    strcpy(dvi->outname,outname);
+  }
 
   if ((dvi->filep = fopen(dvi->name,"rb")) == NULL) {
     /* do not insist on .dvi */
@@ -343,6 +353,8 @@ void DVIClose(struct dvi_data* dvi)
 {
   fclose(dvi->filep);
   DelPageList(dvi);
+  free(dvi->outname);
+  free(dvi->name);
   free(dvi);
 }
 

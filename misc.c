@@ -58,7 +58,7 @@ named COPYING and dvipng.c.");
 	  p = argv[++i] ;
         outname=p;
         /* remove .png extension */
-	Message(PARSE_STDIN,"Output file: %s (will include page number)\n",
+	Message(PARSE_STDIN,"Output file: %s\n",
 		outname);
         break;
 #ifdef MAKETEXPK
@@ -264,7 +264,7 @@ named COPYING and dvipng.c.");
     fprintf(ERR_STREAM,"  -M*       Don't make fonts\n");
     fprintf(ERR_STREAM,"  -l #      Last page to be output\n");
     fprintf(ERR_STREAM,"  -mode s   MetaFont mode (default cx)\n");
-    fprintf(ERR_STREAM,"  -o f      Output file (currently disabled)\n");
+    fprintf(ERR_STREAM,"  -o f      Output file, '%%d' is pagenumber\n");
     fprintf(ERR_STREAM,"  -O c      Image offset\n");
     fprintf(ERR_STREAM,"  -p #      First page to be output\n");
     fprintf(ERR_STREAM,"  -pp #,#.. Page list to be output\n");
@@ -282,8 +282,8 @@ named COPYING and dvipng.c.");
     fprintf(ERR_STREAM,"  -follow   Follow mode\n");
     fprintf(ERR_STREAM,"  -Q #      Quality (~xdvi's shrinkfactor)\n");
     
-    fprintf(ERR_STREAM,"\n     # = number   f = file   s = string  * = suffix, '0' to turn off\n");
-    fprintf(ERR_STREAM,"         c = comma-separated dimension pair (e.g., 3.2in,-32.1cm)\n\n");
+    fprintf(ERR_STREAM,"\n   # = number   f = file   s = string  * = suffix, '0' to turn off\n");
+    fprintf(ERR_STREAM,"       c = comma-separated dimension pair (e.g., 3.2in,-32.1cm)\n\n");
     /*#ifdef HAVE_LIBKPATHSEA
       {
       extern DllImport char *kpse_bug_address;
