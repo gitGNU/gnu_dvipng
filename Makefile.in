@@ -1,8 +1,8 @@
-CC = gcc
-CFLAGS = -g -O2 -Wall
+CC = @CC@
+CFLAGS = @CFLAGS@ -Wall
 CPPFLAGS = -I. -DDEBUG
 
-LIBS = -lkpathsea -lgd 
+LIBS = @LIBS@
 
 bindir = /usr/bin
 INSTALL = /usr/bin/install -c
