@@ -45,12 +45,8 @@ int main P2C(int, argc, char **, argv)
   (void) strcpy(G_progname, argv[0]);
 
   initcolor();
-  vfstack[0] = &dvi;
-  dvi.d = 65536; /* Natural scaling on dvi lengths */
-  dvi.hfontnump=NULL;
-
-
   DecodeArgs(argc, argv);
+  vfstack[0] = dvi;
 
 #ifdef KPATHSEA
   kpse_set_progname(argv[0]);
@@ -83,7 +79,7 @@ int main P2C(int, argc, char **, argv)
     
     if (!QueueEmpty()) 
       DoPages();
-    printf("%s> ",dvi.n);
+    printf("%s> ",dvi->name);
     fgets(line,STRSIZE,stdin);
     while(!FEOF(stdin)) {
       linev[0]=line;  /* OBSERVE linev[0] is never used in DecodeArgs */
@@ -100,7 +96,7 @@ int main P2C(int, argc, char **, argv)
       }
       if (!QueueEmpty()) 
 	DoPages();
-      printf("%s> ",dvi.n);
+      printf("%s> ",dvi->name);
       fgets(line,STRSIZE,stdin);
     }
   }
