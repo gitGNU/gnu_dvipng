@@ -24,13 +24,29 @@ int32_t SetPK(int32_t c, int32_t hh,int32_t vv)
    * greyscales in glyph.data with darkest last.  Draw the character
    * greyscale by greyscale, lightest first.
    */
+
+  /* This code saves _no_ execution time, strangely. Possibly,
+     gdImageChar is implemented as coded below.
+
+     #ifdef HAVE_GDIMAGECREATETRUECOLOR 
+       if (truecolor) 
+         for( i=1; i<=ptr->glyph.nchars ; i++) {
+           Color = gdImageColorResolveAlpha(page_imagep,Red,Green,Blue,
+                                            128-128*i/ptr->glyph.nchars);
+           gdImageChar(page_imagep, &(ptr->glyph),
+	               hh - ptr->xOffset/shrinkfactor,
+		       vv - ptr->yOffset/shrinkfactor,
+	  	       i,Color);
+           }
+        else {
+      #endif */
 #ifdef PROPER_OVERSTRIKE 
   int x,y;
   int pos=0;
   int bgColor,pixelcolor;
   hh -= ptr->xOffset/shrinkfactor;
   vv -= ptr->yOffset/shrinkfactor;
-
+  
   for( i=1; i<=ptr->glyph.nchars ; i++) {
     red = bRed-(bRed-Red)*i/ptr->glyph.nchars;
     green = bGreen-(bGreen-Green)*i/ptr->glyph.nchars;
@@ -72,15 +88,6 @@ int32_t SetPK(int32_t c, int32_t hh,int32_t vv)
 }
 
 
-#if 0 /* HAVE_GDIMAGECOLORRESOLVEALPHA */
-    /* Only works on truecolor images. */
-    Color = gdImageColorResolveAlpha(page_imagep,Red,Green,Blue,
-				   128-128*i/shrinkfactor/shrinkfactor);
-    gdImageChar(page_imagep, &(ptr->glyph),
-		hh - PIXROUND(ptr->xOffset,shrinkfactor),
-		vv - PIXROUND(ptr->yOffset,shrinkfactor),
-		i,Color);
-#endif /* HAVE_GDIMAGECOLORRESOLVEALPHA */
 
 
 unsigned char getnyb(unsigned char** pos)
