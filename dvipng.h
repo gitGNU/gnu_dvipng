@@ -277,7 +277,8 @@ EXTERN struct internal_state {
 #define DEBUG_VF    LASTFLAG * 4
 #define DEBUG_PK    LASTFLAG * 8
 #define DEBUG_GLYPH LASTFLAG * 16
-#define LASTDEBUG   DEBUG_GLYPH
+#define DEBUG_GS    LASTFLAG * 32
+#define LASTDEBUG   DEBUG_GS
 #else
 #define DEBUG_PUT(a,str)
 #define DEBUG_PRINTF(a,str,e1)
