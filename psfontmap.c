@@ -6,11 +6,30 @@
 static unsigned char* psfont_mmap = (unsigned char *)-1;
 static int psfont_filedes = -1;
 static struct stat psfont_stat;
+static struct psfontmap {
+  struct psfontmap *next;
+  char *line,*tfmname,*end;
+} *psfontmap=NULL;
+
+inline char* newword(char** buffer, char* end) 
+{
+  char *word,*pos=*buffer;
+
+  while(pos<end && *pos!=' ' && *pos!='\t' && *pos!='"') pos++;
+  if ((word=malloc(pos-*buffer+1))==NULL)
+    Fatal("cannot malloc space for string");
+  strncpy(word,*buffer,pos-*buffer);
+  word[pos-*buffer]='\0';
+  if (*pos=='"') pos++;
+  *buffer=pos;
+  return(word);
+}
 
 void InitPSFontMap(void)
 {
-  char* psfont_name =
+  char *pos,*end,*psfont_name =
     kpse_find_file("ps2pk.map",kpse_dvips_config_format,false);
+  struct psfontmap *entry;
 
   if (psfont_name==NULL)
     psfont_name =
@@ -30,44 +49,97 @@ void InitPSFontMap(void)
 		     PROT_READ, MAP_SHARED,psfont_filedes,0);
   if (psfont_mmap == (unsigned char *)-1) 
     Warning("cannot mmap psfonts map %s !\n",psfont_name);
+  else {
+    pos = psfont_mmap;
+    end = psfont_mmap+psfont_stat.st_size;
+    while(pos<end) {
+      while(pos < end && (*pos=='\n' || *pos==' ' || *pos=='\t' 
+			  || *pos=='%' || *pos=='*' || *pos==';' || *pos=='#')) {
+	while(pos < end && *pos!='\n') pos++; /* skip comments/empty rows */
+	pos++;
+      }
+      if (pos < end) {
+	if ((entry=malloc(sizeof(struct psfontmap)))==NULL)
+	  Fatal("cannot malloc psfontmap space");
+	entry->line = pos;
+	while(pos < end && (*pos=='<' || *pos=='"')) {
+	  if (*pos=='<') 
+	    while(pos < end && *pos!=' ' && *pos!='\t') pos++;
+	  else 
+	    while(pos < end && *pos!='"') pos++;
+	  while(pos < end && (*pos==' ' || *pos=='\t')) pos++;
+	}
+ 	entry->tfmname = pos;
+	while(pos < end && *pos!='\n') pos++;
+	entry->end = pos;
+	entry->next=psfontmap;
+	psfontmap=entry;
+      }
+      pos++;
+    }
+  }
 }
+
 
 char* FindPSFontMap(char* fontname, char** encoding, FT_Matrix** transform)
 {
-  unsigned char* position=NULL;
+  char *pos,*tfmname,*psname,*psfile=NULL;
+  struct psfontmap *entry;
 
   *encoding=NULL;
+  *transform=NULL;
 
-  if (psfont_mmap != (unsigned char *)-1) {
-    position = psfont_mmap;
-    while(position !=NULL && strncmp(++position,fontname,strlen(fontname))!=0)
-      position=memchr(position,'\n',
-		      psfont_mmap+psfont_stat.st_size-position-1);
-    if (position!=NULL) {
-      unsigned char* end=memchr(position,'\n',
-				psfont_mmap+psfont_stat.st_size-position);
-      unsigned char* cur=memchr(position,'"', 
-				psfont_mmap+psfont_stat.st_size-position)+1;
-      unsigned char* cur2,*str,*psfile=NULL;
-
-      if (end == NULL) 
-	end=psfont_mmap+psfont_stat.st_size;
-      DEBUG_PRINT((DEBUG_FT,"\n  PS FONT MAP: %.*s ",end-position,position));
-      if (cur != NULL && cur < end) {    /* Reencoding/tranformation exists */
-	FT_Fixed xx=0,xy=0,val=0;
-
-	while(*cur!='"' && cur < end) {
-	  val=strtod(cur,(char**)&cur)*0x10000; 
-	  /*                     Small risk, but we're inside double quotes */
-	  while(*cur==' ' && cur < end)
-	    cur++;
-	  if (cur<end-10 && strncmp(cur,"ExtendFont",10)==0) 
-	    xx=val;
-	  if (cur<end-9 && strncmp(cur,"SlantFont",9)==0)
-	    xy=val;
-	  while( *cur!=' ' && *cur!='"' && cur < end)
-	    cur++;
+  entry=psfontmap;
+  while(entry!=NULL && strncmp(entry->tfmname,fontname,strlen(fontname))!=0) 
+    entry=entry->next;
+  if (entry!=NULL) {
+    bool firstnameseen = false;
+    
+    tfmname=fontname;
+    DEBUG_PRINT((DEBUG_FT,"\n  PSFONTMAP: %s ",fontname));
+    pos=entry->line;
+    while(pos < entry->end) { 
+      if (*pos=='<') {
+	pos++;
+	if (pos<entry->end && *pos=='<') {
+	  pos++;
+	  psfile = newword((char**)&pos,entry->end);
+	  DEBUG_PRINT((DEBUG_FT,"<%s ",psfile));
+	} else if (pos<entry->end && *pos=='[') {
+	  pos++;
+	  *encoding = newword((char**)&pos,entry->end);
+	  DEBUG_PRINT((DEBUG_FT,"<[%s ",*encoding));
+	} else {
+	  char* word =newword((char**)&pos,entry->end); 
+	  if (strncmp(word+strlen(word)-4,".enc",4)==0) {   /* encoding */
+	    *encoding=word;
+	    DEBUG_PRINT((DEBUG_FT,"<[%s ",*encoding));
+	  } else {
+	    psfile=word;
+	    DEBUG_PRINT((DEBUG_FT,"<%s ",psfile));
+	  }
 	}
+      } else if (*pos=='"') {    /* Reencoding/tranformation exists */
+	FT_Fixed xx=0,xy=0,val=0;
+	
+	pos++;
+	DEBUG_PRINT((DEBUG_FT,"\""));
+	while(pos < entry->end && *pos!='"') {
+	  val=strtod(pos,(char**)&pos)*0x10000; 
+	  /* Small buffer overrun risk, but we're inside double quotes */
+	  while(pos < entry->end && (*pos==' ' || *pos=='\t')) pos++;
+	  if (pos<entry->end-10 && strncmp(pos,"ExtendFont",10)==0) {
+	    xx=val;
+	    DEBUG_PRINT((DEBUG_FT,"%f ExtendFont ",(float)xx/0x10000));
+	  }
+	  if (pos<entry->end-9 && strncmp(pos,"SlantFont",9)==0) {
+	    xy=val;
+	    DEBUG_PRINT((DEBUG_FT,"%f SlantFont ",(float)xy/0x10000));
+	  }
+	  while(pos<entry->end && *pos!=' ' && *pos!='\t' && *pos!='"') pos++;
+	}
+	DEBUG_PRINT((DEBUG_FT,"\" "));
+	pos++;
 	if (xx!=0 || xy!=0) {
 	  *transform=malloc(sizeof(FT_Matrix));
 	  (**transform).yx=0;
@@ -81,37 +153,22 @@ char* FindPSFontMap(char* fontname, char** encoding, FT_Matrix** transform)
 	  else
 	    (**transform).xy=0;
 	}
+      } else {
+	if (firstnameseen) {
+	  psname = newword((char**)&pos,entry->end);
+	  DEBUG_PRINT((DEBUG_FT,"(%s) ",psname));
+	} else {
+	  while(pos<entry->end && *pos!=' ' && *pos!='\t') pos++;
+	  psname=tfmname;
+	  firstnameseen=true;
+	}
       }
-      cur = memchr(position,'<',psfont_mmap+psfont_stat.st_size-position);
-      while (cur != NULL && cur < end) {    /* we have "<filename" */
-	while((*cur==' ' || *cur=='<') && cur < end)
-	  cur++;
-	cur2 = memchr(cur,' ',psfont_mmap+psfont_stat.st_size-cur);
-	if (cur2>end)
-	  cur2=end;
-	str = malloc(cur2-cur);
-	strncpy(str,cur,cur2-cur);
-	str[cur2-cur]='\0';
-	if (strncmp(cur2-4,".enc",4)==0)    /* encoding */
-	  *encoding = str;
-	else                                /* postcript filename */
-	  psfile = str;
-	cur = memchr(cur2,'<',psfont_mmap+psfont_stat.st_size-cur2);
-      }
-      if (psfile==NULL) {                   /* postscript filename not given */
-	cur=cur2=position;
-	cur2 = memchr(cur,' ',psfont_mmap+psfont_stat.st_size-cur);
-	if (cur2>end)
-	  cur2=end;
-	str = malloc(cur2-cur);
-	strncpy(str,cur,cur2-cur);
-	str[cur2-cur]='\0';
-	psfile = str;
-      }
-      DEBUG_PRINT((DEBUG_FT,"\n  PS FONT MAP DATA: '%s' ",psfile));
-
-      return(psfile);
+      while(pos < entry->end && (*pos==' ' || *pos=='\t')) pos++;
+    }
+    if (psfile==NULL) {
+      psfile=tfmname;
+      DEBUG_PRINT((DEBUG_FT," <%s ",psfile));
     }
   }
-  return(NULL);
+  return(psfile);
 }
