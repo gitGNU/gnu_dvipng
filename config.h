@@ -103,53 +103,6 @@
 #undef MAKETEXPK
 #endif
 
-/*
- * assure that LJ2P is defined when LJ4 is defined;
- * compile with support for LJ4's resident fonts
- */
-#ifdef LJ4
-#define LJ2P
-#define LJ_RESIDENT_FONTS
-#endif
-
-/*
- * assure that LJ2 is defined when LJ2P is defined
- */
-#ifdef LJ2P
-#ifndef LJ2
-#define LJ2
-#endif
-#endif
-
-/*
- * assure that LJ is defined when LJ2 of LJ4 is defined
- */
-#if defined(LJ2)
-#ifndef LJ
-#define LJ
-#endif
-#endif
-
-/*
- * assure that IBM3812 is not defined when LJ is defined
- */
-#ifdef LJ
-#ifdef IBM3812
-#undef IBM3812
-#endif
-#endif
-
-#ifdef LJ_RESIDENT_FONTS
-# ifndef DEFAULT_TFM_PATH
-#  ifdef __riscos
-#   define FONTAREA    "TeXFonts:"
-#  else
-#   define DEFAULT_TFM_PATH   "/usr/local/lib/tex/fonts"
-#  endif
-# endif
-#endif
-
-
 #define  _TRUE      (bool) 1
 #define  _FALSE     (bool) 0
 #define  UNKNOWN     -1
@@ -228,29 +181,6 @@ char path[], char n[], long4 fontmag, char name[],
 # define LASTFNTCHAR 127
 #else
 # define LASTFNTCHAR  255
-#endif
-
-
-
-/* this information is needed in findfile.c and dvi2xx.c, NO CUSTOMIZATION */
-#ifdef LJ
-# ifndef MFMODE300
-#  define MFMODE300 "cx"     /* mode definition for metafont 300dpi */
-# endif
-# ifdef LJ4
-#  ifndef MFMODE600
-#   define MFMODE600 "ljfour"    /* mode definition for metafont 600dpi */
-#  endif
-# else
-#  define MFMODE MFMODE300       /* default mode */
-# endif
-#endif
-
-#ifdef IBM3812
-#define RESOLUTION    240
-#ifndef MFMODE
-#define MFMODE "IBMThreeEightOneTwo"    /* mode definition for metafont */
-#endif
 #endif
 
 #if defined (unix) && !defined (__DJGPP__)
@@ -334,15 +264,6 @@ char path[], char n[], long4 fontmag, char name[],
 # else
 # define ERR_STREAM stderr
 #endif
-
-/*
-#ifndef TRUE
-#define TRUE 1
-#endif
-#ifndef FALSE
-#define FALSE 0
-#endif
-*/
 
 
 /* Information returned by tfm_read_info. */
