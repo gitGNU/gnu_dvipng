@@ -91,49 +91,39 @@ dvipng --help
 @section Availability
 
 The dvipng package is available at SourceForge, at
-@url{http://sourceforge.net/projects/preview-latex}. This is the project
-page of @previewlatex{}. Anonymous CVS is available as well.
+@url{http://sourceforge.net/projects/dvipng}. This is the project
+page of dvipng. Anonymous CVS is available from
+@url{http://sourceforge.net/projects/preview-latex}, but this will
+change in the future.
 
 @section Contacts
 
 Bug reports should be sent to
-@email{preview-latex-bugs@@lists.sourceforge.net}. This is still a
-sub-project of @previewlatex{}.
+@email{dvipng-devel@@lists.sourceforge.net}. 
 
 Questions, suggestions for new features, pleas for help, and/or praise
-should go to @email{preview-latex-devel@@lists.sourceforge.net} (the
-@previewlatex devel team). For more information on this mailing list,
-send a message with just the word `help' as subject or body to
-@email{preview-latex-devel-request@@lists.sourceforge.net} or look at
-@url{http://lists.sourceforge.net/lists/listinfo/preview-latex-devel}.
+should go to @email{dvipng-devel@@lists.sourceforge.net} (the dvipng
+devel team). For more information on this mailing list, send a message
+with just the word `help' as subject or body to
+@email{dvipng-devel-request@@lists.sourceforge.net} or look at
+@url{http://lists.sourceforge.net/lists/listinfo/dvipng-devel}.
 
 Offers to support further development will be appreciated. For developer
-access, ask on @email{preview-latex-devel@@lists.sourceforge.net}.
+access, ask on @email{dvipng-devel@@lists.sourceforge.net}.
 
 
 @section Todo
 
 @itemize @bullet
 @item 
-Some specials affect the overall behaviour of dvipng, these should be
-read also in SkipPage.  Not a fatal bug, but annoying.
-
-@item 
 Test the FreeType interface so that TrueType fonts work properly.
 
 @item
-Color stack that remains between pages. Or rather, works when processing
-pages in reverse order.
-
-@item
-Remove kpathsea dependence, use dvips' environment variables.
+Remove kpathsea dependence, use dvips' environment variables (this is
+maybe less of an issue now with working MiKTeX support).
 
 @item 
 Further speed improvements.
-
-@item 
-Non-integer shrinkfactors for bitmapped fonts, although with the new
-PostScript font support, this may not be needed.
 
 @item 
 Other output specials and source specials.

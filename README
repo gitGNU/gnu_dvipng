@@ -1,5 +1,5 @@
-dvipng
-******
+1 dvipng
+********
 
 This program makes PNG graphics from DVI files as obtained from TeX and
 its relatives.
@@ -9,18 +9,20 @@ fast as is possible. The target audience is people who need to generate
 and regenerate many images again and again. The primary target is the
 preview-latex (X)Emacs package, a package to preview formulas from
 within (X)Emacs. Yes, you get to see your formulas in the (X)Emacs
-buffer, see <http://preview-latex.sf.net>.
+buffer, see `http://preview-latex.sf.net'.
 
    Another example is WeBWorK, an internet-based method for delivering
 homework problems to students over the internet, giving students
 instant feedback as to whether or not their answers are correct, see
-<http://webwork.math.rochester.edu>.
+`http://webwork.math.rochester.edu'.
 
    Other applications may also benefit, like web applications as
 latex2html and WYSIWYG editors like LyX.
 
-Benefits of dvipng
-==================
+1.1 Benefits of dvipng
+======================
+
+   The benefits include
 
    * Speed. It is a very fast bitmap-rendering code for DVI files. On a
      fairly low-end laptop, it takes less than a second to generate 150
@@ -43,13 +45,13 @@ Benefits of dvipng
    * and more...
 
 
-Installation
-============
+1.2 Installation
+================
 
 Read `INSTALL', included in the distribution.
 
-Usage
-=====
+1.3 Usage
+=========
 
 To use dvipng at its simplest, simply type
 
@@ -65,46 +67,39 @@ summary of available options, just type
 
      dvipng --help
 
-Availability
-============
+1.4 Availability
+================
 
 The dvipng package is available at SourceForge, at
-<http://sourceforge.net/projects/preview-latex>. This is the project
-page of preview-latex. Anonymous CVS is available as well.
+`http://sourceforge.net/projects/dvipng'. This is the project page of
+dvipng. Anonymous CVS is available from
+`http://sourceforge.net/projects/preview-latex', but this will change
+in the future.
 
-Contacts
-========
+1.5 Contacts
+============
 
-Bug reports should be sent to
-<preview-latex-bugs@lists.sourceforge.net>. This is still a sub-project
-of preview-latex.
+Bug reports should be sent to <dvipng-devel@lists.sourceforge.net>.
 
    Questions, suggestions for new features, pleas for help, and/or
-praise should go to <preview-latex-devel@lists.sourceforge.net> (the
-preview-latex send a message with just the word `help' as subject or
-body to <preview-latex-devel-request@lists.sourceforge.net> or look at
-<http://lists.sourceforge.net/lists/listinfo/preview-latex-devel>.
+praise should go to <dvipng-devel@lists.sourceforge.net> (the dvipng
+devel team). For more information on this mailing list, send a message
+with just the word `help' as subject or body to
+<dvipng-devel-request@lists.sourceforge.net> or look at
+`http://lists.sourceforge.net/lists/listinfo/dvipng-devel'.
 
    Offers to support further development will be appreciated. For
-developer access, ask on <preview-latex-devel@lists.sourceforge.net>.
+developer access, ask on <dvipng-devel@lists.sourceforge.net>.
 
-Todo
-====
-
-   * Some specials affect the overall behaviour of dvipng, these should
-     be read also in SkipPage.  Not a fatal bug, but annoying.
+1.6 Todo
+========
 
    * Test the FreeType interface so that TrueType fonts work properly.
 
-   * Color stack that remains between pages. Or rather, works when
-     processing pages in reverse order.
-
-   * Remove kpathsea dependence, use dvips' environment variables.
+   * Remove kpathsea dependence, use dvips' environment variables (this
+     is maybe less of an issue now with working MiKTeX support).
 
    * Further speed improvements.
-
-   * Non-integer shrinkfactors for bitmapped fonts, although with the
-     new PostScript font support, this may not be needed.
 
    * Other output specials and source specials.
 
