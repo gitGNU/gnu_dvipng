@@ -45,7 +45,7 @@ void FormFeed P1C(int, pagenum)
 /**********************************************************************/
 /*****************************  SetChar  ******************************/
 /**********************************************************************/
-long4 SetChar P2C(long4, c, int, PassNo)
+int32_t SetChar P2C(int32_t, c, int, PassNo)
 {
   register struct char_entry *ptr;  /* temporary char_entry pointer */
 
@@ -60,7 +60,7 @@ long4 SetChar P2C(long4, c, int, PassNo)
   }
 }
 
-long4 SetPK P2C(long4, c, int, PassNo)
+int32_t SetPK P2C(int32_t, c, int, PassNo)
 {
   register struct char_entry *ptr;  /* temporary char_entry pointer */
   int red,green,blue;
@@ -104,18 +104,17 @@ long4 SetPK P2C(long4, c, int, PassNo)
 		    +y_offset,
 		    i,Color);
       }
-#ifdef DEBUG
-      if (Debug)
-	printf("<%c> at (%ld,%ld)-(%d,%d) offset (%d,%d)\n",
-	       (char)c,
-	       PIXROUND(h, conv*shrinkfactor),
-	       PIXROUND(v, conv*shrinkfactor),
-	       PIXROUND(ptr->xOffset,shrinkfactor),
-	       PIXROUND(ptr->yOffset,shrinkfactor),
-	       x_offset,y_offset);
-#endif
     }
   }
+#ifdef DEBUG
+  if (Debug)
+    printf("(at (%d,%d)-(%d,%d) offset (%d,%d)) ",
+	   PIXROUND(h, conv*shrinkfactor),
+	   PIXROUND(v, conv*shrinkfactor),
+	   PIXROUND(ptr->xOffset,shrinkfactor),
+	   PIXROUND(ptr->yOffset,shrinkfactor),
+	   x_offset,y_offset);
+#endif
   return(ptr->isloaded?ptr->tfmw:0);
 }
 
@@ -125,14 +124,14 @@ long4 SetPK P2C(long4, c, int, PassNo)
 /*****************************  SetRule  ******************************/
 /**********************************************************************/
 /*   this routine will draw a rule */
-long4 SetRule P3C(long4, a, long4, b, int, PassNo)
+int32_t SetRule P3C(int32_t, a, int32_t, b, int, PassNo)
 {
-  long4    xx=0, yy=0;
+  int32_t    xx=0, yy=0;
   int Color;
 
   if ( a > 0 && b > 0 ) {
-    xx = (long4)PIXROUND(b, conv*shrinkfactor);     /* width */
-    yy = (long4)PIXROUND(a, conv*shrinkfactor);     /* height */
+    xx = (int32_t)PIXROUND(b, conv*shrinkfactor);     /* width */
+    yy = (int32_t)PIXROUND(a, conv*shrinkfactor);     /* height */
   }
   switch(PassNo) {
   case PASS_BBOX:
@@ -156,8 +155,8 @@ long4 SetRule P3C(long4, a, long4, b, int, PassNo)
 			     Color);
 #ifdef DEBUG
       if (Debug)
-	printf("Rule (%ld,%ld) at (%ld,%ld) offset (%d,%d)\n",
-	       (long)xx, (long)yy,
+	printf("Rule (%d,%d) at (%d,%d) offset (%d,%d)\n",
+	       xx, yy,
 	       PIXROUND(h, conv*shrinkfactor),
 	       PIXROUND(v, conv*shrinkfactor),
 	       x_offset,y_offset);
