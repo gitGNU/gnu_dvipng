@@ -54,13 +54,19 @@ int32_t SetPK(int32_t c, int PassNo)
       }
     }
   }
-  DEBUG_PRINTF(DEBUG_DVI,"\n  PK CHAR:\t%d",(int)c);
+#ifdef DEBUG
+  if (isprint(c))
+    DEBUG_PRINTF2(DEBUG_DVI,"\n  PK CHAR:\t'%c' %d",c,(int)c);
+  else
+    DEBUG_PRINTF(DEBUG_DVI,"\n  PK CHAR:\t%d",(int)c);
   DEBUG_PRINTF2(DEBUG_DVI," at (%d,%d)",
 		PIXROUND(h,dvi->conv*shrinkfactor),
 		PIXROUND(v, dvi->conv*shrinkfactor));
-  DEBUG_PRINTF2(DEBUG_DVI,"-(%d,%d) ",PIXROUND(ptr->xOffset,shrinkfactor),
+  DEBUG_PRINTF2(DEBUG_DVI,"-(%d,%d)",PIXROUND(ptr->xOffset,shrinkfactor),
 		PIXROUND(ptr->yOffset,shrinkfactor));
-  DEBUG_PRINTF2(DEBUG_DVI,"offset (%d,%d)",x_offset,y_offset);
+  DEBUG_PRINTF2(DEBUG_DVI," offset (%d,%d)",x_offset,y_offset);
+  DEBUG_PRINTF(DEBUG_DVI," tfmw %d",ptr->tfmw);
+#endif
   return(ptr->tfmw);
 }
 
@@ -103,7 +109,6 @@ uint32_t pk_packed_num(unsigned char** pos)
     } else {
       repeatcount = 1;
     }
-    /*     fprintf(ERR_STREAM,"repeatcount = [%d]\n",repeatcount);    */
     return (pk_packed_num(pos));    /* tail end recursion !! */
   }
 }
@@ -374,11 +379,14 @@ void InitPK(struct font_entry * tfontp)
   uint32_t    c;
 
   DEBUG_PRINTF((DEBUG_DVI|DEBUG_PK),"\n  OPEN FONT:\t'%s'", tfontp->name);
+  Message(BE_VERBOSE,"<%s>", tfontp->name);
   if ((tfontp->filedes = open(tfontp->name,O_RDONLY)) == -1) 
     Warning("font file %s could not be opened", tfontp->name);
   fstat(tfontp->filedes,&stat);
   tfontp->mmap = position = 
     mmap(NULL,stat.st_size, PROT_READ, MAP_SHARED,tfontp->filedes,0);
+  if (tfontp->mmap == (unsigned char *)-1) 
+    Fatal("cannot mmap PK file <%s> !\n",currentfont->name);
   if (*position++ != PK_PRE) 
     Fatal("unknown font format in file <%s> !\n",currentfont->name);
   if (*position++ != PK_ID) 
