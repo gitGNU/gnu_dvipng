@@ -8,6 +8,8 @@ AC_SET_MAKE
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_INSTALL
+AC_PATH_PROG(GS, gs, :)
+AC_DEFINE(GS_PATH, "$GS", [Define as the path to GhostScript.])
 
 # Checks for libraries.
 AC_CHECK_LIB([gd], [gdImageCreate],,
@@ -43,6 +45,11 @@ AC_FUNC_MMAP
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([ftime gettimeofday strrchr])
+
+# Documentation-related checks
+AC_PATH_PROG(MAKEINFO, makeinfo, :)
+MAKEINFO_CHECK_MACROS(acronym env option)
+AC_PATH_PROG(INSTALL_INFO, install-info, :, $PATH /usr/sbin /sbin)
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
