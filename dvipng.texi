@@ -155,10 +155,10 @@ dvipng foo
 @end example
 
 @noindent
-where @file{foo.dvi} is the output of @TeX{} that you want to print.  If
-there are four pages in @file{foo.dvi}, those pages will be output as
-@file{foo1.png}, @file{foo2.png}, @file{foo3.png}, and @file{foo4.png},
-respectively.
+where @file{foo.dvi} is the output of @TeX{} that you want to convert to
+PNG format. If there are four pages in @file{foo.dvi}, those pages will
+be output as @file{foo1.png}, @file{foo2.png}, @file{foo3.png}, and
+@file{foo4.png}, respectively.
 
 If you use fonts that have not been used on your system before, they may
 be automatically generated; this process can take a few minutes, so
@@ -402,11 +402,21 @@ a value to compare with the @TeX{} @samp{\count0} values stored in the
 DVI file.  Thus, using @samp{-p =3} will start with the third page of
 the document, no matter what the pages are actually numbered.
 
-@item -pp @var{first}-@var{last}
+@item -pp @var{firstpage}-@var{lastpage}
 @cindex page range
-Print pages @var{first} through @var{last}; but not quite equivalent to
-@samp{-p @var{first} -l @var{last}}. Also multiple @samp{-pp} options
-accumulate, unlike @samp{-p} and @samp{-l}. 
+Print pages @var{firstpage} through @var{lastpage}; but not quite
+equivalent to @samp{-p @var{firstpage} -l @var{lastpage}}. For example,
+when rendering a book, there may be several instances of a page in the
+DVI file (one in @code{\frontmatter}, one in @code{\mainmatter}, and one
+in @code{\backmatter}). In case of several pages matching, @samp{-pp
+@var{firstpage}-@var{lastpage}} will render @emph{all} pages that
+matches the specified range, while @samp{-p @var{firstpage} -l
+@var{lastpage}} will render the pages from the @emph{first} occurrence
+of @var{firstpage} to the @emph{first} occurrence of @var{lastpage}.
+This is the (undocumented) behaviour of dvips. In dvipng you can give
+both kinds of options, in which case you get all pages that matches the
+range in @samp{-pp} between the pages from @samp{-p} to @samp{-l}. Also
+multiple @samp{-pp} options accumulate, unlike @samp{-p} and @samp{-l}.
 @c The @samp{-} separator can also be @samp{:}.
 
 @item -q*
@@ -465,7 +475,7 @@ of dimensions such as @samp{.1in,-.3cm}.
 @c (@pxref{papersize special}).  
 It overrides any paper size special in the DVI file.
 
-@item -v 
+@item -v* 
 Enable verbose operation. This will currently indicate what fonts is
 used, in addition to the usual output.
 
