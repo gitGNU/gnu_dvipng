@@ -1,5 +1,16 @@
 2004-08-18  Jan-Åke Larsson  <jalar@mai.liu.se>
 
+	* Release 1.2
+	
+	* RELEASE: Change for 1.2 
+
+	* dvipng.1: change help text 
+
+	* dvipng.texi: update mailing list text 
+
+	* README: 
+	* readme.texi: update info and todo list
+
 	* draw.c, misc.c, dvipng.c, dvipng.h:
 	Add an intermediate exit status
 
