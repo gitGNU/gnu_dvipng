@@ -5,6 +5,8 @@
 #define TIMING
 /* #define DRAWGLYPH */
 
+#include <stdint.h>
+
 #ifdef KPATHSEA
 #include <kpathsea/config.h>
 #include <kpathsea/c-auto.h>
@@ -45,44 +47,8 @@
 #endif
 
 #include "config.h"
-#include "commands.h"
 
 #define  FIRSTFNTCHAR  0
-
-/* Is any of the below really necessary? */
-#ifdef __riscos
-# ifdef RISC_USE_OSL
-#  define MAXOPEN_OS    16
-# else
-#  define MAXOPEN_OS    8      /* don't know if this IS the maximum */
-# endif
-#else
-# ifdef   OPEN_MAX                    /* ... in a friendly unix system  */
-#  ifndef vms
-#   define MAXOPEN_OS (OPEN_MAX - 8)
-#  else
-#   define  MAXOPEN_OS 12     /* OPEN_MAX seems to be 8 on VMS systems */
-#  endif
-# else
-#  ifdef __DJGPP__
-#   if __DJGPP_MINOR__ <= 1
-    /* DJGPP needs few handles free in the first 20, or else child programs
-       (called by MakeTeX... scripts) won't run, since the stub loader
-       cannot open the .exe program.  This is because DOS only copies the
-       first 20 handles to the child program.  */
-#    define MAXOPEN_OS   5
-#   else
-    /* DJGPP v2.02 and later works around this.  Assume they have at least
-       FILES=30 in their CONFIG.SYS (everybody should).  */
-#    define MAXOPEN_OS  20
-#   endif
-#  else
-#   define  MAXOPEN_OS  12     /* limit on number of open font files */
-#  endif
-# endif
-#endif
-
-#define  MAXOPEN       30 /*MAXOPEN_OS*/
 
 #define  NFNTCHARS       LASTFNTCHAR+1
 #define  STACK_SIZE      100     /* DVI-stack size                     */
@@ -95,12 +61,8 @@
 #define  NEW(A) ((A *)  malloc(sizeof(A)))
 #define  EQ(a,b)        (strcmp(a,b)==0)
 #define  MM_TO_PXL(x)   (int)(((x)*resolution*10)/254)
-#define  PT_TO_PXL(x)   (int)((long4)((x)*resolution*100l)/7224)
-#define  PT_TO_DVI(x)   (long4)((x)*65536l)
-
-#define PK_POST 245
-#define PK_PRE 247
-#define PK_ID 89
+#define  PT_TO_PXL(x)   (int)((int32_t)((x)*resolution*100l)/7224)
+#define  PT_TO_DVI(x)   (int32_t)((x)*65536l)
 
 /*#define PIXROUND(x,c) ((((double)x+(double)(c>>1))/(double)c)+0.5)*/
 /*#define PIXROUND(x,c) (((x)+c)/(c))*/
@@ -108,52 +70,12 @@
 
 /*************************************************************************/
 
-#define  MoveOver(b)  h += (long4) b
-#define  MoveDown(a)  v += (long4) a
+#define  MoveOver(b)  h += (int32_t) b
+#define  MoveDown(a)  v += (int32_t) a
 #define  qfprintf if (!G_quiet) fprintf
 #define  qprintf  if (!G_quiet) printf
 
 #define GetBytes(fp,buf,n) read_multi(buf,1,n,fp) /* used to be a function */
-
-/**********************************************************************/
-/***********************  external definitions  ***********************/
-/**********************************************************************/
-
-#ifndef WIN32
-#ifndef _AMIGA
-# ifndef unix
-#  if NeedFunctionPrototypes
-long    access(char *, int);      /* all the other ones known under RISC OS */
-#  else
-long    access();
-#  endif
-#  ifndef __riscos
-void    exit();
-int     fclose();
-int     fprintf();
-int     fseek();
-/*char   *index();*/
-int     printf();
-int     sscanf();
-int     strcmp();
-char   *strcpy();
-#   ifdef MSC5
-unsigned int strlen();
-#   endif
-void    free();
-void    setbuf();
-#  endif
-
-#  ifdef MSC5
-int     intdos();
-#  endif
-# endif
-#endif
-#else /* WIN32 */
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#endif
 
 /**********************************************************************/
 /********************** Special Data Structures ***********************/
@@ -184,31 +106,31 @@ struct char_entry {             /* character entry */
   gdFont  glyph;     /* contains width and height in pixels, number of
 		      * greylevels and the bitmaps for the greylevels
 		      */
-  short   xOffset, yOffset;        /* x offset and y offset in pixels   */
-  bool    isloaded;
-  long4   fileOffset;
-  long4   tfmw;                    /* TFM width                         */
+  short       xOffset, yOffset;    /* x offset and y offset in pixels   */
+  bool        isloaded;
+  int         fileOffset;
+  int32_t     tfmw;                /* TFM width                         */
   unsigned char   flag_byte;       /* PK flagbyte                       */
 };
 
 struct vf_char {            /* VF character                            */
-  long4 macro_length;
+  int            macro_length;
   unsigned char* macro;     /* Points to beginning of VF macro         */
-  bool free_me;             /* True if this macro is first in a 'batch'*/
-  long4   tfmw;             /* TFM width                               */
+  bool           free_me;   /* True if this macro is first in a 'batch'*/
+  int32_t        tfmw;      /* TFM width                               */
 };
 
 struct font_entry {    /* font entry */
   struct font_entry *next;
-  long4     c, s, d;
-  int       a, l;
-  char      n[STRSIZE];      /* FNT_DEF command parameters               */
-  long4     font_mag;        /* computed from FNT_DEF s and d parameters */
-  char      name[STRSIZE];   /* full name of PK/VF file                  */
-  FILEPTR   filep;    /* file identifier (NO_FILE if none)        */
-  long4     magnification;   /* magnification read from font file        */
-  long4     designsize;      /* design size read from font file          */
-  bool      is_vf;           /* _TRUE for VF font                        */
+  uint32_t     c, s, d;
+  uint8_t      a, l;
+  char         n[STRSIZE];      /* FNT_DEF command parameters               */
+  uint32_t     font_mag;        /* computed from FNT_DEF s and d parameters */
+  char         name[STRSIZE];   /* full name of PK/VF file                  */
+  FILE *       filep;           /* file identifier (NO_FILE if none)        */
+  uint32_t     magnification;   /* magnification read from font file        */
+  uint32_t     designsize;      /* design size read from font file          */
+  bool      is_vf;              /* _TRUE for VF font                        */
   void      *ch[NFNTCHARS];  /* character information 
 			      * PK: points to struct char_entry 
 			      * VF: points to struct vf_char             */
@@ -217,16 +139,10 @@ struct font_entry {    /* font entry */
 
 struct font_num {    /* Font number. Different for VF/DVI, and several
 			font_num can point to one font_entry */
-  struct font_num *next;
-  long4  k;
+  struct font_num   *next;
+  int32_t            k;
   struct font_entry *fontp;
 };
-
-struct pixel_list {
-    FILEPTR pixel_file_id;    /* file identifier  */
-    int     use_count;        /* count of "opens" */
-};
-
 
 /**********************************************************************/
 /***********************  Page Data Structures  ***********************/
@@ -234,16 +150,15 @@ struct pixel_list {
 
 struct page_list {
   struct page_list* next;
-  long4 offset;            /* file offset to BOP */
-  long4 count[11];        /* 10 dvi counters + absolute pagenum in file */
+  int     offset;           /* file offset to BOP */
+  int32_t count[11];        /* 10 dvi counters + absolute pagenum in file */
 };
 
 /**********************************************************************/
 /*************************  Global Procedures  ************************/
 /**********************************************************************/
 /* Note: Global procedures are declared here in alphabetical order, with
-   those which do not return values typed "void".  Their bodies occur in
-   alphabetical order following the main() procedure.  The names are
+   those which do not return values typed "void".  The names are
    kept unique in the first 6 characters for portability. */
 
  /* To Prototype or not to prototype ? */
@@ -298,7 +213,7 @@ struct page_list {
 
 void    CheckChecksum AA((unsigned, unsigned, const char*));
 void    CloseFiles AA((void));
-long4   CommandLength AA((unsigned char*));
+uint32_t   CommandLength AA((unsigned char*)); /* generally 2^32+5 bytes max */
 void    DecodeArgs AA((int, char *[]));
 /*#ifdef __riscos
 void    diagram AA((char *, diagtrafo *));
@@ -306,12 +221,15 @@ void   *xosfile_set_type AA((char *, int));
 void    MakeMetafontFile AA((char *, char *, int));
 #endif*/
 void    DoBop AA((void));
-long4   DoConv AA((long4, long4, int));
+void    DrawCommand AA((unsigned char*, int));
+struct font_entry* DVIOpen AA((char*));
+unsigned char* DVIGetCommand AA((struct font_entry*));
+uint32_t   DoConv AA((uint32_t, uint32_t, int));
 void    DoPages AA((void));
 void    DoSpecial AA((char *, int));
 void    DelPageList AA((void));
 void    Fatal VA();
-struct page_list *FindPage AA((long4));
+struct page_list *FindPage AA((int32_t));
 void    FormFeed AA((int));
 void    FontDef AA((unsigned char*, struct font_entry*));
 void    FontFind AA((struct font_entry *));
@@ -319,23 +237,22 @@ void    GetFontDef AA((void));
 struct page_list *InitPage AA((void));
 void    InitPK  AA((struct font_entry *));
 void    InitVF  AA((struct font_entry *));
-void    LoadAChar AA((long4, register struct char_entry *));
-long4   NoSignExtend AA((FILEPTR, int));
+void    LoadAChar AA((int32_t, register struct char_entry *));
+uint32_t   NoSignExtend AA((FILEPTR, int));
 void    OpenFont AA((struct font_entry *));
 bool    QueueParse AA((char*,bool));
 bool    QueueEmpty AA((void));
 void    QueuePage AA((int,int,bool));
-void    ReadCommand AA((unsigned char*));
-long4   SetChar AA((long4, int));
-long4   SetPK AA((long4, int));
-long4   SetVF AA((long4, int));
-void    SetFntNum AA((long4));
-long4   SetRule AA((long4, long4, int));
-long4   SignExtend AA((FILEPTR, int));
+int32_t   SetChar AA((int32_t, int));
+int32_t   SetPK AA((int32_t, int));
+int32_t   SetVF AA((int32_t, int));
+void    SetFntNum AA((int32_t));
+int32_t   SetRule AA((int32_t, int32_t, int));
+int32_t   SignExtend AA((FILEPTR, int));
 void    SkipPage AA((void));
-long4   SNumRead AA((unsigned char*, register int));
-int     TodoPage AA((void));
-long4   UNumRead AA((unsigned char*, register int));
+int32_t   SNumRead AA((unsigned char*, register int));
+int32_t   TodoPage AA((void));
+uint32_t   UNumRead AA((unsigned char*, register int));
 void    Warning VA();
 /*unsigned char   skip_specials AA((void));*/
 
@@ -357,9 +274,13 @@ void resetcolorstack AA((char *));
 #define EXTERN extern
 #define INIT(x)
 #endif
-#define MAXPAGE 1000000000 /* assume no pages out of this range */
-EXTERN long4    FirstPage  INIT(-MAXPAGE);  /* first page to print (count0) */
-EXTERN long4    LastPage   INIT(MAXPAGE);   /* last page to print           */
+
+#include "commands.h"
+
+#define MAXPAGE INT32_MAX               /* assume no pages out of this range */
+#define MINPAGE INT32_MIN
+EXTERN int32_t    FirstPage  INIT(MINPAGE);  /* first page to print (count0) */
+EXTERN int32_t    LastPage   INIT(MAXPAGE);  /* last page to print           */
 EXTERN bool    FirstPageSpecified INIT(_FALSE);
 EXTERN bool    LastPageSpecified INIT(_FALSE);
 #ifndef KPATHSEA
@@ -386,13 +307,17 @@ EXTERN short   G_errenc INIT(0);        /* has an error been encountered?  */
 EXTERN bool    G_quiet INIT(_FALSE);    /* for quiet operation             */
 EXTERN bool    G_verbose INIT(_FALSE);  /* inform user about pxl-files used*/
 EXTERN bool    G_nowarn INIT(_FALSE);   /* don't print out warnings        */
-EXTERN long4    conv;                   /* converts DVI units to pixels    */
-EXTERN long4    den;                    /* denominator specified in preamble*/
-EXTERN long4    num;                    /* numerator specified in preamble */
-EXTERN long4    h;                      /* current horizontal position     */
-EXTERN long4    v;                      /* current vertical position       */
-EXTERN long4    mag;                    /* magstep specified in preamble   */
-EXTERN long     usermag INIT(0);        /* user specified magstep          */
+EXTERN int32_t     conv;                /* converts DVI units to pixels    */
+EXTERN uint32_t    den;                 /* denominator specified in preamble*/
+EXTERN uint32_t    num;                 /* numerator specified in preamble */
+EXTERN int32_t     h;                   /* current horizontal position     */
+EXTERN int32_t     v;                   /* current vertical position       */
+EXTERN int32_t     w INIT(0);           /* current horizontal spacing      */
+EXTERN int32_t     x INIT(0);           /* current horizontal spacing      */
+EXTERN int32_t     y INIT(0);           /* current vertical spacing        */
+EXTERN int32_t     z INIT(0);           /* current vertical spacing        */
+EXTERN uint32_t    mag;                 /* magstep specified in preamble   */
+EXTERN uint32_t    usermag INIT(0);     /* user specified magstep          */
 EXTERN struct font_entry *hfontptr INIT(NULL); /* font list pointer        */
 
 #ifdef DEBUG
@@ -433,6 +358,7 @@ EXTERN char *MFMODE     INIT("cx");
 # define  max(x,y)       if ((y)>(x)) x = y
 # define  min(x,y)       if ((y)<(x)) x = y
 
+/* These are in pixels*/
 /* Used in PASS_BBOX: Include topleft corner of page */
 EXTERN  int x_min INIT(0); 
 EXTERN  int y_min INIT(0);
@@ -459,7 +385,7 @@ EXTERN  int borderwidth INIT(0);
 
 
 EXTERN gdImagePtr page_imagep INIT(NULL);
-EXTERN int shrinkfactor INIT(3);
+EXTERN int32_t shrinkfactor INIT(3);
 EXTERN char TeXcomment[STRSIZE];  
 
 EXTERN int Red    INIT(0);
@@ -477,12 +403,12 @@ EXTERN int PassDefault INIT(PASS_BBOX);
 EXTERN bool ParseStdin INIT(_FALSE);
 
 EXTERN struct page_list* hpagelistp INIT(NULL);
-EXTERN long4 abspagenumber INIT(0);
+EXTERN uint32_t abspagenumber INIT(0);
 
 /* Virtual fonts */
 EXTERN struct font_entry* vfstack[100];
 EXTERN int vfstackptr INIT(1);
 
-EXTERN struct font_entry dvi;
+EXTERN struct font_entry* dvi INIT(NULL);
 
 #endif /* DVIPNG_H */
