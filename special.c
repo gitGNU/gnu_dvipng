@@ -232,8 +232,8 @@ int  n;
     break ;
   default:
     Warning("at (%ld,%ld) unimplemented \\special{%s}.",
-	    PIXROUND(h,hconv*shrinkfactor),
-	    PIXROUND(v,vconv*shrinkfactor),str);
+	    PIXROUND(h,conv*shrinkfactor),
+	    PIXROUND(v,conv*shrinkfactor),str);
   }
 }
 
@@ -324,8 +324,8 @@ if ((k.v.i >= 0) && (k.v.i < 2)) {*/
         if (i>1) {
 	#ifdef LJ*/
 	  /*          SetPosn(p_x[j], p_y[j]); */
-/*          x_pos = (long4)PIXROUND(p_x[j1]-p_x[j], hconv*shrinkfactor);
-          y_pos = (long4)PIXROUND(p_y[j1]-p_y[j], vconv*shrinkfactor);
+/*          x_pos = (long4)PIXROUND(p_x[j1]-p_x[j], conv*shrinkfactor);
+          y_pos = (long4)PIXROUND(p_y[j1]-p_y[j], conv*shrinkfactor);
           if (labs(x_pos)<labs(y_pos)) x_pos = x_pos+3;
           else                         y_pos = y_pos+3;
           if (GrayFill) {*/
@@ -430,16 +430,16 @@ if (psfile) {*/
                   llx, height, adjusted_llx, adjusted_height);
           
           fprintf(stderr, "OLD x=%d, y=%d\n", 
-                  (int)PIXROUND(h, hconv*shrinkfactor) + x_goffset,
-                  (int)PIXROUND(v, vconv*shrinkfactor) + y_goffset);
+                  (int)PIXROUND(h, conv*shrinkfactor) + x_goffset,
+                  (int)PIXROUND(v, conv*shrinkfactor) + y_goffset);
 #endif  
           v -= 65536l*adjusted_height;*/ /**300/scale_factor;*/
 /*        h -= 65536l*adjusted_llx; *//* *300/scale_factor;*/
 	  /* SetPosn(h, v);*/
 /*#ifdef DEBUGGS   
           fprintf(stderr, "NEW x=%d, y=%d\n", 
-                  (int)PIXROUND(h, hconv*shrinkfactor) + x_goffset,
-                  (int)PIXROUND(v, vconv*shrinkfactor) + y_goffset);
+                  (int)PIXROUND(h, conv*shrinkfactor) + x_goffset,
+                  (int)PIXROUND(v, conv*shrinkfactor) + y_goffset);
 #endif
 */
           /*CopyHPFile( pcl_file );*/
