@@ -52,48 +52,51 @@ long4 SetChar P2C(long4, c, int, PassNo)
   int Color,i;
 
   ptr = &(fontptr->ch[c]);
-  if (PassNo != PASS_SKIP && !(ptr->isloaded)) {
-    LoadAChar(c, ptr);
-  }
-  if (PassNo == PASS_BBOX) {
-    min(x_min,PIXROUND(h, hconv*shrinkfactor)
-	-PIXROUND(ptr->xOffset,shrinkfactor));
-    min(y_min,PIXROUND(v, hconv*shrinkfactor)
-	-PIXROUND(ptr->yOffset,shrinkfactor));
-    max(x_max,PIXROUND(h, hconv*shrinkfactor)
-	-PIXROUND(ptr->xOffset,shrinkfactor)+ptr->glyph.w);
-    max(y_max,PIXROUND(v, hconv*shrinkfactor)
-	-PIXROUND(ptr->yOffset,shrinkfactor)+ptr->glyph.h);
-  } else if ( PassNo == PASS_DRAW && fontptr->font_file_id != NO_FILE) {
-    /*
-     * Draw character. Remember now, we have stored the different
-     * greyscales in glyph.data with darkest last.  Draw the character
-     * greyscale by greyscale, lightest first.
-     */
-    for( i=1; i<=ptr->glyph.nchars ; i++) {
-      red = bRed-(bRed-Red)*i/shrinkfactor/shrinkfactor;
-      green = bGreen-(bGreen-Green)*i/shrinkfactor/shrinkfactor;
-      blue = bBlue-(bBlue-Blue)*i/shrinkfactor/shrinkfactor;
-      Color = gdImageColorResolve(page_imagep,red,green,blue);
-      gdImageChar(page_imagep, &(ptr->glyph),
-		  PIXROUND(h, hconv*shrinkfactor)
-		  -PIXROUND(ptr->xOffset,shrinkfactor)
-		  +x_offset,
-		  PIXROUND(v, vconv*shrinkfactor)
-		  -PIXROUND(ptr->yOffset,shrinkfactor)
-		  +y_offset,
-		  i,Color);
-    }
-
+  if (fontptr->font_file_id != NO_FILE) {
+    switch(PassNo) {
+    case PASS_BBOX:
+      if (!(ptr->isloaded)) {
+	LoadAChar(c, ptr);
+      }
+      min(x_min,PIXROUND(h, hconv*shrinkfactor)
+	  -PIXROUND(ptr->xOffset,shrinkfactor));
+      min(y_min,PIXROUND(v, hconv*shrinkfactor)
+	  -PIXROUND(ptr->yOffset,shrinkfactor));
+      max(x_max,PIXROUND(h, hconv*shrinkfactor)
+	  -PIXROUND(ptr->xOffset,shrinkfactor)+ptr->glyph.w);
+      max(y_max,PIXROUND(v, hconv*shrinkfactor)
+	  -PIXROUND(ptr->yOffset,shrinkfactor)+ptr->glyph.h);
+      break;
+    case PASS_DRAW:
+      /*
+       * Draw character. Remember now, we have stored the different
+       * greyscales in glyph.data with darkest last.  Draw the character
+       * greyscale by greyscale, lightest first.
+       */
+      for( i=1; i<=ptr->glyph.nchars ; i++) {
+	red = bRed-(bRed-Red)*i/shrinkfactor/shrinkfactor;
+	green = bGreen-(bGreen-Green)*i/shrinkfactor/shrinkfactor;
+	blue = bBlue-(bBlue-Blue)*i/shrinkfactor/shrinkfactor;
+	Color = gdImageColorResolve(page_imagep,red,green,blue);
+	gdImageChar(page_imagep, &(ptr->glyph),
+		    PIXROUND(h, hconv*shrinkfactor)
+		    -PIXROUND(ptr->xOffset,shrinkfactor)
+		    +x_offset,
+		    PIXROUND(v, vconv*shrinkfactor)
+		    -PIXROUND(ptr->yOffset,shrinkfactor)
+		    +y_offset,
+		    i,Color);
+      }
 #ifdef DEBUG
-    if (Debug)
-      printf("<%c> at (%d,%d)-(%d,%d)\n",(char)c,
-	     PIXROUND(h, hconv*shrinkfactor),
-	     PIXROUND(v, vconv*shrinkfactor),
-	     ptr->xOffset,ptr->yOffset);
+      if (Debug)
+	printf("<%c> at (%d,%d)-(%d,%d)\n",(char)c,
+	       PIXROUND(h, hconv*shrinkfactor),
+	       PIXROUND(v, vconv*shrinkfactor),
+	       ptr->xOffset,ptr->yOffset);
 #endif
+    }
   }
-  return(ptr->tfmw);
+  return(ptr->isloaded?ptr->tfmw:0);
 }
 
 
@@ -102,7 +105,7 @@ long4 SetChar P2C(long4, c, int, PassNo)
 /*****************************  SetRule  ******************************/
 /**********************************************************************/
 /*   this routine will draw a rule */
-void SetRule P4C(long4, a, long4, b, int, PassNo, int, Set)
+long4 SetRule P3C(long4, a, long4, b, int, PassNo)
 {
   long4    xx=0, yy=0;
   int Color;
@@ -111,13 +114,14 @@ void SetRule P4C(long4, a, long4, b, int, PassNo, int, Set)
     xx = (long4)PIXROUND(b, hconv*shrinkfactor);     /* width */
     yy = (long4)PIXROUND(a, vconv*shrinkfactor);     /* height */
   }
-  if ( PassNo == PASS_BBOX ) {
+  switch(PassNo) {
+  case PASS_BBOX:
     min(x_min,PIXROUND(h, hconv*shrinkfactor)-1);
     min(y_min,PIXROUND(v, hconv*shrinkfactor)-yy+1-1);
     max(x_max,PIXROUND(h, hconv*shrinkfactor)+xx-1-1);
     max(y_max,PIXROUND(v, hconv*shrinkfactor)-1);
-    return;
-  } else if (PassNo==PASS_DRAW) {
+    break;
+  case PASS_DRAW:
 #ifdef DEBUG
     if (Debug)
       fprintf(ERR_STREAM,"Rule xx=%ld, yy=%ld\n", (long)xx, (long)yy);
@@ -127,7 +131,6 @@ void SetRule P4C(long4, a, long4, b, int, PassNo, int, Set)
 	Oh, bugger. Shrink rule properly. Currently produces too dark
 	rules, but...  Why do I need the -1's? Beats me.
       */
-
       Color = gdImageColorResolve(page_imagep, Red,Green,Blue);
       gdImageFilledRectangle(page_imagep,
 			     PIXROUND(h, hconv*shrinkfactor)+x_offset-1,
@@ -137,7 +140,6 @@ void SetRule P4C(long4, a, long4, b, int, PassNo, int, Set)
 			     Color);
     }
   }
-  if (Set)
-    h += b;
+  return(b);
 }
 
