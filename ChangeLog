@@ -1,3 +1,40 @@
+2005-02-04  jalar  <jalar@mai.liu.se>
+
+	* Release 1.5
+	
+	* RELEASE: Prepare for 1.5 
+
+	* INSTALL: 
+	* Makefile.in: 
+	* README: 
+	* color.c: 
+	* commands.h: 
+	* configure.ac: 
+	* draw.c: 
+	* dvi.c: 
+	* dvipng.1: 
+	* dvipng.c: 
+	* dvipng.h: 
+	* dvipng.texi: 
+	* enc.c: 
+	* font.c: 
+	* fontmap.c: 
+	* ft.c: 
+	* install.texi: 
+	* macros.texi: 
+	* miktex.h: 
+	* misc.c: 
+	* papersiz.c: 
+	* pk.c: 
+	* ppagelist.c: 
+	* readme.texi: 
+	* set.c: 
+	* special.c: 
+	* t1.c: 
+	* test_dvipng.tex: 
+	* tfm.c:
+	* vf.c: Update Copyright, set version 1.5
+
 2005-02-03  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* draw.c: 
