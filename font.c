@@ -1,12 +1,13 @@
 #include "dvipng.h"
 
+#if 0
 /*-->OpenFont*/
 /**********************************************************************/
 /**************************** OpenFont  *******************************/
 /**********************************************************************/
 void OpenFont P1C(struct font_entry*, tfontp)
 {
-  if (tfontp->filep != FPNULL)
+  if (tfontp->filep != NULL)
     return;         /* we need not have been called */
 
 #ifdef DEBUG
@@ -14,11 +15,11 @@ void OpenFont P1C(struct font_entry*, tfontp)
     printf("(OPEN %s) ", tfontp->name);
 #endif
 
-  if ((tfontp->filep = fopen(tfontp->name,"rb")) == FPNULL) {
+  if ((tfontp->filep = fopen(tfontp->name,"rb")) == NULL) {
     Warning("font file %s could not be opened", tfontp->name);
   } 
 }
-
+#endif
 
 /*-->ReadFontDef*/
 /**********************************************************************/
@@ -65,12 +66,12 @@ double ActualFactor P1C(uint32_t, unmodsize)
 
 
 void FontDef P2C(unsigned char*, command, 
-		 struct font_entry*, vfparent)
+		 struct dvi_vf_entry*, parent)
 {
   int32_t k;
   unsigned char* current;
   struct font_entry *tfontptr; /* temporary font_entry pointer   */
-  struct font_num *tfontnump;  /* temporary font_num pointer   */
+  struct font_num *tfontnump = NULL;  /* temporary font_num pointer   */
   uint32_t   c, s, d;
   uint8_t    a, l;
   unsigned short i;
@@ -81,17 +82,16 @@ void FontDef P2C(unsigned char*, command,
   c = UNumRead(current, 4); /* checksum */
   s = UNumRead(current+4, 4); /* space size */
   d = UNumRead(current+8, 4); /* design size */
-  /*  if (vfparent->d > 0) { */
-     s = (uint32_t)((uint64_t) s * vfparent->d / 65536);
-	/* 
-	   According to some docs I read it should rather be 
-	   d / (1 << 20) ? Whatever. Can anyone inform me how this is
-	   _really_ calculated?  designsize / (1 << 20) seems to work
-	   also, but I have a feeling the sizing should be guided by
-	   the size in which the virtual font is actually used, not
-	   the designsize.
-	*/
-     /*  }*/
+  if (parent->type==FONT_TYPE_VF) {
+    s = (uint32_t)((uint64_t) s * parent->d / 65536);
+    /* 
+     * According to some docs I read it should be d / (1 << 20) ?
+     * Whatever. Can anyone inform me how this is _really_ calculated?
+     * designsize / (1 << 20) seems to work also, but I have a feeling
+     * the sizing should be guided by the size in which the virtual
+     * font is actually used, not the designsize.
+    */
+  }
   a = UNumRead(current+12, 1); /* length for font name */
   l = UNumRead(current+13, 1); /* device length */
 
@@ -104,7 +104,13 @@ void FontDef P2C(unsigned char*, command,
     Fatal("too long font name for font %ld\n",k);
 
   /* Find entry with this font number in use */
-  tfontnump = vfparent->hfontnump;
+  switch (parent->type) {
+  case FONT_TYPE_VF:
+    tfontnump = parent->vffontnump;
+    break;
+  case DVI_TYPE:
+    tfontnump = parent->fontnump;
+  }
   while (tfontnump != NULL && tfontnump->k != k) {
     tfontnump = tfontnump->next;
   }
@@ -119,9 +125,16 @@ void FontDef P2C(unsigned char*, command,
   if (tfontnump==NULL) {
     if ((tfontnump=malloc(sizeof(struct font_num)))==NULL) 
       Fatal("cannot allocate memory for new font number");
-    tfontnump->next=vfparent->hfontnump;
     tfontnump->k=k;
-    vfparent->hfontnump=tfontnump;
+    switch (parent->type) {
+    case FONT_TYPE_VF:
+      tfontnump->next=parent->vffontnump;
+      parent->vffontnump=tfontnump;
+      break;
+    case DVI_TYPE:
+      tfontnump->next=parent->fontnump;
+      parent->fontnump=tfontnump;
+    }
   }
 
   /* Search font list for possible match */
@@ -145,11 +158,10 @@ void FontDef P2C(unsigned char*, command,
   /* No fitting font found, create new entry. */
   if ((tfontptr = NEW(struct font_entry )) == NULL)
     Fatal("can't malloc space for font_entry");
-
   tfontptr->next = hfontptr;
   hfontptr = tfontptr;
   tfontnump->fontp = tfontptr;
-  tfontptr->filep = FPNULL;
+  tfontptr->filedes = 0;
   tfontptr->c = c; /* checksum */
   tfontptr->s = s; /* space size */
   tfontptr->d = d; /* design size */
@@ -158,17 +170,15 @@ void FontDef P2C(unsigned char*, command,
   strncpy(tfontptr->n,current+14,a+l); /* full font name */
   tfontptr->n[a+l] = '\0';
   
+  tfontptr->name[0]='\0';
+  for (i = FIRSTFNTCHAR; i <= LASTFNTCHAR; i++) {
+    tfontptr->pk_ch[i] = NULL;
+  }
+
   tfontptr->font_mag = 
     (uint32_t)((ActualFactor((uint32_t)(1000.0*tfontptr->s
 				  /(double)tfontptr->d+0.5))
-	     * ActualFactor(mag) * resolution * 5.0) + 0.5);
-  /*  if (vf_size > 0) {
-    Fatal("FONT_MAG %d/%d=%d\n",tfontptr->s,tfontptr->d,tfontptr->font_mag);
-    }*/
-  tfontptr->name[0]='\0';
-  for (i = FIRSTFNTCHAR; i <= LASTFNTCHAR; i++) {
-    tfontptr->ch[i] = NULL;
-  }
+	     * ActualFactor(dvi->mag) * resolution * 5.0) + 0.5);
 }
 
 void FontFind P1C(struct font_entry *,tfontptr)
@@ -176,8 +186,9 @@ void FontFind P1C(struct font_entry *,tfontptr)
 #ifdef KPATHSEA
   kpse_glyph_file_type font_ret;
   char *name;
-  unsigned dpi
-    = kpse_magstep_fix ((unsigned) (tfontptr->font_mag / 5.0 + .5),
+  unsigned dpi;  
+
+  dpi = kpse_magstep_fix ((unsigned) (tfontptr->font_mag / 5.0 + .5),
 			resolution, NULL);
   tfontptr->font_mag = dpi * 5; /* save correct dpi */
 
@@ -211,7 +222,7 @@ void FontFind P1C(struct font_entry *,tfontptr)
     } else {
       Warning("font %s at %u not found, characters will be left blank.\n",
 	      tfontptr->n, dpi);
-      tfontptr->filep = NO_FILE;
+      tfontptr->filedes = 0;
       tfontptr->magnification = 0;
       tfontptr->designsize = 0;
     }
@@ -226,7 +237,7 @@ void FontFind P1C(struct font_entry *,tfontptr)
 		 _FALSE,
 		 0))) {
     Warning(tfontptr->name); /* contains error messsage */
-    tfontptr->filep = NO_FILE;
+    tfontptr->filedes = 0;
 #ifdef __riscos
     MakeMetafontFile(PXLpath, tfontptr->n, tfontptr->font_mag);
 #endif
@@ -243,21 +254,27 @@ void FontFind P1C(struct font_entry *,tfontptr)
 /**********************************************************************/
 /****************************  SetFntNum  *****************************/
 /**********************************************************************/
-void SetFntNum P1C(int32_t, k)
+void SetFntNum P2C(int32_t, k, struct dvi_vf_entry*, parent)
 /*  this routine is used to specify the font to be used in printing future
     characters */
 {
-  struct font_num *tfontnump;  /* temporary font_num pointer   */
+  struct font_num *tfontnump=NULL;  /* temporary font_num pointer   */
 
-  tfontnump = vfstack[vfstackptr-1]->hfontnump;
+  switch (parent->type) {
+  case FONT_TYPE_VF:
+    tfontnump = parent->vffontnump;
+    break;
+  case DVI_TYPE:
+    tfontnump = parent->fontnump;
+  }
   while (tfontnump != NULL && tfontnump->k != k)
     tfontnump = tfontnump->next;
   if (tfontnump == NULL)
     Fatal("font %d undefined", k);
 
-  vfstack[vfstackptr] = tfontnump->fontp;
-  if (vfstack[vfstackptr]->name[0]=='\0')
-    FontFind(vfstack[vfstackptr]);
+  currentfont = tfontnump->fontp;
+  if (currentfont->name[0]=='\0')
+    FontFind(currentfont);
 }
 
 
