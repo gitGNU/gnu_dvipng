@@ -28,8 +28,6 @@
  **********************************************************************
  * This program translates TeX's DVI-Code into Portable Network Graphics.
  *
- * Copyright (C) Jan-Åke Larsson 2002-2003
- *
  * Recipe:
  * Take a simple dvi2?? converter, dvilj was found suitable.
  * Read and relish the code of xdvi and dvips
