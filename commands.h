@@ -110,7 +110,6 @@ EXTERN const int8_t dvi_commandlength[256]
 #endif
 ;
 
-#ifdef DEBUG
 EXTERN const char* dvi_commands[256] 
 #ifdef MAIN
 ={
@@ -170,5 +169,4 @@ EXTERN const char* dvi_commands[256]
 }
 #endif
 ;
-#endif
 
