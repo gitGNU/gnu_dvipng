@@ -19,7 +19,7 @@ bool DecodeArgs(int argc, char ** argv)
 #ifdef HAVE_LIBKPATHSEA
     puts (KPSEVERSION);
 #endif
-    puts ("Copyright (C) 2002 Jan-흆e Larsson.\n\
+    puts ("Copyright (C) 2002-2003 Jan-흆e Larsson.\n\
 There is NO warranty.  You may redistribute this software\n\
 under the terms of the GNU General Public License.\n\
 For more information about these matters, see the files\n\
@@ -236,7 +236,7 @@ named COPYING and dvipng.c.");
 
   if (argv[0]!=NULL) {
     programname=argv[0];
-    Message(BE_NONQUIET,"This is %s Copyright 2002 Jan-흆e Larsson\n",
+    Message(BE_NONQUIET,"This is %s Copyright 2002-2003 Jan-흆e Larsson\n",
 	    PACKAGE_STRING);
   }
 
@@ -399,7 +399,9 @@ void Message(int activeflags, char *fmt, ...)
   va_start(args, fmt);
   if ( flags & activeflags ) {
     vfprintf(ERR_STREAM, fmt, args);
+#ifdef DEBUG
     fflush(ERR_STREAM);
+#endif
   }
   va_end(args);
 }
