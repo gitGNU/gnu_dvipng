@@ -189,3 +189,17 @@ AC_DEFUN(MAKEINFO_CHECK_MACROS,
 AC_SUBST(MAKEINFO_MACROS)
 ])
 
+
+dnl
+dnl Check for enc, cmap, sfd formats
+dnl
+AC_DEFUN(AC_HAS_KPSE_ENC_FORMATS,
+ [AC_MSG_CHECKING([whether kpse_enc_format is in kpathsea/tex-file.h])
+  AC_TRY_COMPILE([
+    #include <stdio.h>
+    #include <kpathsea/tex-file.h>],
+    [kpse_enc_format;kpse_cmap_format;kpse_sfd_format],
+ [AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_KPSE_ENC_FORMATS, 1, 
+	[Define to 1 if your kpathsea has kpse_enc_format])],
+ [AC_MSG_RESULT(no)])])
