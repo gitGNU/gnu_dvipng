@@ -51,6 +51,9 @@
 /* Define to 1 if you have the `gdImageCreateTrueColor' function. */
 #undef HAVE_GDIMAGECREATETRUECOLOR
 
+/* Define to 1 if you have the `gdImageGif' function. */
+#undef HAVE_GDIMAGEGIF
+
 /* Define to 1 if you have the `gdImagePngEx' function. */
 #undef HAVE_GDIMAGEPNGEX
 
