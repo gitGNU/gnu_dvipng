@@ -378,7 +378,7 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 	gdImageDestroy(psimage);
       }
       Message(BE_NONQUIET,">");
-    } else { /* Not PASS_DRAW */
+    } else { /* Don't draw */
       int pngheight,pngwidth;
       
       /* Convert from postscript 72 dpi resolution to our given resolution */
