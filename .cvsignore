@@ -4,3 +4,7 @@
 *.png
 *.ps
 *.tex
+config.h
+config.status
+configure
+Makefile

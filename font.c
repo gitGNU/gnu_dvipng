@@ -178,7 +178,7 @@ void FontDef(unsigned char* command, void* parent)
 
 void FontFind(struct font_entry * tfontptr)
 {
-#ifdef KPATHSEA
+#ifdef HAVE_LIBKPATHSEA
   kpse_glyph_file_type font_ret;
   char *name;
   unsigned dpi;  
@@ -214,7 +214,7 @@ void FontFind(struct font_entry * tfontptr)
       tfontptr->designsize = 0;
     }
   }
-#else /* not KPATHSEA */
+#else /* not HAVE_LIBKPATHSEA */
       /* Ouch time! findfile not implemented (old cruft from dvilj) */
   /* Total argh, since none of this is adapted to vf and the like */
   if (!(findfile(PXLpath,
