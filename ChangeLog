@@ -1,4 +1,28 @@
+2005-02-10  jalar  <jalar@mai.liu.se>
+
+	* config.h.in: 
+	* configure.ac: 
+	* dvipng.texi: 
+	* dvipng.h: 
+	* misc.c: 
+	* set.c: Add proper alpha channel 
+
 2005-02-04  jalar  <jalar@mai.liu.se>
+
+	* color.c: 
+	* draw.c: 
+	* dvi.c: 
+	* dvipng.c: 
+	* font.c: 
+	* ft.c: 
+	* misc.c: 
+	* papersiz.c: 
+	* pk.c: 
+	* set.c: 
+	* special.c: 
+	* t1.c: 
+	* tfm.c:
+	* vf.c: Cosmetic changes to warnings and fatals
 
 	* Release 1.5
 	
