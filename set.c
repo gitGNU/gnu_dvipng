@@ -6,17 +6,9 @@ void DoBop(void)
 void DoBop()
 #endif
 {
-  if (page_imagep) gdImageDestroy(page_imagep);
-  /*
-  page_imagep=gdImageCreate(h_pgsiz_dots,v_pgsiz_dots);
-  */
-  page_imagep=gdImageCreate(x_max-x_min,y_max-y_min);
-  x_goffset=-x_min;
-  y_goffset=-y_min;
-  x_min=0; /* Always include topright corner */
-  y_min=0;
-  x_max=0;
-  y_max=0;
+  if (page_imagep) 
+    gdImageDestroy(page_imagep);
+  page_imagep=gdImageCreate(x_width,y_width);
   gdImageColorAllocate(page_imagep,bRed,bGreen,bBlue); /* Set bg color */
 }
 
@@ -62,9 +54,10 @@ int     PassNo;
   int Color,i;
 
   ptr = &(fontptr->ch[c]);
-  if (!(ptr->isloaded))
+  if (PassNo != PASS_SKIP && !(ptr->isloaded)) {
     LoadAChar(c, ptr);
-  if (PassNo == 0) {
+  }
+  if (PassNo == PASS_BBOX) {
     min(x_min,PIXROUND(h, hconv*shrinkfactor)
 	-PIXROUND(ptr->xOffset,shrinkfactor));
     min(y_min,PIXROUND(v, hconv*shrinkfactor)
@@ -73,7 +66,10 @@ int     PassNo;
 	-PIXROUND(ptr->xOffset,shrinkfactor)+ptr->glyph.w);
     max(y_max,PIXROUND(v, hconv*shrinkfactor)
 	-PIXROUND(ptr->yOffset,shrinkfactor)+ptr->glyph.h);
-  } else if (fontptr->font_file_id != NO_FILE) {
+    if (command <= SET4)
+      h += ptr->tfmw;
+  }
+  if ( PassNo == PASS_DRAW && fontptr->font_file_id != NO_FILE) {
     /*
       Draw character. Remember now, we have stored the different
       greyscales in glyph.data with darkest last.  Draw the
@@ -87,12 +83,15 @@ int     PassNo;
       gdImageChar(page_imagep, &(ptr->glyph),
 		  PIXROUND(h, hconv*shrinkfactor)
 		  -PIXROUND(ptr->xOffset,shrinkfactor)
-		  +x_goffset,
+		  +x_offset,
 		  PIXROUND(v, vconv*shrinkfactor)
 		  -PIXROUND(ptr->yOffset,shrinkfactor)
-		  +y_goffset,
+		  +y_offset,
 		  i,Color);
     }
+
+    if (command <= SET4)
+      h += ptr->tfmw;
 
 #ifdef DEBUG
     if (Debug)
@@ -102,9 +101,6 @@ int     PassNo;
 	     ptr->xOffset,ptr->yOffset);
 #endif
   }
-
-  if (command <= SET4)
-    h += ptr->tfmw;
 }
 
 
@@ -129,13 +125,13 @@ int     PassNo, Set;
     xx = (long4)PIXROUND(b, hconv*shrinkfactor);     /* width */
     yy = (long4)PIXROUND(a, vconv*shrinkfactor);     /* height */
   }
-  if (PassNo == 0) {
+  if (PassNo == PASS_BBOX ) {
     min(x_min,PIXROUND(h, hconv*shrinkfactor)-1);
     min(y_min,PIXROUND(v, hconv*shrinkfactor)-yy+1-1);
     max(x_max,PIXROUND(h, hconv*shrinkfactor)+xx-1-1);
     max(y_max,PIXROUND(v, hconv*shrinkfactor)-1);
     return;
-  } else {
+  } else if (PassNo==PASS_DRAW) {
 #ifdef DEBUG
     if (Debug)
       fprintf(ERR_STREAM,"Rule xx=%ld, yy=%ld\n", (long)xx, (long)yy);
@@ -148,10 +144,10 @@ int     PassNo, Set;
 
       Color = gdImageColorResolve(page_imagep, Red,Green,Blue);
       gdImageFilledRectangle(page_imagep,
-			     PIXROUND(h, hconv*shrinkfactor)+x_goffset-1,
-			     PIXROUND(v, vconv*shrinkfactor)-yy+1+y_goffset-1,
-			     PIXROUND(h, hconv*shrinkfactor)+xx-1+x_goffset-1,
-			     PIXROUND(v, vconv*shrinkfactor)+y_goffset-1,
+			     PIXROUND(h, hconv*shrinkfactor)+x_offset-1,
+			     PIXROUND(v, vconv*shrinkfactor)-yy+1+y_offset-1,
+			     PIXROUND(h, hconv*shrinkfactor)+xx-1+x_offset-1,
+			     PIXROUND(v, vconv*shrinkfactor)+y_offset-1,
 			     Color);
     }
   }
