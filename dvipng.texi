@@ -2,7 +2,7 @@
 @setfilename dvipng.info
 @settitle dvipng: A DVI driver
 
-@set version 0.3
+@set version 0.4
 @set month-year June 2003
 
 @c Put everything in one index (arbitrarily chosen to be the concept index).
@@ -61,7 +61,7 @@ approved by the Free Software Foundation.
 @c @summarycontents
 @contents
 
-@node Top, Why dvipng, (dir), (dir)
+@node Top, Introduction, (dir), (dir)
 @ifnottex
 @top dvipng
 
@@ -79,62 +79,23 @@ Jan-@AA{}ke Larsson
 @end ifnottex
 
 @menu
-* Why dvipng::                  Why use dvipng?
-* Installation::                How to compile and install dvipng.
+* Introduction::                Introduction
+* Installation::                How to compile and install dvipng
 * Basic usage::                 First things first
 * Command-line options::        Advanced usage
 * Diagnosing problems::         Problems?
-* Color::                       Using color with dvipng.
-* Index::                       General index.
+* Color::                       Using color with dvipng
+* Index::                       General index
 @end menu
 
 
 
-@node Why dvipng, Installation, Top, Top
-@chapter Why use dvipng?
+@node Introduction, Installation, Top, Top
+@chapter Introduction
 
-The dvipng driver generates nice PNG images of the pages contained in a
-DVI file. It is intended to produce anti-aliased screen-resolution
-images as fast as is possible. The target  audience is people who need to
-generate and regenerate many images again and again. The target is the
-@previewlatex{} (X)Emacs package, but other applications may also
-benefit, like web applications as latex2html and WYSIWYG editors like
-LyX.
+@include readme.texi
 
-The antialiasing is done via a mechanism where the fonts are rendered at
-a specific resolution and then shrunk similarly as is done by the xdvi
-driver. This is because the driver is intended for speed rather than
-extreme accuracy. Note that the end result is as good or better as that
-produced by xdvi, which is the standard display driver for DVI files.
-
-One of the most important features of dvipng is that it does not read
-the postamble, so it can be started before @TeX{} finishes. Some DVI
-drivers explicitly use the postamble, and can even crash if they try to
-read the DVI before @TeX{} has finished. This will not be a problem when
-using dvipng. Default operation is to give an error message if the DVI
-ends prematurely, butl the @samp{-follow} switch makes dvipng wait at
-EOF for further output, unless it finds the POST marker that indicates
-the end of the DVI. This is similar to @samp{tail -f} but for DVI-to-PNG
-conversion.
-
-Another important feature is the support of virtual fonts, which add a
-great level of flexibility to @TeX{}. Among other things, virtual fonts
-are used to give dvipng its PostScript font support.
-
-Missing fonts are converted on demand from GF or from PostScript Type1
-to PK format. If a font cannot be generated, a scaled version
-of the same font at a different size can be used instead, although
-dvipng will complain loudly about the poor aesthetics of the resulting
-output.
-
-There is support for simple Encapsulated PostScript inclusion and also
-for color specials, but other specials are not supported at the moment.
-
-Source is provided and freely distributable, so adding a site-specific
-feature is possible. Adding such features is made easier by the highly
-modular structure of the program.
-
-@node Installation, Basic usage, Why dvipng, Top
+@node Installation, Basic usage, Introduction, Top
 @chapter Installation
 
 @cindex configuration, of dvipng
@@ -1256,8 +1217,22 @@ all the instructions in this manual, and still can't get something to
 work. The following sections provide some helpful hints if you find
 yourself in such a situation.
 
-For details on effective bug reporting, common installation problems,
-and @code{mktexpk} problems, @pxref{Bugs,,, kpathsea, Kpathsea}.
+Bug reports should be sent to
+@email{preview-latex-bugs@@lists.sourceforge.net}. This is still a
+sub-project of @previewlatex{}.
+
+Questions, suggestions for new features, pleas for help, and/or praise
+should go to @email{preview-latex-devel@@lists.sourceforge.net} (the
+preview-latex devel team). For more information on this mailing list,
+send a message with just the word `help' as subject or body to
+@email{preview-latex-devel-request@@lists.sourceforge.net} or look at
+@url{http://lists.sourceforge.net/lists/listinfo/preview-latex-devel}.
+
+Offers to support further development will be appreciated. For developer
+access, ask on @email{preview-latex-devel@@lists.sourceforge.net}.
+
+For details on the @TeX{} path-searching library, and @code{mktexpk}
+problems, @pxref{Bugs,,, kpathsea, Kpathsea}.
 
 @menu
 * Debug options::               Getting diagnostics.
