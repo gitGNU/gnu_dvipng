@@ -1,11 +1,11 @@
-Release notes for version 1.5 of the dvipng package:
+Release notes for version 1.6 of the dvipng package:
 
 This program makes PNG graphics from DVI files as obtained from TeX
 and its relatives.
 
 
-The 1.5 release fixes a bug in --picky mode and makes it possible to
-use dvips' named colors with the -bg and -fg command line switches.
+The 1.6 release adds proper alpha channel support and reestablishes 
+identification of preview-latex' tightpage mode option.
 
 
 It has been tested to a fair degree. Note the disclaimer in the
