@@ -3,7 +3,7 @@
 # include <alloca.h>
 #endif
 
-void CreateImage(void)
+void CreateImage(pixels x_width,pixels y_width)
 {
   int Background;
 
@@ -12,7 +12,7 @@ void CreateImage(void)
   if (x_width <= 0) x_width=1;
   if (y_width <= 0) y_width=1;
 #ifdef HAVE_GDIMAGECREATETRUECOLOR
-  if (truecolor) 
+  if (flags & RENDER_TRUECOLOR) 
     page_imagep=gdImageCreateTrueColor(x_width,y_width);
   else
 #endif
@@ -23,9 +23,10 @@ void CreateImage(void)
     gdImageColorTransparent(page_imagep,Background); 
   }
 #ifdef HAVE_GDIMAGECREATETRUECOLOR
-  if (truecolor) 
+  if (flags & RENDER_TRUECOLOR) 
     /* Truecolor: there is no background color index, fill image instead. */
-    gdImageFilledRectangle(page_imagep, 0, 0, x_width-1, y_width-1, Background);
+    gdImageFilledRectangle(page_imagep, 0, 0, 
+			   x_width-1, y_width-1, Background);
 #endif
   if (borderwidth>0) {
     int Transparent;
@@ -70,7 +71,7 @@ void WriteImage(char *pngname, int pagenum)
   gdImagePng(page_imagep,outfp);
 #endif
   fclose(outfp);
-  DEBUG_PRINT((DEBUG_DVI,"\n  WROTE:   \t%s\n",pngname));
+  DEBUG_PRINT(DEBUG_DVI,("\n  WROTE:   \t%s\n",pngname));
   gdImageDestroy(page_imagep);
   page_imagep=NULL;
 }
@@ -82,7 +83,7 @@ void WriteImage(char *pngname, int pagenum)
 /*****************************  SetRule  ******************************/
 /**********************************************************************/
 /*   this routine will draw a rule */
-dviunits SetRule(dviunits a, dviunits b, subpixels hh,subpixels vv, int PassNo)
+dviunits SetRule(dviunits a, dviunits b, subpixels hh,subpixels vv)
 {
   int Color;
   pixels    width=0, height=0;
@@ -92,15 +93,7 @@ dviunits SetRule(dviunits a, dviunits b, subpixels hh,subpixels vv, int PassNo)
     width = (b+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor;
     height = (a+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor;
   }
-  switch(PassNo) {
-  case PASS_BBOX:
-    /* The +1's are because things are cut _at_that_coordinate_. */
-    min(x_min,hh);
-    min(y_min,vv-height+1);
-    max(x_max,hh+width);
-    max(y_max,vv+1);
-    break;
-  case PASS_DRAW:
+  if (page_imagep != NULL) {
     if ((height>0) && (width>0)) {
       /* This code produces too dark rules. But what the hell. Grey
        * rules look fuzzy.
@@ -108,23 +101,22 @@ dviunits SetRule(dviunits a, dviunits b, subpixels hh,subpixels vv, int PassNo)
       Color = gdImageColorResolve(page_imagep, Red,Green,Blue);
       /* +1 and -1 are because the Rectangle coords include last pixels */
       gdImageFilledRectangle(page_imagep,hh,vv-height+1,hh+width-1,vv,Color);
-      DEBUG_PRINT((DEBUG_DVI,"\n  RULE \t%dx%d at (%d,%d)",
+      DEBUG_PRINT(DEBUG_DVI,("\n  RULE \t%dx%d at (%d,%d)",
 		   width, height, hh, vv));
     }
+  } else {
+    /* The +1's are because things are cut _at_that_coordinate_. */
+    min(x_min,hh);
+    min(y_min,vv-height+1);
+    max(x_max,hh+width);
+    max(y_max,vv+1);
   }
   return(b);
 }
 
 
 #if 0
-  switch(PassNo) {
-  case PASS_BBOX:
-    min(x_min,hh);
-    min(y_min,vv-height+1);
-    max(x_max,hh+width);
-    max(y_max,vv+1);
-    break;
-  case PASS_DRAW:
+  if (page_imagep != NULL) {
     if ((a>0) && (b>0)) {
       int width,height,left=-1,right=-1,bottom=-1,top=-1;
       gdImagePtr rule;
@@ -236,12 +228,17 @@ dviunits SetRule(dviunits a, dviunits b, subpixels hh,subpixels vv, int PassNo)
 		  h/dvi->conv/shrinkfactor,
 		  (v-a)/dvi->conv/shrinkfactor,
 		  0,0,width,height);
-      DEBUG_PRINT((DEBUG_DVI,"\n  RULE \t%dx%d at (%d,%d)",
+      DEBUG_PRINT(DEBUG_DVI,("\n  RULE \t%dx%d at (%d,%d)",
 		   width,height,
 		   PIXROUND(h, dvi->conv*shrinkfactor),
 		   PIXROUND(v, dvi->conv*shrinkfactor)));
-      DEBUG_PRINT((DEBUG_DVI," (lrtb %d %d %d %d)",left,right,top,bottom));
+      DEBUG_PRINT(DEBUG_DVI,(" (lrtb %d %d %d %d)",left,right,top,bottom));
     }
+  } else {
+    min(x_min,hh);
+    min(y_min,vv-height+1);
+    max(x_max,hh+width);
+    max(y_max,vv+1);
   }
 #endif
 

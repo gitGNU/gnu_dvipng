@@ -25,7 +25,7 @@
 int main(int argc, char ** argv)
 {
   bool parsestdin;
-  
+    
 #ifdef TIMING
 # ifdef HAVE_GETTIMEOFDAY
   gettimeofday(&Tp, NULL);
@@ -65,14 +65,16 @@ int main(int argc, char ** argv)
 #endif
 
 #ifdef HAVE_FT2
-  if (FT_Init_FreeType( &libfreetype ))
-    Fatal("an error occured during freetype initialisation"); 
+  if (FT_Init_FreeType( &libfreetype )) {
+    Warning("an error occured during freetype initialisation, disabling it"); 
+    flags &= ~USE_FREETYPE;
+  }
 # ifdef DEBUG
   {
     FT_Int      amajor, aminor, apatch;
     
     FT_Library_Version( libfreetype, &amajor, &aminor, &apatch );
-    DEBUG_PRINT((DEBUG_FT,"\n  FREETYPE VERSION: FreeType %d.%d.%d", 
+    DEBUG_PRINT(DEBUG_FT,("\n  FREETYPE VERSION: FreeType %d.%d.%d", 
 		 amajor, aminor, apatch));
   }
 # endif
