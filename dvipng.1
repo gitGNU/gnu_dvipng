@@ -2,8 +2,8 @@
 ''' $RCSfile$$Revision$$Date$
 '''
 ''' $Log$
-''' Revision 1.7  2004/10/27 08:05:52  jalar
-''' Amend docs
+''' Revision 1.8  2004/11/25 12:16:03  jalar
+''' Add some minor things
 '''
 '''
 .de Sh
@@ -96,7 +96,7 @@
 .nr % 0
 .rr F
 .\}
-.TH DVIPNG 1 "dvipng 1.2" "27/Oct/2004" "User commands"
+.TH DVIPNG 1 "dvipng 1.3" "25/Nov/2004" "User commands"
 .UC
 .if n .hy 0
 .if n .na
@@ -234,12 +234,14 @@ Print a usage message and exit.
 Print the version number and exit.
 .Ip "\fB\-bd\fR \fInum\fR" 4
 .Ip "\fB\-bd\fR \fIcolor_spec\fR" 4
+.Ip "\fB\-bd \*(N'\fR\fInum\fR\fB \fR\fIcolor_spec\fR\fB\*(T'\fR" 4
 Set the pixel width of the transparent border (default 0). Using this
 option will make the image edges transparent, but it only affects pixels
-with the background color. Giving a \fIcolor_spec\fR will make the
-border that color in viewers that cannot handle transparency (and make
-the default width 1 px). Naturally, you can give both a width and a
-color spec, by using the option twice.
+with the background color. Giving a \fIcolor_spec\fR will set the
+fallback color, to be used in viewers that cannot handle transparency
+(the default is the background color). The color spec should be in
+TeX color \especial syntax, e.g., \*(L'rgb 1.0 0.0 0.0\*(R'. Setting the
+fallback color makes the default border width 1 px. 
 .Ip "\fB--bdpi\fR \fInum\fR" 4
 Set the base (Metafont) resolution, both horizontal and vertical, to
 \fInum\fR dpi (dots per inch). This option is necessary when manually
@@ -247,9 +249,9 @@ selecting Metafont mode with the --mode option (see below).
 .Ip "\fB\-bg\fR \fIcolor_spec\fR" 4
 Choose background color for the images. This option will be ignored if
 there is a background color \especial in the \s-1DVI\s0. The color spec should
-be in TeX syntax, e.g., \*(L'rgb 1.0 0.0 0.0\*(R'. You can also specify
-\&'Transparent\*(R' which will give you a transparent background with the
-normal background as a fallback color. 
+be in TeX color \especial syntax, e.g., \*(L'rgb 1.0 0.0 0.0\*(R'. You can
+also specify \*(L'Transparent\*(R' which will give you a transparent background
+with the normal background as a fallback color. 
 .Ip "\fB\-d\fR \fInum\fR" 4
 Set the debug flags, showing what dvipng (thinks it) is doing. This will
 work unless dvipng has been compiled without the \fB\s-1DEBUG\s0\fR option
@@ -292,7 +294,7 @@ numbers rather than the physical page number. See the \fB\-o\fR switch.
 .Ip "\fB\-fg\fR \fIcolor_spec\fR" 4
 Choose foreground color for the images. This option will be ignored if
 there is a foreground color \especial in the \s-1DVI\s0. The color spec should
-be in TeX syntax, e.g., \*(L'rgb 1.0 0.0 0.0\*(R'. 
+be in TeX color \especial syntax, e.g., \*(L'rgb 1.0 0.0 0.0\*(R'.
 .Ip "\fB--follow*\fR" 4
 Enable follow mode. One of the benefits of dvipng is that it does not
 read the postamble, so it can be started before TeX finishes. This
@@ -509,6 +511,8 @@ Copyright (c) 2002-2004 Jan-@AA{}ke Larsson
 .IX Item "\fB\-bd\fR \fInum\fR"
 
 .IX Item "\fB\-bd\fR \fIcolor_spec\fR"
+
+.IX Item "\fB\-bd \*(N'\fR\fInum\fR\fB \fR\fIcolor_spec\fR\fB\*(T'\fR"
 
 .IX Item "\fB--bdpi\fR \fInum\fR"
 
