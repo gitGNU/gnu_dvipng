@@ -68,7 +68,7 @@ approved by the Free Software Foundation.
 @c @summarycontents
 @contents
 
-@node Top, Introduction, (dir), (dir)
+@node Top
 @ifnottex
 @top dvipng
 
@@ -77,9 +77,7 @@ Independent) file into PNG (Portable Network Graphics).
 
 This file documents dvipng version @value{version}
 
-This documentation is @emph{preliminary}, but should cover most
-important points. Corrections or perhaps rewrites of sections are
-@emph{very welcome}.
+Corrections or perhaps rewrites of sections are @emph{very welcome}.
 
 Jan-@AA{}ke Larsson
 
@@ -98,14 +96,14 @@ Jan-@AA{}ke Larsson
 
 
 
-@node Introduction, Installation, Top, Top
+@node Introduction
 @chapter Introduction
 
 @c man begin DESCRIPTION
 @include readme.texi
 @c man end
 
-@node Installation, Basic usage, Introduction, Top
+@node Installation
 @chapter Installation
 
 @cindex configuration, of dvipng
@@ -114,7 +112,7 @@ Jan-@AA{}ke Larsson
 
 @include install.texi
 
-@node Basic usage, Command-line options, Installation, Top
+@node Basic usage
 @chapter Basic usage of dvipng
 
 @cindex invoking dvipng
@@ -131,14 +129,14 @@ PNG format. If there are four pages in @file{foo.dvi}, those pages will
 be output as @file{foo1.png}, @file{foo2.png}, @file{foo3.png}, and
 @file{foo4.png}, respectively.
 
-If you have enabled the PostScript font support (via FreeType), fonts
-will be rendered as they are needed. Otherwise, if you use fonts that
-have not been used on your system before, they may be automatically
+If you have enabled the PostScript font support (via FreeType or T1lib),
+fonts will be rendered as they are needed. Otherwise, if you use fonts
+that have not been used on your system before, they may be automatically
 generated; this process can take a few minutes, so progress reports
-appear by default.  The next time the same font is used, it will have
-been saved on disk, so rendering will go much faster.  (If dvipng tries
+appear by default. The next time the same font is used, it will have
+been saved on disk, so rendering will go much faster. (If dvipng tries
 to endlessly generate the same fonts over and over again, something is
-wrong.  @xref{Unable to generate fonts,,, kpathsea, Kpathsea}.)
+wrong. @xref{Unable to generate fonts,,, kpathsea, Kpathsea}.)
 
 Many options are available (see the next section).  For a brief summary
 of available options, just type
@@ -147,7 +145,7 @@ of available options, just type
 dvipng --help
 @end example
 
-@node Command-line options, Diagnosing problems, Basic usage, Top
+@node Command-line options
 @chapter Command-line options
 
 @cindex command-line options
@@ -162,7 +160,7 @@ section will give a good idea of the capabilities of the driver.
 @end menu
 
 
-@node Option summary, Option details, Command-line options, Command-line options
+@node Option summary
 @section Option summary
 
 @cindex options, summary
@@ -174,7 +172,7 @@ dvipng with no arguments or with the standard @samp{--help} option.
 @end example
 
 
-@node Option details,  , Option summary, Command-line options
+@node Option details
 @section Option details
 
 @cindex option, details of
@@ -207,21 +205,27 @@ with the background color.
 @item --bdpi @var{num}
 @cindex base resolution, setting
 Set the base (Metafont) resolution, both horizontal and vertical, to
-@var{num} dpi (dots per inch). This option is neccessary when manually
-selecting Metafont mode with the --mode option (see below)
+@var{num} dpi (dots per inch). This option is necessary when manually
+selecting Metafont mode with the --mode option (see below).
 
-@item -bg @var{color spec.}
+@item -bg @var{color_spec}
 @cindex background color (option)
 Choose background color for the images. This option will be ignored if
 there is a background color \special in the DVI. The color spec should
-be in @TeX{} syntax, e.g., 'rgb 1.0 0.0 0.0'. See @xref{Color}.
+be in @TeX{} syntax, e.g., 'rgb 1.0 0.0 0.0'. You can also specify
+'Transparent' which will give you a transparent background with the
+normal background as a fallback color. @xref{Color}.
 
 @item -d @var{num}
 @cindex debugging
-Set the debug flags, showing what dvipng (thinks it) is doing.  This will
-work unless dvipng has been compiled without the @samp{DEBUG} option (not
-recommended).  @xref{Debug options}, for the possible values of
-@var{num}.  Use @samp{-d -1} as the first option for maximum output.
+Set the debug flags, showing what dvipng (thinks it) is doing. This will
+work unless dvipng has been compiled without the @samp{DEBUG} option
+(not recommended). Set the flags as you need them, use @samp{-d -1} as
+the first option for maximum output. @xref{Debug options}. 
+
+@item --dvinum*
+Set this option to make the output page number be the @TeX{} page
+numbers rather than the physical page number. See the @samp{-o} switch.
 
 @item -D @var{num}
 @cindex output resolution, setting
@@ -299,11 +303,11 @@ typesetters that can set the page size automatically.  This works by
 downloading @file{crop.pro}.
 @end ignore
 
-@item -fg @var{color spec.}
+@item -fg @var{color_spec}
 @cindex foreground color (option)
 Choose foreground color for the images. This option will be ignored if
 there is a foreground color \special in the DVI. The color spec should
-be in @TeX{} syntax, e.g., 'rgb 1.0 0.0 0.0'. See @xref{Color}.
+be in @TeX{} syntax, e.g., 'rgb 1.0 0.0 0.0'. @xref{Color}.
 
 @item --follow*
 @cindex follow mode
@@ -318,11 +322,14 @@ POST marker that indicates the end of the DVI. This is similar to
 Enable/disable FreeType font rendering (default on). This option is
 available if the FreeType2 font library was present at compilation time.
 If this is the case, dvipng will have direct support for PostScript
-Type1 and TrueType fonts in dvipng, rather than using @samp{gsftopk} for
-rendering the fonts. If you have PostScript versons of Computer Modern
-installed, there will be no need to generate bitmapped variants on disk
-of these. Then, you can render images at different (and unusual)
+Type1 and TrueType fonts internally, rather than using @samp{gsftopk}
+for rendering the fonts. If you have PostScript versions of Computer
+Modern installed, there will be no need to generate bitmapped variants
+on disk of these. Then, you can render images at different (and unusual)
 resolutions without cluttering the disk with lots of bitmapped fonts.
+Note that if you have both FreeType and T1lib on your system, FreeType
+will be preferred by dvipng. If you for some reason would want to use
+T1lib rendering, use this option.
 
 @item --height*
 @cindex baseline reporting
@@ -353,12 +360,8 @@ Use @var{mode} as the Metafont device name for the PK fonts (both for
 path searching and font generation). This needs to be augmented with the
 base device resolution, given with the @samp{--bdpi} option. See the
 file @url{ftp://ftp.tug.org/tex/modes.mf} for a list of resolutions and
-mode names for most devices. With the default paths, explicitly
-specifying the mode also makes the program assume the fonts are in a
-subdirectory named @var{mode}. @xref{TeX directory structure,, @TeX{}
-directory structure, kpathsea, Kpathsea}. If Metafont does not
-understand the @var{mode} name, see @xref{Unable to generate fonts,,,
-kpathsea, Kpathsea}.
+mode names for most devices. @xref{Unable to generate fonts,,, kpathsea,
+Kpathsea}.
 
 @item -M*
 @cindex font generation, avoiding
@@ -386,8 +389,9 @@ configuration file value.
 @cindex output, redirecting
 @cindex standard output, output to
 Send output to the file @var{name}. A single occurrence of @samp{%d} or
-@samp{%03d} will be exchanged for the @TeX{} page number. The default
-output filename is @samp{@var{file}%d.png} where the input DVI file was
+@samp{%03d} will be exchanged for the physical page number (this can be
+changed, see the @samp{--dvinum} switch). The default output filename is
+@samp{@var{file}%d.png} where the input DVI file was
 @samp{@var{file}.dvi}.
 
 @ignore
@@ -481,7 +485,6 @@ Run securely.  This disables shell command execution in @code{\special}
 (via @samp{`}, @pxref{Dynamic creation of graphics}) and config files
 (via the @samp{E} option, @pxref{Configuration file commands}), pipes as
 output files, and opening of any absolute filenames.
-@end ignore
 
 @item -t @var{papertype}
 @cindex paper type
@@ -500,12 +503,33 @@ You can also specify a @var{papertype} of @samp{landscape}, which
 rotates a document by 90 degrees. To rotate a document whose paper type
 is not the default, you can use the @samp{-t} option twice, once for the
 paper type, and once for @samp{landscape}.
+@end ignore
 
-@item -T @var{hsize},@var{vsize}
-Set the paper size to (@var{hsize},@var{vsize}), a comma-separated pair
-of dimensions such as @samp{.1in,-.3cm}. 
+@item -T @var{image_size}
+Set the image size to @var{image_size} which can be either of
+@samp{bbox}, @samp{tight}, or a comma-separated pair of dimensions
+@var{hsize},@var{vsize} such as @samp{.1in,.3cm}. The default is
+@samp{bbox} which produces a PNG that includes all ink put on the page
+and in addition the DVI origin, located 1in from the top and 1in from
+the left edge of the paper. This usually gives whitespace above and to
+the left in the produced image. The value @samp{tight} will make dvipng
+only include all ink put on the page, producing neat images.
 @c (@pxref{papersize special}).  
-It overrides any paper size special in the DVI file.
+This option overrides any papersize special in the DVI file.
+
+@item --t1lib*
+@cindex T1lib font rendering
+Enable/disable T1lib font rendering (default on). This option is
+available if the T1lib font library was present at compilation time. If
+this is the case, dvipng will have direct support for PostScript Type1
+fonts internally, rather than using @samp{gsftopk} for rendering the
+fonts. If you have PostScript versions of Computer Modern installed,
+there will be no need to generate bitmapped variants on disk of these.
+Then, you can render images at different (and unusual) resolutions
+without cluttering the disk with lots of bitmapped fonts. Note that if
+you have both FreeType and T1lib on your system FreeType will be
+preferred by dvipng, and if you for some reason rather want to use
+T1lib, give the option @samp{--freetype0} (see above).
 
 @item --truecolor*
 @cindex truecolor output
@@ -532,7 +556,7 @@ integer, for increased precision.
 @cindex compression
 Set the PNG compression level to @var{num}. This option is enabled if
 your @samp{libgd} is new enough. The default compression level is 1,
-wich selects maximum speed at the price of slightly larger PNGs. For an
+which selects maximum speed at the price of slightly larger PNGs. For an
 older @samp{libgd}, the hard-soldered value 5 is used. The include file
 @samp{png.h} says
 @ifclear man
@@ -594,7 +618,7 @@ kpathsea, Kpathsea}.
 
 @end vtable
 
-@c @node Paper size and landscape, Interaction with PostScript, Installation, Top
+@c @node Paper size and landscape
 @chapter Paper size and landscape orientation
 
 @cindex paper size, general
@@ -626,7 +650,7 @@ drivers.
 @end menu
 
 
-@c @node papersize special, Config file paper sizes, Option details, Command-line options
+@c @node papersize special
 @section @samp{papersize} special
 
 @findex papersize @r{special}
@@ -658,7 +682,7 @@ An alternate specification of @code{landscape}:
 
 @noindent
 This is supported for backward compatibility, but it is hoped that
-reventually the @code{papersize} comment will dominate.
+eventually the @code{papersize} comment will dominate.
 
 Of course, such a @code{\special} only informs dvipng of the desired
 paper size; you must also adjust @code{\hsize} and @code{\vsize} in your
@@ -668,7 +692,7 @@ The @code{papersize} special must occur somewhere on the first page of
 the document.
 
 
-@c @node Config file paper sizes,  , papersize special, Command-line options
+@c @node Config file paper sizes
 @section Configuration file paper size command
 
 @cindex paper size configuration file command
@@ -776,7 +800,7 @@ operator if at all possible.
 
 
 
-@c @node Interaction with PostScript, PostScript figures, Command-line options, Top
+@c @node Interaction with PostScript
 @chapter Interaction with PostScript
 
 @cindex interaction with PostScript
@@ -793,7 +817,7 @@ literal PostScript code, and hypertext.
 @end menu
 
 
-@c @node PostScript figures, Header files, Command-line options, Top
+@c @node PostScript figures
 @chapter PostScript figures
 
 Scaling and including PostScript graphics is a breeze---if the PostScript
@@ -809,7 +833,7 @@ be accommodated with just a little more work.
 @end menu
 
 
-@c @node Bounding box, EPSF macros, Option details, Command-line options
+@c @node Bounding box
 @section The bounding box comment
 
 @cindex bounding box, comment for
@@ -906,7 +930,7 @@ please complain to the authors of the software package that generated
 the file.
 
 
-@c @node EPSF macros, psfile special, Bounding box, Command-line options
+@c @node EPSF macros
 @section Using the EPSF macros
 
 @cindex EPSF macros
@@ -987,7 +1011,7 @@ terminal when it processes each figure, give the command:
 @end menu
 
 
-@c @node EPSF scaling, EPSF clipping, EPSF macros, EPSF macros
+@c @node EPSF scaling
 @subsection EPSF scaling
 
 @cindex scaling of figures
@@ -1087,7 +1111,7 @@ DVI magnification is not applied to any output from code you write in
 @samp{bop-hook} or its ilk (@pxref{PostScript hooks}),
 
 
-@c @node EPSF clipping,  , EPSF scaling, EPSF macros
+@c @node EPSF clipping
 @subsection EPSF clipping
 
 @cindex clipping of EPSF
@@ -1115,7 +1139,7 @@ and to turn clipping back off, use
 @end example
 
 
-@c @node psfile special, Dynamic creation of graphics, EPSF macros, Command-line options
+@c @node psfile special
 @section @samp{psfile} special
 
 @findex psfile @r{special}
@@ -1188,7 +1212,7 @@ The @samp{@@scaleunit} variable, which is by default 100, is what
 scale factor.
 
 
-@c @node Dynamic creation of graphics, Fonts in figures, psfile special, Command-line options
+@c @node Dynamic creation of graphics
 @section Dynamic creation of PostScript graphics files
 
 @cindex dynamic creation of graphics
@@ -1227,7 +1251,7 @@ can be anything, including using a file conversion utility such as
 with the @samp{-R} command-line option or @samp{R} configuration option.
 
 
-@c @node Fonts in figures,  , Dynamic creation of graphics, Command-line options
+@c @node Fonts in figures
 @section Fonts in figures
 
 @cindex figures and fonts
@@ -1279,7 +1303,7 @@ MetaPost's output figures contain lines like this for bitmap fonts used
 in a MetaPost label (@pxref{MetaPost,,, web2c, Web2c}).
 
 
-@c @node Header files, Diagnosing problems, Command-line options, Top
+@c @node Header files
 @chapter PostScript header files
 
 @cindex header files, defined
@@ -1311,7 +1335,7 @@ when header files are included.
 
 @end ignore
 
-@node Diagnosing problems, Color, Command-line options, Top
+@node Diagnosing problems
 @chapter Diagnosing problems
 
 @cindex problems
@@ -1346,7 +1370,7 @@ problems, @pxref{Common problems,,, kpathsea, Kpathsea}.
 @end menu
 
 
-@node Debug options, Including graphics fails, Diagnosing problems, Diagnosing problems
+@node Debug options
 @section Debug options
 
 @cindex debugging options
@@ -1397,18 +1421,22 @@ Kpathsea path searches
 
 @end table
 
-@node Including graphics fails,  , Debug options, Diagnosing problems
-@section Including graphics fails
+@node Included graphics problems
+@section Included graphics problems
 
-@cindex including graphics fails
-@cindex graphics inclusion fails
-@cindex failure, to include graphics
+@cindex graphics inclusion problems
 
 The most common problem with including graphics is an incorrect bounding
 box.
 @c (@pxref{Bounding box}). 
 Complain to whoever wrote the software that generated the file if the
 bounding box is indeed incorrect.
+
+An additional problem is that the image in dvipng is always clipped to
+the bounding box. This is because the image is rendered by GhostScript
+by an internal call and then copied to the dvipng image. At present no
+workaround is known, but there may be one for a future GhostScript.
+We'll see.
 
 @ignore
 @cindex Illustrator, workaround for
@@ -1426,7 +1454,7 @@ some applications read the PostScript file from the input stream,
 looking for a particular comment.
 @end ignore
 
-@node Color, Copying, Diagnosing problems, Top
+@node Color
 @chapter Color
 
 To support color, dvipng recognizes a certain set of specials. These
@@ -1439,18 +1467,18 @@ specials start with the keyword @samp{color} or the keyword
 @end menu
 
 
-@node Color specifications, Color specials, Color, Color
+@node Color specifications
 @section Color specifications
 
 @cindex color specifications
 
 The color specification supported by dvipng is the name of a color model
-(initially, one of @samp{rgb}, @samp{hsb}, @samp{cmyk}, or @samp{gray})
+(initially, one of @samp{rgb}, @samp{hsv}, @samp{cmyk}, or @samp{gray})
 followed by the appropriate number of parameters. Thus, the color
 specification @samp{rgb 0.3 0.4 0.5} would correspond to the color that
 is @samp{0.3 0.4 0.5} in its red, blue and green values. 
 
-@node Color specials,  , Color specifications, Color
+@node Color specials
 @section Color specials
 
 We will describe @samp{background} first, since it is the simplest. The
@@ -1488,7 +1516,7 @@ info dvipng
 @c man end
 @end ifset
 
-@node Copying, Index, Color, Top
+@node Copying
 @chapter Copying
 
 
@@ -1512,7 +1540,7 @@ Copyright @copyright{} 2002-2004 Jan-@AA{}ke Larsson
 
 @c man begin COPYRIGHT
 @ifset man
-This program is released under the GNU General Public Licence, see the
+This program is released under the GNU General Public License, see the
 COPYING file in the dvipng distribution or
 @url{http://www.gnu.org/licenses/gpl.html}.
 
