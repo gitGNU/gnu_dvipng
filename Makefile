@@ -168,8 +168,8 @@ prog_cflags = -DUNIX -DKPATHSEA
 common_objects = 
 
 program = dvipng
-objects = dvipng.o color.o font.o io.o misc.o pk.o \
-	set.o special.o papersiz.o pages.o
+objects = dvipng.o color.o draw.o font.o io.o misc.o pk.o \
+	set.o special.o papersiz.o pagelist.o pagequeue.o
 all: $(program)
 
 $(program): $(objects) $(kpathsea)
