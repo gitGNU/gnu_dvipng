@@ -19,7 +19,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
   02111-1307, USA.
 
-  Copyright © 2002-2004 Jan-Åke Larsson
+  Copyright (C) 2002-2004 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -121,6 +121,9 @@ typedef int32_t dviunits;
 /* integer round to the nearest number, not towards zero */
 #define PIXROUND(num,den) ((num)>0 ? ((num)+(den)/2)/(den) : -(((den)/2-(num))/(den)))
 
+#if HAVE_ALLOCA_H
+# include <alloca.h>
+#endif
 #define TEMPSTR(s,a) { char* tmp=a; \
                if (tmp!=NULL) {\
                  s=alloca(strlen(tmp)+1);strcpy(s,tmp);free(tmp);\
@@ -511,6 +514,8 @@ EXTERN  int y_pwidth INIT(0);
 
 /* The transparent border preview-latex desires */
 EXTERN  int borderwidth INIT(0);
+
+/* fallback color for transparent background */
 EXTERN bool userbordercolor INIT(FALSE); /* if true, use user-supplied color */
 EXTERN struct dvi_color bordercolor;
 
