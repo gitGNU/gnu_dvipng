@@ -9,8 +9,8 @@ dvipng [options] [filename] -
 @c man end
 @end ifset
 
-@set version 1.5
-@set month-year February 2005
+@set version 1.6
+@set month-year April 2005
 
 @c Put everything in one index (arbitrarily chosen to be the concept index).
 @syncodeindex fn cp
@@ -1391,17 +1391,16 @@ work. The following sections provide some helpful hints if you find
 yourself in such a situation.
 
 Bug reports should be sent to
-@email{dvipng-devel@@lists.sourceforge.net}.
+@email{dvipng@@nongnu.org}. 
 
 Questions, suggestions for new features, pleas for help, and/or praise
-should go to @email{dvipng-devel@@lists.sourceforge.net} (the dvipng
-devel team). For more information on this mailing list, send a message
-with just the word `help' as subject or body to
-@email{dvipng-devel-request@@lists.sourceforge.net} or look at
-@url{http://lists.sourceforge.net/lists/listinfo/dvipng-devel}.
+should go to @email{dvipng@@nongnu.org}. For more information on this
+mailing list, send a message with just the word `help' as subject or
+body to @email{dvipng-request@@nongnu.org} or look at
+@url{http://lists.nongnu.org/mailman/listinfo/dvipng}.
 
 Offers to support further development will be appreciated. For developer
-access, ask on @email{dvipng-devel@@lists.sourceforge.net}.
+access, ask on @email{dvipng@@nongnu.org}.
 
 For details on the @TeX{} path-searching library, and @code{mktexpk}
 problems, @pxref{Common problems,,, kpathsea, Kpathsea}.
