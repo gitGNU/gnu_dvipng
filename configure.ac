@@ -9,7 +9,7 @@ AC_SET_MAKE
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PATH_PROG(GS, gs, :)
-AC_DEFINE(GS_PATH, "$GS", [Define as the path to GhostScript.])
+AC_DEFINE_UNQUOTED(GS_PATH, "$GS", [Define as the path to GhostScript.])
 
 # Checks for libraries.
 AC_CHECK_LIB([gd], [gdImageCreate],,
