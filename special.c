@@ -185,8 +185,10 @@ void SetSpecial(char * special, int32_t length, int32_t h, int32_t v,
 	  if ( psimage == NULL ) 
 	    Warning("Unable to convert %s to PNG, image will be left blank", 
 		    psfile );
+#ifdef HAVE_GDIMAGECREATETRUECOLOR
 	  else if (!truecolor)
-	    gdImageTrueColorToPalette(psimage,0,256);
+	      gdImageTrueColorToPalette(psimage,0,256);
+#endif
 	}
       }
       if (pngname !=NULL && psimage != NULL) {
