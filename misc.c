@@ -37,22 +37,13 @@ long4    unmodsize;                 /* actually factor * 1000 */
 /*********************************************************************/
 /***************************** DecodeArgs ****************************/
 /*********************************************************************/
-void
-#if NeedFunctionPrototypes
-DecodeArgs(int argc, char *argv[])
-#else
-DecodeArgs(argc, argv)
-int     argc;
-char    *argv[];
-#endif
+void DecodeArgs P2C(int, argc, char **, argv)
 {
   int     i;                 /* argument index for flags      */
   char    curarea[STRSIZE];  /* current file area             */
   char    curname[STRSIZE];  /* current file name             */
   char    *p, *p1;           /* temporary character pointers  */
-#ifdef __riscos
-  int     ddi;
-#endif
+  int     k;
 
 #ifndef KPATHSEA
   if ((tcp = getenv("TEXPXL")) != NULL) PXLpath = tcp;
@@ -116,14 +107,17 @@ named COPYING and dvipng.c.");
       case 'T' :
 	if (*p == 0 && argv[i+1])
 	  p = argv[++i] ;
-	handlepapersize(p, &x_width, &y_width) ;
-	if (Landscape) {
-	  Warning(
-		"Both landscape and papersize specified; ignoring landscape") ;
-	  Landscape = _FALSE ;
+	if (strcmp(p,"bbox")) {
+	  PassDefault=PASS_BBOX;
+	} else { 
+	  handlepapersize(p, &x_width, &y_width) ;
+	  if (Landscape) {
+	    Warning("Both landscape and pagesize specified; using pagesize") ;
+	    Landscape = _FALSE ;
+	  }
+	  /* Avoid PASS_BBOX */
+	  PassDefault = PASS_DRAW;
 	}
-	/* Avoid PASS_BBOX */
-	PassDefault = PASS_DRAW;
 	break ;
       case 't':       /* specify paper format, only for cropmarks */
 	/* cropmarks not implemented yet */
@@ -189,7 +183,11 @@ named COPYING and dvipng.c.");
 	  p++ ;
 	  if (*p == 0 && argv[i+1])
 	    p = argv[++i] ;
-	  if (ParsePages(p))
+	  if (*p == '=') {
+	    Abspage = _TRUE ;
+	    p++ ;
+	  }
+	  if (ParsePages(p,Abspage))
 	    Fatal("bad page list specifier (-pp).") ;
 	  Pagelist = _TRUE ;
 	  break ;
@@ -252,8 +250,11 @@ named COPYING and dvipng.c.");
         if ( sscanf(p, "%d", &shrinkfactor) != 1 )
           Fatal("argument of -Q is not a valid integer\n");
 	break;
+      case '\0':
+	ParseStdin=_TRUE;
+	break;
       default:
-        Warning("%c is not a valid flag\n", *p);
+        Warning("%c is not a valid flag\n", c);
       }
     } else {
 
@@ -283,11 +284,9 @@ named COPYING and dvipng.c.");
       /* split into file name + extension */
       p1 = strrchr(curname, '.');
       if (p1 == NULL) {
-	if (*rootname == '\0') {
-	  (void) strcpy(rootname, curname);
-	}
+	(void) strcpy(rootname, curname);
 	strcat(curname, ".dvi");
-      } else if (*rootname == '\0') {
+      } else {
 	*p1 = '\0';
 	(void) strcpy(rootname, curname);
 	*p1 = '.';
@@ -296,6 +295,11 @@ named COPYING and dvipng.c.");
       (void) strcpy(filename, curarea);
       (void) strcat(filename, curname);
       
+      if (dvifp != FPNULL) {
+	EmptyPageList();
+	fclose(dvifp);
+      }
+
       if ((dvifp = BINOPEN(filename)) == FPNULL) {
 	/* do not insist on .dvi */
 	if (p1 == NULL) {
@@ -315,6 +319,35 @@ named COPYING and dvipng.c.");
 #endif
 	}
       }
+#ifdef DEBUG
+      if (Debug)
+	printf("OPEN FILE\t%s\n", filename);
+#endif
+
+      if ((k = (int)NoSignExtend(dvifp, 1)) != PRE) {
+	Fatal("PRE doesn't occur first--are you sure this is a DVI file?\n\n");
+      }
+      k = (int)SignExtend(dvifp, 1);
+      if (k != DVIFORMAT) {
+	Fatal("DVI format = %d, can only process DVI format %d files\n\n",
+	      k, DVIFORMAT);
+      }
+      num = NoSignExtend(dvifp, 4);
+      den = NoSignExtend(dvifp, 4);
+      mag = NoSignExtend(dvifp, 4);
+      if ( usermag > 0 && usermag != mag )
+	Warning("DVI magnification of %ld over-ridden by user (%ld)",
+		(long)mag, usermag );
+      if ( usermag > 0 )
+	mag = usermag;
+      hconv = DoConv(num, den, hconvRESOLUTION);
+      vconv = DoConv(num, den, vconvRESOLUTION);
+      
+      k = (int)NoSignExtend(dvifp, 1);
+      GetBytes(dvifp, curname, k);
+
+      if ((hpagelistp=InitPage())==NULL)
+	Fatal("no pages in DVI file");
     }
   }
 
@@ -376,14 +409,7 @@ named COPYING and dvipng.c.");
 /*********************************************************************/
 /********************************  DoConv  ***************************/
 /*********************************************************************/
-long4
-#if NeedFunctionPrototypes
-DoConv(long4 num, long4 den, int convResolution)
-#else
-DoConv(num, den, convResolution)
-long4    num, den;
-int     convResolution;
-#endif
+long4 DoConv P3C(long4, num, long4, den, int, convResolution)
 {
   /*register*/ double conv;
   conv = ((double)num / (double)den) *
@@ -393,16 +419,12 @@ int     convResolution;
   return((long4)((1.0/conv)+0.5));
 }
 
+
 /*-->AllDone*/
 /**********************************************************************/
 /****************************** AllDone  ******************************/
 /**********************************************************************/
-#if NeedFunctionPrototypes
-void AllDone(bool PFlag)
-#else
-void AllDone(PFlag)
-bool PFlag;
-#endif
+void AllDone P1C(bool, PFlag)
 {
 #ifdef TIMING
   double  time;
