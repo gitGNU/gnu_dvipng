@@ -3,7 +3,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 
-void ReadTFM(struct font_entry * tfontp, char* tfmname)
+bool ReadTFM(struct font_entry * tfontp, char* tfmname)
 {
   struct stat stat;
   struct ft_char *tcharptr;  
@@ -14,12 +14,17 @@ void ReadTFM(struct font_entry * tfontp, char* tfmname)
 
   DEBUG_PRINT(((DEBUG_DVI|DEBUG_FT|DEBUG_TFM),
 	       "\n  OPEN METRICS:\t'%s'", tfmname));
-  if ((filedes = open(tfmname,O_RDONLY)) == -1) 
+  if ((filedes = open(tfmname,O_RDONLY)) == -1) {
     Warning("metric file %s could not be opened", tfmname);
+    return(false);
+  }
   fstat(filedes,&stat);
   filemmap = mmap(NULL,stat.st_size, PROT_READ, MAP_SHARED,filedes,0);
-  if (filemmap == (unsigned char *)-1) 
-    Fatal("cannot mmap metric file %s",tfmname);
+  if (filemmap == (unsigned char *)-1) {
+    Warning("cannot mmap metric file %s",tfmname);
+    close(filedes);
+    return(false);
+  }
   lh = UNumRead(filemmap+2,2);
   bc = UNumRead(filemmap+4,2);
   ec = UNumRead(filemmap+6,2);
@@ -33,7 +38,6 @@ void ReadTFM(struct font_entry * tfontp, char* tfmname)
     c++;
     position += 4; 
   }
-
   
   /* Read char widths */
   c=bc;
@@ -55,6 +59,7 @@ void ReadTFM(struct font_entry * tfontp, char* tfmname)
     position += 4;
   }
   free(width);
+  return(true);
 }
   
 

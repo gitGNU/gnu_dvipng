@@ -215,11 +215,11 @@ void    SetFntNum(int32_t, void* /* dvi/vf */);
 #ifdef HAVE_FT2
 void    InitPSFontMap(void);
 char*   FindPSFontMap(char*, char**, FT_Matrix**);
-void    InitFT(struct font_entry *, unsigned, char*, FT_Matrix* );
+bool    InitFT(struct font_entry *, unsigned, char*, FT_Matrix* );
 int32_t SetFT(int32_t, int32_t, int32_t);
 void    LoadFT(int32_t, struct ft_char *);
 struct encoding* FindEncoding(char*);
-void    ReadTFM(struct font_entry *, char*);
+bool    ReadTFM(struct font_entry *, char*);
 #endif
 
 /********************************************************/

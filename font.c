@@ -201,13 +201,22 @@ void FontFind(struct font_entry * tfontptr)
       free (name);
       name = kpse_find_file(tfontptr->n, kpse_tfm_format, false);
       if (name!=NULL) {
-	InitFT(tfontptr,dpi,encoding,transform);
-	if (transform!=NULL)
-	  free(transform);
-	ReadTFM(tfontptr,name);
-	free(name);
+	if (InitFT(tfontptr,dpi,encoding,transform)) {
+	  if (!ReadTFM(tfontptr,name)) {
+	    /* if Freetype or TFM loading fails for some reason, fall
+	       back to PK font */
+	    free(name);
+	    name=NULL; 
+	  } else
+	    free(name);
+	} else {
+	  free(name);
+	  name=NULL; 
+	}
       }
     }
+    if (transform!=NULL)
+      free(transform);
   }
 #endif
   if (name==NULL) {

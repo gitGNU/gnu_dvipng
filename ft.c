@@ -86,33 +86,44 @@ void LoadFT(int32_t c, struct ft_char * ptr)
   }
 }
 
-void InitFT(struct font_entry * tfontp, unsigned dpi,
+bool InitFT(struct font_entry * tfontp, unsigned dpi,
 	    char* encoding, FT_Matrix* transform)
 {
   int error;
 
-  DEBUG_PRINT(((DEBUG_DVI|DEBUG_VF),"\n  OPEN FONT:\t'%s'", tfontp->name));
-  Message(BE_VERBOSE,"<%s>", tfontp->name);
+  DEBUG_PRINT(((DEBUG_DVI|DEBUG_FT),"\n  OPEN FONT:\t'%s'", tfontp->name));
   error = FT_New_Face( libfreetype, tfontp->name, 0, &tfontp->face );
-  if (error == FT_Err_Unknown_File_Format)
+  if (error == FT_Err_Unknown_File_Format) {
     Warning("font file %s has unknown format", tfontp->name);
-  else if (error)
+    return(false);
+  } else if (error) { 
     Warning("font file %s could not be opened", tfontp->name);
-  if (encoding == NULL) {
-    tfontp->enc=NULL;
-    if (FT_Select_Charmap( tfontp->face, FT_ENCODING_ADOBE_CUSTOM )
-	&& FT_Select_Charmap( tfontp->face, FT_ENCODING_ADOBE_STANDARD ))
+    return(false);
+  } else {
+    Message(BE_VERBOSE,"<%s>", tfontp->name);
+    if (encoding == NULL) {
+      tfontp->enc=NULL;
+      if (FT_Select_Charmap( tfontp->face, FT_ENCODING_ADOBE_CUSTOM )
+	  && FT_Select_Charmap( tfontp->face, FT_ENCODING_ADOBE_STANDARD )) {
+	Warning("unable to set font encoding for %s", tfontp->name);
+	return(false);
+      }
+    }
+    else if ((tfontp->enc=FindEncoding(encoding))==NULL) {
       Warning("unable to set font encoding for %s", tfontp->name);
+      return(false);
+    }
+    if (FT_Set_Char_Size( tfontp->face, /* handle to face object           */
+			  0,            /* char_width in 1/64th of points  */
+			  tfontp->d/65536*64,
+			  /* char_height in 1/64th of points */
+			  dpi/shrinkfactor,   /* horizontal resolution */
+			  dpi/shrinkfactor )) /* vertical resolution   */ {
+      Warning("unable to set font size for %s", tfontp->name);
+      return(false);
+    }
+    FT_Set_Transform(tfontp->face, transform, NULL);
+    tfontp->type = FONT_TYPE_FT;
   }
-  else
-    tfontp->enc=FindEncoding(encoding);
-  if (FT_Set_Char_Size( tfontp->face, /* handle to face object           */
-			0,            /* char_width in 1/64th of points  */
-			tfontp->d/65536*64,
-			/* char_height in 1/64th of points */
-			dpi/shrinkfactor,   /* horizontal resolution */
-			dpi/shrinkfactor )) /* vertical resolution   */
-    Warning("unable to set font size for %s", tfontp->name);
-  FT_Set_Transform(tfontp->face, transform, NULL);
-  tfontp->type = FONT_TYPE_FT;
+  return(true);
 }
