@@ -331,6 +331,13 @@ Note that if you have both FreeType and T1lib on your system, FreeType
 will be preferred by dvipng. If you for some reason would want to use
 T1lib rendering, use this option.
 
+@item --gif*
+@cindex GIF image format
+The images are output in the GIF format, if GIF support is
+enabled. This is the default for the @samp{dvigif} binary, which only
+should be installed when GIF support is available. See also the
+@samp{--png} option.
+
 @item --height*
 @cindex baseline reporting
 @cindex height reporting
@@ -394,26 +401,6 @@ changed, see the @samp{--dvinum} switch). The default output filename is
 @samp{@var{file}%d.png} where the input DVI file was
 @samp{@var{file}.dvi}.
 
-@ignore
-@findex popen @r{for output}
-@kindex - @r{as output filename}
-@kindex ! @r{starting output filename}
-@kindex | @r{starting output filename}
-@cindex lpr spooler, MS-DOS emulation
-@cindex spooling to lpr on MS-DOS
-If @var{name} is @samp{-}, output goes to standard output.  If the first
-character of @var{name} is @samp{!} or @samp{|}, then the remainder will
-be used as an argument to @code{popen}; thus, specifying @samp{|lpr} as
-the output file will automatically queue the file for printing as
-usual.  (The MS-DOS version will print to the local printer device
-@file{PRN} when @var{name} is @samp{|lpr} and a program by that name
-cannot be found.)
-
-@samp{-o} disables the automatic reading of the @code{PRINTER}
-environment variable, and turns off the automatic sending of control-D.
-See the @samp{-f} option for how to override this.
-@end ignore
-
 @item -O @var{x-offset},@var{y-offset}
 @cindex offset pages
 Move the origin by @var{x-offset},@var{y-offset}, a comma-separated
@@ -435,6 +422,21 @@ specified) is treated as a physical (absolute) page number, rather than
 a value to compare with the @TeX{} @samp{\count0} values stored in the
 DVI file.  Thus, using @samp{-p =3} will start with the third page of
 the document, no matter what the pages are actually numbered.
+
+@item --picky*
+@cindex no erroneous images
+No images are output when a warning occurs. Normally, dvipng will
+output an image in spite of a warning, but there may be something
+missing in this image. One reason to use this option would be if you
+have a more complete but slower fallback converter. Mainly, this is
+useful for failed figure inclusion and unknown \special occurrences,
+but warnings will also occur for missing or unknown color specs and
+missing PK fonts.
+
+@item --png*
+@cindex PNG image format
+The images are output in the PNG format. This is the default for the
+@samp{dvipng} binary. See also the @samp{--gif} option.
 
 @item -pp @var{firstpage}-@var{lastpage}
 @cindex page range
@@ -1547,7 +1549,7 @@ This program is released under the GNU General Public License, see the
 COPYING file in the dvipng distribution or
 @url{http://www.gnu.org/licenses/gpl.html}.
 
-Copyright @copyright{} 2002-2004 Jan-Åke Larsson
+Copyright @copyright{} 2002-2004 Jan-@AA{}ke Larsson
 @end ifset
 @c man end
 
