@@ -343,6 +343,36 @@ char * xmalloc(unsigned size)
 }
 */
 
+void DecodeString(char *string)
+{
+#define PARSEARGS 10
+  char    *strv[PARSEARGS];
+  int     strc=1;
+  strv[0]=NULL;                       /* No program name */
+
+  while (*string==' ' || *string=='\t' || *string=='\n') 
+    string++;
+  while (*string!='\0') {
+    strv[strc++]=string;
+    if (*string!='\'') {
+      /* Normal split at whitespace */
+      while (*string!=' ' && *string!='\t' && *string!='\n' && *string!='\0') 
+	string++;
+    } else {
+      /* String delimiter found , so search for next */
+      strv[strc-1]=++string;
+      while (*string!='\'' && *string!='\0') 
+	string++;
+    }
+    if (*string!='\0')
+      *string++='\0';
+    while (*string==' ' || *string=='\t' || *string=='\n') 
+      string++;
+  }
+  if (strc>1) /* Nonempty */
+    (void) DecodeArgs(strc,strv);
+}
+
 /*-->Fatal*/
 /**********************************************************************/
 /******************************  Fatal  *******************************/
