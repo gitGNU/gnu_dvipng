@@ -32,7 +32,7 @@
 @author by Jan-@AA{}ke Larsson.
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 2003-2004 Jan-@AA{}ke Larsson
+Copyright @copyright{} 2002-2004 Jan-@AA{}ke Larsson
  
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
