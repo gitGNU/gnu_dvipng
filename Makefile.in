@@ -9,6 +9,7 @@ prefix = @prefix@
 exec_prefix = @exec_prefix@
 bindir = @bindir@
 infodir = @infodir@
+DESTDIR=
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 MKINSTALLDIRS = ./mkinstalldirs
@@ -36,8 +37,8 @@ dvipng: $(objects)
 $(objects): dvipng.h commands.h config.h
 
 install-dvipng: dvipng
-	-$(MKINSTALLDIRS) $(bindir)
-	$(INSTALL) dvipng $(bindir)
+	-$(MKINSTALLDIRS) $(DESTDIR)$(bindir)
+	$(INSTALL) dvipng $(DESTDIR)$(bindir)
 
 ####################################### The documentation
 
@@ -69,11 +70,11 @@ README: readme.texi
 		readme.texi --output README
 
 install-docs: docs
-	-$(MKINSTALLDIRS) $(infodir)
+	-$(MKINSTALLDIRS) $(DESTDIR)$(infodir)
 	for x in dvipng.info* ; do \
-		$(INSTALL_DATA) $$x $(infodir) ; \
+		$(INSTALL_DATA) $$x $(DESTDIR)$(infodir) ; \
 	done
-	-$(INSTALL_INFO) --info-dir=$(infodir) dvipng.info
+	-$(INSTALL_INFO) --info-dir=$(DESTDIR)$(infodir) dvipng.info
 
 
 ####################################### The test
