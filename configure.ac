@@ -43,6 +43,12 @@ AC_CHECK_LIB([kpathsea], [kpse_set_progname],,
 # Checks for header files. 
 AC_CHECK_HEADERS([gd.h png.h kpathsea/kpathsea.h],,
 		 [AC_MSG_ERROR([cannot find/use $ac_header])])
+AC_CHECK_FT2(,[CFLAGS="$FT2_CFLAGS $CFLAGS"
+	LIBS="$FT2_LIBS $LIBS"
+	FT_O="ft.o tfm.o psfontmap.o enc.o"	
+	AC_DEFINE(HAVE_FT2, 1, [Define to 1 if you have freetype2])],
+	[FT_O=""])
+AC_SUBST(FT_O)
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS([fcntl.h sys/time.h])
 
@@ -69,6 +75,22 @@ AC_CHECK_FUNCS([gdImagePngEx gdImageCreateTrueColor gdImageTrueColorToPalette])
 AC_PATH_PROG(MAKEINFO, makeinfo, :)
 MAKEINFO_CHECK_MACROS(acronym env option)
 AC_PATH_PROG(INSTALL_INFO, install-info, :, $PATH /usr/sbin /sbin)
+
+# Dvips config files
+if test "x$FT_O" != "x"; then
+  AC_PATH_PROG(KPSEWHICH, kpsewhich, no)
+  if test "$KPSEWHICH" != "no"; then
+    AC_MSG_CHECKING([for ps2pk.map])
+    PS2PK=`$KPSEWHICH psfonts.map | sed s%base/psfonts.map%% `config/ps2pk.map
+    if test -e $PS2PK; then
+      AC_DEFINE(HAVE_PS2PK_MAP, 1, 
+		[Define to 1 if you have ps2pk.map where expected])
+      AC_MSG_RESULT([$PS2PK])
+    else
+      AC_MSG_RESULT([no, this may inhibit your PS font selection])
+    fi
+  fi
+fi
 
 AC_MSG_RESULT([
 ** Configuration summary for $PACKAGE_STRING:

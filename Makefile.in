@@ -22,7 +22,7 @@ DVIPS=dvips
 TEXIFILES = dvipng.texi readme.texi install.texi macros.texi dvipng.help
 
 objects = dvipng.o color.o draw.o dvi.o font.o misc.o pk.o \
-	set.o special.o papersiz.o ppagelist.o vf.o
+	set.o special.o papersiz.o ppagelist.o vf.o @FT_O@ 
 
 all: dvipng docs
 
