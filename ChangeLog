@@ -1,3 +1,7 @@
+2004-08-02  Jan-Åke Larsson  <jalar@mai.liu.se>
+
+	* draw.c: Fix behaviour of --no-image-on-warn
+
 2004-07-01  Jan-Åke Larsson  <jalar@mai.liu.se>
 
 	* miktex.mak: New, for MIKTeX 
