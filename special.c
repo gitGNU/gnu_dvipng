@@ -395,13 +395,32 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
   }
 
   /* preview-latex' tightpage option */
-  if (strcmp(buffer,"!userdict")==0 
-      && strcmp(buffer+10,"begin/bop-hook{7{currentfile token not{stop}if 65781.76 div DVImag mul}repeat 72 add 72 2 copy gt{exch}if 4 2 roll neg 2 copy lt{exch}if dup 0 gt{pop 0 exch}{exch dup 0 lt{pop 0}if}ifelse 720 add exch 720 add 3 1 roll 4{5 -1 roll add 4 1 roll}repeat <</PageSize[5 -1 roll 6 index sub 5 -1 roll 5 index sub]/PageOffset[7 -2 roll [1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice//bop-hook exec}bind def end")==0) {
-    if (page_imagep==NULL) 
-      Message(BE_NONQUIET,"preview-latex's tightpage option detected, will use its bounding box.\n");
-    flags |= PREVIEW_LATEX_TIGHTPAGE;
-    return;
+  if (strcmp(token,"!(preview")==0) { 
+    char* preview_version,*token2;
+    preview_version=strtok(NULL,")");
+    token2=strtok(NULL,"(");
+    token2=strtok(NULL,")");
+    if (strcmp(token2,"tightpage")==0) {
+      if (page_imagep==NULL) 
+	Message(BE_NONQUIET," (preview-latex %s tightpage option detected, will use its bounding box)",preview_version);
+      flags |= PREVIEW_LATEX_TIGHTPAGE;
+      return;
+    }
   }
+
+  if (strcmp(token,"!userdict")==0) {
+    char* test;
+    test=strchr(buffer+10,'7');
+    while(test && strncmp(test,"7{currentfile token not{stop}if 65781.76 div DVImag mul}repeat",62)!=0)
+      test=strchr(test+1,'7');
+    if (test) {
+      if (page_imagep==NULL) 
+	Message(BE_NONQUIET," (preview-latex <= 0.9.1 tightpage option detected, will use its bounding box)");
+      flags |= PREVIEW_LATEX_TIGHTPAGE;
+      return;
+    }
+  }
+
   if (strncmp(token,"ps::",4)==0) {
     /* Hokay, decode bounding box */
     dviunits adj_llx,adj_lly,adj_urx,adj_ury,ht,dp,wd;
