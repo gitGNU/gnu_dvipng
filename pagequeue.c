@@ -23,7 +23,7 @@ int32_t TodoPage P1H(void)
   int val;
 
   if (hpagequeuep==NULL) 
-    return(MAXPAGE);
+    return(PAGE_NOPAGE);
   
   val = Reverse ? hpagequeuep->last-- : hpagequeuep->first++;
   Abspage = hpagequeuep->abspage;
@@ -115,16 +115,16 @@ bool QueueParse P2C(register char  *, s, bool, abspage)
 		ps_low = n;
 	    }
 	    else
-		ps_low = -MAXPAGE;
+		ps_low = PAGE_MINPAGE;
 	    range++;
 	    innumber = 0;
 	    continue;
 	}
 	if (c == 0 || white (c)) {/* end of this range */
 	    if (!innumber) {	/* no upper bound */
-		ps_high = MAXPAGE;
+		ps_high = PAGE_MAXPAGE;
 		if (!range)	/* no lower bound either */
-		    ps_low = -MAXPAGE;
+		    ps_low = PAGE_MINPAGE;
 	    }
 	    else {		/* have an upper bound */
 		ps_high = n;

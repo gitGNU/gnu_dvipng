@@ -38,28 +38,22 @@ struct dvi_data* DVIOpen P1C(char*, dviname)
       exit (EXIT_FAILURE);
     }
   }
-#ifdef DEBUG
-  if (Debug)
-    printf("OPEN FILE\t%s\n", dvi->name);
-#endif
-  
+  DEBUG_PRINTF(DEBUG_DVI,"OPEN FILE\t%s", dvi->name);
   pre=DVIGetCommand(dvi);
   if (*pre != PRE) {
     Fatal("PRE doesn't occur first--are you sure this is a DVI file?\n\n");
   }
-#ifdef DEBUG
-  if (Debug)
-    printf("DVI START:\tPRE ");
-#endif
-  
   k = UNumRead(pre+1,1);
+  DEBUG_PRINTF(DEBUG_DVI,"DVI START:\tPRE %d",k);
   if (k != DVIFORMAT) {
     Fatal("DVI format = %d, can only process DVI format %d files\n\n",
 	  k, DVIFORMAT);
   }
   dvi->num = UNumRead(pre+2, 4);
   dvi->den = UNumRead(pre+6, 4);
+  DEBUG_PRINTF2(DEBUG_DVI," %d/%d",dvi->num,dvi->den);  
   dvi->mag = UNumRead(pre+10, 4); /*FIXME, see font.c*/
+  DEBUG_PRINTF(DEBUG_DVI," %d",dvi->mag);  
   if ( usermag > 0 && usermag != dvi->mag ) {
     Warning("DVI magnification of %d over-ridden by user (%ld)",
 	    (long)dvi->mag, usermag );
@@ -68,20 +62,11 @@ struct dvi_data* DVIOpen P1C(char*, dviname)
   dvi->conv = (1.0/(((double)dvi->num / (double)dvi->den) *
 		    ((double)dvi->mag / 1000.0) *
 		    ((double)resolution/254000.0)))+0.5;
-
-#ifdef DEBUG
-  if (Debug)
-    printf("(%d) ",dvi->conv);
-#endif
-  
+  DEBUG_PRINTF(DEBUG_DVI," (%d)",dvi->conv);
   k = UNumRead(pre+14,1);
-#ifdef DEBUG
-  if (Debug)
-    printf("'%.*s'\n",k,pre+15);
-#endif
+  DEBUG_PRINTF2(DEBUG_DVI," '%.*s'",k,pre+15);
   if (G_verbose)
     printf("'%.*s' -> %s#.png\n",k,pre+15,dvi->outname);
-
   return(dvi);
 }
 
@@ -94,11 +79,7 @@ unsigned char* DVIGetCommand P1C(struct dvi_data*, dvi)
   int length;
   uint32_t strlength=0;
 
-#ifdef DEBUG
-  if (Debug)
-    printf("\n@%ld ", ftell(dvi->filep));
-#endif
-
+  DEBUG_PRINTF(DEBUG_DVI,"\n@%ld ", ftell(dvi->filep));
   *command = fgetc(dvi->filep);
   length = dvi_commandlength[*command];
   if (length < 0)
@@ -117,10 +98,10 @@ unsigned char* DVIGetCommand P1C(struct dvi_data*, dvi)
     /*    strlength = UNumRead((char*)command+1, length-1);*/
     break;
   case FNT_DEF1: case FNT_DEF2: case FNT_DEF3: case FNT_DEF4:
-    strlength = *(command + length-1) + *(command+length-2);
+    strlength = *(command + length - 1) + *(command + length - 2);
     break;
   case PRE: 
-    strlength = *(command+length-1);
+    strlength = *(command + length - 1);
     break;
   default:
   }
@@ -174,31 +155,18 @@ void SkipPage P1H(void)
   while (*command != EOP)  {
     switch (*command)  {
     case FNT_DEF1: case FNT_DEF2: case FNT_DEF3: case FNT_DEF4:
-#ifdef DEBUG
-      if (Debug)
-	printf("NOSKIP CMD:\t%s", dvi_commands[*command]);
-#endif
+      DEBUG_PRINTF(DEBUG_DVI,"NOSKIP CMD:\t%s", dvi_commands[*command]);
       FontDef(command,(struct dvi_vf_entry*)dvi);
-#ifdef DEBUG
-      if (Debug)
-	printf("\n");
-#endif
       break;
     case BOP: case PRE:    case POST:    case POST_POST:
       Fatal("%s occurs within page", dvi_commands[*command]);
       break;
     default:
-#ifdef DEBUG
-      if (Debug)
-	printf("SKIP CMD:\t%s\n", dvi_commands[*command]);
-#endif
+      DEBUG_PRINTF(DEBUG_DVI,"SKIP CMD:\t%s", dvi_commands[*command]);
     }
     command=DVIGetCommand(dvi);
   } /* while */
-#ifdef DEBUG
-  if (Debug)
-    printf("SKIP CMD:\t%s\n", dvi_commands[*command]);
-#endif
+  DEBUG_PRINTF(DEBUG_DVI,"SKIP CMD:\t%s", dvi_commands[*command]);
 }
 
 struct page_list* InitPage P1H(void)
@@ -212,21 +180,11 @@ struct page_list* InitPage P1H(void)
   while((*command != BOP) && (*command != POST)) {
     switch(*command) {
     case FNT_DEF1: case FNT_DEF2: case FNT_DEF3: case FNT_DEF4:
-#ifdef DEBUG
-      if (Debug)
-	printf("NOPAGE CMD:\t%s ", dvi_commands[*command]);
-#endif
+      DEBUG_PRINTF(DEBUG_DVI,"NOPAGE CMD:\t%s", dvi_commands[*command]);
       FontDef(command,(struct dvi_vf_entry*)dvi);
-#ifdef DEBUG
-      if (Debug)
-	printf("\n");
-#endif
       break;
     case NOP:
-#ifdef DEBUG
-      if (Debug)
-	printf("NOPAGE CMD:\tNOP\n");
-#endif
+      DEBUG_PUTS(DEBUG_DVI,"NOPAGE CMD:\tNOP");
       break;
     default:
       Fatal("%s occurs outside page", dvi_commands[*command]);
@@ -238,24 +196,16 @@ struct page_list* InitPage P1H(void)
   tpagelistp->next = NULL;
   if ( *command == BOP ) {  /*  Init page */
     int i;
-#ifdef DEBUG
-    if (Debug)
-      printf("PAGE START:\tBOP ");
-#endif
+    DEBUG_PUTS(DEBUG_DVI,"PAGE START:\tBOP");
     tpagelistp->offset = ftell(dvi->filep)-45;
     for (i = 0; i <= 9; i++) {
       tpagelistp->count[i] = UNumRead(command + 1 + i*4, 4);
+      DEBUG_PRINTF(DEBUG_DVI," %d",tpagelistp->count[i]);
     }
     tpagelistp->count[10] = ++abspagenumber;
-#ifdef DEBUG
-    if (Debug)
-      printf("(absno=%d)\n",abspagenumber);
-#endif
+    DEBUG_PRINTF(DEBUG_DVI," (%d)",abspagenumber);
   } else {
-#ifdef DEBUG
-    if (Debug)
-      printf("DVI END:\tPOST\n");
-#endif
+    DEBUG_PUTS(DEBUG_DVI,"DVI END:\tPOST");
     tpagelistp->offset = ftell(dvi->filep)-1;
     tpagelistp->count[10] = -1; /* POST */
   }
@@ -269,36 +219,57 @@ struct page_list* FindPage P1C(int32_t,pagenum)
   int index;
   
   /* If no page is to be found, return no page */
-  if (pagenum==MAXPAGE)
+  if (pagenum==PAGE_NOPAGE)
     return(NULL);
 
   index = Abspage ? 10 : 0 ;
-
-  /* Check if page is in list (stop on last page in list anyway) */
+#ifdef DEBUG
+  if (Abspage) {
+    DEBUG_PRINTF(DEBUG_DVI,"\n  FIND PAGE:\t(%d)",pagenum);
+  } else {
+    DEBUG_PRINTF(DEBUG_DVI,"\n  FIND PAGE:\t%d",pagenum);
+  }
+#endif
+  /* If we have read past the last page in our current list or the
+   *  list is empty, look at the next page
+   */
+  if (hpagelistp==NULL || hpagelistp->offset < ftell(dvi->filep)) {
+    tpagelistp=hpagelistp;
+    hpagelistp=InitPage();
+    hpagelistp->next=tpagelistp;
+  }
+  if (hpagelistp==NULL)    
+      Fatal("no pages in %s",dvi->name);
+  /* Check if page is in list */
   tpagelistp = hpagelistp;
-  while(tpagelistp->next!=NULL && tpagelistp->count[index]!=pagenum) {
+  while(tpagelistp!=NULL && tpagelistp->count[index]!=pagenum) {
     tpagelistp = tpagelistp->next;
   }
-  /* Last page may be pointer to POST */
-  if (tpagelistp->count[10]==-1) {
-    fseek(dvi->filep, tpagelistp->offset+1L, SEEK_SET);
-  } else {
-    fseek(dvi->filep, tpagelistp->offset+45L, SEEK_SET);
-    /* If page not yet found, skip in file until found */
-    while(tpagelistp!=NULL && tpagelistp->count[index]!=pagenum) {
+  /* If not, skip current page and look at the next page */
+  if (tpagelistp==NULL) {
+    while(hpagelistp->count[index]!=pagenum && hpagelistp->count[10]!=-1) {
       SkipPage();
-      tpagelistp->next=InitPage();
-      tpagelistp = tpagelistp->next;
-    }
+      tpagelistp=hpagelistp;
+      hpagelistp=InitPage();
+      hpagelistp->next=tpagelistp;
+    }    
+    tpagelistp=hpagelistp;
   }
-
-#ifdef DEBUG
-  if (Debug)
-    if (tpagelistp!=NULL)
-      printf("FIND PAGE@%d:\tcount0=%d\t(absno=%d)\n", tpagelistp->offset,
-	     tpagelistp->count[0],tpagelistp->count[10]);
-#endif
-
+  /* Have we found it? */
+  if (tpagelistp->count[index]==pagenum) {
+    if (pagenum==PAGE_POST) {
+      fseek(dvi->filep, tpagelistp->offset+1L, SEEK_SET);
+     } else {
+       fseek(dvi->filep, tpagelistp->offset+45L, SEEK_SET);
+     }
+  } else /* we're at POST, are we trying to find the last page? */
+    if (pagenum==PAGE_LASTPAGE) {
+      tpagelistp=hpagelistp->next;
+      fseek(dvi->filep, tpagelistp->offset+45L, SEEK_SET);
+    } else {
+      tpagelistp=NULL;
+      /*	Warning("page %d not found",pagenum);*/
+    }
   return(tpagelistp);
 }
 

@@ -257,6 +257,12 @@ struct dvi_vf_entry {
   };
 };
 
+#define PAGE_NOPAGE   INT32_MAX
+#define PAGE_POST     INT32_MAX-1
+#define PAGE_LASTPAGE INT32_MAX-2
+#define PAGE_MAXPAGE  INT32_MAX-3    /* assume no pages out of this range */
+#define PAGE_MINPAGE  INT32_MIN      /* assume no pages out of this range */
+
 struct page_list {
   struct page_list* next;
   int     offset;           /* file offset to BOP */
@@ -285,8 +291,6 @@ void    Fatal VA();
 struct page_list *FindPage AA((int32_t));
 void    FormFeed AA((struct dvi_data*,int));
 void    FontDef AA((unsigned char*, struct dvi_vf_entry*));
-void    FontFind AA((struct font_entry *));
-void    GetFontDef AA((void));
 struct page_list *InitPage AA((void));
 void    LoadAChar AA((int32_t, register struct pk_char *));
 uint32_t   NoSignExtend AA((FILE*, int));
@@ -328,10 +332,8 @@ void resetcolorstack AA((char *));
 
 #include "commands.h"
 
-#define MAXPAGE INT32_MAX               /* assume no pages out of this range */
-#define MINPAGE INT32_MIN
-EXTERN int32_t    FirstPage  INIT(MINPAGE);  /* first page to print (count0) */
-EXTERN int32_t    LastPage   INIT(MAXPAGE);  /* last page to print           */
+EXTERN int32_t FirstPage  INIT(PAGE_MINPAGE);/* first page to print (count0) */
+EXTERN int32_t LastPage   INIT(PAGE_MAXPAGE);/* last page to print           */
 EXTERN bool    FirstPageSpecified INIT(_FALSE);
 EXTERN bool    LastPageSpecified INIT(_FALSE);
 #ifndef KPATHSEA
@@ -370,16 +372,21 @@ EXTERN struct internal_state {
 } current_state;
 
 #ifdef DEBUG
-EXTERN int Debug INIT(0);
-#define DEBUG_START() do { if (Debug) {
-#define DEBUG_END()        fflush (stdout); } } while (0)
-#define DEBUG_PRINT(str)						\
-  DEBUG_START (); fputs (str, stdout); DEBUG_END ()
-#define DEBUG_PRINT1(str, e1)						\
-  DEBUG_START (); printf (str, e1); DEBUG_END ()
+EXTERN unsigned int Debug INIT(0);
+#define DEBUG_START(a) if (Debug & a) {
+#define DEBUG_END      fflush(stdout);} 
+#define DEBUG_PUTS(a,str) DEBUG_START(a) fputs(str,stdout);DEBUG_END
+#define DEBUG_PRINTF(a,str,e1) DEBUG_START(a) printf(str,e1);DEBUG_END
+#define DEBUG_PRINTF2(a,str,e1,e2) DEBUG_START(a) printf(str,e1,e2);DEBUG_END
+#define DEBUG_DVI   1
+#define DEBUG_VF    2
+#define DEBUG_PK    4
+#define DEBUG_GLYPH 8 /* should always be last, see misc.c */
 #else
-#define DEBUG_PRINT(str)
-#define DEBUG_PRINT1(str, e1)
+#define DEBUG_START(a) 
+#define DEBUG_END      
+#define DEBUG_PUT(a,str)
+#define DEBUG_PRINTF(a,str,e1)
 #endif
 
 /************************timing stuff*********************/

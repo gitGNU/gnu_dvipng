@@ -32,9 +32,11 @@ named COPYING and dvipng.c.");
       switch (c) {
 #ifdef DEBUG
       case 'd':       /* selects Debug output */
-	Debug = _TRUE;
+	sscanf(p, "%u", &Debug);
+	if(Debug==0) 
+	  Debug = DEBUG_DVI;
 #ifdef KPATHSEA
-	sscanf(p, "%u", &kpathsea_debug);
+	kpathsea_debug = Debug/DEBUG_GLYPH;
 #endif
 	printf("Debug output enabled\n");
         break;
@@ -266,8 +268,6 @@ named COPYING and dvipng.c.");
 	DVIClose(dvi);
       }
       dvi=DVIOpen(argv[i]);
-      if ((hpagelistp=InitPage())==NULL)
-	Fatal("no pages in DVI file");
     }
   }
 

@@ -16,9 +16,8 @@
  *
  **********************************************************************
  * Preprocessor switches:
- *      #define DEBUG    for massive printing of trace information
- *               when -d cmdline option specified
- *      #define DRAWGLYPH draws PK-Glyphs on stdout
+ *      #define DEBUG      for massive printing of trace information
+ *                         when -d cmdline option specified
  **********************************************************************
  */
 
@@ -53,22 +52,16 @@ int main P2C(int, argc, char **, argv)
   kpse_init_prog("DVIPNG", resolution, MFMODE, "cmr10");
 #endif
 
-
   if (!ParseStdin) {
     /* If pages not given on commandline, insert all pages */
     if (QueueEmpty()) {
       if (!Reverse) {
-	QueuePage(1,MAXPAGE,_TRUE);
+	QueuePage(1,PAGE_LASTPAGE,_TRUE);
       } else {
 	struct page_list *tpagelistp;
 	
-	tpagelistp=hpagelistp;
-	while(tpagelistp!=NULL) {
-	  SkipPage();
-	  tpagelistp->next=InitPage();
-	  tpagelistp=tpagelistp->next;
-	}
-	QueuePage(1,abspagenumber,_TRUE);
+	tpagelistp=FindPage(PAGE_LASTPAGE);
+	QueuePage(1,tpagelistp->count[10],_TRUE);
       }
     }
     DoPages();
