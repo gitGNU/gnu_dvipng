@@ -252,6 +252,7 @@ void DrawPages(void)
       ++ndone;
 #endif
       Message(BE_NONQUIET,"] ");
+      fflush(ERR_STREAM);
       dvi_pos=NextPPage(dvi,dvi_pos);
     }
     Message(BE_NONQUIET,"\n");
