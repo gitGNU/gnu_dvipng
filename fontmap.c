@@ -22,18 +22,24 @@ inline char* newword(char** buffer, char* end)
   return(word);
 }
 
+char* find_format(char* name)
+{
+  /* Cater for both new (first case) and old (second case) kpathsea */
+  char* format =
+     kpse_find_file(name,kpse_fontmap_format,false);
+
+  if (format==NULL)
+    kpse_find_file(name,kpse_dvips_config_format,false);
+  return(format);
+}
+
 void InitPSFontMap(void)
 {
-#ifndef kpse_fontmap_format
-#define kpse_fontmap_format kpse_dvips_config_format
-#endif
-  char *pos,*end,*psfont_name =
-    kpse_find_file("ps2pk.map",kpse_fontmap_format,false);
+  char *pos,*end,*psfont_name = find_format("ps2pk.map");
   struct psfontmap *entry;
 
   if (psfont_name==NULL)
-    psfont_name =
-      kpse_find_file("psfonts.map",kpse_fontmap_format,false);
+    psfont_name = find_format("psfonts.map");
 
   if (psfont_name==NULL) {
     Warning("cannot find ps2pk.map, nor psfonts.map");
