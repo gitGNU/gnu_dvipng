@@ -2,7 +2,7 @@
 @setfilename dvipng.info
 @settitle dvipng: A DVI driver
 
-@set version 0.5
+@set version 0.6
 @set month-year August 2003
 
 @c Put everything in one index (arbitrarily chosen to be the concept index).

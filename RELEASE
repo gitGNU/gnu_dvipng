@@ -1,11 +1,10 @@
-Release notes for version 0.5 of the dvipng package:
+Release notes for version 0.6 of the dvipng package:
 
 This program makes PNG graphics from DVI files as obtained from TeX
 and its relatives.
 
-This release is a bugfix release. The bounding boxes were "off" on
-some machines in the previous release. Preliminary truecolor support
-has been added if gd allows it. 
+This release is a bugfix release. It fixes the documentation
+installation and speeds up PostScript inclusion considerably.
 
 It has been tested but will probably need further testing. Report any
 bugs you find, see README for instructions.
