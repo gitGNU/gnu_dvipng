@@ -1,3 +1,28 @@
+/* color.c */
+
+/************************************************************************
+
+  Part of the dvipng distribution
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+  02111-1307, USA.
+
+  Copyright © 2002-2004 Jan-Åke Larsson
+
+************************************************************************/
+
 #include "dvipng.h"
 #include <fcntl.h> // open/close
 #include <sys/mman.h>
@@ -9,37 +34,31 @@
  * Besides, the current antialiasing implementation needs rgb anyway.
 */
 
-static int cstack_red[STACK_SIZE];
-static int cstack_green[STACK_SIZE]; 
-static int cstack_blue[STACK_SIZE];
-static int csp=0;
-
 struct colorname {
-  struct colorname* next;
   char*             name;
   char*             color;
 } *colornames=NULL;
 
 void initcolor() 
 {
-   csp = 0;
-   cstack_red[0]=0; 
-   cstack_green[0]=0; 
-   cstack_blue[0]=0; 
-   Red=0;
-   Green=0;
-   Blue=0;
+   csp = 1;
+   cstack[0].red=255; 
+   cstack[0].green=255; 
+   cstack[0].blue=255; 
+   cstack[1].red=0; 
+   cstack[1].green=0; 
+   cstack[1].blue=0; 
 }
 
 void LoadDvipsNam (void)
 {
-  char *pos,*max,*buf,*dvipsnam_file =
-    kpse_find_file("dvipsnam.def",kpse_tex_format,false);
+  char *pos,*max,*buf,*dvipsnam_file;
   int fd;
   struct colorname *tmp=NULL;
   struct stat stat;
   unsigned char* dvipsnam_mmap;
-  
+
+  TEMPSTR(dvipsnam_file,kpse_find_file("dvipsnam.def",kpse_tex_format,false));
   if (dvipsnam_file == NULL) {
     Warning("color name file dvipsnam.def could not be found");
     return;
@@ -55,12 +74,12 @@ void LoadDvipsNam (void)
     Warning("cannot mmap color name <%s> !\n",dvipsnam_file);
     return;
   }
-  if ((buf = malloc(stat.st_size*2))==NULL) 
+  if ((colornames = malloc(stat.st_size*2))==NULL) 
     Fatal("cannot alloc space for color names");
   pos=dvipsnam_mmap;
   max=dvipsnam_mmap+stat.st_size;
-  tmp=(struct colorname*)buf;
-  buf+=stat.st_size;
+  tmp=colornames;
+  buf=(char*)colornames+stat.st_size;
   while (pos<max && *pos!='\\') pos++;
   while(pos+9<max && strncmp(pos,"\\endinput",9)!=0) {
     while (pos+17<max && strncmp(pos,"\\DefineNamedColor",17)!=0) {
@@ -89,15 +108,22 @@ void LoadDvipsNam (void)
     *buf++='\0';
     while (pos<max && *pos!='\\') pos++;
     DEBUG_PRINT(DEBUG_COLOR,("\n  COLOR NAME:\t'%s' '%s'",
-		 tmp->name,tmp->color)); 
-    tmp->next = colornames;
-    colornames = tmp;
+			     tmp->name,tmp->color)); 
     tmp++;
   }
+  tmp->name=NULL;
   if (munmap(dvipsnam_mmap,stat.st_size))
     Warning("cannot munmap color name file %s!?\n",dvipsnam_file);
   if (close(fd))
     Warning("cannot close color name file %s!?\n",dvipsnam_file);
+  //  free(dvipsnam_file);
+}
+
+void ClearDvipsNam(void)
+{
+  if (colornames!=NULL)
+    free(colornames);
+  colornames=NULL;
 }
 
 float toktof(char* token)
@@ -146,12 +172,14 @@ void stringrgb(char* p,int *r,int *g,int *b)
     if (colornames==NULL) 
       LoadDvipsNam();
     tmp=colornames;
-    while(tmp!=NULL && strcmp(tmp->name,token)) 
-      tmp=tmp->next;
-    if (tmp!=NULL)
+    while(tmp!=NULL && tmp->name!=NULL && strcmp(tmp->name,token)) 
+      tmp++;
+    if (tmp!=NULL) {
       /* One-level recursion */
-      stringrgb(tmp->color,r,g,b);
-    else {
+      char* colorspec=alloca(sizeof(char)*strlen(tmp->color+1));
+      strcpy(colorspec,tmp->color);
+      stringrgb(colorspec,r,g,b);
+    } else {
       char* t2=strtok(NULL,"");  
       if (t2!=NULL) 
 	Warning("Unimplemented color specification '%s %s'\n",p,t2);
@@ -164,36 +192,79 @@ void stringrgb(char* p,int *r,int *g,int *b)
 }
 
 void background(char* p)
+     /* void Background(char* p, struct page_list *tpagep)*/
 {
-  stringrgb(p, &bRed, &bGreen, &bBlue);
-  DEBUG_PRINT(DEBUG_COLOR,("\n  BACKGROUND:\t(%d %d %d) ",bRed, bGreen, bBlue))
-} 
+  stringrgb(p, &cstack[0].red, &cstack[0].green, &cstack[0].blue);
+  DEBUG_PRINT(DEBUG_COLOR,("\n  BACKGROUND:\t(%d %d %d) ",
+			   cstack[0].red, cstack[0].green, cstack[0].blue));
+  /* Background color changes affect the _whole_ page */
+  /*if (tpagep!=NULL) {
+    tpagep->cstack[0].red = cstack[0].red;
+    tpagep->cstack[0].green = cstack[0].green;
+    tpagep->cstack[0].blue = cstack[0].blue;
+    } */
+}
 
 void pushcolor(char * p)
 {
   if ( ++csp == STACK_SIZE )
     Fatal("Out of color stack space") ;
-  stringrgb(p, &Red, &Green, &Blue);
-  cstack_red[csp] = Red; 
-  cstack_green[csp] = Green; 
-  cstack_blue[csp] = Blue; 
-  DEBUG_PRINT(DEBUG_COLOR,("\n  COLOR PUSH:\t(%d %d %d) ",Red, Green,Blue))
+  stringrgb(p, &cstack[csp].red, &cstack[csp].green, &cstack[csp].blue);
+  DEBUG_PRINT(DEBUG_COLOR,("\n  COLOR PUSH:\t(%d %d %d) ",
+			   cstack[csp].red, cstack[csp].green, cstack[csp].blue))
 }
 
 void popcolor()
 {
-  if (csp > 0) csp--; /* Last color is global */
-  Red = cstack_red[csp];
-  Green = cstack_green[csp];
-  Blue = cstack_blue[csp];
+  if (csp > 1) csp--; /* Last color is global */
   DEBUG_PRINT(DEBUG_COLOR,("\n  COLOR POP\t"))
 }
 
 void resetcolorstack(char * p)
 {
-  if ( csp > 0 )
+  if ( csp > 1 )
     Warning("Global color change within nested colors\n");
-  csp=-1;
+  csp=0;
   pushcolor(p) ;
   DEBUG_PRINT(DEBUG_COLOR,("\n  RESET COLOR:\tbottom of stack:"))
+}
+
+void StoreColorStack(struct page_list *tpagep)
+{
+  int i=0;
+
+  DEBUG_PRINT(DEBUG_COLOR,("\n  STORE COLOR STACK:\t %d ", csp));
+  tpagep->csp=csp;
+  while ( i <= csp ) {
+    DEBUG_PRINT(DEBUG_COLOR,("\n  COLOR STACK:\t %d (%d %d %d) ",i,
+			     cstack[i].red, cstack[i].green, cstack[i].blue));
+    tpagep->cstack[i].red = cstack[i].red;
+    tpagep->cstack[i].green = cstack[i].green;
+    tpagep->cstack[i].blue = cstack[i].blue;
+    i++;
+  }
+}
+
+void ReadColorStack(struct page_list *tpagep)
+{
+  int i=0;
+
+  DEBUG_PRINT(DEBUG_COLOR,("\n  READ COLOR STACK:\t %d ", tpagep->csp));
+  csp=tpagep->csp;
+  while ( i <= tpagep->csp ) {
+    DEBUG_PRINT(DEBUG_COLOR,("\n  COLOR STACK:\t %d (%d %d %d) ",i,
+			     cstack[i].red, cstack[i].green, cstack[i].blue));
+    cstack[i].red = tpagep->cstack[i].red;
+    cstack[i].green = tpagep->cstack[i].green;
+    cstack[i].blue = tpagep->cstack[i].blue;
+    i++;
+  }
+}
+
+void StoreBackgroundColor(struct page_list *tpagep)
+{
+  /* Background color changes affect the _whole_ page */
+  tpagep->cstack[0].red = cstack[0].red;
+  tpagep->cstack[0].green = cstack[0].green;
+  tpagep->cstack[0].blue = cstack[0].blue;
 }

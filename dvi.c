@@ -1,3 +1,28 @@
+/* dvi.c */
+
+/************************************************************************
+
+  Part of the dvipng distribution
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+  02111-1307, USA.
+
+  Copyright © 2002-2004 Jan-Åke Larsson
+
+************************************************************************/
+
 #include "dvipng.h"
 #include <libgen.h>
 #include <sys/stat.h>
@@ -58,6 +83,7 @@ void DVIInit(struct dvi_data* dvi)
   Message(BE_VERBOSE,"'%.*s' -> %s\n",k,pre+15,dvi->outname);
   fstat(fileno(dvi->filep), &stat);
   dvi->mtime = stat.st_mtime;
+  dvi->pagelistp=NULL;
 }
 
 struct dvi_data* DVIOpen(char* dviname,char* outname)
@@ -206,6 +232,13 @@ void SkipPage(struct dvi_data* dvi)
       DEBUG_PRINT(DEBUG_DVI,("NOSKIP CMD:\t%s", dvi_commands[*command]));
       FontDef(command,dvi);
       break;
+    case XXX1: case XXX2: case XXX3: case XXX4:
+      DEBUG_PRINT(DEBUG_DVI,("NOSKIP CMD:\t%s %d", dvi_commands[*command],
+			     UNumRead(command+1, dvi_commandlength[*command]-1)));
+      SetSpecial(command + dvi_commandlength[*command], 
+		 UNumRead(command+1, dvi_commandlength[*command]-1),
+		 0,0);
+      break;
     case BOP: case PRE: case POST: case POST_POST:
       Fatal("%s occurs within page", dvi_commands[*command]);
       break;
@@ -241,18 +274,20 @@ struct page_list* InitPage(struct dvi_data* dvi)
     }
     command=DVIGetCommand(dvi);
   }
-  if ((tpagelistp = malloc(sizeof(struct page_list)))==NULL)
+  if ((tpagelistp = 
+       malloc(sizeof(struct page_list)+(csp+1-2)*sizeof(struct dvi_color)))==NULL)
     Fatal("cannot allocate memory for new page entry");
   tpagelistp->next = NULL;
   if ( *command == BOP ) {  /*  Init page */
     int i;
     DEBUG_PRINT(DEBUG_DVI,("PAGE START:\tBOP"));
+    StoreColorStack(tpagelistp);
     tpagelistp->offset = ftell(dvi->filep)-45;
     for (i = 0; i <= 9; i++) {
       tpagelistp->count[i] = UNumRead(command + 1 + i*4, 4);
       DEBUG_PRINT(DEBUG_DVI,(" %d",tpagelistp->count[i]));
     }
-    if (dvi->pagelistp==NULL)
+    if (dvi->pagelistp==NULL) 
       tpagelistp->count[10] = 1;
     else
       tpagelistp->count[10] = dvi->pagelistp->count[10]+1;
@@ -261,12 +296,14 @@ struct page_list* InitPage(struct dvi_data* dvi)
     DEBUG_PRINT(DEBUG_DVI,("DVI END:\tPOST"));
     tpagelistp->offset = ftell(dvi->filep)-1;
     tpagelistp->count[0] = PAGE_POST; /* POST */
+    tpagelistp->count[10] = PAGE_POST; /* POST */
   }
   return(tpagelistp);
 }
 
 int SeekPage(struct dvi_data* dvi, struct page_list* page)
 {
+  ReadColorStack(page);
   return(fseek(dvi->filep, 
 	       page->offset+((page->count[0]==PAGE_POST) ? 1L : 45L),
 	       SEEK_SET));
@@ -351,11 +388,13 @@ void DelPageList(struct dvi_data* dvi)
 
 void DVIClose(struct dvi_data* dvi)
 {
-  fclose(dvi->filep);
-  DelPageList(dvi);
-  free(dvi->outname);
-  free(dvi->name);
-  free(dvi);
+  if (dvi!=NULL) {
+    fclose(dvi->filep);
+    DelPageList(dvi);
+    free(dvi->outname);
+    free(dvi->name);
+    free(dvi);
+  }
 }
 
 bool DVIReOpen(struct dvi_data* dvi)
