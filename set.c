@@ -60,7 +60,7 @@ void WriteImage(char *pngname, int pagenum)
   if ((outfp = fopen(pngname,"wb")) == NULL)
       Fatal("Cannot open output file %s",pngname);
 #ifdef HAVE_GDIMAGEPNGEX
-  gdImagePngEx(page_imagep,outfp,1)
+  gdImagePngEx(page_imagep,outfp,compression);
 #else
   gdImagePng(page_imagep,outfp);
 #endif
@@ -77,58 +77,57 @@ void WriteImage(char *pngname, int pagenum)
 /*****************************  SetRule  ******************************/
 /**********************************************************************/
 /*   this routine will draw a rule */
-int32_t SetRule(int32_t a, int32_t b, int32_t h,int32_t v,int PassNo)
+int32_t SetRule(int32_t a, int32_t b, int32_t hh,int32_t vv, int PassNo)
 {
   int Color;
-#if 0
-  int32_t    xx=0, yy=0;
+  int32_t    width=0, height=0;
 
   if ( a > 0 && b > 0 ) {
-    xx = (b+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor;     /* width */
-    yy = (a+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor;     /* height */
-    //    if (xx==0) xx=1;
+    /* Calculate width and height, round up */
+    width = (b+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor;
+    height = (a+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor;
   }
   switch(PassNo) {
   case PASS_BBOX:
-    min(x_min,PIXROUND(h, dvi->conv*shrinkfactor));
-    min(y_min,PIXROUND(v, dvi->conv*shrinkfactor)-yy+1);
-    max(x_max,PIXROUND(h, dvi->conv*shrinkfactor)+xx);
-    max(y_max,PIXROUND(v, dvi->conv*shrinkfactor)+1);
+    /* The +1's are because things are cut _at_that_coordinate_. */
+    min(x_min,hh);
+    min(y_min,vv-height+1);
+    max(x_max,hh+width);
+    max(y_max,vv+1);
     break;
   case PASS_DRAW:
-    if ((yy>0) && (xx>0)) {
-      /*
-	This code produces too dark rules. 
-      */
+    if ((height>0) && (width>0)) {
+      /* This code produces too dark rules. But what the hell. Grey
+       * rules look fuzzy.
+       */
       Color = gdImageColorResolve(page_imagep, Red,Green,Blue);
-      gdImageFilledRectangle(page_imagep,
-			     PIXROUND(h, dvi->conv*shrinkfactor),
-			     PIXROUND(v, dvi->conv*shrinkfactor)-yy+1,
-			     PIXROUND(h, dvi->conv*shrinkfactor)+xx-1,
-			     PIXROUND(v, dvi->conv*shrinkfactor),
-			     Color);
+      /* +1 and -1 are because the Rectangle coords include last pixels */
+      gdImageFilledRectangle(page_imagep,hh,vv-height+1,hh+width-1,vv,Color);
       DEBUG_PRINT((DEBUG_DVI,"\n  RULE \t%dx%d at (%d,%d)",
-		   xx, yy,
-		   PIXROUND(h, dvi->conv*shrinkfactor),
-		   PIXROUND(v, dvi->conv*shrinkfactor)));
+		   width, height, hh, vv));
     }
   }
-#endif
+  return(b);
+}
+
+
+#if 0
   switch(PassNo) {
   case PASS_BBOX:
-    min(x_min,PIXROUND(h, dvi->conv*shrinkfactor));
-    min(y_min,PIXROUND((v-a-dvi->conv+1), dvi->conv*shrinkfactor));
-    max(x_max,PIXROUND((h+b+dvi->conv-1), dvi->conv*shrinkfactor)+1);
-    max(y_max,PIXROUND((v+dvi->conv-1), dvi->conv*shrinkfactor)+1);
+    min(x_min,hh);
+    min(y_min,vv-height+1);
+    max(x_max,hh+width);
+    max(y_max,vv+1);
     break;
   case PASS_DRAW:
     if ((a>0) && (b>0)) {
       int width,height,left=-1,right=-1,bottom=-1,top=-1;
       gdImagePtr rule;
       
-      /* Calculate width, round up on the right and down on the left */
+
       width  = (h+b+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor
 	- h/dvi->conv/shrinkfactor;
+      /* Calculate height, round up on the bottom and down on the top */
       height = (v+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor
 	- (v-a)/dvi->conv/shrinkfactor;
       rule = gdImageCreate(width,height);
@@ -232,13 +231,13 @@ int32_t SetRule(int32_t a, int32_t b, int32_t h,int32_t v,int PassNo)
 		  h/dvi->conv/shrinkfactor,
 		  (v-a)/dvi->conv/shrinkfactor,
 		  0,0,width,height);
-      DEBUG_PRINT((DEBUG_DVI,"\n  RULE \t%dx%d at (%d,%d) offset (%d,%d)",
+      DEBUG_PRINT((DEBUG_DVI,"\n  RULE \t%dx%d at (%d,%d)",
 		   width,height,
 		   PIXROUND(h, dvi->conv*shrinkfactor),
 		   PIXROUND(v, dvi->conv*shrinkfactor)));
       DEBUG_PRINT((DEBUG_DVI," (lrtb %d %d %d %d)",left,right,top,bottom));
     }
   }
-  return(b);
-}
+#endif
+
 

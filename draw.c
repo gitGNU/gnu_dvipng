@@ -156,17 +156,34 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
     break;
   case SET_RULE:
     DEBUG_PRINT((DEBUG_DVI," %d %d",
-		  UNumRead(command+1, 4), UNumRead(command+5, 4)));
-    MoveRight(SetRule(DO_VFCONV(UNumRead(command+1, 4)),
-		      DO_VFCONV(UNumRead(command+5, 4)),
-		      h,v, PassNo));
+		 UNumRead(command+1, 4), UNumRead(command+5, 4)));
+#ifndef NO_DRIFT
+    temp = SetRule(DO_VFCONV(UNumRead(command+1, 4)),
+		   DO_VFCONV(UNumRead(command+5, 4)),
+		   hh, vv, PassNo);
+    h += temp;
+    hh += PIXROUND(temp,dvi->conv*shrinkfactor);
+    CHECK_MAXDRIFT(h,hh);
+#else
+    h += SetRule(DO_VFCONV(UNumRead(command+1, 4)),
+		 DO_VFCONV(UNumRead(command+5, 4)),
+		 PIXROUND(h,dvi->conv*shrinkfactor), 
+		 PIXROUND(v,dvi->conv*shrinkfactor), PassNo);
+#endif
     break;
   case PUT_RULE:
     DEBUG_PRINT((DEBUG_DVI," %d %d",
-		  UNumRead(command+1, 4), UNumRead(command+5, 4)));
+		 UNumRead(command+1, 4), UNumRead(command+5, 4)));
+#ifndef NO_DRIFT
     (void) SetRule(DO_VFCONV(UNumRead(command+1, 4)),
 		   DO_VFCONV(UNumRead(command+5, 4)),
-		   h,v, PassNo);
+		   hh, vv, PassNo);
+#else
+    (void) SetRule(DO_VFCONV(UNumRead(command+1, 4)),
+		   DO_VFCONV(UNumRead(command+5, 4)),
+		   PIXROUND(h,dvi->conv*shrinkfactor),
+		   PIXROUND(v,dvi->conv*shrinkfactor), PassNo);
+#endif
     break;
   case BOP:
     Fatal("BOP occurs within page");
