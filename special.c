@@ -64,10 +64,19 @@ ps2png(const char *psfile, int hresolution, int vresolution,
 	psimage = gdImageCreateFromPng(pngstream);
 	fclose(pngstream);
       }
+#ifdef HAVE_GDIMAGETRUECOLORTOPALETTE
+#ifdef HAVE_GDIMAGECREATETRUECOLOR
+      if (!truecolor)
+#endif
+	gdImageTrueColorToPalette(psimage,0,256);
+#endif
+#ifdef DEBUG
       if (psimage != NULL)
-	DEBUG_PRINT((DEBUG_GS,"\n  GS OUTPUT:\t%dx%d image ",gdImageSX(psimage),gdImageSY(psimage)));
+	DEBUG_PRINT((DEBUG_GS,"\n  GS OUTPUT:\t%dx%d image ",
+		     gdImageSX(psimage),gdImageSY(psimage)));
       else
 	DEBUG_PRINT((DEBUG_GS,"\n  GS OUTPUT:\tNO IMAGE "));
+#endif
     }
   }
   return psimage;
@@ -78,7 +87,7 @@ ps2png(const char *psfile, int hresolution, int vresolution,
 /****************************  SetSpecial  ***************************/
 /*********************************************************************/
 
-void SetSpecial(char * special, int32_t length, int32_t h, int32_t v, 
+void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv, 
 		bool PassNo)
 /* interpret a \special command, made up of keyword=value pairs */
 /* Color specials only for now. Warn otherwise. */
@@ -171,8 +180,11 @@ void SetSpecial(char * special, int32_t length, int32_t h, int32_t v,
 	if (pngfile!=NULL) {
 	  FILE* pngfilep = fopen(pngfile,"rb");
 
-	  if (pngfilep!=NULL)
+	  if (pngfilep!=NULL) {
 	    psimage = gdImageCreateFromPng(pngfilep);
+	    fclose(pngfilep);
+	  }
+	  free(pngfile);
 	}
       }
       Message(BE_NONQUIET,"<%s",psname);
@@ -185,15 +197,16 @@ void SetSpecial(char * special, int32_t length, int32_t h, int32_t v,
 	  if ( psimage == NULL ) 
 	    Warning("Unable to convert %s to PNG, image will be left blank", 
 		    psfile );
-#ifdef HAVE_GDIMAGECREATETRUECOLOR
-	  else if (!truecolor)
-	      gdImageTrueColorToPalette(psimage,0,256);
-#endif
 	}
       }
       if (pngname !=NULL && psimage != NULL) {
 	FILE* pngfilep = fopen(pngname,"wb");
-	gdImagePng(psimage,pngfilep);
+	if (pngfilep!=NULL) {
+	  gdImagePng(psimage,pngfilep);
+	  fclose(pngfilep);
+	} else
+	  Warning("Unable to cache %s as PNG", 
+		  psfile );
       } 
       if (psimage!=NULL) {
 	DEBUG_PRINT((DEBUG_DVI,
@@ -201,13 +214,9 @@ void SetSpecial(char * special, int32_t length, int32_t h, int32_t v,
 		     psfile,
 		     gdImageSX(psimage),gdImageSY(psimage),
 		     hresolution,vresolution,
-		     PIXROUND(h, dvi->conv*shrinkfactor),
-		     PIXROUND(v, dvi->conv*shrinkfactor),
-		     x_offset,y_offset));
-	gdImageCopy(page_imagep, psimage,
-		    PIXROUND(h,dvi->conv*shrinkfactor)+x_offset,
-		    PIXROUND(v,dvi->conv*shrinkfactor)-gdImageSY(psimage)
-		    +y_offset,
+		     hh, vv, x_offset, y_offset));
+	gdImageCopy(page_imagep, psimage, 
+		    hh+x_offset, vv-gdImageSY(psimage)+y_offset,
 		    0,0,
 		    gdImageSX(psimage),gdImageSY(psimage));
 	gdImageDestroy(psimage);
@@ -221,81 +230,78 @@ void SetSpecial(char * special, int32_t length, int32_t h, int32_t v,
       pngwidth  = (hresolution*(urx - llx)+71)/72;
       DEBUG_PRINT((DEBUG_DVI,"\n  PS-PNG INCLUDE \t(%d,%d)", 
 		   pngwidth,pngheight));
-      min(x_min,PIXROUND(h, dvi->conv*shrinkfactor));
-      min(y_min,PIXROUND(v, dvi->conv*shrinkfactor)-pngheight);
-      max(x_max,PIXROUND(h, dvi->conv*shrinkfactor)+pngwidth);
-      max(y_max,PIXROUND(v, dvi->conv*shrinkfactor));
+      min(x_min,hh);
+      min(y_min,vv-pngheight);
+      max(x_max,hh+pngwidth);
+      max(y_max,vv);
     }
     return;
   }
 #if 0
-      char cmd[255],tmp[255];
-      char *scale_file = tmpnam(tmp);
-      char *pngfile = tmpnam(NULL);
-      FILE* scalef;
-
-      if ( (scalef = fopen(scale_file,"wb")) == NULL ) {
-	Warning("Unable to open file %s for writing", scale_file );
+  { 
+    char cmd[255],tmp[255];
+    char *scale_file = tmpnam(tmp);
+    char *pngfile = tmpnam(NULL);
+    FILE* scalef;
+    
+    if ( (scalef = fopen(scale_file,"wb")) == NULL ) {
+      Warning("Unable to open file %s for writing", scale_file );
+      return;
+    }
+    fprintf(scalef, "<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice\n",  
+	    urx - llx, ury - lly,llx,lly);
+    fclose( scalef );
+    sprintf(cmd,"gs -sDEVICE=png16m -r%dx%d -dBATCH -dSAFER -q -dNOPAUSE -sOutputFile=%s -dTextAlphaBits=4 -dGraphicsAlphaBits=4 %s %s",
+	    hresolution,
+	    vresolution,
+	    pngfile,
+	    scale_file,
+	    psfile);
+    
+    if (system(cmd)) {
+      Warning("execution of '%s' returned an error, image will be left blank.", cmd);
+    } else {   
+      gdImagePtr psimage;
+      FILE* pngf;
+      
+      if ( (pngf = fopen(pngfile,"rb")) == NULL ) {
+	Warning("Unable to open file %s for reading", pngfile );
 	return;
       }
-      fprintf(scalef, "<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice\n",  
-	      urx - llx, ury - lly,llx,lly);
-      fclose( scalef );
-      sprintf(cmd,"gs -sDEVICE=png16m -r%dx%d -dBATCH -dSAFER -q -dNOPAUSE -sOutputFile=%s -dTextAlphaBits=4 -dGraphicsAlphaBits=4 %s %s",
-	      hresolution,
-	      vresolution,
-	      pngfile,
-	      scale_file,
-	      psfile);
-      
-      if (system(cmd)) {
-	Warning("execution of '%s' returned an error, image will be left blank.", cmd);
-      } else {   
-	gdImagePtr psimage;
-	FILE* pngf;
-	
-	if ( (pngf = fopen(pngfile,"rb")) == NULL ) {
-	  Warning("Unable to open file %s for reading", pngfile );
-	  return;
-	}
-	psimage = gdImageCreateFromPng(pngf);
-	fclose(pngf);
-	DEBUG_PRINT((DEBUG_DVI,
-	     "\n  PS-PNG INCLUDE \t(%d,%d) dpi %dx%d at (%d,%d) offset (%d,%d)",   
-		     gdImageSX(psimage),gdImageSY(psimage),
-		     hresolution,vresolution,
-		     PIXROUND(h, dvi->conv*shrinkfactor),
-		     PIXROUND(v, dvi->conv*shrinkfactor),
-		     x_offset,y_offset));
-	gdImageCopy(page_imagep, psimage,
-		    PIXROUND(h,dvi->conv*shrinkfactor)+x_offset,
-		    PIXROUND(v,dvi->conv*shrinkfactor)-gdImageSY(psimage)
-		       +y_offset,
-		    0,0,
-		    gdImageSX(psimage),gdImageSY(psimage));
-	gdImageDestroy(psimage);
-	Message(BE_NONQUIET,"<%s>",psfile);
-      }
-      unlink(scale_file);
-      unlink(pngfile);
-    } else {
-      int pngheight,pngwidth;
-
-      /* Convert from postscript 72 dpi resolution to our given resolution */
-      pngheight = (vresolution*(ury - lly)+71)/72; /* +71: do 'ceil' */
-      pngwidth  = (hresolution*(urx - llx)+71)/72;
-      DEBUG_PRINT((DEBUG_DVI,"\n  PS-PNG INCLUDE \t(%d,%d)", 
-		   pngwidth,pngheight));
-      min(x_min,PIXROUND(h, dvi->conv*shrinkfactor));
-      min(y_min,PIXROUND(v, dvi->conv*shrinkfactor)-pngheight);
-      max(x_max,PIXROUND(h, dvi->conv*shrinkfactor)+pngwidth);
-      max(y_max,PIXROUND(v, dvi->conv*shrinkfactor));
+      psimage = gdImageCreateFromPng(pngf);
+      fclose(pngf);
+      DEBUG_PRINT((DEBUG_DVI,
+		   "\n  PS-PNG INCLUDE \t(%d,%d) dpi %dx%d at (%d,%d) offset (%d,%d)",   
+		   gdImageSX(psimage),gdImageSY(psimage),
+		   hresolution,vresolution,
+		   hh, vv, x_offset, y_offset));
+      gdImageCopy(page_imagep, psimage,
+		  hh+x_offset, vv-gdImageSY(psimage)+y_offset,
+		  0,0,
+		  gdImageSX(psimage),gdImageSY(psimage));
+      gdImageDestroy(psimage);
+      Message(BE_NONQUIET,"<%s>",psfile);
     }
-    return;
+    unlink(scale_file);
+    unlink(pngfile);
+  } else {
+    int pngheight,pngwidth;
+    
+    /* Convert from postscript 72 dpi resolution to our given resolution */
+    pngheight = (vresolution*(ury - lly)+71)/72; /* +71: do 'ceil' */
+    pngwidth  = (hresolution*(urx - llx)+71)/72;
+    DEBUG_PRINT((DEBUG_DVI,"\n  PS-PNG INCLUDE \t(%d,%d)", 
+		 pngwidth,pngheight));
+    min(x_min,hh);
+    min(y_min,vv-pngheight);
+    max(x_max,hh+pngwidth);
+    max(y_max,vv);
+  }
+  return;
 #endif
-  Warning("at (%ld,%ld) unimplemented \\special{%.*s}. %s",
-	  PIXROUND(h,dvi->conv*shrinkfactor),
-	  PIXROUND(v,dvi->conv*shrinkfactor),length,special,token);
+  if (PassNo==PASS_DRAW)
+    Warning("at (%ld,%ld) unimplemented \\special{%.*s}.",
+	    hh, vv, length,special);
 }
 
 
