@@ -168,9 +168,8 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
   case XXX1: case XXX2: case XXX3: case XXX4:
     DEBUG_PRINTF(DEBUG_DVI," %d",
 		 UNumRead(command+1, dvi_commandlength[*command]-1));
-    if (PassNo == PASS_DRAW)
-      SetSpecial(command + dvi_commandlength[*command], 
-		 UNumRead(command+1, dvi_commandlength[*command]-1),h,v);
+    SetSpecial(command + dvi_commandlength[*command], 
+	       UNumRead(command+1, dvi_commandlength[*command]-1),h,v,PassNo);
     break;
   case FNT_DEF1: case FNT_DEF2: case FNT_DEF3: case FNT_DEF4:
     if (((struct font_entry*)parent)->type==DVI_TYPE) {
