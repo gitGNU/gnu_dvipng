@@ -2,9 +2,8 @@
 
 /*
  * Color. We delete and recreate the gdImage for each new page. This
- * means that the stack must contain rgb value not color
- * index. Besides, the current antialiasing implementation needs rgb
- * anyway.
+ * means that the stack must contain rgb value not color index.
+ * Besides, the current antialiasing implementation needs rgb anyway.
 */
 
 static int cstack_red[STACK_SIZE];
