@@ -93,7 +93,7 @@ char* FindPSFontMap(char* fontname, char** encoding, FT_Matrix** transform)
   while(entry!=NULL && strncmp(entry->tfmname,fontname,strlen(fontname))!=0) 
     entry=entry->next;
   if (entry!=NULL) {
-    bool firstnameseen = false;
+    int nameno = 0;
     
     tfmname=fontname;
     DEBUG_PRINT((DEBUG_FT,"\n  PSFONTMAP: %s ",fontname));
@@ -154,13 +154,21 @@ char* FindPSFontMap(char* fontname, char** encoding, FT_Matrix** transform)
 	    (**transform).xy=0;
 	}
       } else {
-	if (firstnameseen) {
-	  psname = newword((char**)&pos,entry->end);
-	  DEBUG_PRINT((DEBUG_FT,"(%s) ",psname));
-	} else {
+	switch (++nameno) {
+	case 1:
 	  while(pos<entry->end && *pos!=' ' && *pos!='\t') pos++;
 	  psname=tfmname;
-	  firstnameseen=true;
+	  break;
+	case 2:
+	  psname = newword((char**)&pos,entry->end);
+	  DEBUG_PRINT((DEBUG_FT,"(%s) ",psname));
+	  break;
+	case 3:
+	  *encoding = newword((char**)&pos,entry->end);
+	  DEBUG_PRINT((DEBUG_FT,"<[%s ",*encoding));
+	  break;
+	default:
+	  Warning("more than three bare words in font map entry");
 	}
       }
       while(pos < entry->end && (*pos==' ' || *pos=='\t')) pos++;
