@@ -29,7 +29,7 @@ char* find_format(char* name)
      kpse_find_file(name,kpse_fontmap_format,false);
 
   if (format==NULL)
-    kpse_find_file(name,kpse_dvips_config_format,false);
+    format = kpse_find_file(name,kpse_dvips_config_format,false);
   return(format);
 }
 
