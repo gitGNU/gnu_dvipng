@@ -188,6 +188,15 @@ bool DecodeArgs(int argc, char ** argv)
 	  resetcolorstack(p);
 	  Message(PARSE_STDIN,"Foreground: rgb %d,%d,%d\n",Red,Green,Blue);
 	  break;
+#ifdef HAVE_FT2
+	} else if ( strncmp(p,"reetype",7) == 0 ) { /* -freetype activation */
+	  freetype = (p[7] != '0');
+	  if (freetype)
+	    Message(PARSE_STDIN,"FreeType rendering on\n",p);
+	  else 
+	    Message(PARSE_STDIN,"FreeType rendering off\n");
+	  break;
+#endif
 	} else if (strcmp(p,"ollow") == 0 ) {
 	  if (DVIFollowToggle())
 	    Message(PARSE_STDIN,"Follow mode on\n");
@@ -324,34 +333,37 @@ named COPYING and dvipng.c.");
     fprintf(stdout,"\nUsage: %s [OPTION]... FILENAME[.dvi]\n", programname);
     fprintf(stdout,"Options are chosen to be similar to dvips' options where possible:\n");
 #ifdef DEBUG
-    fprintf(stdout,"  -d #        Debug (# is the debug bitmap, 1 if not given)\n");
+    fprintf(stdout,"  -d #         Debug (# is the debug bitmap, 1 if not given)\n");
 #endif
-    fprintf(stdout,"  -D #        Resolution\n");
-    fprintf(stdout,"  -M*         Don't make fonts\n");
-    fprintf(stdout,"  -l #        Last page to be output\n");
-    fprintf(stdout,"  -mode s     MetaFont mode (default cx)\n");
-    fprintf(stdout,"  -o f        Output file, '%%d' is pagenumber\n");
-    fprintf(stdout,"  -O c        Image offset\n");
-    fprintf(stdout,"  -p #        First page to be output\n");
-    fprintf(stdout,"  -pp #,#..   Page list to be output\n");
-    fprintf(stdout,"  -q*         Quiet operation\n");
-    fprintf(stdout,"  -r*         Reverse order of pages\n");
-    fprintf(stdout,"  -t c        Paper format (also accepts e.g., '-t a4')\n");
-    fprintf(stdout,"  -T c        Image size (also accepts '-T bbox' and '-T tight')\n");
-    fprintf(stdout,"  -v*         Verbose operation\n");
-    fprintf(stdout,"  -x #        Override dvi magnification\n");
-    fprintf(stdout,"  -           Interactive query of options\n");
+    fprintf(stdout,"  -D #         Resolution\n");
+    fprintf(stdout,"  -M*          Don't make fonts\n");
+    fprintf(stdout,"  -l #         Last page to be output\n");
+    fprintf(stdout,"  -mode s      MetaFont mode (default cx)\n");
+    fprintf(stdout,"  -o f         Output file, '%%d' is pagenumber\n");
+    fprintf(stdout,"  -O c         Image offset\n");
+    fprintf(stdout,"  -p #         First page to be output\n");
+    fprintf(stdout,"  -pp #,#..    Page list to be output\n");
+    fprintf(stdout,"  -q*          Quiet operation\n");
+    fprintf(stdout,"  -r*          Reverse order of pages\n");
+    fprintf(stdout,"  -t c         Paper format (also accepts e.g., '-t a4')\n");
+    fprintf(stdout,"  -T c         Image size (also accepts '-T bbox' and '-T tight')\n");
+    fprintf(stdout,"  -v*          Verbose operation\n");
+    fprintf(stdout,"  -x #         Override dvi magnification\n");
+    fprintf(stdout,"  -            Interactive query of options\n");
     fprintf(stdout,"\nThese do not correspond to dvips options:\n");
-    fprintf(stdout,"  -bd #       Transparent border width in dots\n");
-    fprintf(stdout,"  -bg s       Background color (TeX-style color)\n");
-    fprintf(stdout,"  -fg s       Foreground color (TeX-style color)\n");
-    fprintf(stdout,"  -follow*    Follow mode\n");
-#ifdef HAVE_GDIMAGECREATETRUECOLOR
-    fprintf(stdout,"  -truecolor* Truecolor output\n");
+    fprintf(stdout,"  -bd #        Transparent border width in dots\n");
+    fprintf(stdout,"  -bg s        Background color (TeX-style color)\n");
+    fprintf(stdout,"  -fg s        Foreground color (TeX-style color)\n");
+    fprintf(stdout,"  --follow*    Follow mode\n");
+#ifdef HAVE_FT2
+    fprintf(stdout,"  --freetype*  FreeType font rendering (default on)\n");
 #endif
-    fprintf(stdout,"  -Q #        Quality (~xdvi's shrinkfactor)\n");
+#ifdef HAVE_GDIMAGECREATETRUECOLOR
+    fprintf(stdout,"  --truecolor* Truecolor output\n");
+#endif
+    fprintf(stdout,"  -Q #         Quality (~xdvi's shrinkfactor)\n");
 #ifdef HAVE_GDIMAGEPNGEX
-    fprintf(stdout,"  -z #        PNG compression level\n");
+    fprintf(stdout,"  -z #         PNG compression level\n");
 #endif
     
     fprintf(stdout,"\n   # = number   f = file   s = string  * = suffix, '0' to turn off\n");

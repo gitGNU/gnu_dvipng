@@ -363,6 +363,9 @@ EXTERN struct timeb timebuffer;
 
 EXTERN int   resolution INIT(300);
 EXTERN char *MFMODE     INIT("cx");
+#ifdef HAVE_FT2
+EXTERN bool   freetype INIT(true);
+#endif
 #ifdef HAVE_GDIMAGEPNGEX
 EXTERN int   compression INIT(1);
 #endif

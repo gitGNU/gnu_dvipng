@@ -187,8 +187,9 @@ void FontFind(struct font_entry * tfontptr)
     strcpy (tfontptr->name, name);
     free (name);
     InitVF(tfontptr);
-  } else {
+  }
 #ifdef HAVE_FT2
+  if (freetype && name==NULL) {
     psfile = FindPSFontMap(tfontptr->n, &encoding, &transform);
     if (psfile!=NULL) {
       name = kpse_find_ft(psfile);
@@ -208,8 +209,8 @@ void FontFind(struct font_entry * tfontptr)
       }
     }
   }
-  if (name==NULL) {
 #endif
+  if (name==NULL) {
     name = kpse_find_pk (tfontptr->n, dpi, &font_ret);
     if (name!=NULL) {
       strcpy (tfontptr->name, name);

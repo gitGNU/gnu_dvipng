@@ -277,6 +277,17 @@ switch makes dvipng wait at EOF for further output, unless it finds the
 POST marker that indicates the end of the DVI. This is similar to
 @samp{tail -f} but for DVI-to-PNG conversion.
 
+@item --freetype*
+@cindex FreeType font rendering
+Enable/disable FreeType font rendering (default on). This option is
+available if the FreeType2 font library was present at compilation time.
+If this is the case, dvipng will have direct support for PostScript
+Type1 and TrueType fonts in dvipng, rather than using @samp{gsftopk} for
+rendering the fonts. If you have PostScript versons of Computer Modern
+installed, there will be no need to generate bitmapped variants on disk
+of these. Then, you can render images at different (and unusual)
+resolutions without cluttering the disk with lots of bitmapped fonts.
+
 @item -l [=]@var{num}
 @cindex last page printed
 @cindex page, last printed
