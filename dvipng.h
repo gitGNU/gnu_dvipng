@@ -279,7 +279,7 @@ struct font_num {    /* Font number. Different for VF/DVI, and several
   struct font_entry *fontp;
 };
 
-void    CheckChecksum(unsigned, unsigned, const char*);
+void    CheckChecksum(uint32_t, uint32_t, const char*);
 void    InitPK (struct font_entry *newfontp);
 void    DonePK(struct font_entry *oldfontp);
 void    InitVF (struct font_entry *newfontp);
@@ -347,12 +347,12 @@ int32_t   SetChar(int32_t);
 dviunits  SetGlyph(int32_t c, int32_t hh,int32_t vv);
 int32_t   SetVF(int32_t);
 int32_t   SetRule(int32_t, int32_t, int32_t, int32_t);
-void      SetSpecial(char *, int, int32_t, int32_t);
+void      SetSpecial(char *, int32_t, int32_t, int32_t);
 void      BeginVFMacro(struct font_entry*);
 void      EndVFMacro(void);
 
 /**************************************************/
-void handlepapersize(char*,int*,int*);
+void handlepapersize(char*,int32_t*,int32_t*);
 
 void background(char *);
 void initcolor(void);
@@ -399,6 +399,7 @@ EXTERN struct internal_state {
 #define NO_IMAGE_ON_WARN             (1<<12)
 #define PAGE_GAVE_WARN               (1<<13)
 #define PREVIEW_LATEX_TIGHTPAGE      (1<<14)
+#define GIF_OUTPUT                   (1<<15)
 EXTERN unsigned int flags INIT(BE_NONQUIET | USE_FREETYPE | USE_LIBT1);
 
 #ifdef DEBUG
