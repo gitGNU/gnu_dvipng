@@ -413,7 +413,7 @@ void DrawPages(void)
       Message(REPORT_HEIGHT," height=%d", y_offset+1);
       DrawPage(x_offset*dvi->conv*shrinkfactor,
 	       y_offset*dvi->conv*shrinkfactor);
-      if ( ! (flags & NO_IMAGE_ON_WARN && flags & PAGE_GAVE_WARN )) {
+      if ( ! (flags & MODE_PICKY && flags & PAGE_GAVE_WARN )) {
 	WriteImage(dvi->outname,dvi_pos->count[(flags & DVI_PAGENUM)?0:10]);
 #ifdef TIMING
 	++ndone;
