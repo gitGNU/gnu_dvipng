@@ -6,6 +6,8 @@ void CreateImage(void)
 
   if (page_imagep) 
     gdImageDestroy(page_imagep);
+  if (x_width <= 0) x_width=1;
+  if (y_width <= 0) y_width=1;
   page_imagep=gdImageCreate(x_width,y_width);
   /* Set bg color */
   Background = gdImageColorAllocate(page_imagep,bRed,bGreen,bBlue);
@@ -29,12 +31,24 @@ void CreateImage(void)
   }
 }
 
-void WriteImage(char *outname, int pagenum)
+void WriteImage(char *pngname, int pagenum)
 {
-  char  pngname[STRSIZE];       
+  char* pos;
   FILE* outfp=NULL;
 
-  (void)sprintf(pngname,"%s%d.png",outname,pagenum);
+  if ((pos=strchr(pngname,'%')) != NULL) {
+    if (strchr(++pos,'%'))
+      Fatal("too many %%'s in output file name");
+    if (*pos == 'd' || strncmp(pos,"03d",3)==0) {
+      /* %d -> pagenumber, so add 9 string positions 
+	 since pagenumber max +-2^31 or +-2*10^9 */
+      char* tempname = alloca(strlen(pngname)+9);
+      sprintf(tempname,pngname,pagenum);
+      pngname = tempname;
+    } else {
+      Fatal("unacceptible format spec. in output file name");
+    }
+  }
   if ((outfp = fopen(pngname,"wb")) == NULL)
       Fatal("Cannot open output file %s",pngname);
   gdImagePng(page_imagep,outfp);
@@ -63,22 +77,22 @@ int32_t SetRule(int32_t a, int32_t b, int32_t h,int32_t v,int PassNo)
   switch(PassNo) {
   case PASS_BBOX:
     min(x_min,PIXROUND(h, dvi->conv*shrinkfactor)-1);
-    min(y_min,PIXROUND(v, dvi->conv*shrinkfactor)-yy-1);
-    max(x_max,PIXROUND(h, dvi->conv*shrinkfactor)+xx-1-1);
-    max(y_max,PIXROUND(v, dvi->conv*shrinkfactor)-1-1);
+    min(y_min,PIXROUND(v, dvi->conv*shrinkfactor)-yy+1);
+    max(x_max,PIXROUND(h, dvi->conv*shrinkfactor)+xx-1);
+    max(y_max,PIXROUND(v, dvi->conv*shrinkfactor)+1);
     break;
   case PASS_DRAW:
     if ((yy>0) && (xx>0)) {
       /*
 	Oh, bugger. Shrink rule properly. Currently produces too dark
-	rules, but...  Why do I need the -1's? Possible cause: PIXROUND.
+	rules, but...  Positioned to imitate dvips' behaviour.
       */
       Color = gdImageColorResolve(page_imagep, Red,Green,Blue);
       gdImageFilledRectangle(page_imagep,
-			     PIXROUND(h, dvi->conv*shrinkfactor)+x_offset-1,
-			     PIXROUND(v, dvi->conv*shrinkfactor)-yy+y_offset-1,
-			     PIXROUND(h, dvi->conv*shrinkfactor)+xx-1+x_offset-1,
-			     PIXROUND(v, dvi->conv*shrinkfactor)-1+y_offset-1,
+			     PIXROUND(h, dvi->conv*shrinkfactor)-1+x_offset,
+			     PIXROUND(v, dvi->conv*shrinkfactor)-yy+1+y_offset,
+			     PIXROUND(h, dvi->conv*shrinkfactor)+xx-2+x_offset,
+			     PIXROUND(v, dvi->conv*shrinkfactor)+y_offset,
 			     Color);
       DEBUG_PRINTF2(DEBUG_DVI,"\n  RULE \t(%d,%d)", xx, yy);
       DEBUG_PRINTF2(DEBUG_DVI," at (%d,%d)", 
