@@ -38,6 +38,10 @@ named COPYING and dvipng.c.");
     if (*argv[i]=='-') {
       char *p=argv[i]+2 ;
       char c=argv[i][1] ;
+      if (c=='-') {
+	p++;
+	c=argv[i][2];
+      }
       switch (c) {
       case 'd':       /* selects Debug output */
 #ifdef DEBUG
@@ -85,8 +89,9 @@ named COPYING and dvipng.c.");
 	  if (argv[i+1])
 	    MFMODE = argv[++i] ;
 	  Message(PARSE_STDIN,"MetaFont mode: %s\n",MFMODE);
+	  break;
 	}
-	break;
+	goto DEFAULT;
 #endif /* MAKETEXPK */
       case 'O' : /* Offset */
 	if (*p == 0 && argv[i+1])
@@ -150,6 +155,7 @@ named COPYING and dvipng.c.");
 	    Message(PARSE_STDIN,"Not caching images\n");
 	  break;
 	}
+	goto DEFAULT;
       case 'b':
 	if ( *p == 'g' ) { /* -bg background color */
 	  p++;
@@ -165,12 +171,14 @@ named COPYING and dvipng.c.");
 	  else 
 	    Message(PARSE_STDIN,"Transp. background (fallback rgb %d,%d,%d)\n",
 		    bRed,bGreen,bBlue);
+	  break;
 	} else if ( *p == 'd' ) { /* -bd border width */
 	  p++;
 	  if (*p == 0 && argv[i+1])
 	    p = argv[++i] ;
 	  borderwidth = atoi(p);
 	  Message(PARSE_STDIN,"Transp. border: %d dots\n",borderwidth);
+	  break;
 	} else if (strncmp(p,"aseline",7)==0) { /* Baseline reporting */ 
 	  if (p[8] != '0')
 	    flags |= REPORT_BASELINE;
@@ -181,8 +189,9 @@ named COPYING and dvipng.c.");
 	    Message(PARSE_STDIN,"Baseline reporting on\n",p);
 	  else 
 	    Message(PARSE_STDIN,"Baseline reporting off\n");
+	  break;
 	}
-	break;
+	goto DEFAULT;
       case 'f':
 	if ( *p == 'g' ) { /* -fg foreground color */
 	  p++;
@@ -190,13 +199,15 @@ named COPYING and dvipng.c.");
 	    p = argv[++i] ;
 	  resetcolorstack(p);
 	  Message(PARSE_STDIN,"Foreground: rgb %d,%d,%d\n",Red,Green,Blue);
+	  break;
 	} else if (strcmp(p,"ollow") == 0 ) {
 	  if (DVIFollowToggle())
 	    Message(PARSE_STDIN,"Follow mode on\n");
 	  else
 	    Message(PARSE_STDIN,"Follow mode off\n");
+	  break;
 	}
-	break;
+	goto DEFAULT;
       case 'x' : case 'y' :
 	if (*p == 0 && argv[i+1])
 	  p = argv[++i] ;
@@ -215,7 +226,6 @@ named COPYING and dvipng.c.");
 	  Message(PARSE_STDIN,"Page list: %s\n",p);
 	  if (ParsePages(p))
 	    Fatal("bad page list specifier (-pp).");
-	  break ;
 	} else {   /* a -p specifier for first page */
 	  int32_t firstpage;
 	  bool abspage=_FALSE;
@@ -289,7 +299,7 @@ named COPYING and dvipng.c.");
       case '\0':
 	flags |= PARSE_STDIN;
 	break;
-      default:
+      DEFAULT: default:
 	Warning("%s is not a valid option", argv[i]);
       }
     } else {
