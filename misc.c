@@ -27,7 +27,7 @@ There is NO warranty.  You may redistribute this software\n\
 under the terms of the GNU General Public License.\n\
 For more information about these matters, see the files\n\
 named COPYING and dvipng.c.");
-    exit (0); 
+    exit (EXIT_SUCCESS); 
   }
 
   for (i=1; i<argc; i++) {
@@ -211,16 +211,22 @@ named COPYING and dvipng.c.");
 	}
 	break ;
       case 'q':       /* quiet operation */
-        flags &= !BE_NONQUIET & !BE_VERBOSE;
-        break;
+	if (*p != '0')
+	  flags &= !BE_NONQUIET & !BE_VERBOSE;
+        else
+	  flags |= BE_NONQUIET;
+	break;
       case 'r':       /* switch order to process pages */
-	if (Reverse()) 
+	if (Reverse() && *p != '0') 
 	  Message(PARSE_STDIN,"Reverse order\n");
 	else
 	  Message(PARSE_STDIN,"Normal order\n");
         break;
       case 'v':    /* verbatim mode */
-	flags |= BE_NONQUIET | BE_VERBOSE;
+	if (*p != '0')
+	  flags |= BE_NONQUIET | BE_VERBOSE;
+	else
+	  flags &= !BE_VERBOSE;
         break;
       case 'D' :
 	if (*p == 0 && argv[i+1])
@@ -231,6 +237,8 @@ named COPYING and dvipng.c.");
 	Message(PARSE_STDIN,"Dpi: %d\n",resolution);
 	break;
       case 'Q':       /* quality (= shrinkfactor) */
+	if (*p == 0 && argv[i+1])
+	  p = argv[++i] ;
         shrinkfactor = atoi(p);
 	Message(PARSE_STDIN,"Shrinkfactor: %d\n",shrinkfactor);
 	break;
@@ -255,44 +263,44 @@ named COPYING and dvipng.c.");
   }
 
   if (dvi==NULL) {
-    fprintf(ERR_STREAM,"\nUsage: dvipng [OPTION]... FILENAME[.dvi]\n");
-    fprintf(ERR_STREAM,"Options are chosen to be similar to dvips' options where possible:\n");
+    fprintf(stdout,"\nUsage: dvipng [OPTION]... FILENAME[.dvi]\n");
+    fprintf(stdout,"Options are chosen to be similar to dvips' options where possible:\n");
 #ifdef DEBUG
-    fprintf(ERR_STREAM,"  -d #      Debug (# is the debug bitmap, 1 if not given)\n");
+    fprintf(stdout,"  -d #      Debug (# is the debug bitmap, 1 if not given)\n");
 #endif
-    fprintf(ERR_STREAM,"  -D #      Resolution\n");
-    fprintf(ERR_STREAM,"  -M*       Don't make fonts\n");
-    fprintf(ERR_STREAM,"  -l #      Last page to be output\n");
-    fprintf(ERR_STREAM,"  -mode s   MetaFont mode (default cx)\n");
-    fprintf(ERR_STREAM,"  -o f      Output file, '%%d' is pagenumber\n");
-    fprintf(ERR_STREAM,"  -O c      Image offset\n");
-    fprintf(ERR_STREAM,"  -p #      First page to be output\n");
-    fprintf(ERR_STREAM,"  -pp #,#.. Page list to be output\n");
-    fprintf(ERR_STREAM,"  -q        Quiet operation\n");
-    fprintf(ERR_STREAM,"  -r        Reverse order of pages\n");
-    fprintf(ERR_STREAM,"  -t c      Paper format (also accepts e.g., '-t a4')\n");
-    fprintf(ERR_STREAM,"  -T c      Image size (also accepts '-T bbox' and '-T tight')\n");
-    fprintf(ERR_STREAM,"  -v        Verbose operation\n");
-    fprintf(ERR_STREAM,"  -x #      Override dvi magnification\n");
-    fprintf(ERR_STREAM,"  -         Interactive query of options\n");
-    fprintf(ERR_STREAM,"\nThese do not correspond to dvips options:\n");
-    fprintf(ERR_STREAM,"  -bd #     Transparent border width in dots\n");
-    fprintf(ERR_STREAM,"  -bg s     Background color (TeX-style color)\n");
-    fprintf(ERR_STREAM,"  -fg s     Foreground color (TeX-style color)\n");
-    fprintf(ERR_STREAM,"  -follow   Follow mode\n");
-    fprintf(ERR_STREAM,"  -Q #      Quality (~xdvi's shrinkfactor)\n");
+    fprintf(stdout,"  -D #      Resolution\n");
+    fprintf(stdout,"  -M*       Don't make fonts\n");
+    fprintf(stdout,"  -l #      Last page to be output\n");
+    fprintf(stdout,"  -mode s   MetaFont mode (default cx)\n");
+    fprintf(stdout,"  -o f      Output file, '%%d' is pagenumber\n");
+    fprintf(stdout,"  -O c      Image offset\n");
+    fprintf(stdout,"  -p #      First page to be output\n");
+    fprintf(stdout,"  -pp #,#.. Page list to be output\n");
+    fprintf(stdout,"  -q*       Quiet operation\n");
+    fprintf(stdout,"  -r*       Reverse order of pages\n");
+    fprintf(stdout,"  -t c      Paper format (also accepts e.g., '-t a4')\n");
+    fprintf(stdout,"  -T c      Image size (also accepts '-T bbox' and '-T tight')\n");
+    fprintf(stdout,"  -v*       Verbose operation\n");
+    fprintf(stdout,"  -x #      Override dvi magnification\n");
+    fprintf(stdout,"  -         Interactive query of options\n");
+    fprintf(stdout,"\nThese do not correspond to dvips options:\n");
+    fprintf(stdout,"  -bd #     Transparent border width in dots\n");
+    fprintf(stdout,"  -bg s     Background color (TeX-style color)\n");
+    fprintf(stdout,"  -fg s     Foreground color (TeX-style color)\n");
+    fprintf(stdout,"  -follow   Follow mode\n");
+    fprintf(stdout,"  -Q #      Quality (~xdvi's shrinkfactor)\n");
     
-    fprintf(ERR_STREAM,"\n   # = number   f = file   s = string  * = suffix, '0' to turn off\n");
-    fprintf(ERR_STREAM,"       c = comma-separated dimension pair (e.g., 3.2in,-32.1cm)\n\n");
+    fprintf(stdout,"\n   # = number   f = file   s = string  * = suffix, '0' to turn off\n");
+    fprintf(stdout,"       c = comma-separated dimension pair (e.g., 3.2in,-32.1cm)\n\n");
     /*#ifdef HAVE_LIBKPATHSEA
       {
       extern DllImport char *kpse_bug_address;
-      putc ('\n', ERR_STREAM);
-      fputs (kpse_bug_address, ERR_STREAM);
+      putc ('\n', stdout);
+      fputs (kpse_bug_address, stdout);
       }
       #endif*/
     if ((flags & PARSE_STDIN) == 0) {
-      exit(1);
+      exit(EXIT_SUCCESS);
     }
   }
   if ((flags & PARSE_STDIN) == 0 && (! ppused)) 
@@ -406,9 +414,9 @@ void Message(int activeflags, char *fmt, ...)
 
   va_start(args, fmt);
   if ( flags & activeflags ) {
-    vfprintf(ERR_STREAM, fmt, args);
+    vfprintf(stdout, fmt, args);
 #ifdef DEBUG
-    fflush(ERR_STREAM);
+    fflush(stdout);
 #endif
   }
   va_end(args);
