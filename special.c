@@ -76,21 +76,40 @@ ps2png(const char *psfile, int hresolution, int vresolution,
     close(downpipe[1]);
     dup2(downpipe[0], STDIN_FILENO);
     close(downpipe[0]);
-    DEBUG_PRINT(DEBUG_GS,
-		("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s %s ",// %s",
-		 GS_PATH, device, resolution, //devicesize,
-		 "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
-		 "-sOutputFile=-", 
-		 "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
-		 "-"));
+#ifdef DEBUG
+    if (flags & NO_GSSAFER) {
+      DEBUG_PRINT(DEBUG_GS,
+		  ("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s ",// %s",
+		   GS_PATH, device, resolution, //devicesize,
+		   "-dBATCH", "-dNOPAUSE", "-q", 
+		   "-sOutputFile=-", 
+		   "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
+		   "-"));
+    } else {
+      DEBUG_PRINT(DEBUG_GS,
+		  ("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s %s ",// %s",
+		   GS_PATH, device, resolution, //devicesize,
+		   "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
+		   "-sOutputFile=-", 
+		   "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
+		   "-"));
+    }
+#endif
     close(uppipe[0]);
     dup2(uppipe[1], STDOUT_FILENO);
     close(uppipe[1]);
-    execl (GS_PATH, GS_PATH, device, resolution, //devicesize,
-	   "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
-	   "-sOutputFile=-", 
-	   "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
-	   "-",NULL);
+    if (flags & NO_GSSAFER) 
+      execl (GS_PATH, GS_PATH, device, resolution, //devicesize,
+	     "-dBATCH", "-dNOPAUSE", "-q", 
+	     "-sOutputFile=-", 
+	     "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
+	     "-",NULL);
+    else
+      execl (GS_PATH, GS_PATH, device, resolution, //devicesize,
+	     "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
+	     "-sOutputFile=-", 
+	     "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
+	     "-",NULL);
     _exit (EXIT_FAILURE);
   }
   /* Parent process. */
@@ -108,19 +127,35 @@ ps2png(const char *psfile, int hresolution, int vresolution,
       Warning("Ghostscript could not be found");
       return(NULL);
   }
-  DEBUG_PRINT(DEBUG_GS,
-	      ("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s %s ",// %s",
-	       szGsPath, device, resolution, //devicesize,
-	       "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
-	       "-sOutputFile=-", 
-	       "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
-	       "-"));
-  sprintf(szCommandLine,"\"%s\" %s %s %s %s %s %s %s %s %s %s",// %s",
-	       szGsPath, device, resolution, //devicesize,
-	       "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
-	       "-sOutputFile=-", 
-	       "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
-	       "-");
+  if (flags & NO_GSSAFER) {
+    DEBUG_PRINT(DEBUG_GS,
+		("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s ",// %s",
+		 szGsPath, device, resolution, //devicesize,
+		 "-dBATCH", "-dNOPAUSE", "-q", 
+		 "-sOutputFile=-", 
+		 "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
+		 "-"));
+    sprintf(szCommandLine,"\"%s\" %s %s %s %s %s %s %s %s %s",// %s",
+	    szGsPath, device, resolution, //devicesize,
+	    "-dBATCH", "-dNOPAUSE", "-q", 
+	    "-sOutputFile=-", 
+	    "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
+	    "-");
+  } else {
+    DEBUG_PRINT(DEBUG_GS,
+		("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s %s ",// %s",
+		 szGsPath, device, resolution, //devicesize,
+		 "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
+		 "-sOutputFile=-", 
+		 "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
+		 "-"));
+    sprintf(szCommandLine,"\"%s\" %s %s %s %s %s %s %s %s %s %s",// %s",
+	    szGsPath, device, resolution, //devicesize,
+	    "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
+	    "-sOutputFile=-", 
+	    "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
+	    "-");
+  }
   if (! miktex_start_process_3(szCommandLine, &pi, INVALID_HANDLE_VALUE,
 			       &hPsStream, &hPngStream, &hStdErr, 0)) {
       Warning("Ghostscript could not be started");
@@ -303,6 +338,10 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 	if (psfile == NULL) {
 	  Warning("PS file %s not found, image will be left blank", psname );
 	  flags |= PAGE_GAVE_WARN;
+	} else if (flags & NO_GHOSTSCRIPT) {
+	    Warning("GhostScript calls disallowed by --noghostscript", 
+		    psfile );
+	    flags |= PAGE_GAVE_WARN;
 	} else {
 	  psimage = ps2png(psfile, hresolution, vresolution, 
 			   urx, ury, llx, lly);
@@ -410,11 +449,9 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 	      hh, vv, length,special);
     return;
   }
-  if ( page_imagep != NULL || flags & NO_IMAGE_ON_WARN ) {
+  if ( page_imagep != NULL || flags & MODE_PICKY ) {
     Warning("at (%ld,%ld) unimplemented \\special{%.*s}.",
 	    hh, vv, length,special);
     flags |= PAGE_GAVE_WARN;
   }
 }
-
-
