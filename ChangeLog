@@ -1,3 +1,10 @@
+2005-01-25  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* color.c: Fix segfault when trying to find nonexisting dvipsnam
+	color
+
+	* dvipng.c: Make dvipsnam colors available on command line
+
 2004-12-10  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* Release 1.4
