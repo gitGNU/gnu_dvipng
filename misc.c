@@ -70,6 +70,17 @@ named COPYING and dvipng.c.");
 	    printf("MakeTeXPK disabled\n");
 	}
         break;
+       case 'm':
+ 	if (strcmp(p,"ode") == 0 ) {
+ 	printf("%s\n",p);
+ 	  if (argv[i+1])
+ 	    MFMODE = argv[++i] ;
+ 	  (void) strcpy(rootname, p);
+ 	  if (ParseStdin)
+ 	    printf("MetaFont mode: %s\n",MFMODE);
+ 	  break ;
+ 	}
+ 	break;
 #endif /* MAKETEXPK */
       case 'O' : /* Offset */
 	if (*p == 0 && argv[i+1])
