@@ -10,7 +10,7 @@ bool ReadTFM(struct font_entry * tfontp, char* tfmname)
   int filedes;
   unsigned char* filemmap,*position; 
   int lh,bc,ec,nw, c;
-  int32_t* width;
+  dviunits* width;
 
   DEBUG_PRINT(((DEBUG_DVI|DEBUG_FT|DEBUG_TFM),
 	       "\n  OPEN METRICS:\t'%s'", tfmname));
@@ -30,7 +30,7 @@ bool ReadTFM(struct font_entry * tfontp, char* tfmname)
   ec = UNumRead(filemmap+6,2);
   nw = UNumRead(filemmap+8,2);
   DEBUG_PRINT((DEBUG_TFM," %d %d %d %d",lh,bc,ec,nw));
-  width=xmalloc(nw*sizeof(int32_t));  
+  width=alloca(nw*sizeof(dviunits));  
   c=0;
   position=filemmap+24+(lh+ec-bc+1)*4;
   while( c < nw ) {
@@ -49,7 +49,7 @@ bool ReadTFM(struct font_entry * tfontp, char* tfmname)
     tcharptr->data=NULL;
     tcharptr->tfmw=width[*position];
     DEBUG_PRINT((DEBUG_TFM,"%d [%d] %d",c,*position,tcharptr->tfmw));
-    tcharptr->tfmw = (int32_t) 
+    tcharptr->tfmw = (dviunits) 
       ((int64_t) tcharptr->tfmw * tfontp->s / (1 << 20));
     DEBUG_PRINT((DEBUG_TFM," (%d)",tcharptr->tfmw));
     if (c > NFNTCHARS) /* Only positive for now */

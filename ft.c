@@ -1,13 +1,16 @@
 #include "dvipng.h"
+#if HAVE_ALLOCA_H
+# include <alloca.h>
+#endif
 
 #define PROPER_OVERSTRIKE
 
-int32_t SetFT(int32_t c, int32_t hh, int32_t vv) 
+dviunits SetFT(int32_t c, subpixels hh, subpixels vv) 
 {
   register struct ft_char *ptr = currentfont->chr[c];
                                       /* temporary ft_char pointer */
   int red,green,blue;
-  int *Color=alloca(sizeof(int)*ptr->greys);
+  int *Color=alloca(sizeof(int)*(ptr->greys+1));
   int x,y;
   int pos=0;
   int bgColor,pixelcolor;
@@ -39,6 +42,7 @@ int32_t SetFT(int32_t c, int32_t hh, int32_t vv)
       }
       pos++;
     }
+    DEBUG_PRINT((DEBUG_GLYPH,"|\n"));
   }
   return(ptr->tfmw);
 }
@@ -78,8 +82,8 @@ void LoadFT(int32_t c, struct ft_char * ptr)
   bit=ptr->data;
   for(i=0;i<bitmap.rows;i++) {
     for(j=0;j<bitmap.width;j++) {
-      k=bitmap.buffer[i*bitmap.pitch+j]/GREYLEVELS;
-      DEBUG_PRINT((DEBUG_GLYPH,k>0?"*":" "));
+      k=bitmap.buffer[i*bitmap.pitch+j]/(256/GREYLEVELS);
+      DEBUG_PRINT((DEBUG_GLYPH,"%c",k+(k>9)?'0':'A'-10));
       bit[i*bitmap.width+j]=k;
     }
     DEBUG_PRINT((DEBUG_GLYPH,"|\n"));
@@ -99,31 +103,63 @@ bool InitFT(struct font_entry * tfontp, unsigned dpi,
   } else if (error) { 
     Warning("font file %s could not be opened", tfontp->name);
     return(false);
-  } else {
-    Message(BE_VERBOSE,"<%s>", tfontp->name);
-    if (encoding == NULL) {
-      tfontp->enc=NULL;
-      if (FT_Select_Charmap( tfontp->face, FT_ENCODING_ADOBE_CUSTOM )
-	  && FT_Select_Charmap( tfontp->face, FT_ENCODING_ADOBE_STANDARD )) {
-	Warning("unable to set font encoding for %s", tfontp->name);
-	return(false);
-      }
-    }
-    else if ((tfontp->enc=FindEncoding(encoding))==NULL) {
+  } 
+  Message(BE_VERBOSE,"<%s>", tfontp->name);
+  if (encoding == NULL) {
+    tfontp->enc=NULL;
+#ifndef FT_ENCODING_ADOBE_CUSTOM
+# define FT_ENCODING_ADOBE_CUSTOM ft_encoding_adobe_custom
+# define FT_ENCODING_ADOBE_STANDARD ft_encoding_adobe_standard
+#endif
+    if (FT_Select_Charmap( tfontp->face, FT_ENCODING_ADOBE_CUSTOM )
+	&& FT_Select_Charmap( tfontp->face, FT_ENCODING_ADOBE_STANDARD )) {
       Warning("unable to set font encoding for %s", tfontp->name);
       return(false);
     }
-    if (FT_Set_Char_Size( tfontp->face, /* handle to face object           */
-			  0,            /* char_width in 1/64th of points  */
-			  tfontp->d/65536*64,
-			  /* char_height in 1/64th of points */
-			  dpi/shrinkfactor,   /* horizontal resolution */
-			  dpi/shrinkfactor )) /* vertical resolution   */ {
-      Warning("unable to set font size for %s", tfontp->name);
-      return(false);
-    }
-    FT_Set_Transform(tfontp->face, transform, NULL);
-    tfontp->type = FONT_TYPE_FT;
   }
+  else if ((tfontp->enc=FindEncoding(encoding))==NULL) {
+    Warning("unable to set font encoding for %s", tfontp->name);
+    return(false);
+  }
+  if (FT_Set_Char_Size( tfontp->face, /* handle to face object           */
+			0,            /* char_width in 1/64th of points  */
+			tfontp->d/65536*64,
+			/* char_height in 1/64th of points */
+			dpi/shrinkfactor,   /* horizontal resolution */
+			dpi/shrinkfactor )) /* vertical resolution   */ {
+    Warning("unable to set font size for %s", tfontp->name);
+    return(false);
+  }
+  FT_Set_Transform(tfontp->face, transform, NULL);
+  tfontp->type = FONT_TYPE_FT;
   return(true);
 }
+
+
+void UnLoadFT(struct ft_char *ptr)
+{
+  if (ptr->data!=NULL)
+    free(ptr->data);
+  ptr->data=NULL;
+}
+
+
+void DoneFT(struct font_entry *tfontp)
+{
+  int c=0;
+
+  int error = FT_Done_Face( tfontp->face );
+  if (error)
+    Warning("font file %s could not be closed", tfontp->name);
+  while(c<NFNTCHARS-1) {
+    if (tfontp->chr[c]!=NULL) {
+      UnLoadFT((struct ft_char*)tfontp->chr[c]);
+      free(tfontp->chr[c]);
+      tfontp->chr[c]=NULL;
+    }
+    c++;
+  }
+  tfontp->name[0]='\0';
+}
+
+

@@ -131,7 +131,7 @@ void FontDef(unsigned char* command, void* parent)
 
   DEBUG_PRINT(((DEBUG_DVI|DEBUG_VF),"\n  FONT %d:\tNew entry created",k));
   /* No fitting font found, create new entry. */
-  if ((tfontptr = malloc(sizeof(struct font_entry))) == NULL)
+  if ((tfontptr = calloc(1,sizeof(struct font_entry))) == NULL)
     Fatal("can't malloc space for font_entry");
   tfontptr->next = hfontptr;
   hfontptr = tfontptr;
@@ -260,6 +260,46 @@ void FontFind(struct font_entry * tfontptr)
 }
 
 
+void DoneFont(struct font_entry *tfontp)
+{
+  switch (tfontp->type) {
+  case FONT_TYPE_PK:
+    DonePK(tfontp);
+    break;
+  case FONT_TYPE_VF:
+    DoneVF(tfontp);
+    break;
+  case FONT_TYPE_FT:
+    DoneFT(tfontp);
+    break;
+  }
+  free(tfontp);
+}
+
+
+void FreeFontNumP(struct font_num *hfontnump)
+{
+  struct font_num *tmp;
+  while(hfontnump!=NULL) {
+    tmp=hfontnump->next; 
+    free(hfontnump);
+    hfontnump=tmp;
+  }
+}
+
+void ClearFonts(void)
+{
+  struct font_entry *tmp;
+
+  while(hfontptr!=NULL) {
+    tmp=hfontptr->next;
+    DoneFont(hfontptr);
+    free(hfontptr);
+    hfontptr=tmp;
+  }
+  FreeFontNumP(dvi->fontnump);
+
+}
 
 /*-->SetFntNum*/
 /**********************************************************************/
@@ -289,4 +329,3 @@ void SetFntNum(int32_t k, void* parent /* dvi/vf */)
 }
 
 
-    

@@ -47,6 +47,7 @@ void InitVF(struct font_entry * tfontp)
       PROT_READ, MAP_SHARED,tfontp->filedes,0);
   if (tfontp->mmap == (unsigned char *)-1) 
     Fatal("cannot mmap VF file <%s> !\n",currentfont->name);
+  tfontp->end=tfontp->mmap+stat.st_size;
   if (*(tfontp->mmap) != PRE) 
     Fatal("unknown font format in file <%s> !\n",currentfont->name);
   if (*(tfontp->mmap+1) != VF_ID) 
@@ -108,5 +109,26 @@ void InitVF(struct font_entry * tfontp)
     position += tcharptr->length;
   }
 }
-  
 
+
+void DoneVF(struct font_entry *tfontp)
+{
+  int c=0;
+
+  if (munmap(tfontp->mmap,tfontp->end-tfontp->mmap))
+    Warning("font file %s could not be munmapped", tfontp->name);
+  if (close(tfontp->filedes)) 
+    Warning("font file %s could not be closed", tfontp->name);
+  tfontp->mmap=NULL;
+  tfontp->filedes=-1;
+  while(c<NFNTCHARS-1) {
+    if (tfontp->chr[c]!=NULL) {
+      free(tfontp->chr[c]);
+      tfontp->chr[c]=NULL;
+    }
+    c++;
+  }
+  FreeFontNumP(tfontp->vffontnump);
+  tfontp->vffontnump=NULL;
+  tfontp->name[0]='\0';
+}

@@ -1,4 +1,7 @@
 #include "dvipng.h"
+#if HAVE_ALLOCA_H
+# include <alloca.h>
+#endif
 
 void CreateImage(void)
 {
@@ -79,10 +82,10 @@ void WriteImage(char *pngname, int pagenum)
 /*****************************  SetRule  ******************************/
 /**********************************************************************/
 /*   this routine will draw a rule */
-int32_t SetRule(int32_t a, int32_t b, int32_t hh,int32_t vv, int PassNo)
+dviunits SetRule(dviunits a, dviunits b, subpixels hh,subpixels vv, int PassNo)
 {
   int Color;
-  int32_t    width=0, height=0;
+  pixels    width=0, height=0;
 
   if ( a > 0 && b > 0 ) {
     /* Calculate width and height, round up */

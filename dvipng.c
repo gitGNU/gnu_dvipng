@@ -118,6 +118,12 @@ int main(int argc, char ** argv)
 	    "Thereof in TIC/TOC region %.5f s.\n",my_toc);
 #endif
 
+  ClearFonts();
+#ifdef HAVE_FT2
+  if (FT_Done_FreeType(libfreetype)) 
+    Fatal("an error occured during freetype destruction"); 
+#endif  
+
   exit(EXIT_SUCCESS);
 }
 

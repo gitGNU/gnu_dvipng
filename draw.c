@@ -7,22 +7,22 @@
 #endif
 
 struct stack_entry {  
-  int32_t    h, v, w, x, y, z; /* stack entry                           */
+  dviunits    h, v, w, x, y, z; /* stack entry                           */
 #ifndef NO_DRIFT
-  int32_t    hh,vv;
+  subpixels    hh,vv;
 #endif
 } stack[STACK_SIZE];           /* stack                                 */
 int       sp = 0;              /* stack pointer                         */
 
-int32_t     h;                   /* current horizontal position     */
-int32_t     v;                   /* current vertical position       */
-int32_t     w INIT(0);           /* current horizontal spacing      */
-int32_t     x INIT(0);           /* current horizontal spacing      */
-int32_t     y INIT(0);           /* current vertical spacing        */
-int32_t     z INIT(0);           /* current vertical spacing        */
+dviunits    h;                   /* current horizontal position     */
+dviunits    v;                   /* current vertical position       */
+dviunits    w=0;                 /* current horizontal spacing      */
+dviunits    x=0;                 /* current horizontal spacing      */
+dviunits    y=0;                 /* current vertical spacing        */
+dviunits    z=0;                 /* current vertical spacing        */
 #ifndef NO_DRIFT
-int32_t     hh;                  /* current rounded horizontal position     */
-int32_t     vv;                  /* current rounded vertical position       */
+subpixels   hh;                  /* current rounded horizontal position     */
+subpixels   vv;                  /* current rounded vertical position       */
 #else
 # define hh PIXROUND(h,dvi->conv*shrinkfactor)
 # define vv PIXROUND(v,dvi->conv*shrinkfactor)
@@ -60,16 +60,16 @@ int PassNo;
 		        vv += PIXROUND( temp,dvi->conv*shrinkfactor ); \
                       CHECK_MAXDRIFT(v,vv)
 #else
-#define MoveRight(b)  h += (int32_t) b
-#define MoveDown(a)   v += (int32_t) a
+#define MoveRight(b)  h += (dviunits) b
+#define MoveDown(a)   v += (dviunits) a
 #endif
 
 
 #define DO_VFCONV(a) ((((struct font_entry*) parent)->type==DVI_TYPE)?a:\
-    (int32_t)((int64_t) a *  ((struct font_entry*) parent)->s / (1 << 20)))
+    (dviunits)((int64_t) a *  ((struct font_entry*) parent)->s / (1 << 20)))
 
 
-int32_t SetChar(int32_t c)
+dviunits SetChar(int32_t c)
 {
   if (currentfont==NULL) 
     Fatal("faulty DVI, trying to set character from null font");
@@ -109,12 +109,12 @@ int32_t SetChar(int32_t c)
   case FONT_TYPE_FT: {
     struct ft_char* ptr = currentfont->chr[c];
     if (ptr->data == NULL) 
-      LoadFT(c, ptr);
+    LoadFT(c, ptr);
     DEBUG_PRINT((DEBUG_DVI,"\n  FT CHAR:\t"));
     if (isprint(c))
       DEBUG_PRINT((DEBUG_DVI,"'%c' ",c));
     DEBUG_PRINT((DEBUG_DVI,"%d at (%d,%d) tfmw %d", c,hh,vv,ptr->tfmw));
-    if (PassNo==PASS_DRAW)
+    if (PassNo==PASS_DRAW) 
       return(SetFT(c, hh, vv));
     else {
       /* Expand bounding box if necessary */
@@ -136,7 +136,7 @@ int32_t SetChar(int32_t c)
 void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
      /* To be used both in plain DVI drawing and VF drawing */
 {
-  int32_t temp;
+  dviunits temp;
 
   if (/*command >= SETC_000 &&*/ *command <= SETC_127) {
     temp = SetChar((int32_t)*command);
@@ -323,7 +323,7 @@ void EndVFMacro(void)
 }
 
 
-void DrawPage(int32_t hoffset, int32_t voffset) 
+void DrawPage(dviunits hoffset, dviunits voffset) 
      /* To be used after having read BOP and will exit cleanly when
       * encountering EOP.
       */
@@ -362,7 +362,7 @@ void DrawPages(void)
 	  x_min = y_min = INT32_MAX;
 	}
 	PassNo=PASS_BBOX;
-	DrawPage((int32_t) 0, (int32_t) 0);
+	DrawPage((dviunits) 0, (dviunits) 0);
 	SeekPage(dvi,dvi_pos);
 	x_width = x_max-x_min;
 	y_width = y_max-y_min;

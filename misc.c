@@ -455,9 +455,14 @@ void Fatal (char *fmt, ...)
   fprintf(stderr, "\n");
   fprintf(stderr, "%s: Fatal error, ", programname);
   vfprintf(stderr, fmt, args);
-
+  
   fprintf(stderr, "\n\n");
   va_end(args);
+
+  ClearFonts();
+#ifdef HAVE_FT2
+  (void) FT_Done_FreeType(libfreetype); /* at this point, ignore error */
+#endif  
   exit(EXIT_FAILURE);
 }
 

@@ -2,6 +2,9 @@
 #include <fcntl.h> // open/close
 #include <sys/mman.h>
 #include <sys/stat.h>
+#if HAVE_ALLOCA_H
+# include <alloca.h>
+#endif
 
 #define PK_POST 245
 #define PK_PRE 247
@@ -11,12 +14,12 @@ unsigned char   dyn_f;
 int             repeatcount;
 int             poshalf;
 
-int32_t SetPK(int32_t c, int32_t hh,int32_t vv)
+dviunits SetPK(int32_t c, int32_t hh,int32_t vv)
 {
   register struct pk_char *ptr = currentfont->chr[c];
                                       /* temporary pk_char pointer */
   int red,green,blue;
-  int *Color=alloca(sizeof(int)*ptr->greys);
+  int *Color=alloca(sizeof(int)*(ptr->greys+1));
   int x,y;
   int pos=0;
   int bgColor,pixelcolor;
@@ -186,7 +189,7 @@ void LoadPK(int32_t c, register struct pk_char * ptr)
     pos+=8+n;
   }
   DEBUG_PRINT((DEBUG_PK," %d",ptr->tfmw));
-  ptr->tfmw = (int32_t)
+  ptr->tfmw = (dviunits)
     ((int64_t) ptr->tfmw * currentfont->s / 0x100000 );
   DEBUG_PRINT((DEBUG_PK," (%d)",ptr->tfmw));
   
@@ -365,6 +368,7 @@ void InitPK(struct font_entry * tfontp)
     mmap(NULL,stat.st_size, PROT_READ, MAP_SHARED,tfontp->filedes,0);
   if (tfontp->mmap == (unsigned char *)-1) 
     Fatal("cannot mmap PK file <%s> !\n",currentfont->name);
+  tfontp->end=tfontp->mmap+stat.st_size;
   if (*position++ != PK_PRE) 
     Fatal("unknown font format in file <%s> !\n",currentfont->name);
   if (*position++ != PK_ID) 
@@ -425,3 +429,29 @@ void InitPK(struct font_entry * tfontp)
   }
 }
 
+void UnLoadPK(struct pk_char *ptr)
+{
+  if (ptr->data!=NULL)
+    free(ptr->data);
+  ptr->data=NULL;
+}
+
+void DonePK(struct font_entry *tfontp)
+{
+  int c=0;
+
+  if (munmap(tfontp->mmap,tfontp->end-tfontp->mmap))
+    Warning("font file %s could not be munmapped", tfontp->name);
+  if (close(tfontp->filedes)) 
+    Warning("font file %s could not be closed", tfontp->name);
+  tfontp->mmap=NULL;
+  tfontp->filedes=-1;
+  while(c<NFNTCHARS-1) {
+    if (tfontp->chr[c]!=NULL) {
+      UnLoadPK((struct pk_char*)tfontp->chr[c]);
+      free(tfontp->chr[c]);
+    }
+    c++;
+  }
+  tfontp->name[0]='\0';
+}

@@ -58,6 +58,10 @@ typedef  int     bool;
 /*************************  protos.h  ************************/
 /*************************************************************/
 
+typedef int pixels;
+typedef int32_t subpixels;
+typedef int32_t dviunits;
+
 #define  MM_TO_PXL(x)   (int)(((x)*resolution*10)/254)
 #define  PT_TO_PXL(x)   (int)((int32_t)((x)*resolution*100l)/7224)
 #define  PT_TO_DVI(x)   (int32_t)((x)*65536l)
@@ -105,6 +109,8 @@ struct dvi_data {    /* dvi entry */
   struct dvi_data *next;
   uint32_t     num, den, mag;   /* PRE command parameters            */
   int32_t      conv;            /* computed from num and den         */
+  /* divide dvi units (sp) with conv to get mf device resolution */
+  /* divide further with shrinkfactor to get true resolution */
   char *       name;            /* full name of DVI file             */
   char *       outname;         /* output filename (basename)        */
   FILE *       filep;           /* file pointer                      */
@@ -148,11 +154,11 @@ struct encoding {
 
 #define FONT_TYPE_PK            1
 struct pk_char {                   /* PK character */
-  int32_t        tfmw;             /* TFM width                         */
+  dviunits       tfmw;             /* TFM width                         */
   unsigned char  greys;            /* ink is black at this value        */
-  int            w,h;              /* width height in pixels            */
+  pixels         w,h;              /* width height in pixels            */
   char          *data;             /* glyph data                        */
-  short          xOffset, yOffset; /* x offset and y offset in pixels   */
+  pixels         xOffset, yOffset; /* x offset and y offset in pixels   */
   unsigned char *mmap;             /* Points to beginning of PK data    */
   uint32_t       length;           /* Length of PK data                 */
   unsigned char  flag_byte;        /* PK flagbyte                       */
@@ -160,7 +166,7 @@ struct pk_char {                   /* PK character */
 
 #define FONT_TYPE_VF            2
 struct vf_char {                   /* VF character                     */
-  int32_t        tfmw;             /* TFM width                        */
+  dviunits       tfmw;             /* TFM width                        */
   unsigned char* mmap;             /* Points to beginning of VF macro  */
   uint32_t       length;           /* Length of VF macro               */
 };
@@ -168,11 +174,11 @@ struct vf_char {                   /* VF character                     */
 #ifdef HAVE_FT2
 #define FONT_TYPE_FT            3
 struct ft_char {                   /* FT character */
-  int32_t        tfmw;             /* TFM width                         */
+  dviunits       tfmw;             /* TFM width                         */
   unsigned char  greys;            /* ink is black at this value        */
-  int            w,h;              /* width height in pixels            */
-  char          *data;             /* glyph data                        */
-  short          xOffset, yOffset; /* x offset and y offset in pixels   */
+  pixels         w,h;              /* width height in pixels            */
+  unsigned char *data;             /* glyph data                        */
+  pixels         xOffset, yOffset; /* x offset and y offset in pixels   */
 };
 #endif
 
@@ -185,8 +191,8 @@ struct font_entry {    /* font entry */
   uint32_t     font_mag;        /* computed from s and d             */
   char         name[STRSIZE];   /* full name of PK/VF file           */
   int          filedes;         /* file descriptor                   */
-  unsigned char* mmap;          /* memory map                        */
-  int          length;          /* its length                        */
+  unsigned char* mmap,*end;     /* memory map                        */
+  //  int          length;          /* its length                        */
   uint32_t     magnification;   /* magnification read from font file */
   uint32_t     designsize;      /* design size read from font file   */
   void *       chr[NFNTCHARS];  /* character information             */ 
@@ -206,16 +212,21 @@ struct font_num {    /* Font number. Different for VF/DVI, and several
 };
 
 void    CheckChecksum(unsigned, unsigned, const char*);
-void    InitPK (struct font_entry *);
-void    InitVF (struct font_entry *);
+void    InitPK (struct font_entry *newfontp);
+void    DonePK(struct font_entry *oldfontp);
+void    InitVF (struct font_entry *newfontp);
+void    DoneVF(struct font_entry *oldfontp);
 
 void    FontDef(unsigned char*, void* /* dvi/vf */);
+void    ClearFonts(void);
 void    SetFntNum(int32_t, void* /* dvi/vf */);      
+void    FreeFontNumP(struct font_num *hfontnump);
 
 #ifdef HAVE_FT2
 void    InitPSFontMap(void);
 char*   FindPSFontMap(char*, char**, FT_Matrix**);
 bool    InitFT(struct font_entry *, unsigned, char*, FT_Matrix* );
+void    DoneFT(struct font_entry *tfontp);
 int32_t SetFT(int32_t, int32_t, int32_t);
 void    LoadFT(int32_t, struct ft_char *);
 struct encoding* FindEncoding(char*);
@@ -343,9 +354,9 @@ EXTERN double my_tic,my_toc INIT(0);
 EXTERN int      ndone INIT(0);          /* number of pages converted       */
 # ifdef HAVE_GETTIMEOFDAY
 EXTERN struct timeval Tp;
-#  define TIC() { gettimeofday(&Tp, NULL); \
+#  define TIC { gettimeofday(&Tp, NULL); \
     my_tic= (float)Tp.tv_sec + ((float)(Tp.tv_usec))/ 1000000.0;}
-#  define TOC() { gettimeofday(&Tp, NULL); \
+#  define TOC { gettimeofday(&Tp, NULL); \
     my_toc += ((float)Tp.tv_sec + ((float)(Tp.tv_usec))/ 1000000.0) - my_tic;}
 # else
 #  ifdef HAVE_FTIME
