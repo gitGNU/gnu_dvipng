@@ -181,6 +181,31 @@ unsigned char*   DVIGetCommand(struct dvi_data*);
 uint32_t         CommandLength(unsigned char*); 
 
 /********************************************************/
+/**********************  misc.h  ************************/
+/********************************************************/
+
+struct filemmap {
+#ifdef MIKTEX
+  HANDLE hFile;
+  HANDLE hMap;
+#else  /* MIKTEX */
+  int fd;
+#endif	/* MIKTEX */
+  void* mmap;
+  size_t size;
+};
+
+bool    DecodeArgs(int, char *[]);
+void    DecodeString(char *);
+
+void    Message(int, char *fmt, ...);
+void    Warning(char *fmt, ...);
+void    Fatal(char *fmt, ...);
+
+int32_t   SNumRead(unsigned char*, register int);
+uint32_t   UNumRead(unsigned char*, register int);
+
+/********************************************************/
 /***********************  font.h  ***********************/
 /********************************************************/
 struct encoding {
@@ -230,9 +255,7 @@ struct font_entry {    /* font entry */
   char         n[STRSIZE];      /* FNT_DEF command parameters        */
   int          dpi;             /* computed from s and d             */
   char         name[STRSIZE];   /* full name of PK/VF file           */
-  int          filedes;         /* file descriptor                   */
-  unsigned char* mmap,*end;     /* memory map                        */
-  //  int          length;          /* its length                        */
+  struct filemmap fmmap;        /* file memory map                   */
   uint32_t     magnification;   /* magnification read from font file */
   uint32_t     designsize;      /* design size read from font file   */
   void *       chr[NFNTCHARS];  /* character information             */ 
@@ -299,19 +322,8 @@ void    ClearPpList(void);
 void    Reverse(bool);
 struct page_list*   NextPPage(void* /* dvi */, struct page_list*);
 
-/********************************************************/
-/**********************  misc.h  ************************/
-/********************************************************/
 
-bool    DecodeArgs(int, char *[]);
-void    DecodeString(char *);
 
-void    Message(int, char *fmt, ...);
-void    Warning(char *fmt, ...);
-void    Fatal(char *fmt, ...);
-
-int32_t   SNumRead(unsigned char*, register int);
-uint32_t   UNumRead(unsigned char*, register int);
 
 #ifdef MAIN
 #define EXTERN
@@ -450,6 +462,10 @@ EXTERN int    dpi                  INIT(100);
 #ifdef HAVE_GDIMAGEPNGEX
 EXTERN int   compression INIT(1);
 #endif
+#ifdef MIKTEX
+#undef min
+#undef max
+#endif        /* MIKTEX */
 # define  max(x,y)       if ((y)>(x)) x = y
 # define  min(x,y)       if ((y)<(x)) x = y
 

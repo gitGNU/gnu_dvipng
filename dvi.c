@@ -24,7 +24,13 @@
 ************************************************************************/
 
 #include "dvipng.h"
-#include <libgen.h>
+#ifdef MIKTEX
+# include <gnu-miktex.h>
+# define SLEEP    Sleep(1000)
+#else  /* MIKTEX */
+# include <libgen.h>
+# define SLEEP    sleep(1)
+#endif	/* MIKTEX */
 #include <sys/stat.h>
 
 bool followmode=0;
@@ -39,7 +45,7 @@ static unsigned char fgetc_follow(FILE* fp)
   int got=fgetc(fp);
 
   while(followmode && got==EOF) {
-    sleep(1);
+    SLEEP;
     got=fgetc(fp);
   }
   if (got==EOF)
@@ -91,7 +97,7 @@ struct dvi_data* DVIOpen(char* dviname,char* outname)
   char* tmpstring;
   struct dvi_data* dvi;
 
-  if ((dvi = malloc(sizeof(struct dvi_data)))==NULL)
+  if ((dvi = calloc(1,sizeof(struct dvi_data)))==NULL)
     Fatal("cannot allocate memory for dvi struct");
 
   dvi->type = DVI_TYPE;
@@ -134,7 +140,7 @@ struct dvi_data* DVIOpen(char* dviname,char* outname)
     dvi->filep = fopen(dvi->name,"rb");
   }
   while((dvi->filep == NULL) && followmode) {
-    sleep(1);
+    SLEEP;
     *tmpstring='.';
     if ((dvi->filep = fopen(dvi->name,"rb")) == NULL) {
       /* do not insist on .dvi */
@@ -415,7 +421,7 @@ bool DVIReOpen(struct dvi_data* dvi)
     dvi->filep=NULL;
     DelPageList(dvi);
     while(((dvi->filep = fopen(dvi->name,"rb")) == NULL) && followmode) {
-      sleep(1);
+      SLEEP;
     }
     if (dvi->filep == NULL) {
       perror(dvi->name);

@@ -24,7 +24,7 @@
 ************************************************************************/
 
 #include "dvipng.h"
-#include <sys/wait.h>
+#include <fcntl.h>
 #if HAVE_ALLOCA_H
 # include <alloca.h>
 #endif
@@ -33,102 +33,160 @@ gdImagePtr
 ps2png(const char *psfile, int hresolution, int vresolution, 
        int urx, int ury, int llx, int lly)
 {
-  int status, downpipe[2], uppipe[2];
+#ifndef MIKTEX
+  int downpipe[2], uppipe[2];
   pid_t pid;
+#else
+  HANDLE hPngStream;
+  HANDLE hPsStream;
+  HANDLE hStdErr;
+  PROCESS_INFORMATION pi;
+  _TCHAR szCommandLine[2048];
+  _TCHAR szGsPath[_MAX_PATH];
+  int fd;
+#endif
+  FILE *psstream=NULL, *pngstream=NULL;
   char resolution[STRSIZE]; 
-  char devicesize[STRSIZE]; 
+  //  char devicesize[STRSIZE]; 
   /* For some reason, png256 gives inferior result */
   char *device="-sDEVICE=png16m";  
   gdImagePtr psimage=NULL;
   static bool showpage;
 
-  status=sprintf(resolution, "-r%dx%d",hresolution,vresolution);
+  sprintf(resolution, "-r%dx%d",hresolution,vresolution);
+  /* Future extension for \rotatebox
   status=sprintf(devicesize, "-g%dx%d",
-		  //(int)((sin(atan(1.0))+1)*
-		  (urx - llx)*hresolution/72,//), 
-		  //(int)((sin(atan(1.0))+1)*
-    (ury - lly)*vresolution/72);//);
+		 //(int)((sin(atan(1.0))+1)*
+		 (urx - llx)*hresolution/72,//), 
+		 //(int)((sin(atan(1.0))+1)*
+		 (ury - lly)*vresolution/72);//);
+  */
   /* png16m being the default, this code is not needed
    * #ifdef HAVE_GDIMAGECREATETRUECOLOR
    * if (flags & RENDER_TRUECOLOR) 
    * device="-sDEVICE=png16m";
    * #endif  
    */
-  if (status>0 && status<STRSIZE 
-      && pipe(downpipe)==0 && pipe(uppipe)==0) { /* Ready to fork */
-    pid = fork ();
-    if (pid == 0) { /* Child process.  Execute gs. */       
-      close(downpipe[1]);
-      dup2(downpipe[0], STDIN_FILENO);
-      close(downpipe[0]);
-      DEBUG_PRINT(DEBUG_GS,
-		  ("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s %s ",// %s",
-		   GS_PATH, device, resolution, //devicesize,
-		   "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
-		   "-sOutputFile=-", 
-		   "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
-		   "-"));
-      close(uppipe[0]);
-      dup2(uppipe[1], STDOUT_FILENO);
-      close(uppipe[1]);
-      execl (GS_PATH, GS_PATH, device, resolution, //devicesize,
-	     "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
-	     "-sOutputFile=-", 
-	     "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
-	     "-",NULL);
-      _exit (EXIT_FAILURE);
+
+#ifndef MIKTEX
+  if (pipe(downpipe) || pipe(uppipe)) return(NULL);
+  /* Ready to fork */
+  pid = fork ();
+  if (pid == 0) { /* Child process.  Execute gs. */       
+    close(downpipe[1]);
+    dup2(downpipe[0], STDIN_FILENO);
+    close(downpipe[0]);
+    DEBUG_PRINT(DEBUG_GS,
+		("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s %s ",// %s",
+		 GS_PATH, device, resolution, //devicesize,
+		 "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
+		 "-sOutputFile=-", 
+		 "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
+		 "-"));
+    close(uppipe[0]);
+    dup2(uppipe[1], STDOUT_FILENO);
+    close(uppipe[1]);
+    execl (GS_PATH, GS_PATH, device, resolution, //devicesize,
+	   "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
+	   "-sOutputFile=-", 
+	   "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
+	   "-",NULL);
+    _exit (EXIT_FAILURE);
+  }
+  /* Parent process. */
+  
+  close(downpipe[0]);
+  psstream=fdopen(downpipe[1],"wb");
+  if (psstream == NULL) 
+    close(downpipe[1]);
+  close(uppipe[1]);
+  pngstream=fdopen(uppipe[0],"rb");
+  if (pngstream == NULL) 
+    close(uppipe[0]);
+#else /* MIKTEX */
+  if (! miktex_find_miktex_executable("mgs.exe", szGsPath)) {
+      Warning("Ghostscript could not be found");
+      return(NULL);
+  }
+  DEBUG_PRINT(DEBUG_GS,
+	      ("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s %s ",// %s",
+	       szGsPath, device, resolution, //devicesize,
+	       "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
+	       "-sOutputFile=-", 
+	       "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
+	       "-"));
+  sprintf(szCommandLine,"\"%s\" %s %s %s %s %s %s %s %s %s %s",// %s",
+	       szGsPath, device, resolution, //devicesize,
+	       "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
+	       "-sOutputFile=-", 
+	       "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
+	       "-");
+  if (! miktex_start_process_3(szCommandLine, &pi, INVALID_HANDLE_VALUE,
+			       &hPsStream, &hPngStream, &hStdErr, 0)) {
+      Warning("Ghostscript could not be started");
+      return(NULL);
+  }
+  CloseHandle (pi.hThread);
+  fd = _open_osfhandle((intptr_t)hPsStream, _O_WRONLY);
+  if (fd >= 0) { 
+    psstream = _tfdopen(fd, "wb");
+    if (psstream == NULL) 
+      _close (fd);
+  }
+  fd = _open_osfhandle((intptr_t)hPngStream, _O_RDONLY);
+  if (fd >= 0) {
+    pngstream = _tfdopen(fd, "rb");
+    if (pngstream == NULL) 
+      _close (fd);
+  }
+#endif 
+  if (psstream) {
+    DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\t<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice",
+			  urx - llx, ury - lly,llx,lly));
+    fprintf(psstream, "<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice\n",
+	    urx - llx, ury - lly,llx,lly);
+    if ( cstack[0].red < 255 || cstack[0].green < 255 || cstack[0].blue < 255 ) {
+      DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\tgsave %f %f %f setrgbcolor clippath fill grestore",
+			    cstack[0].red/255.0, cstack[0].green/255.0, cstack[0].blue/255.0));
+      fprintf(psstream, "gsave %f %f %f setrgbcolor clippath fill grestore",
+	      cstack[0].red/255.0, cstack[0].green/255.0, cstack[0].blue/255.0);
     }
-    else if (pid > 0) { /* Parent process. */
-      FILE *psstream, *pngstream;
-      
-      close(downpipe[0]);
-      psstream=fdopen(downpipe[1],"w");
-      if (psstream) {
-	DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\t<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice",
-	       urx - llx, ury - lly,llx,lly));
-       fprintf(psstream, "<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice\n",
-               urx - llx, ury - lly,llx,lly);
-	if ( cstack[0].red < 255 || cstack[0].green < 255 || cstack[0].blue < 255 ) {
-	  DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\tgsave %f %f %f setrgbcolor clippath fill grestore",
-		  cstack[0].red/255.0, cstack[0].green/255.0, cstack[0].blue/255.0));
-	  fprintf(psstream, "gsave %f %f %f setrgbcolor clippath fill grestore",
-		  cstack[0].red/255.0, cstack[0].green/255.0, cstack[0].blue/255.0);
-	}
-	DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\t(%s) run", psfile));
-	fprintf(psstream, "(%s) run\n", psfile);
-	if (showpage) {
-	  DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\tshowpage"));
-	  fprintf(psstream, "showpage\n");
-	}
-	DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\tquit"));
-	fprintf(psstream, "quit\n");
-	fclose(psstream);
-      }
-      close(uppipe[1]);
-      pngstream=fdopen(uppipe[0],"r");
-      if (pngstream) {
-	psimage = gdImageCreateFromPng(pngstream);
-	fclose(pngstream);
-      }
+    DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\t(%s) run", psfile));
+    fprintf(psstream, "(%s) run\n", psfile);
+    if (showpage) {
+      DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\tshowpage"));
+      fprintf(psstream, "showpage\n");
+    }
+    DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\tquit"));
+    fprintf(psstream, "quit\n");
+    fclose(psstream);
+  }
+  if (pngstream) {
+    psimage = gdImageCreateFromPng(pngstream);
+    fclose(pngstream);
+  }
+#ifdef MIKTEX
+  CloseHandle(pi.hProcess);
+#endif
 #ifdef HAVE_GDIMAGETRUECOLORTOPALETTE
 #ifdef HAVE_GDIMAGECREATETRUECOLOR
-      if (!flags & RENDER_TRUECOLOR)
+  if (!flags & RENDER_TRUECOLOR)
 #endif
-	gdImageTrueColorToPalette(psimage,0,256);
+    gdImageTrueColorToPalette(psimage,0,256);
 #endif
-      if (psimage == NULL) {
-	DEBUG_PRINT(DEBUG_GS,("\n  GS OUTPUT:\tNO IMAGE "));
-	if (!showpage) {
-	  showpage=true;
-	  DEBUG_PRINT(DEBUG_GS,("(will try adding \"showpage\") "));
-	  psimage=ps2png(psfile, hresolution, vresolution, urx, ury, llx, lly);
-	  showpage=false;
-	}
-      } else {
-	DEBUG_PRINT(DEBUG_GS,("\n  GS OUTPUT:\t%dx%d image ",
-			      gdImageSX(psimage),gdImageSY(psimage)));
-      }
+  if (psimage == NULL) {
+    DEBUG_PRINT(DEBUG_GS,("\n  GS OUTPUT:\tNO IMAGE "));
+    if (!showpage) {
+      showpage=true;
+      DEBUG_PRINT(DEBUG_GS,("(will try adding \"showpage\") "));
+      psimage=ps2png(psfile, hresolution, vresolution, urx, ury, llx, lly);
+      showpage=false;
     }
+#ifdef DEBUG
+  } else {
+    DEBUG_PRINT(DEBUG_GS,("\n  GS OUTPUT:\t%dx%d image ",
+			  gdImageSX(psimage),gdImageSY(psimage)));
+#endif
   }
   return psimage;
 }
@@ -280,8 +338,6 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 		    gdImageSX(psimage),gdImageSY(psimage));
 	gdImageDestroy(psimage);
       }
-      //if (psfile!=NULL)
-      //	free(psfile);
       Message(BE_NONQUIET,">");
     } else { /* Not PASS_DRAW */
       int pngheight,pngwidth;
