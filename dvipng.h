@@ -99,8 +99,8 @@ struct dvi_data {    /* dvi entry */
   struct dvi_data *next;
   uint32_t     num, den, mag;   /* PRE command parameters            */
   int32_t      conv;            /* computed from num and den         */
-  char         name[STRSIZE];   /* full name of DVI file             */
-  char         outname[STRSIZE];/* output filename (basename)        */
+  char *       name;            /* full name of DVI file             */
+  char *       outname;         /* output filename (basename)        */
   FILE *       filep;           /* file pointer                      */
   time_t       mtime;           /* modification time                 */
   struct font_num  *fontnump;   /* DVI font numbering                */
@@ -270,6 +270,7 @@ EXTERN struct internal_state {
 
 #ifdef DEBUG
 /*EXTERN unsigned int Debug INIT(0);*/
+#define DEBUG_PRINT(a) Message a
 #define DEBUG_PUTS(a,str) Message(a,str) /* variadic macros? BAH!*/
 #define DEBUG_PRINTF(a,str,e1) Message(a,str,e1)
 #define DEBUG_PRINTF2(a,str,e1,e2) Message(a,str,e1,e2)
