@@ -64,8 +64,8 @@ void LoadFT(int32_t c, struct char_entry * ptr)
   for(i=0;i<bitmap.rows;i++) {
     for(j=0;j<bitmap.width;j++) {
       k=bitmap.buffer[i*bitmap.pitch+j]/(256/GREYLEVELS)*17;
-      //k=(bitmap.buffer[i*bitmap.pitch+j]+1)/16;
-      //k= k>0 ? k*16-1 : 0;
+      /* k=(bitmap.buffer[i*bitmap.pitch+j]+1)/16; */
+      /* k= k>0 ? k*16-1 : 0; */
       DEBUG_PRINT(DEBUG_GLYPH,("%3u ",k));
       bit[i*bitmap.width+j]=k;
     }

@@ -1,3 +1,8 @@
+2004-11-15  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* draw.c, dvipng.c, enc.c, font.c, ft.c, pk.c, special.c, t1.c:
+	Don't use C++ comments.
+
 2004-11-05  David Kastrup  <dakas@users.sourceforge.net>
 
 	* Makefile.in (install-dvigif): Don't fail if dvigif already

@@ -64,7 +64,7 @@ int main(int argc, char ** argv)
 #  endif
 # endif
 #endif
-  //  setbuf(stderr, NULL);
+  /* setbuf(stderr, NULL); */
 
   initcolor();
   parsestdin = DecodeArgs(argc, argv);

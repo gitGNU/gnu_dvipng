@@ -100,7 +100,7 @@ struct encoding* FindEncoding(char* encoding)
 {
   struct encoding *temp=encodingp;
 
-  //  printf("{%s} \n",encoding);
+  /* printf("{%s} \n",encoding); */
   while(temp!=NULL && strcmp(encoding,temp->name)!=0) 
     temp=temp->next;
   if (temp==NULL) {

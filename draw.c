@@ -25,7 +25,7 @@
 
 #include "dvipng.h"
 
-//#define NO_DRIFT
+/* #define NO_DRIFT */
 
 #ifdef DEBUG
 #include <ctype.h> // isprint

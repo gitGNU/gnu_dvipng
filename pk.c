@@ -294,12 +294,12 @@ void LoadPK(int32_t c, register struct char_entry * ptr)
     Fatal("Unable to allocate image space for char <%c>\n", (char)c);
   for (j = 0; j < (int) height; j++) {	
     for (i = 0; i < (int) width; i++) {    
-      //      if (((i % shrinkfactor) == 0) && ((j % shrinkfactor) == 0))
-      //	ptr->data[i/shrinkfactor+j/shrinkfactor*shrunk_width] =
-      //	  buffer[i+j*width];
-      //      else 
-	ptr->data[i/shrinkfactor+j/shrinkfactor*shrunk_width] +=
-	  buffer[i+j*width];
+      /* if (((i % shrinkfactor) == 0) && ((j % shrinkfactor) == 0))
+	 ptr->data[i/shrinkfactor+j/shrinkfactor*shrunk_width] =
+	 buffer[i+j*width];
+	 else */
+      ptr->data[i/shrinkfactor+j/shrinkfactor*shrunk_width] +=
+	buffer[i+j*width];
     }
   }	
   for (j = 0; j < shrunk_height; j++) {	

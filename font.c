@@ -205,13 +205,13 @@ void FontFind(struct font_entry * tfontptr)
   kpse_glyph_file_type font_ret;
   char *name;
 
-  //tfontptr->dpi = kpse_magstep_fix (tfontptr->dpi, resolution, NULL);
+  /* tfontptr->dpi = kpse_magstep_fix (tfontptr->dpi, resolution, NULL); */
   DEBUG_PRINT(DEBUG_DVI,("\n  FIND FONT:\t%s %d",tfontptr->n,tfontptr->dpi));
 
   TEMPSTR(name,kpse_find_vf (tfontptr->n));
   if (name!=NULL) {
     strcpy (tfontptr->name, name);
-    //    free (name);
+    /* free (name); */
     InitVF(tfontptr);
   }
 #ifdef HAVE_FT2_OR_LIBT1
@@ -223,7 +223,7 @@ void FontFind(struct font_entry * tfontptr)
       TEMPSTR(name,kpse_find_t1_or_tt(tfontptr->n));
     if (name!=NULL) {
       strcpy (tfontptr->name, name);
-      //free (name);
+      /* free (name); */
       TEMPSTR(name,kpse_find_file(tfontptr->n, kpse_tfm_format, false));
       if (name!=NULL) {
 	if (!ReadTFM(tfontptr,name)) {
@@ -257,7 +257,7 @@ void FontFind(struct font_entry * tfontptr)
     TEMPSTR(name,kpse_find_pk (tfontptr->n, tfontptr->dpi, &font_ret));
     if (name!=NULL) {
       strcpy (tfontptr->name, name);
-      //free (name);
+      /* free (name); */
       
       if (!FILESTRCASEEQ (tfontptr->n, font_ret.name)) {
 	flags |= PAGE_GAVE_WARN;

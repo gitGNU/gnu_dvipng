@@ -47,7 +47,7 @@ ps2png(const char *psfile, int hresolution, int vresolution,
 #endif
   FILE *psstream=NULL, *pngstream=NULL;
   char resolution[STRSIZE]; 
-  //  char devicesize[STRSIZE]; 
+  /*   char devicesize[STRSIZE];  */
   /* For some reason, png256 gives inferior result */
   char *device="-sDEVICE=png16m";  
   gdImagePtr psimage=NULL;

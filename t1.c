@@ -72,13 +72,13 @@ void LoadT1(int32_t c, struct char_entry * ptr)
      suppose.
    */
   xoffset = -glyph->metrics.leftSideBearing;
-  //printf("xoffset: %d\n",xoffset);
+  /* printf("xoffset: %d\n",xoffset); */
   i_offset = ( shrinkfactor - xoffset % shrinkfactor ) % shrinkfactor;
   width = original_width+i_offset;
   ptr->xOffset = xoffset+i_offset;
 
   yoffset = glyph->metrics.ascent-1;
-  //printf("yoffset: %d\n",yoffset);
+  /* printf("yoffset: %d\n",yoffset); */
   j_offset = ( shrinkfactor - (yoffset-(shrinkfactor-1)) % shrinkfactor )
     % shrinkfactor;
   height = original_height+j_offset;
@@ -93,7 +93,7 @@ void LoadT1(int32_t c, struct char_entry * ptr)
   ptr->w = shrunk_width;
   ptr->h = shrunk_height;
 
-  //printf("(%d,%d) ",ptr->w,ptr->h);
+  /* printf("(%d,%d) ",ptr->w,ptr->h); */
   DEBUG_PRINT(DEBUG_GLYPH,("\nDRAW GLYPH %d\n", (int)c));
 
   /*
