@@ -68,8 +68,8 @@ bool DecodeArgs(int argc, char ** argv)
       switch (c) {
       case 'd':       /* selects Debug output */
 	if (*p>'9' && *p!='-') {
-	  if (strncmp(p,"vinum",8)==0) { 
-	    if (p[9] != '0') {
+	  if (strncmp(p,"vinum",5)==0) { 
+	    if (p[5] != '0') {
 	      flags |= DVI_PAGENUM;
 	      Message(PARSE_STDIN,"DVI page number output on\n",p);
 	    } else {
@@ -78,7 +78,7 @@ bool DecodeArgs(int argc, char ** argv)
 	    }
 	    break;
 	  } else if (strncmp(p,"epth",4)==0) { /* Depth reporting */ 
-	    if (p[8] != '0') {
+	    if (p[4] != '0') {
 	      flags |= REPORT_DEPTH;
 	      Message(PARSE_STDIN,"Depth reporting on\n",p);
 	    } else {
@@ -139,7 +139,7 @@ bool DecodeArgs(int argc, char ** argv)
 	if (strcmp(p,"elp") == 0 ) {
 	  break;
 	} else if (strncmp(p,"eight",5) == 0 ) { /* Height reporting */ 
-	  if (p[8] != '0') {
+	  if (p[5] != '0') {
 	    flags |= REPORT_HEIGHT;
 	    Message(PARSE_STDIN,"Height reporting on\n",p);
 	  } else {
@@ -158,7 +158,7 @@ bool DecodeArgs(int argc, char ** argv)
         break ;
       case 'e':
 	if (strncmp(p,"xpand-bbox",10) == 0 ) {	
-	  if (p[8] != '0') {
+	  if (p[10] != '0') {
 	    flags |= EXPAND_BBOX;
 	    Message(PARSE_STDIN,"BBox expansion on\n",p);
 	  } else {
@@ -189,7 +189,7 @@ bool DecodeArgs(int argc, char ** argv)
 #if HAVE_GDIMAGECREATETRUECOLOR
 	/* Truecolor */
 	if (strncmp(p,"ruecolor",8)==0) { 
-	  if (p[9] != '0') {
+	  if (p[8] != '0') {
 	    flags |= RENDER_TRUECOLOR; 
 	    Message(PARSE_STDIN,"Truecolor mode on\n",p);
 	  } else { 
@@ -228,7 +228,7 @@ bool DecodeArgs(int argc, char ** argv)
 	break;
       case 'c':
 	if (strncmp(p,"acheimages",10)==0) { 
-	  if (p[11] != '0') {
+	  if (p[10] != '0') {
 	    flags |= CACHE_IMAGES;
 	    Message(PARSE_STDIN,"Caching images\n",p);
 	  } else { 
@@ -330,11 +330,11 @@ bool DecodeArgs(int argc, char ** argv)
 	  flags &= ~GIF_OUTPUT;
 	  Message(PARSE_STDIN,"PNG output\n");
 	} else if (strncmp(p,"icky",4)==0) { 
-	  if (p[9] != '0') {
-	    flags |= NO_IMAGE_ON_WARN;
+	  if (p[4] != '0') {
+	    flags |= MODE_PICKY;
 	    Message(PARSE_STDIN,"No images output for pages with warnings\n",p);
 	  } else {
-	    flags &= ~NO_IMAGE_ON_WARN;
+	    flags &= ~MODE_PICKY;
 	    Message(PARSE_STDIN,"Images output even for pages with warnings\n");
 	  }
 	} else {   /* a -p specifier for first page */
@@ -351,6 +351,38 @@ bool DecodeArgs(int argc, char ** argv)
 	  FirstPage(firstpage,abspage);
 	  Message(PARSE_STDIN,"First page: %d\n",firstpage);
 	}
+	break ;
+      case 's' :
+	if (strncmp(p,"trict",5)==0) { 
+	  if (p[5] != '0') {
+	    flags |= MODE_STRICT;
+	    Message(PARSE_STDIN,"Warnings are fatal\n",p);
+	  } else {
+	    flags &= ~MODE_STRICT;
+	    Message(PARSE_STDIN,"Warnings are not fatal\n");
+	  }
+	} else
+	  goto DEFAULT;
+	break ;
+      case 'n' :
+	if (strncmp(p,"oghostscript",12)==0) { 
+	  if (p[12] != '0') {
+	    flags |= NO_GHOSTSCRIPT;
+	    Message(PARSE_STDIN,"No GhostScript calls\n",p);
+	  } else {
+	    flags &= ~NO_GHOSTSCRIPT;
+	    Message(PARSE_STDIN,"GhostScript calls made\n");
+	  }
+	} else if (strncmp(p,"ogssafer",8)==0) { 
+	  if (p[8] != '0') {
+	    flags |= NO_GSSAFER;
+	    Message(PARSE_STDIN,"GhostScript calls does not use -dSAFER\n",p);
+	  } else {
+	    flags &= ~NO_GSSAFER;
+	    Message(PARSE_STDIN,"GhostScript calls use -dSAFER\n");
+	  }
+	} else
+	  goto DEFAULT;
 	break ;
       case 'l':
 	{
