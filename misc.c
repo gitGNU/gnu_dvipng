@@ -1,15 +1,19 @@
 #include "dvipng.h"
 
+static char *programname;
 
 /*-->DecodeArgs*/
 /*********************************************************************/
 /***************************** DecodeArgs ****************************/
 /*********************************************************************/
-void DecodeArgs(int argc, char ** argv)
+bool DecodeArgs(int argc, char ** argv)
 {
   int     i;                 /* argument index for flags      */
-  int32_t firstpage=PAGE_NOPAGE, lastpage=PAGE_NOPAGE;
-  bool abspage=_FALSE;
+  int32_t firstpage=PAGE_MINPAGE;
+  int32_t lastpage=PAGE_LASTPAGE;
+  bool abspage=_TRUE;
+  static bool reverse=_FALSE;
+  static bool parsestdin=_FALSE;
 
 #ifndef KPATHSEA
   if ((tcp = getenv("TEXPXL")) != NULL) PXLpath = tcp;
@@ -53,7 +57,7 @@ named COPYING and dvipng.c.");
         if (p1 != NULL && strcmp(p1,".png") == 0 ) {
 	  *p1='\0';
         }
-	if (ParseStdin)
+	if (parsestdin)
 	  printf("Output file: %s#.png (#=page number)\n",rootname);
         break;
 #endif
@@ -64,7 +68,7 @@ named COPYING and dvipng.c.");
 #ifdef KPATHSEA
         kpse_set_program_enabled (kpse_pk_format, makeTexPK, kpse_src_cmdline);
 #endif /* KPATHSEA */
-	if (ParseStdin) {
+	if (parsestdin) {
 	  if (makeTexPK)
 	    printf("MakeTeXPK enabled\n");
 	  else
@@ -75,7 +79,7 @@ named COPYING and dvipng.c.");
 	if (strcmp(p,"ode") == 0 ) {
 	  if (argv[i+1])
 	    MFMODE = argv[++i] ;
-	  if (ParseStdin)
+	  if (parsestdin)
 	    printf("MetaFont mode: %s\n",MFMODE);
 	  break ;
 	}
@@ -89,7 +93,7 @@ named COPYING and dvipng.c.");
 	y_offset = y_offset_def; 
 	x_max = x_min = -x_offset_def; /* set BBOX */
 	y_max = y_min = -y_offset_def;
-	if (ParseStdin)
+	if (parsestdin)
 	  printf("Offset: (%d,%d)\n",x_offset_def,y_offset_def);
         break ;
       case 'T' :
@@ -97,11 +101,11 @@ named COPYING and dvipng.c.");
 	  p = argv[++i] ;
 	if (strcmp(p,"bbox")==0) {
 	  PassDefault=PASS_BBOX;
-	  if (ParseStdin)
+	  if (parsestdin)
 	    printf("Pagesize: (bbox)\n");
 	} else if (strcmp(p,"tight")==0) {
 	  PassDefault=PASS_TIGHT_BBOX;
-	  if (ParseStdin)
+	  if (parsestdin)
 	    printf("Pagesize: (tight bbox)\n");
 	} else { 
 	  handlepapersize(p, &x_width, &y_width) ;
@@ -111,7 +115,7 @@ named COPYING and dvipng.c.");
 	  }
 	  /* Avoid PASS_BBOX */
 	  PassDefault = PASS_DRAW;
-	  if (ParseStdin)
+	  if (parsestdin)
 	    printf("Pagesize: (%d,%d)\n",x_width,y_width);
 	}
 	break ;
@@ -132,7 +136,7 @@ named COPYING and dvipng.c.");
 	  Landscape = _TRUE;
 	} else 
 	  Fatal("The papersize %s is not implemented, sorry.\n",p);
-	if (ParseStdin)
+	if (parsestdin)
 	  printf("Papersize: %s\n",p);
         break;
       case 'b':
@@ -145,7 +149,7 @@ named COPYING and dvipng.c.");
 	  } else {
 	    background(p);
 	  }
-	  if (ParseStdin) {
+	  if (parsestdin) {
 	    if (borderwidth>=0) {
 	      printf("Background: rgb %d,%d,%d\n",bRed,bGreen,bBlue);
 	    } else {
@@ -159,7 +163,7 @@ named COPYING and dvipng.c.");
 	    p = argv[++i] ;
 	  if ( sscanf(p, "%d", &borderwidth) != 1 )
 	    Fatal("argument of -bd is not a valid integer\n");
-	  if (ParseStdin)
+	  if (parsestdin)
 	    printf("Transp. border: %d dots\n",borderwidth);
 	}
 	break;
@@ -169,7 +173,7 @@ named COPYING and dvipng.c.");
 	  if (*p == 0 && argv[i+1])
 	    p = argv[++i] ;
 	  resetcolorstack(p);
-	  if (ParseStdin)
+	  if (parsestdin)
 	    printf("Foreground: rgb %d,%d,%d\n",Red,Green,Blue);
 	}
 	break;
@@ -179,7 +183,7 @@ named COPYING and dvipng.c.");
 	if (sscanf(p, "%d", &usermag)==0 || usermag < 1 ||
 	    usermag > 1000000)
 	  Fatal("Bad magnification parameter (-x or -y).") ;
-	if (ParseStdin)
+	if (parsestdin)
 	  printf("Magstep: %d\n",usermag);
 	/*overridemag = (c == 'x' ? 1 : -1) ;*/
 	break ;
@@ -195,7 +199,7 @@ named COPYING and dvipng.c.");
 	  }*/
 	/* must be page number instead */
 #endif
-	if (*p == 'p') {  /* a -pp specifier for a page list? */
+	if (*p == 'p') {  /* a -pp specifier for a page list */
 	  int pp_abspage = _FALSE;
 
 	  p++ ;
@@ -205,39 +209,46 @@ named COPYING and dvipng.c.");
 	    pp_abspage = _TRUE ;
 	    p++ ;
 	  }
-	  if (QueueParse(p,pp_abspage))
+	  if (QueueParse(p,pp_abspage,reverse))
 	    Fatal("bad page list specifier (-pp).") ;
 	  break ;
-	}
-	if (*p == 0 && argv[i+1])
-	  p = argv[++i] ;
-	if (*p == '=') {
-	  abspage = _TRUE ;
-	  p++ ;
-	}
-	if (sscanf(p, "%d", &firstpage)!=1) {
-	  Fatal("bad first page option (-p %s).",p) ;
+	} else {   /* a -p specifier for first page */
+	  if (*p == 0 && argv[i+1])
+	    p = argv[++i] ;
+	  if (*p == '=') {
+	    p++ ;
+	  } else {
+	    abspage = _FALSE;
+	  }
+	  if (sscanf(p, "%d", &firstpage)!=1) {
+	    Fatal("bad first page option (-p %s).",p) ;
+	  }
+	if (parsestdin) 
+	  printf("First page: %d\n",firstpage);
 	}
 	break ;
       case 'l':
 	if (*p == 0 && argv[i+1])
 	  p = argv[++i] ;
 	if (*p == '=') {
-	  abspage = _TRUE ;
 	  p++ ;
+	} else {
+	  abspage = _FALSE ;
 	}
 	if (sscanf(p, "%d", &lastpage)!=1) {
 	  Fatal("bad last page option (-l %s).",p) ;
 	}
+	if (parsestdin) 
+	  printf("Last page: %d\n",lastpage);
 	break ;
       case 'q':       /* quiet operation */
         G_quiet = _TRUE;
 	G_verbose = _FALSE;
         break;
       case 'r':       /* switch order to process pages */
-        Reverse = (bool)(!Reverse);
-	if (ParseStdin) {
-	  if (Reverse) 
+        reverse = (bool)(!reverse);
+	if (parsestdin) {
+	  if (reverse) 
 	    printf("Reverse order\n");
 	  else
 	    printf("Normal order\n");
@@ -252,17 +263,17 @@ named COPYING and dvipng.c.");
 	if (sscanf(p, "%d", &resolution)==0 || resolution < 10 ||
 	    resolution > 10000)
 	  Fatal("bad dpi parameter (-D).") ;
-	if (ParseStdin) 
+	if (parsestdin) 
 	  printf("Dpi: %d\n",resolution);
 	break;
       case 'Q':       /* quality (= shrinkfactor) */
         if ( sscanf(p, "%d", &shrinkfactor) != 1 )
           Fatal("argument of -Q is not a valid integer\n");
-	if (ParseStdin) 
+	if (parsestdin) 
 	  printf("Shrinkfactor: %d\n",shrinkfactor);
 	break;
       case '\0':
-	ParseStdin=_TRUE;
+	parsestdin=_TRUE;
 	break;
       default:
 	Warning("%c is not a valid flag\n", c);
@@ -274,9 +285,15 @@ named COPYING and dvipng.c.");
       dvi=DVIOpen(argv[i]);
     }
   }
-  qfprintf(ERR_STREAM,"This is %s Copyright 2002 Jan-Åke Larsson\n", VERSION);
+
+  if (argv[0]!=NULL) {
+    programname=argv[0];
+    qfprintf(ERR_STREAM,"This is %s Copyright 2002 Jan-Åke Larsson\n", 
+	     VERSION);
+  }
+
   if (dvi==NULL) {
-    fprintf(ERR_STREAM,"Usage: dvipng [OPTION]... FILENAME[.dvi]\n");
+    fprintf(ERR_STREAM,"\nUsage: dvipng [OPTION]... FILENAME[.dvi]\n");
     fprintf(ERR_STREAM,"Options are chosen to be similar to dvips' options where possible:\n");
 #ifdef DEBUG
     fprintf(ERR_STREAM,"  -d #      Debug (# is the debug bitmap, 1 if not given)\n");
@@ -311,17 +328,16 @@ named COPYING and dvipng.c.");
       fputs (kpse_bug_address, ERR_STREAM);
       }
       #endif*/
-    exit(1);
-  }
-  if (firstpage!=PAGE_NOPAGE) {
-    if (lastpage!=PAGE_NOPAGE) {
-      QueuePage(firstpage,lastpage,abspage);
-    } else {
-      QueuePage(firstpage,PAGE_LASTPAGE,abspage);
+    if (!parsestdin) {
+      exit(1);
     }
-  } else if (lastpage!=PAGE_NOPAGE) {
-    QueuePage(1,lastpage,abspage);
-  } 
+  }
+
+  if (!parsestdin || firstpage!=PAGE_MINPAGE || lastpage!=PAGE_LASTPAGE) {
+    QueuePage(firstpage!=PAGE_MINPAGE ? firstpage : 1,
+	      lastpage,abspage,reverse);
+  }
+  return(parsestdin);
 }
 /*
 char * xmalloc(unsigned size)
@@ -344,7 +360,7 @@ void Fatal (char *fmt, ...)
 
   va_start(args, fmt);
   fprintf(ERR_STREAM, "\n");
-  fprintf(ERR_STREAM, "%s: Fatal error, ", G_progname);
+  fprintf(ERR_STREAM, "%s: Fatal error, ", programname);
   vfprintf(ERR_STREAM, fmt, args);
 
   fprintf(ERR_STREAM, "\n\n");
@@ -377,7 +393,7 @@ void Warning(char *fmt, ...)
   if ( G_nowarn || G_quiet )
     return;
   
-  fprintf(ERR_STREAM, "%s warning: ", G_progname);
+  fprintf(ERR_STREAM, "%s warning: ", programname);
   vfprintf(ERR_STREAM, fmt, args);
   fprintf(ERR_STREAM, "\n");
   va_end(args);
