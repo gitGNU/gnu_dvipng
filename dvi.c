@@ -1,10 +1,6 @@
 #include "dvipng.h"
 #include <libgen.h>
 
-
-
-
-
 struct dvi_data* DVIOpen(char* dviname)
 {
   int     k;
@@ -103,8 +99,6 @@ unsigned char* DVIGetCommand(struct dvi_data* dvi)
   case PRE: 
     strlength = *(command + length - 1);
     break;
-  default:
-    break;
   }
   if (lcommand!=command) {
     free(lcommand);
@@ -142,8 +136,6 @@ uint32_t CommandLength(unsigned char* command)
   case PRE: 
     length += *(command + length - 1);
     break;
-  default:
-    break;
   }
   return(length);
 }
@@ -160,11 +152,13 @@ void SkipPage(void)
       DEBUG_PRINTF(DEBUG_DVI,"NOSKIP CMD:\t%s", dvi_commands[*command]);
       FontDef(command,(struct dvi_vf_entry*)dvi);
       break;
-    case BOP: case PRE:    case POST:    case POST_POST:
+    case BOP: case PRE: case POST: case POST_POST:
       Fatal("%s occurs within page", dvi_commands[*command]);
       break;
+#ifdef DEBUG
     default:
       DEBUG_PRINTF(DEBUG_DVI,"SKIP CMD:\t%s", dvi_commands[*command]);
+#endif
     }
     command=DVIGetCommand(dvi);
   } /* while */
@@ -214,7 +208,7 @@ struct page_list* InitPage(void)
   return(tpagelistp);
 }
 
-struct page_list* FindPage(int32_t pagenum)
+struct page_list* FindPage(int32_t pagenum, bool abspage)
      /* Find page of certain number, absolute number if Abspage is set */
 {
   struct page_list* tpagelistp;
@@ -224,9 +218,9 @@ struct page_list* FindPage(int32_t pagenum)
   if (pagenum==PAGE_NOPAGE)
     return(NULL);
 
-  index = Abspage ? 10 : 0 ;
+  index = abspage ? 10 : 0 ;
 #ifdef DEBUG
-  if (Abspage) {
+  if (abspage) {
     DEBUG_PRINTF(DEBUG_DVI,"\n  FIND PAGE:\t(%d)",pagenum);
   } else {
     DEBUG_PRINTF(DEBUG_DVI,"\n  FIND PAGE:\t%d",pagenum);

@@ -157,7 +157,7 @@ void DoPages(void)
 {
   struct page_list *tpagelistp=NULL;
 
-  while((tpagelistp=FindPage(TodoPage()))!=NULL
+  while((tpagelistp=FindQdPage())!=NULL
 	&& tpagelistp->count[10]!=-1) {
     if (PassDefault == PASS_BBOX || PassDefault == PASS_TIGHT_BBOX) {
       if (PassDefault == PASS_TIGHT_BBOX) {

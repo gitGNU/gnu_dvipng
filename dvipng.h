@@ -1,9 +1,8 @@
 #ifndef DVIPNG_H
 #define DVIPNG_H
 
-#define VERSION "0.0 (dvipngk)"
+#define VERSION "dvipng(k) 0.1"
 #define TIMING
-/* #define DRAWGLYPH */
 
 #include <stdint.h>
 
@@ -51,6 +50,9 @@
 
 #define  FIRSTFNTCHAR  0
 #define  LASTFNTCHAR  255
+#define  NFNTCHARS       LASTFNTCHAR+1
+
+#define  STACK_SIZE      100     /* DVI-stack size                     */
 
 typedef  int     bool;
 #define  _TRUE      (bool) 1
@@ -68,16 +70,6 @@ typedef  int     bool;
 /*************************  protos.h  ************************/
 /*************************************************************/
 
-#define  NFNTCHARS       LASTFNTCHAR+1
-#define  STACK_SIZE      100     /* DVI-stack size                     */
-#define  NONEXISTANT     -1      /* offset for PXL files not found     */
-#ifdef RISC_USE_OSL
-# define  NO_FILE        (FPNULL-1)
-#else
-# define  NO_FILE        ((FILE *)-1)
-#endif
-#define  NEW(A) ((A *)  malloc(sizeof(A)))
-#define  EQ(a,b)        (strcmp(a,b)==0)
 #define  MM_TO_PXL(x)   (int)(((x)*resolution*10)/254)
 #define  PT_TO_PXL(x)   (int)((int32_t)((x)*resolution*100l)/7224)
 #define  PT_TO_DVI(x)   (int32_t)((x)*65536l)
@@ -211,6 +203,7 @@ uint32_t         CommandLength(unsigned char*);
 struct dvi_data* DVIOpen(char*);
 unsigned char*   DVIGetCommand(struct dvi_data*);
 void             DVIClose(struct dvi_data*);
+struct page_list*FindPage(int32_t, bool);
 
 
 /***************** general crap ******************/
@@ -226,7 +219,7 @@ void    DoBop(void);
 void    DrawCommand(unsigned char*, int, struct dvi_vf_entry*);
 void    DoPages(void);
 void    Fatal(char *fmt, ...);
-struct page_list *FindPage(int32_t);
+struct page_list*   FindQdPage(void);
 void    FormFeed(struct dvi_data*,int);
 void    FontDef(unsigned char*, struct dvi_vf_entry*);
 struct page_list *InitPage(void);
@@ -244,7 +237,6 @@ int32_t   SetRule(int32_t, int32_t, int);
 int32_t   SignExtend(FILE*, int);
 void    SkipPage(void);
 int32_t   SNumRead(unsigned char*, register int);
-int32_t   TodoPage(void);
 uint32_t   UNumRead(unsigned char*, register int);
 void    Warning(char *fmt, ...);
 /*unsigned char   skip_specials(void);*/
@@ -270,19 +262,12 @@ void resetcolorstack(char *);
 
 #include "commands.h"
 
-EXTERN int32_t FirstPage  INIT(PAGE_MINPAGE);/* first page to print (count0) */
-EXTERN int32_t LastPage   INIT(PAGE_MAXPAGE);/* last page to print           */
-EXTERN bool    FirstPageSpecified INIT(_FALSE);
-EXTERN bool    LastPageSpecified INIT(_FALSE);
 #ifndef KPATHSEA
 EXTERN char   *PXLpath INIT(FONTAREA);
 #endif
 EXTERN char    G_progname[STRSIZE];     /* program name                     */
 EXTERN bool    Reverse INIT(_FALSE);    /* process DVI in reverse order?    */
 EXTERN bool    Landscape INIT(_FALSE);  /* print document in ladscape mode  */
-EXTERN bool    Abspage INIT(_FALSE);    /* use absolute page numbers        */
-EXTERN int     Firstseq INIT(0);        /* FIXME       */
-EXTERN int     Lastseq INIT(1000);      /* FIXME       */
 #ifdef MAKETEXPK
 #ifdef KPATHSEA
 EXTERN bool    makeTexPK INIT(MAKE_TEX_PK_BY_DEFAULT);

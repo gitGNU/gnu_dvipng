@@ -60,7 +60,7 @@ int main(int argc, char ** argv)
       } else {
 	struct page_list *tpagelistp;
 	
-	tpagelistp=FindPage(PAGE_LASTPAGE);
+	tpagelistp=FindPage(PAGE_LASTPAGE,_TRUE);
 	QueuePage(1,tpagelistp->count[10],_TRUE);
       }
     }

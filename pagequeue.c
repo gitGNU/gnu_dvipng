@@ -10,31 +10,30 @@ struct pagequeue {
   struct pagequeue *next; 
   int first,last;
   bool abspage;
-} *hpagequeuep = NULL;  /* the list of allowed pages */
+} *hpagequeuep = NULL;  
 
-/*-->TodoPage*/
+/*-->FindQdPage*/
 /**********************************************************************/
-/******************************  TodoPage  ****************************/
+/****************************  FindQdPage  ****************************/
 /**********************************************************************/
 /* Return the page in turn on our queue */
 
-int32_t TodoPage(void)
+struct page_list* FindQdPage(void)
 {
-  int val;
-
+  struct page_list* page;
   if (hpagequeuep==NULL) 
-    return(PAGE_NOPAGE);
+    return(NULL);
+
+  page=FindPage(Reverse ? hpagequeuep->last-- : hpagequeuep->first++,
+		  hpagequeuep->abspage);
   
-  val = Reverse ? hpagequeuep->last-- : hpagequeuep->first++;
-  Abspage = hpagequeuep->abspage;
   if (hpagequeuep->last<hpagequeuep->first) {
     struct pagequeue *temp = hpagequeuep;
     hpagequeuep = hpagequeuep->next;
     free(temp);
   }
-  return(val);
+  return(page);
 }
-
 
 void QueuePage(int first, int last, bool abspage)
 {
