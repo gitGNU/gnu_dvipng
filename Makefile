@@ -1,14 +1,9 @@
-# Makefile for dvipngk
-version = 0.0
-
 CC = gcc
 CFLAGS = -g -O2 -Wall
 CPPFLAGS = -I. -DKPATHSEA -DDEBUG
 
-# Linking
 LOADLIBES = -lkpathsea -lgd -lm
 
-# Installation.
 bindir = /usr/bin
 INSTALL = /usr/bin/install -c
 
