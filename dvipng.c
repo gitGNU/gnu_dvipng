@@ -83,6 +83,12 @@ int main(int argc, char ** argv)
   putenv(ENV_SELFAUTOPARENT);
 # endif
   kpse_set_program_enabled (kpse_pk_format, makeTexPK, kpse_src_compile);
+#endif
+
+  initcolor();
+  parsestdin = DecodeArgs(argc, argv);
+
+#ifdef HAVE_LIBKPATHSEA
   if (user_mfmode)
     if (user_bdpi)
       kpse_init_prog("DVIPNG", user_bdpi, user_mfmode, "cmr10");
@@ -94,9 +100,6 @@ int main(int argc, char ** argv)
   else
     kpse_init_prog("DVIPNG", 300, "cx", "cmr10");
 #endif
-
-  initcolor();
-  parsestdin = DecodeArgs(argc, argv);
 
 #ifdef HAVE_FT2_OR_LIBT1
   InitPSFontMap();
