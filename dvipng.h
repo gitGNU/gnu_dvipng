@@ -363,6 +363,7 @@ void      EndVFMacro(void);
 /**************************************************/
 void handlepapersize(char*,int32_t*,int32_t*);
 
+void stringrgb(char* colorstring,int *r,int *g,int *b);
 void background(char *);
 void initcolor(void);
 void popcolor(void);
@@ -412,6 +413,7 @@ EXTERN struct internal_state {
 #define MODE_STRICT                  (1<<16)
 #define NO_GHOSTSCRIPT               (1<<17)
 #define NO_GSSAFER                   (1<<18)
+#define BG_TRANSPARENT               (1<<19)
 EXTERN uint32_t flags INIT(BE_NONQUIET | USE_FREETYPE | USE_LIBT1);
 
 #ifdef DEBUG
@@ -509,6 +511,8 @@ EXTERN  int y_pwidth INIT(0);
 
 /* The transparent border preview-latex desires */
 EXTERN  int borderwidth INIT(0);
+EXTERN bool userbordercolor INIT(FALSE); /* if true, use user-supplied color */
+EXTERN struct dvi_color bordercolor;
 
 
 EXTERN gdImagePtr page_imagep INIT(NULL);

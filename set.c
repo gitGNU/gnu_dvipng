@@ -46,7 +46,7 @@ void CreateImage(pixels x_width,pixels y_width)
   /* Set bg color */
   Background = gdImageColorAllocate(page_imagep,
 				    cstack[0].red,cstack[0].green,cstack[0].blue);
-  if (borderwidth<0) {
+  if (flags & BG_TRANSPARENT) {
     gdImageColorTransparent(page_imagep,Background); 
   }
 #ifdef HAVE_GDIMAGECREATETRUECOLOR
@@ -55,21 +55,18 @@ void CreateImage(pixels x_width,pixels y_width)
     gdImageFilledRectangle(page_imagep, 0, 0, 
 			   x_width-1, y_width-1, Background);
 #endif
-  if (borderwidth>0) {
-    int Transparent;
-    
-    /* Set ANOTHER bg color, transparent this time */
-    Transparent = gdImageColorAllocate(page_imagep,
-				       cstack[0].red,cstack[0].green,cstack[0].blue); 
-    gdImageColorTransparent(page_imagep,Transparent); 
-    gdImageFilledRectangle(page_imagep,0,0,
-			   x_width-1,borderwidth-1,Transparent);
-    gdImageFilledRectangle(page_imagep,0,0,
-			   borderwidth-1,y_width-1,Transparent);
-    gdImageFilledRectangle(page_imagep,x_width-borderwidth,0,
-			   x_width-1,y_width-1,Transparent);
-    gdImageFilledRectangle(page_imagep,0,y_width-borderwidth,
-			   x_width-1,y_width-1,Transparent);
+}
+
+
+void ChangeColor(gdImagePtr imagep,int x1,int y1,int x2,int y2,int color1,int color2)
+/* In the given rectangle, change color1 to color2 */
+{
+  int x,y;
+  for( y=y1; y<=y2; y++) {
+    for( x=x1; x<=x2; x++) {
+      if (gdImageGetPixel(imagep, x, y)==color1) 
+	gdImageSetPixel(imagep, x, y, color2);
+    }
   }
 }
 
@@ -77,6 +74,30 @@ void WriteImage(char *pngname, int pagenum)
 {
   char* pos;
   FILE* outfp=NULL;
+
+  /* Transparent border */
+  if (borderwidth>0) {
+    int Transparent,bgcolor;
+    pixels x_width,y_width;
+
+    x_width=gdImageSX(page_imagep);
+    y_width=gdImageSY(page_imagep);
+    
+    bgcolor = gdImageColorResolve(page_imagep,
+				  cstack[0].red,cstack[0].green,cstack[0].blue);
+    /* Set ANOTHER bg color, transparent this time */
+    if (userbordercolor)
+      Transparent = gdImageColorAllocate(page_imagep,
+					 bordercolor.red,bordercolor.green,bordercolor.blue); 
+    else
+      Transparent = gdImageColorAllocate(page_imagep,
+					 cstack[0].red,cstack[0].green,cstack[0].blue); 
+    gdImageColorTransparent(page_imagep,Transparent); 
+    ChangeColor(page_imagep,0,0,x_width-1,borderwidth-1,bgcolor,Transparent);
+    ChangeColor(page_imagep,0,0,borderwidth-1,y_width-1,bgcolor,Transparent);
+    ChangeColor(page_imagep,x_width-borderwidth,0,x_width-1,y_width-1,bgcolor,Transparent);
+    ChangeColor(page_imagep,0,y_width-borderwidth,x_width-1,y_width-1,bgcolor,Transparent);
+  }
 
   if ((pos=strchr(pngname,'%')) != NULL) {
     if (strchr(++pos,'%'))

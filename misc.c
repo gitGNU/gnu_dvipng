@@ -244,14 +244,14 @@ bool DecodeArgs(int argc, char ** argv)
 	  if (*p == 0 && argv[i+1])
 	    p = argv[++i] ;
 	  if (strncmp(p,"Transparent",11) == 0 ) 
-	    borderwidth=-1;
+	    flags |= BG_TRANSPARENT;
 	  else
 	    background(p);
-	  if (borderwidth>=0) 
-	    Message(PARSE_STDIN,"Background: rgb %d,%d,%d\n",
+	  if (flags & BG_TRANSPARENT) 
+	    Message(PARSE_STDIN,"Transp. background (fallback rgb %d,%d,%d)\n",
 		    cstack[0].red,cstack[0].green,cstack[0].blue);
 	  else 
-	    Message(PARSE_STDIN,"Transp. background (fallback rgb %d,%d,%d)\n",
+	    Message(PARSE_STDIN,"Background: rgb %d,%d,%d\n",
 		    cstack[0].red,cstack[0].green,cstack[0].blue);
 	  break;
 	} else if (strcmp(p, "dpi")==0) {
@@ -264,11 +264,26 @@ bool DecodeArgs(int argc, char ** argv)
 	  Message(PARSE_STDIN,"Bdpi: %d\n",user_bdpi);
 	  break;
 	} else if ( *p == 'd' ) { /* -bd border width */
+	  int tmpi;
+	  char* tmps;
 	  p++;
 	  if (*p == 0 && argv[i+1])
 	    p = argv[++i] ;
-	  borderwidth = atoi(p);
-	  Message(PARSE_STDIN,"Transp. border: %d dots\n",borderwidth);
+	  tmpi = strtol(p, &tmps, 10);
+	  if (p<tmps) {
+	    borderwidth=tmpi;
+	    Message(PARSE_STDIN,"Transp. border: %d dots\n",borderwidth);
+	  }
+	  if (*tmps) {
+	    stringrgb(tmps, &bordercolor.red, &bordercolor.green, &bordercolor.blue);
+	    userbordercolor=TRUE;
+	    if (borderwidth==0) {
+	      borderwidth=1;
+	      Message(PARSE_STDIN,"Transp. border: %d dots\n",borderwidth);
+	    }
+	    Message(PARSE_STDIN,"Transp. border: rgb %d,%d,%d\n",
+		    bordercolor.red, bordercolor.green, bordercolor.blue);
+	  }
 	  break;
 	} 
 	goto DEFAULT;
