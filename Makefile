@@ -7,8 +7,8 @@ LOADLIBES = -lkpathsea -lgd -lm
 bindir = /usr/bin
 INSTALL = /usr/bin/install -c
 
-objects = dvipng.o color.o draw.o dvi.o font.o io.o misc.o pk.o \
-	set.o special.o papersiz.o pagequeue.o vf.o
+objects = dvipng.o color.o draw.o dvi.o font.o misc.o pk.o \
+	set.o special.o papersiz.o ppagelist.o vf.o
 
 dvipng: $(objects)
 	$(CC) $(LDFLAGS) $(objects) -o dvipng $(LOADLIBES) $(LDLIBS)
