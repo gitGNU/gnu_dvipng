@@ -169,15 +169,13 @@ common_objects =
 
 program = dvipng
 objects = dvipng.o color.o font.o io.o misc.o pk.o postamble.o \
-	set.o special.o
+	set.o special.o papersiz.o pages.o
 all: $(program)
 
 $(program): $(objects) $(kpathsea)
 	$(kpathsea_link) $(objects) $(LOADLIBES)
 
 $(objects): dvipng.h
-
-
 
 # tkpathsea.make -- target for remaking kpathsea.
 makeargs = $(MFLAGS) CC='$(CC)' CFLAGS='$(CFLAGS)' $(XMAKEARGS)
