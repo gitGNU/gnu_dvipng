@@ -1,7 +1,7 @@
 #include "dvipng.h"
 #include <libgen.h>
 
-struct dvi_data* DVIOpen(char* dviname)
+struct dvi_data* DVIOpen(char* dviname,char* outname)
 {
   int     k;
   unsigned char* pre;
@@ -15,15 +15,18 @@ struct dvi_data* DVIOpen(char* dviname)
   dvi->fontnump=NULL;
 
   strcpy(dvi->name,dviname);
+  tmpstring = strrchr(dvi->name, '.');
+  if (tmpstring == NULL) 
+    strcat(dvi->name, ".dvi");
 
   /* split into file name + extension */
-  strcpy(dvi->outname,basename(dviname));
+  if (outname==NULL) 
+    strcpy(dvi->outname,basename(dviname));
+  else
+    strcpy(dvi->outname,basename(outname));
   tmpstring = strrchr(dvi->outname, '.');
-  if (tmpstring == NULL) {
-    strcat(dvi->name, ".dvi");
-  } else {
+  if (tmpstring != NULL) 
     *tmpstring='\0';
-  }
 
   if ((dvi->filep = fopen(dvi->name,"rb")) == NULL) {
     /* do not insist on .dvi */
@@ -202,67 +205,82 @@ struct page_list* InitPage(void)
   } else {
     DEBUG_PUTS(DEBUG_DVI,"DVI END:\tPOST");
     tpagelistp->offset = ftell(dvi->filep)-1;
-    tpagelistp->count[10] = -1; /* POST */
+    tpagelistp->count[0] = PAGE_POST; /* POST */
   }
   return(tpagelistp);
 }
 
-struct page_list* FindPage(int32_t pagenum, bool abspage)
-     /* Find page of certain number, absolute number if Abspage is set */
+void SeekPage(struct page_list* page)
+{
+  if (page->count[0]==PAGE_POST) {
+    fseek(dvi->filep, page->offset+1L, SEEK_SET);
+  } else {
+    fseek(dvi->filep, page->offset+45L, SEEK_SET);
+  }
+}
+
+struct page_list* NextPage(struct page_list* page)
 {
   struct page_list* tpagelistp;
-  int index;
-  
-  index = abspage ? 10 : 0 ;
-#ifdef DEBUG
-  if (abspage) {
-    DEBUG_PRINTF(DEBUG_DVI,"\n  FIND PAGE:\t(%d)",pagenum);
-  } else {
-    DEBUG_PRINTF(DEBUG_DVI,"\n  FIND PAGE:\t%d",pagenum);
-  }
-#endif
+
+  /* if page points to POST there is no next page */
+  if (page!=NULL && page->count[0]==PAGE_POST) 
+    return(NULL);
+
   /* If we have read past the last page in our current list or the
-   *  list is empty, look at the next page
+   *  list is empty, sneak a look at the next page
    */
-  if (hpagelistp==NULL || hpagelistp->offset < ftell(dvi->filep)) {
+  if (hpagelistp==NULL || hpagelistp->offset+45L < ftell(dvi->filep)) {
+    tpagelistp=hpagelistp;
+    if ((hpagelistp=InitPage())==NULL)    
+      Fatal("no pages in %s",dvi->name);
+    hpagelistp->next=tpagelistp;
+  }
+
+  if (page!=hpagelistp) {
+    /* also works if page==NULL, we'll get the first page then */
+    tpagelistp=hpagelistp;
+    while(tpagelistp!=NULL && tpagelistp->next!=page)
+      tpagelistp=tpagelistp->next;
+  } else {
+    /* hpagelistp points to the last page we've read so far,
+     * the last page that we know where it is, so to speak
+     * So look at the next
+     */
+    SeekPage(hpagelistp);
+    SkipPage();
     tpagelistp=hpagelistp;
     hpagelistp=InitPage();
     hpagelistp->next=tpagelistp;
-  }
-  if (hpagelistp==NULL)    
-      Fatal("no pages in %s",dvi->name);
-  /* Check if page is in list */
-  tpagelistp = hpagelistp;
-  while(tpagelistp!=NULL && tpagelistp->count[index]!=pagenum) {
-    tpagelistp = tpagelistp->next;
-  }
-  /* If not, skip current page and look at the next page */
-  if (tpagelistp==NULL) {
-    while(hpagelistp->count[index]!=pagenum && hpagelistp->count[10]!=-1) {
-      SkipPage();
-      tpagelistp=hpagelistp;
-      hpagelistp=InitPage();
-      hpagelistp->next=tpagelistp;
-    }    
     tpagelistp=hpagelistp;
   }
-  /* Have we found it? */
-  if (tpagelistp->count[index]==pagenum) {
-    if (pagenum==PAGE_POST) {
-      fseek(dvi->filep, tpagelistp->offset+1L, SEEK_SET);
-     } else {
-       fseek(dvi->filep, tpagelistp->offset+45L, SEEK_SET);
-     }
-  } else /* we're at POST, are we trying to find the last page? */
-    if (pagenum==PAGE_LASTPAGE) {
-      tpagelistp=hpagelistp->next;
-      fseek(dvi->filep, tpagelistp->offset+45L, SEEK_SET);
-    } else {
-      tpagelistp=NULL;
-      /*	Warning("page %d not found",pagenum);*/
-    }
   return(tpagelistp);
 }
+
+struct page_list* PrevPage(struct page_list* page)
+{
+  return(page->next);
+}
+
+
+struct page_list* FindPage(int32_t pagenum, bool abspage)
+     /* Find first page of certain number, 
+	absolute number if abspage is set */
+{
+  struct page_list* page=NextPage(NULL);
+  
+  if (pagenum==PAGE_LASTPAGE || pagenum==PAGE_POST) {
+    while(page!=NULL && page->count[0]!=PAGE_POST)
+      page=NextPage(page);
+    if (pagenum==PAGE_LASTPAGE)
+      page=PrevPage(page);
+  } else
+    if (pagenum!=PAGE_FIRSTPAGE) 
+      while(page != NULL && pagenum != page->count[abspage ? 0 : 10])
+	page=NextPage(page);
+  return(page);
+}
+
 
 void DVIClose(struct dvi_data* dvi)
 {
