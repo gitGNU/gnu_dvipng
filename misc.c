@@ -9,10 +9,11 @@ static int   flags=BE_NONQUIET;
 /*********************************************************************/
 bool DecodeArgs(int argc, char ** argv)
 {
-  int     i;                 /* argument index for flags      */
-  bool ppused=_FALSE;
-  char *dviname=NULL; 
-  char *outname=NULL;
+  int     i;                 /* argument index for flags       */
+  bool ppused=_FALSE;        /* Flag when -pp is used          */
+  char *dviname=NULL;        /* Name of dvi file               */
+  char *outname=NULL;        /* Name of output file (concatenated
+				with the page number and .png) */
 
   if (argc == 2 && (strcmp (argv[1], "--version") == 0)) {
     puts (PACKAGE_STRING);
@@ -37,9 +38,11 @@ named COPYING and dvipng.c.");
 	  int debug = 0;
 	  
 	  if (*p == 0 && argv[i+1])
-	    p = argv[++i];
+	    p = argv[i+1];
 	  debug = atoi(p);
-	  flags |= debug!=0 ? debug * LASTFLAG * 2 : DEBUG_DVI;
+	  flags |= (debug>0) ? debug * LASTFLAG * 2 : DEBUG_DVI;
+	  if (debug > 0 && p == argv[i+1])
+	    i++;
 #ifdef HAVE_LIBKPATHSEA
 	  kpathsea_debug = debug/LASTDEBUG;
 #endif
@@ -147,6 +150,11 @@ named COPYING and dvipng.c.");
 	    p = argv[++i] ;
 	  resetcolorstack(p);
 	  Message(PARSE_STDIN,"Foreground: rgb %d,%d,%d\n",Red,Green,Blue);
+	} else if (strcmp(p,"ollow") == 0 ) {
+	  if (DVIFollowToggle())
+	    Message(PARSE_STDIN,"Follow mode on\n");
+	  else
+	    Message(PARSE_STDIN,"Follow mode off\n");
 	}
 	break;
       case 'x' : case 'y' :
@@ -270,6 +278,7 @@ named COPYING and dvipng.c.");
     fprintf(ERR_STREAM,"  -bd #     Transparent border width in dots\n");
     fprintf(ERR_STREAM,"  -bg s     Background color (TeX-style color)\n");
     fprintf(ERR_STREAM,"  -fg s     Foreground color (TeX-style color)\n");
+    fprintf(ERR_STREAM,"  -follow   Follow mode\n");
     fprintf(ERR_STREAM,"  -Q #      Quality (~xdvi's shrinkfactor)\n");
     
     fprintf(ERR_STREAM,"\n     # = number   f = file   s = string  * = suffix, '0' to turn off\n");
@@ -349,8 +358,6 @@ int32_t SNumRead(unsigned char* current, register int n)
 }
 
 
-
-/*-->Fatal*/
 /**********************************************************************/
 /******************************  Fatal  *******************************/
 /**********************************************************************/
