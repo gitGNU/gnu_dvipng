@@ -99,21 +99,22 @@ int32_t SetChar(int32_t c)
 	return(SetPK(c, hh, vv));
       else {
 	/* Expand bounding box if necessary */
-	min(x_min,hh - PIXROUND(ptr->xOffset,shrinkfactor));
-	min(y_min,vv - PIXROUND(ptr->yOffset,shrinkfactor));
-	max(x_max,hh - PIXROUND(ptr->xOffset,shrinkfactor)+ptr->glyph.w);
-	max(y_max,vv - PIXROUND(ptr->yOffset,shrinkfactor)+ptr->glyph.h);
+	min(x_min,hh - ptr->xOffset/shrinkfactor);
+	min(y_min,vv - ptr->yOffset/shrinkfactor);
+	max(x_max,hh - ptr->xOffset/shrinkfactor + ptr->glyph.w);
+	max(y_max,vv - ptr->yOffset/shrinkfactor + ptr->glyph.h);
 	return(ptr->tfmw);
       }
 #else
       if (PassNo==PASS_DRAW)
-	return(SetPK(c, PIXROUND(h,dvi->conv*shrinkfactor), PIXROUND(v,dvi->conv*shrinkfactor)));
+	return(SetPK(c, PIXROUND(h,dvi->conv*shrinkfactor), 
+		     PIXROUND(v,dvi->conv*shrinkfactor)));
       else {
 	/* Expand bounding box if necessary */
-	min(x_min,PIXROUND(PIXROUND(h,dvi->conv) - ptr->xOffset,shrinkfactor));
-	min(y_min,PIXROUND(PIXROUND(v,dvi->conv) - ptr->yOffset,shrinkfactor));
-	max(x_max,PIXROUND(PIXROUND(h,dvi->conv) - ptr->xOffset,shrinkfactor)+ptr->glyph.w);
-	max(y_max,PIXROUND(PIXROUND(v,dvi->conv) - ptr->yOffset,shrinkfactor)+ptr->glyph.h);
+	min(x_min,(PIXROUND(h,dvi->conv) - ptr->xOffset)/shrinkfactor);
+	min(y_min,(PIXROUND(v,dvi->conv) - ptr->yOffset)/shrinkfactor);
+	max(x_max,(PIXROUND(h,dvi->conv) - ptr->xOffset)/shrinkfactor+ptr->glyph.w);
+	max(y_max,(PIXROUND(v,dvi->conv) - ptr->yOffset)/shrinkfactor+ptr->glyph.h);
 	return(ptr->tfmw);
       }
 #endif
@@ -362,7 +363,7 @@ void DrawPages(void)
 	  x_min = y_min = INT32_MAX;
 	}
 	PassNo=PASS_BBOX;
-	DrawPage();
+	DrawPage(0,0);
 	SeekPage(dvi,dvi_pos);
 	x_width = x_max-x_min;
 	y_width = y_max-y_min;
