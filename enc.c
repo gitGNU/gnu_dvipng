@@ -74,11 +74,12 @@ struct encoding* FindEncoding(char* encoding)
 
   while(temp!=NULL && strcmp(encoding,temp->name)!=0) 
     temp=temp->next;
-  if (temp==NULL)
+  if (temp==NULL) {
     temp=InitEncoding(encoding);
-  if (temp!=NULL) {
-    temp->next=encodingp;
-    encodingp=temp;
+    if (temp!=NULL) {
+      temp->next=encodingp;
+      encodingp=temp;
+    }
   }
   return(temp);
 }
