@@ -62,7 +62,7 @@ void InitVF(struct font_entry * tfontp)
   Message(BE_VERBOSE,"<%s>", tfontp->name);
   if (MmapFile(tfontp->name,&(tfontp->fmmap)))
     Fatal("font file %s unusable", tfontp->name);
-  position=tfontp->fmmap.mmap;
+  position=(unsigned char*)tfontp->fmmap.mmap;
   if (*(position) != PRE) 
     Fatal("unknown font format in file <%s> !\n",currentfont->name);
   if (*(position+1) != VF_ID) 
@@ -82,8 +82,8 @@ void InitVF(struct font_entry * tfontp)
   position += 8;
   while(*position >= FNT_DEF1 && *position <= FNT_DEF4) {
     DEBUG_PRINT(DEBUG_VF,("\n  @%ld VF:\t%s", 
-		  (long)((void*)position - tfontp->fmmap.mmap), 
-		  dvi_commands[*position]));
+			  (long)position - (long)tfontp->fmmap.mmap, 
+			  dvi_commands[*position]));
     FontDef(position,tfontp);	
     length = dvi_commandlength[*position];
     position += length + *(position + length-1) + *(position+length-2);
@@ -98,7 +98,7 @@ void InitVF(struct font_entry * tfontp)
   /* Read char definitions */
   while(*position < FNT_DEF1) {
     DEBUG_PRINT(DEBUG_VF,("\n@%ld VF CHAR:\t", 
-		 (long)((void*)position - tfontp->fmmap.mmap)));
+			  (long)position - (long)tfontp->fmmap.mmap));
     tcharptr=xmalloc(sizeof(struct char_entry));
     switch (*position) {
     case LONG_CHAR:

@@ -29,7 +29,7 @@
 #else
 #define basename xbasename
 #endif
-#include <fcntl.h> // open/close
+#include <fcntl.h> /* open/close */
 #include <sys/mman.h>
 #include <sys/stat.h>
 
@@ -715,7 +715,7 @@ bool MmapFile (char *filename,struct filemmap *fmmap)
   fstat(fmmap->fd,&stat);
   fmmap->size=stat.st_size;
   fmmap->mmap = mmap(NULL,fmmap->size, PROT_READ, MAP_SHARED,fmmap->fd,0);
-  if (fmmap->mmap == (unsigned char *)-1) {
+  if (fmmap->mmap == (char*)-1) {
     Warning("cannot mmap file <%s>",filename);
     fmmap->mmap=NULL;
     close(fmmap->fd);

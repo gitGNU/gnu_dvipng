@@ -227,7 +227,7 @@ uint32_t CommandLength(unsigned char* command)
   length = dvi_commandlength[*command];
   switch (*command)  {
   case XXX1: case XXX2: case XXX3: case XXX4: 
-    length += UNumRead((char*)command + 1,length - 1);
+    length += UNumRead(command + 1,length - 1);
     break;
   case FNT_DEF1: case FNT_DEF2: case FNT_DEF3: case FNT_DEF4: 
     length += *(command + length - 1) + *(command + length - 2);

@@ -28,7 +28,7 @@
 /* #define NO_DRIFT */
 
 #ifdef DEBUG
-#include <ctype.h> // isprint
+#include <ctype.h> /* isprint */
 #endif
 
 struct stack_entry {  
@@ -268,7 +268,7 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
   case XXX1: case XXX2: case XXX3: case XXX4:
     DEBUG_PRINT(DEBUG_DVI,(" %d",
 		 UNumRead(command+1, dvi_commandlength[*command]-1)));
-    SetSpecial(command + dvi_commandlength[*command], 
+    SetSpecial((char*)command + dvi_commandlength[*command], 
 	       UNumRead(command+1, dvi_commandlength[*command]-1),
 	       hh,vv);
     break;

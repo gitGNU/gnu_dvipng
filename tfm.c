@@ -39,14 +39,15 @@ bool ReadTFM(struct font_entry * tfontp, char* tfmname)
   DEBUG_PRINT((DEBUG_DVI|DEBUG_FT|DEBUG_TFM),
 	      ("\n  OPEN METRICS:\t'%s'", tfmname));
   if (MmapFile(tfmname,&fmmap)) return(false);
-  lh = UNumRead(fmmap.mmap+2,2);
-  bc = UNumRead(fmmap.mmap+4,2);
-  ec = UNumRead(fmmap.mmap+6,2);
-  nw = UNumRead(fmmap.mmap+8,2);
+  position=(unsigned char*)fmmap.mmap;
+  lh = UNumRead(position+2,2);
+  bc = UNumRead(position+4,2);
+  ec = UNumRead(position+6,2);
+  nw = UNumRead(position+8,2);
   DEBUG_PRINT(DEBUG_TFM,(" %d %d %d %d",lh,bc,ec,nw));
   width=alloca(nw*sizeof(dviunits));  
   c=0;
-  position=fmmap.mmap+24+(lh+ec-bc+1)*4;
+  position=position+24+(lh+ec-bc+1)*4;
   while( c < nw ) {
     width[c] = SNumRead(position,4);
     c++;
@@ -55,10 +56,10 @@ bool ReadTFM(struct font_entry * tfontp, char* tfmname)
   
   /* Read char widths */
   c=bc;
-  position=fmmap.mmap+24+lh*4;
+  position=(unsigned char*)fmmap.mmap+24+lh*4;
   while(c <= ec) {
     DEBUG_PRINT(DEBUG_TFM,("\n@%ld TFM METRICS:\t", 
-		 (long)((void*)position - fmmap.mmap)));
+			   (long)position - (long)fmmap.mmap));
     tcharptr=xmalloc(sizeof(struct char_entry));
     tcharptr->data=NULL;
     tcharptr->tfmw=width[*position];

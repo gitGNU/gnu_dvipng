@@ -118,7 +118,7 @@ void FontDef(unsigned char* command, void* parent)
   if (tfontnump!=NULL 
       && tfontnump->fontp->s == s 
       && tfontnump->fontp->d == d 
-      && strncmp(tfontnump->fontp->n,current+14,a+l) == 0) {
+      && strncmp(tfontnump->fontp->n,(char*)current+14,a+l) == 0) {
     DEBUG_PRINT((DEBUG_DVI|DEBUG_VF),("\n  FONT %d:\tMatch found",k));
     return;
   }
@@ -143,7 +143,7 @@ void FontDef(unsigned char* command, void* parent)
   while (tfontptr != NULL 
 	 && (tfontptr->s != s 
 	     || tfontptr->d != d 
-	     || strncmp(tfontptr->n,current+14,a+l) != 0 ) ) {
+	     || strncmp(tfontptr->n,(char*)current+14,a+l) != 0 ) ) {
     tfontptr = tfontptr->next;
   }
   /* If found, set its number and return */
@@ -170,7 +170,7 @@ void FontDef(unsigned char* command, void* parent)
   tfontptr->d = d; /* design size */
   tfontptr->a = a; /* length for font name */
   tfontptr->l = l; /* device length */
-  strncpy(tfontptr->n,current+14,a+l); /* full font name */
+  strncpy(tfontptr->n,(char*)current+14,a+l); /* full font name */
   tfontptr->n[a+l] = '\0';
   
   tfontptr->name[0] = '\0';
@@ -211,7 +211,6 @@ void FontFind(struct font_entry * tfontptr)
   TEMPSTR(name,kpse_find_vf (tfontptr->n));
   if (name!=NULL) {
     strcpy (tfontptr->name, name);
-    /* free (name); */
     InitVF(tfontptr);
   }
 #ifdef HAVE_FT2_OR_LIBT1
@@ -223,12 +222,10 @@ void FontFind(struct font_entry * tfontptr)
       TEMPSTR(name,kpse_find_t1_or_tt(tfontptr->n));
     if (name!=NULL) {
       strcpy (tfontptr->name, name);
-      /* free (name); */
       TEMPSTR(name,kpse_find_file(tfontptr->n, kpse_tfm_format, false));
       if (name!=NULL) {
 	if (!ReadTFM(tfontptr,name)) {
 	  Warning("unable to read tfm file %s", name);
-	  //free(name);
 	  name=NULL;
 	} else 
 #ifdef HAVE_FT2
@@ -239,14 +236,11 @@ void FontFind(struct font_entry * tfontptr)
 #endif
 	      /* if Freetype or T1 loading fails for some reason, fall
 		 back to PK font */
-	      //free(name);
 	      name=NULL; 
-	    }// else
-	    //free(name);
+	    }
 #ifdef HAVE_FT2
 #ifdef HAVE_LIBT1
-	  }// else
-	   // free(name);
+	  }
 #endif
 #endif
       }
@@ -257,8 +251,6 @@ void FontFind(struct font_entry * tfontptr)
     TEMPSTR(name,kpse_find_pk (tfontptr->n, tfontptr->dpi, &font_ret));
     if (name!=NULL) {
       strcpy (tfontptr->name, name);
-      /* free (name); */
-      
       if (!FILESTRCASEEQ (tfontptr->n, font_ret.name)) {
 	flags |= PAGE_GAVE_WARN;
 	Warning("font %s not found, using %s at %d dpi instead.\n",

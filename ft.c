@@ -33,7 +33,7 @@ void LoadFT(int32_t c, struct char_entry * ptr)
   FT_Bitmap  bitmap;
   FT_UInt    glyph_i;
   int i,j,k;
-  char* bit;
+  unsigned char* bit;
 
   DEBUG_PRINT(DEBUG_FT,("\n  LOAD FT CHAR\t%d (%d)",c,ptr->tfmw));
   if (currentfont->psfontmap!=NULL
@@ -52,8 +52,7 @@ void LoadFT(int32_t c, struct char_entry * ptr)
   bitmap=currentfont->face->glyph->bitmap;
   DEBUG_PRINT(DEBUG_FT,(" (%dx%d)",bitmap.width,bitmap.rows));
     
-  if ((ptr->data 
-       = (char*) calloc(bitmap.width*bitmap.rows,sizeof(char))) == NULL)
+  if ((ptr->data = calloc(bitmap.width*bitmap.rows,sizeof(char))) == NULL)
     Fatal("Unable to allocate image space for char <%c>\n", (char)c);
   ptr->w = bitmap.width;
   ptr->h = bitmap.rows;

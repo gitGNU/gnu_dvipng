@@ -201,8 +201,8 @@ void LoadPK(int32_t c, register struct char_entry * ptr)
   ptr->w = shrunk_width;
   ptr->h = shrunk_height;
   pos+=n;
-  buffer = (char*)alloca(shrunk_width*shrunk_height*
-			 shrinkfactor*shrinkfactor*sizeof(char));
+  buffer = alloca(shrunk_width*shrunk_height*
+		  shrinkfactor*shrinkfactor*sizeof(char));
   (void)memset(buffer,0,shrunk_width*shrunk_height*
 	       shrinkfactor*shrinkfactor*sizeof(char));
   DEBUG_PRINT(DEBUG_GLYPH,("\nDRAW GLYPH %d\n", (int)c));
@@ -323,7 +323,7 @@ void InitPK(struct font_entry * tfontp)
   Message(BE_VERBOSE,"<%s>", tfontp->name);
   if (MmapFile(tfontp->name,&(tfontp->fmmap)))
     Fatal("font file %s unusable", tfontp->name);
-  position=tfontp->fmmap.mmap;
+  position=(unsigned char*)tfontp->fmmap.mmap;
   if (tfontp->fmmap.size < 2 || tfontp->fmmap.size < 3+*(position+2)+16) 
     Fatal("PK file %s ends prematurely",tfontp->name);
   if (*position++ != PK_PRE) 
@@ -353,7 +353,7 @@ void InitPK(struct font_entry * tfontp)
   position = skip_specials(position);
   while (*position != PK_POST) {
     DEBUG_PRINT(DEBUG_PK,("\n  @%ld PK CHAR:\t%d",
-		  (long)((void*)position - tfontp->fmmap.mmap), *position));
+			  (long)position - (long)tfontp->fmmap.mmap, *position));
     if ((tcharptr = malloc(sizeof(struct char_entry))) == NULL)
       Fatal("can't malloc space for char_entry");
     tcharptr->flag_byte = *position;
