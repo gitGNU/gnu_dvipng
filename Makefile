@@ -104,7 +104,7 @@ srcdir = .
 CC = gcc
 CFLAGS = -g -O2 $(XCFLAGS) -Wall
 CPPFLAGS =  $(XCPPFLAGS)
-DEFS = -DHAVE_CONFIG_H $(XDEFS)
+DEFS = -DHAVE_CONFIG_H $(XDEFS) -DDEBUG
 
 # Kpathsea needs this for compiling, programs need it for linking.
 LIBTOOL = ./klibtool # FIXME $(kpathsea_srcdir_parent)/klibtool
@@ -168,7 +168,7 @@ prog_cflags = -DUNIX -DKPATHSEA
 common_objects = 
 
 program = dvipng
-objects = dvipng.o color.o font.o io.o misc.o pk.o postamble.o \
+objects = dvipng.o color.o font.o io.o misc.o pk.o \
 	set.o special.o papersiz.o pages.o
 all: $(program)
 
