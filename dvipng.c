@@ -43,7 +43,23 @@ int main(int argc, char ** argv)
   parsestdin = DecodeArgs(argc, argv);
 
 #ifdef HAVE_LIBKPATHSEA
-  kpse_set_progname(argv[0]);
+  /* Use extra paths as used by dvips */
+  kpse_set_program_name(argv[0],"dvips");
+  /* If dvipng is not installed in the texmf tree, and SELFAUTO...
+   * is used in texmf.cnf, kpathsea will not find a) Virtual fonts
+   * b) ps2pk.map or psfonts.map c) PostScript fonts
+   *
+   * We adjust these things here
+   */
+# ifdef ENV_SELFAUTOLOC
+  putenv(ENV_SELFAUTOLOC);
+# endif
+# ifdef ENV_SELFAUTODIR
+  putenv(ENV_SELFAUTODIR);
+# endif
+# ifdef ENV_SELFAUTOPARENT
+  putenv(ENV_SELFAUTOPARENT);
+# endif
   kpse_set_program_enabled (kpse_pk_format, makeTexPK, kpse_src_compile);
   kpse_init_prog("DVIPNG", resolution, MFMODE, "cmr10");
 #endif
@@ -51,15 +67,16 @@ int main(int argc, char ** argv)
 #ifdef HAVE_FT2
   if (FT_Init_FreeType( &libfreetype ))
     Fatal("an error occured during freetype initialisation"); 
-  InitPSFontMap();
 # ifdef DEBUG
   {
     FT_Int      amajor, aminor, apatch;
     
     FT_Library_Version( libfreetype, &amajor, &aminor, &apatch );
-    DEBUG_PRINT((DEBUG_FT,"FreeType %d.%d.%d\n", amajor, aminor, apatch));
+    DEBUG_PRINT((DEBUG_FT,"\n  FREETYPE VERSION: FreeType %d.%d.%d", 
+		 amajor, aminor, apatch));
   }
 # endif
+  InitPSFontMap();
 #endif
 
   DrawPages();

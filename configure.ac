@@ -65,7 +65,7 @@ AC_HEADER_STDC
 AC_FUNC_MMAP
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([dup2 strchr strrchr])
+AC_CHECK_FUNCS([dup2 strchr strrchr memchr memset putenv])
 if test "$enable_timing" = "yes"; then
   AC_CHECK_FUNCS([ftime gettimeofday])
 fi
@@ -76,21 +76,46 @@ AC_PATH_PROG(MAKEINFO, makeinfo, :)
 MAKEINFO_CHECK_MACROS(acronym env option)
 AC_PATH_PROG(INSTALL_INFO, install-info, :, $PATH /usr/sbin /sbin)
 
-# Dvips config files
-if test "x$FT_O" != "x"; then
-  AC_PATH_PROG(KPSEWHICH, kpsewhich, no)
-  if test "$KPSEWHICH" != "no"; then
-    AC_MSG_CHECKING([for ps2pk.map])
-    PS2PK=`$KPSEWHICH psfonts.map | sed s%base/psfonts.map%% `config/ps2pk.map
-    if test -e $PS2PK; then
-      AC_DEFINE(HAVE_PS2PK_MAP, 1, 
-		[Define to 1 if you have ps2pk.map where expected])
-      AC_MSG_RESULT([$PS2PK])
-    else
-      AC_MSG_RESULT([no, this may inhibit your PS font selection])
-    fi
-  fi
-fi
+# SELFAUTO
+AC_ARG_ENABLE(selfauto-set, 
+  AC_HELP_STRING([--enable-selfauto-set],
+  [This option will make the final binary explicitly set the
+   $SELFAUTO... variables to make it look as dvipng is installed in the
+   main texmf tree, even if it isn't. This is necessary when texmf.cnf
+   uses $SELFAUTO... variables and dvipng is not installed in the texmf
+   tree. Otherwise, dvipng may not be able to find virtual fonts, or 
+   psfonts.map.]),
+  [ if test "$enableval" = yes ; then
+      AC_MSG_CHECKING([for \$SELFAUTOLOC])
+      SELFAUTOLOC=`kpsewhich -expand-var=\\\$SELFAUTOLOC`
+      AC_DEFINE_UNQUOTED(ENV_SELFAUTOLOC,["SELFAUTOLOC=$SELFAUTOLOC"],
+	[The environment setting for \$SELFAUTOLOC])
+      AC_MSG_RESULT([$SELFAUTOLOC])
+      AC_MSG_CHECKING([for \$SELFAUTODIR])
+      SELFAUTODIR=`kpsewhich -expand-var=\\\$SELFAUTODIR`
+      AC_DEFINE_UNQUOTED(ENV_SELFAUTODIR,["SELFAUTODIR=$SELFAUTODIR"],
+	[The environment setting for \$SELFAUTODIR])
+      AC_MSG_RESULT([$SELFAUTODIR])
+      AC_MSG_CHECKING([for \$SELFAUTOPARENT])
+      SELFAUTOPARENT=`kpsewhich -expand-var=\\\$SELFAUTOPARENT`
+      AC_DEFINE_UNQUOTED(ENV_SELFAUTOPARENT,["SELFAUTOPARENT=$SELFAUTOPARENT"],
+	[The environment setting for \$SELFAUTOPARENT])
+      AC_MSG_RESULT([$SELFAUTOPARENT])
+    fi ],
+  [AC_MSG_CHECKING([for texmf.cnf])
+  TEXMF_CNF=`kpsewhich texmf.cnf`
+  AC_MSG_RESULT([$TEXMF_CNF])
+  AC_MSG_CHECKING([for \$SELFAUTO in texmf.cnf])
+  if grep SELFAUTO "$TEXMF_CNF" > /dev/null 2> /dev/null; then
+    AC_MSG_RESULT([yes
+***************************************************************
+texmf.cnf is using \$SELFAUTO... variables. If you are going to 
+install dvipng outside the texmf tree, you may need to use
+--enable-selfauto-set, type ./configure --help for help
+***************************************************************])
+  else
+    AC_MSG_RESULT([no])
+  fi])
 
 AC_MSG_RESULT([
 ** Configuration summary for $PACKAGE_STRING:

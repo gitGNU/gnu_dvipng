@@ -17,24 +17,11 @@ void InitPSFontMap(void)
       kpse_find_file("psfonts.map",kpse_dvips_config_format,false);
 
   if (psfont_name==NULL) {
-    Warning("cannot find psfonts.map");
+    Warning("cannot find ps2pk.map, nor psfonts.map");
     return;
   }
-#ifdef HAVE_PS2PK_MAP
-  if (strcmp(psfont_name+strlen(psfont_name)-16,"base/psfonts.map")==0) {
-    strcpy(psfont_name+strlen(psfont_name)-16,"config/ps2pk.map");
-    psfont_filedes = open(psfont_name,O_RDONLY);
-    if (psfont_filedes == -1) {
-      strcpy(psfont_name+strlen(psfont_name)-16,"base/psfonts.map");
-      Warning("cannot find ps2pk.map, using %s", psfont_name);
-    }
-  }
-  if (psfont_filedes == -1) 
-#endif
-    psfont_filedes = open(psfont_name,O_RDONLY);
-  DEBUG_PRINT((DEBUG_FT,"\n  OPEN PSFONT MAP:\t'%s'", 
-	       psfont_name));
-  if (psfont_filedes == -1) { 
+  DEBUG_PRINT((DEBUG_FT,"\n  OPEN PSFONT MAP:\t'%s'", psfont_name));  
+  if ((psfont_filedes = open(psfont_name,O_RDONLY)) == -1) { 
     Warning("psfonts map %s could not be opened", psfont_name);
     return;
   }
@@ -42,7 +29,7 @@ void InitPSFontMap(void)
   psfont_mmap = mmap(NULL,psfont_stat.st_size,
 		     PROT_READ, MAP_SHARED,psfont_filedes,0);
   if (psfont_mmap == (unsigned char *)-1) 
-    Warning("cannot mmap psfonts map <%s> !\n",psfont_name);
+    Warning("cannot mmap psfonts map %s !\n",psfont_name);
 }
 
 char* FindPSFontMap(char* fontname, char** encoding, FT_Matrix** transform)
