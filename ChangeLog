@@ -1,5 +1,7 @@
 2004-05-14  Jan-Åke Larsson  <jalar@mai.liu.se>
 
+	* config.h.in: Use more tests 
+
 	* dvipng.1: Add documentation 
 
 	* dvipng.texi: Fix build. Revert to four-argument @node, my
