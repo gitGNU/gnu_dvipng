@@ -143,6 +143,22 @@ named COPYING and dvipng.c.");
 	} else 
 	  Fatal("The papersize %s is not implemented, sorry.\n",p);
         break;
+      case 'b':
+	if ( *p == 'g' ) {
+	  p++;
+	  if (*p == 0 && argv[i+1])
+	    p = argv[++i] ;
+	  background(p);
+	}
+	break;
+      case 'f':
+	if ( *p == 'g' ) {
+	  p++;
+	  if (*p == 0 && argv[i+1])
+	    p = argv[++i] ;
+	  resetcolorstack(p);
+	}
+	break;
       case 'x' : case 'y' :
 	if (*p == 0 && argv[i+1])
 	  p = argv[++i] ;
