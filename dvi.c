@@ -89,7 +89,7 @@ struct dvi_data* DVIOpen(char* dviname,char* outname)
       *tmpstring = '\0';
     strcat(dvi->outname, "%d.png");
   } else {
-    dvi->outname = malloc(strlen(outname));
+    dvi->outname = malloc(strlen(outname)+1);
     if (dvi->outname==NULL)
       Fatal("cannot allocate space for output filename");
     strcpy(dvi->outname,outname);
