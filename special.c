@@ -171,7 +171,7 @@ bool ParseDiagram(char *str)
 #endif /* __riscos */
 
 
-void DoSpecial(char * str, int n)
+void SetSpecial(char * str, int n, int32_t h, int32_t v)
 /* interpret a \special command, made up of keyword=value pairs */
 /* Color specials only for now. Warn otherwise. */
 {

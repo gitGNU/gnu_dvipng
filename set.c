@@ -44,21 +44,6 @@ void WriteImage(char *outname, int pagenum)
   page_imagep=NULL;
 }
 
-/*-->SetChar*/
-/**********************************************************************/
-/*****************************  SetChar  ******************************/
-/**********************************************************************/
-int32_t SetChar(int32_t c, int PassNo)
-{
-  switch(currentfont->type) {
-  case FONT_TYPE_PK:
-    return(SetPK(c, PassNo));
-    break;
-  case FONT_TYPE_VF:
-    return(SetVF(c, PassNo));
-  }
-  return(0);
-}
 
 
 /*-->SetRule*/
@@ -66,7 +51,7 @@ int32_t SetChar(int32_t c, int PassNo)
 /*****************************  SetRule  ******************************/
 /**********************************************************************/
 /*   this routine will draw a rule */
-int32_t SetRule(int32_t a, int32_t b, int PassNo)
+int32_t SetRule(int32_t a, int32_t b, int32_t h,int32_t v,int PassNo)
 {
   int32_t    xx=0, yy=0;
   int Color;

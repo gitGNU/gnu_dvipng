@@ -12,63 +12,32 @@ int             poshalf;
 
 void    LoadAChar(int32_t, register struct pk_char *);
 
-int32_t SetPK(int32_t c, int PassNo)
+int32_t SetPK(int32_t c, int32_t h,int32_t v)
 {
-  register struct pk_char *ptr;  /* temporary pk_char pointer */
+  register struct pk_char *ptr = currentfont->pk_ch[c];
+                                      /* temporary pk_char pointer */
   int red,green,blue;
   int Color,i;
 
-  if ((ptr = currentfont->pk_ch[c]) != NULL) {
-    if (ptr->glyph.data == NULL) {
-      LoadAChar(c, ptr);
-    }
-    switch(PassNo) {
-    case PASS_BBOX:
-      /* Expand bounding box if necessary */
-      min(x_min,PIXROUND(h, dvi->conv*shrinkfactor)
-	  -PIXROUND(ptr->xOffset,shrinkfactor));
-      min(y_min,PIXROUND(v, dvi->conv*shrinkfactor)
-	  -PIXROUND(ptr->yOffset,shrinkfactor));
-      max(x_max,PIXROUND(h, dvi->conv*shrinkfactor)
-	  -PIXROUND(ptr->xOffset,shrinkfactor)+ptr->glyph.w);
-      max(y_max,PIXROUND(v, dvi->conv*shrinkfactor)
-	  -PIXROUND(ptr->yOffset,shrinkfactor)+ptr->glyph.h);
-      break;
-    case PASS_DRAW:
-      /*
-       * Draw character. Remember now, we have stored the different
-       * greyscales in glyph.data with darkest last.  Draw the character
-       * greyscale by greyscale, lightest first.
-       */
-      for( i=1; i<=ptr->glyph.nchars ; i++) {
-	red = bRed-(bRed-Red)*i/shrinkfactor/shrinkfactor;
-	green = bGreen-(bGreen-Green)*i/shrinkfactor/shrinkfactor;
-	blue = bBlue-(bBlue-Blue)*i/shrinkfactor/shrinkfactor;
-	Color = gdImageColorResolve(page_imagep,red,green,blue);
-	gdImageChar(page_imagep, &(ptr->glyph),
-		    PIXROUND(h, dvi->conv*shrinkfactor)
-		    -PIXROUND(ptr->xOffset,shrinkfactor)
-		    +x_offset,
-		    PIXROUND(v, dvi->conv*shrinkfactor)
-		    -PIXROUND(ptr->yOffset,shrinkfactor)
-		    +y_offset,
-		    i,Color);
-      }
-    }
+  /*
+   * Draw character. Remember now, we have stored the different
+   * greyscales in glyph.data with darkest last.  Draw the character
+   * greyscale by greyscale, lightest first.
+   */
+  for( i=1; i<=ptr->glyph.nchars ; i++) {
+    red = bRed-(bRed-Red)*i/shrinkfactor/shrinkfactor;
+    green = bGreen-(bGreen-Green)*i/shrinkfactor/shrinkfactor;
+    blue = bBlue-(bBlue-Blue)*i/shrinkfactor/shrinkfactor;
+    Color = gdImageColorResolve(page_imagep,red,green,blue);
+    gdImageChar(page_imagep, &(ptr->glyph),
+		PIXROUND(h, dvi->conv*shrinkfactor)
+		-PIXROUND(ptr->xOffset,shrinkfactor)
+		+x_offset,
+		PIXROUND(v, dvi->conv*shrinkfactor)
+		-PIXROUND(ptr->yOffset,shrinkfactor)
+		+y_offset,
+		i,Color);
   }
-#ifdef DEBUG
-  if (isprint(c))
-    DEBUG_PRINTF2(DEBUG_DVI,"\n  PK CHAR:\t'%c' %d",c,(int)c);
-  else
-    DEBUG_PRINTF(DEBUG_DVI,"\n  PK CHAR:\t%d",(int)c);
-  DEBUG_PRINTF2(DEBUG_DVI," at (%d,%d)",
-		PIXROUND(h,dvi->conv*shrinkfactor),
-		PIXROUND(v, dvi->conv*shrinkfactor));
-  DEBUG_PRINTF2(DEBUG_DVI,"-(%d,%d)",PIXROUND(ptr->xOffset,shrinkfactor),
-		PIXROUND(ptr->yOffset,shrinkfactor));
-  DEBUG_PRINTF2(DEBUG_DVI," offset (%d,%d)",x_offset,y_offset);
-  DEBUG_PRINTF(DEBUG_DVI," tfmw %d",ptr->tfmw);
-#endif
   return(ptr->tfmw);
 }
 
