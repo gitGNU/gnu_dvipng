@@ -24,7 +24,7 @@
 #************************************************************************
 
 # Process this file with autoconf to produce a configure script.
-AC_INIT([dvipng], [1.5], [dvipng-devel@lists.sf.net])
+AC_INIT([dvipng], [1.6], [dvipng@nongnu.org])
 AC_CONFIG_SRCDIR([dvipng.c])
 
 AC_ARG_ENABLE(debug, 
@@ -117,7 +117,7 @@ AC_FUNC_MALLOC
 AC_FUNC_MMAP
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([dup2 memset munmap pow putenv strchr strrchr strtol])
+AC_CHECK_FUNCS([dup2 memset munmap pow putenv strchr strrchr strtol strstr])
 if test "$enable_timing" = "yes"; then
   AC_CHECK_FUNCS([ftime gettimeofday])
 fi
