@@ -190,22 +190,21 @@ char *str;
 #endif /* __riscos */
 
 
+void DoSpecial P2C(char *,str, int, n)
 /* interpret a \special command, made up of keyword=value pairs */
 /* Color specials only for now. Warn otherwise. */
-#if NeedFunctionPrototypes
-void DoSpecial(char *str, int n)
-#else
-void DoSpecial(str, n)
-char *str;
-int  n;
-#endif
 {
   char *p;
 
-  *(str+n)='\0';
+#ifdef DEBUG
+  if (Debug)
+    printf("'%.*s' ",n,str);
+#endif
 
   p=str;
   while(*p==' ') p++;
+
+  /* Fragile. Should compare with n */
 
   switch (*p) {
   case 'b':
@@ -231,9 +230,9 @@ int  n;
     } 
     break ;
   default:
-    Warning("at (%ld,%ld) unimplemented \\special{%s}.",
+    Warning("at (%ld,%ld) unimplemented \\special{%.*s}.",
 	    PIXROUND(h,conv*shrinkfactor),
-	    PIXROUND(v,conv*shrinkfactor),str);
+	    PIXROUND(v,conv*shrinkfactor),n,str);
   }
 }
 
