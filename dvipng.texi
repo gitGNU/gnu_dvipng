@@ -2,8 +2,8 @@
 @setfilename dvipng.info
 @settitle dvipng: A DVI driver
 
-@set version 0.9
-@set month-year January 2004
+@set version 1.0
+@set month-year March 2004
 
 @c Put everything in one index (arbitrarily chosen to be the concept index).
 @syncodeindex fn cp
@@ -32,7 +32,7 @@
 @author by Jan-@AA{}ke Larsson.
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 2003 Jan-@AA{}ke Larsson
+Copyright @copyright{} 2003-2004 Jan-@AA{}ke Larsson
  
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -216,6 +216,22 @@ recommended).  @xref{Debug options}, for the possible values of
 @cindex output resolution, setting
 Set the output resolution, both horizontal and vertical, to @var{num}
 dpi (dots per inch). 
+
+One may want to adjust this to fit a certain text font size (e.g., on
+a web page), and for a text font height of @var{font_px} pixels (in
+Mozilla) the correct formula is
+@example
+@var{dpi} = @var{font_px} * 72.27 / 10 [px * @TeX{}pt/in / @TeX{}pt]
+@end example
+The last division by ten is due to the standard font height 10pt in
+your document, if you use 12pt, divide by 12. Unfortunately, some
+proprietary browsers have font height in pt (points), not pixels. You
+have to rescale that to pixels, using the screen resolution (default
+is usually 96 dpi) which means the formula is
+@example
+@var{font_px} = @var{font_pt} * 96 / 72 [pt * px/in / (pt/in)] 
+@end example
+On some high-res screens, the value is instead 120 dpi. Good luck!
 
 @item --depth*
 @cindex baseline reporting
