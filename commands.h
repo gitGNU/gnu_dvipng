@@ -66,3 +66,109 @@
 #define  POST_POST      249     /* postamble ending */
 
 /*  undefined_commands           250,251,252,253,254,255 */
+
+EXTERN const int8_t dvi_commandlength[256] 
+#ifdef MAIN
+={
+  1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,            /* SETC_000 --- SETC_127    */
+  2,3,4,5,9,                  /* SET1 --- SET4, SET_RULE  */ 
+  2,3,4,5,9,                  /* PUT1 --- PUT4, PUT_RULE  */ 
+  1,45,1,1,1,                 /* NOP, BOP, EOP, PUSH, POP */
+  2,3,4,5,                    /* RIGHT1 --- RIGHT4        */
+  1,2,3,4,5,                  /* W0 --- W4                */
+  1,2,3,4,5,                  /* X0 --- X4                */
+  2,3,4,5,                    /* DOWN1 --- DOWN4          */
+  1,2,3,4,5,                  /* Y0 --- Y4                */
+  1,2,3,4,5,                  /* Z0 --- Z4                */
+  1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,                    /* FONT_00 --- FONT_63      */
+  2,3,4,5,                    /* FNT1 --- FNT4            */
+  2,3,4,5,                    /* XXX1 --- XXX4 + special string    */
+  16,17,18,19,                /* FNT_DEF1 --- FNT_DEF4 + font name */
+  15,                         /* PRE + TeX comment        */
+  29,                         /* POST                     */
+  10,                         /* POST_POST minimum        */
+  -1,-1,-1,-1,-1,-1           /* undefined                */
+}
+#endif
+;
+
+#ifdef DEBUG
+EXTERN const char* dvi_commands[256] 
+#ifdef MAIN
+={
+"SETC_000","SETC_001","SETC_002","SETC_003","SETC_004",
+"SETC_005","SETC_006","SETC_007","SETC_008","SETC_009",
+"SETC_010","SETC_011","SETC_012","SETC_013","SETC_014",
+"SETC_015","SETC_016","SETC_017","SETC_018","SETC_019",
+"SETC_020","SETC_021","SETC_022","SETC_023","SETC_024",
+"SETC_025","SETC_026","SETC_027","SETC_028","SETC_029",
+"SETC_030","SETC_031","SETC_032","SETC_033","SETC_034",
+"SETC_035","SETC_036","SETC_037","SETC_038","SETC_039",
+"SETC_040","SETC_041","SETC_042","SETC_043","SETC_044",
+"SETC_045","SETC_046","SETC_047","SETC_048","SETC_049",
+"SETC_050","SETC_051","SETC_052","SETC_053","SETC_054",
+"SETC_055","SETC_056","SETC_057","SETC_058","SETC_059",
+"SETC_060","SETC_061","SETC_062","SETC_063","SETC_064",
+"SETC_065","SETC_066","SETC_067","SETC_068","SETC_069",
+"SETC_070","SETC_071","SETC_072","SETC_073","SETC_074",
+"SETC_075","SETC_076","SETC_077","SETC_078","SETC_079",
+"SETC_080","SETC_081","SETC_082","SETC_083","SETC_084",
+"SETC_085","SETC_086","SETC_087","SETC_088","SETC_089",
+"SETC_090","SETC_091","SETC_092","SETC_093","SETC_094",
+"SETC_095","SETC_096","SETC_097","SETC_098","SETC_099",
+"SETC_100","SETC_101","SETC_102","SETC_103","SETC_104",
+"SETC_105","SETC_106","SETC_107","SETC_108","SETC_109",
+"SETC_110","SETC_111","SETC_112","SETC_113","SETC_114",
+"SETC_115","SETC_116","SETC_117","SETC_118","SETC_119",
+"SETC_120","SETC_121","SETC_122","SETC_123","SETC_124",
+"SETC_125","SETC_126","SETC_127",
+"SET1","SET2","SET3","SET4","SET_RULE",
+"PUT1","PUT2","PUT3","PUT4","PUT_RULE",
+"NOP","BOP","EOP","PUSH","POP",
+"RIGHT1","RIGHT2","RIGHT3","RIGHT4",
+"W0","W1","W2","W3","W4",
+"X0","X1","X2","X3","X4",
+"DOWN1","DOWN2","DOWN3","DOWN4",
+"Y0","Y1","Y2","Y3","Y4",
+"Z0","Z1","Z2","Z3","Z4",
+"FONT_00","FONT_01","FONT_02","FONT_03","FONT_04",
+"FONT_05","FONT_06","FONT_07","FONT_08","FONT_09",
+"FONT_10","FONT_11","FONT_12","FONT_13","FONT_14",
+"FONT_15","FONT_16","FONT_17","FONT_18","FONT_19",
+"FONT_20","FONT_21","FONT_22","FONT_23","FONT_24",
+"FONT_25","FONT_26","FONT_27","FONT_28","FONT_29",
+"FONT_30","FONT_31","FONT_32","FONT_33","FONT_34",
+"FONT_35","FONT_36","FONT_37","FONT_38","FONT_39",
+"FONT_40","FONT_41","FONT_42","FONT_43","FONT_44",
+"FONT_45","FONT_46","FONT_47","FONT_48","FONT_49",
+"FONT_50","FONT_51","FONT_52","FONT_53","FONT_54",
+"FONT_55","FONT_56","FONT_57","FONT_58","FONT_59",
+"FONT_60","FONT_61","FONT_62","FONT_63",
+"FNT1","FNT2","FNT3","FNT4",
+"XXX1","XXX2","XXX3","XXX4",
+"FNT_DEF1","FNT_DEF2","FNT_DEF3","FNT_DEF4",
+"PRE","POST","POST_POST",
+"UNDEF_250","UNDEF_251","UNDEF_252","UNDEF_253","UNDEF_254","UNDEF_255"
+}
+#endif
+;
+#endif
+
