@@ -156,9 +156,8 @@ struct encoding {
 #define FONT_TYPE_PK            1
 struct pk_char {                   /* PK character */
   dviunits       tfmw;             /* TFM width                         */
-  unsigned char  greys;            /* ink is black at this value        */
   pixels         w,h;              /* width height in pixels            */
-  char          *data;             /* glyph data                        */
+  unsigned char *data;             /* glyph data (0=transp, 255=max ink)*/
   pixels         xOffset, yOffset; /* x offset and y offset in pixels   */
   unsigned char *mmap;             /* Points to beginning of PK data    */
   uint32_t       length;           /* Length of PK data                 */

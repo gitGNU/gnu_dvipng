@@ -3,37 +3,37 @@
 # include <alloca.h>
 #endif
 
-#define PROPER_OVERSTRIKE
+#define GREYS 255
 
 dviunits SetFT(int32_t c, subpixels hh, subpixels vv) 
 {
   register struct ft_char *ptr = currentfont->chr[c];
                                       /* temporary ft_char pointer */
   int red,green,blue;
-  int *Color=alloca(sizeof(int)*(ptr->greys+1));
+  int *Color=alloca(sizeof(int)*(GREYS+1));
   int x,y;
   int pos=0;
   int bgColor,pixelcolor;
   hh -= ptr->xOffset;
   vv -= ptr->yOffset;
   
-  for( x=1; x<=ptr->greys ; x++) {
-    red = bRed-(bRed-Red)*x/ptr->greys;
-    green = bGreen-(bGreen-Green)*x/ptr->greys;
-    blue = bBlue-(bBlue-Blue)*x/ptr->greys;
+  for( x=0; x<=GREYS ; x++) {
+    red = bRed-(bRed-Red)*x/GREYS;
+    green = bGreen-(bGreen-Green)*x/GREYS;
+    blue = bBlue-(bBlue-Blue)*x/GREYS;
     Color[x] = gdImageColorResolve(page_imagep,red,green,blue);
   }  
   for( y=0; y<ptr->h; y++) {
     for( x=0; x<ptr->w; x++) {
       if (ptr->data[pos]>0) {
 	bgColor = gdImageGetPixel(page_imagep, hh + x, vv + y);
-	if (bgColor > 0) {
+	if (bgColor != Color[0]) {
 	  red=gdImageRed(page_imagep, bgColor);
 	  green=gdImageGreen(page_imagep, bgColor);
 	  blue=gdImageBlue(page_imagep, bgColor);
-	  red = red-(red-Red)*ptr->data[pos]/ptr->greys;
-	  green = green-(green-Green)*ptr->data[pos]/ptr->greys;
-	  blue = blue-(blue-Blue)*ptr->data[pos]/ptr->greys;
+	  red = red-(red-Red)*ptr->data[pos]/GREYS;
+	  green = green-(green-Green)*ptr->data[pos]/GREYS;
+	  blue = blue-(blue-Blue)*ptr->data[pos]/GREYS;
 	  pixelcolor = gdImageColorResolve(page_imagep, red, green, blue);
 	  gdImageSetPixel(page_imagep, hh + x, vv + y, pixelcolor);
 	} else
@@ -74,15 +74,16 @@ void LoadFT(int32_t c, struct ft_char * ptr)
     Fatal("Unable to allocate image space for char <%c>\n", (char)c);
   ptr->w = bitmap.width;
   ptr->h = bitmap.rows;
+
 #define GREYLEVELS 16
-  ptr->greys = GREYLEVELS-1;
-  
   DEBUG_PRINT(DEBUG_GLYPH,("\nDRAW GLYPH %d\n", (int)c));
   bit=ptr->data;
   for(i=0;i<bitmap.rows;i++) {
     for(j=0;j<bitmap.width;j++) {
-      k=bitmap.buffer[i*bitmap.pitch+j]/(256/GREYLEVELS);
-      DEBUG_PRINT(DEBUG_GLYPH,("%c",k+((k<=9)?'0':'A'-10)));
+      k=bitmap.buffer[i*bitmap.pitch+j]/(256/GREYLEVELS)*17;
+      //k=(bitmap.buffer[i*bitmap.pitch+j]+1)/16;
+      //k= k>0 ? k*16-1 : 0;
+      DEBUG_PRINT(DEBUG_GLYPH,("%3u ",k));
       bit[i*bitmap.width+j]=k;
     }
     DEBUG_PRINT(DEBUG_GLYPH,("|\n"));
@@ -110,14 +111,17 @@ bool InitFT(struct font_entry * tfontp, unsigned dpi,
 # define FT_ENCODING_ADOBE_CUSTOM ft_encoding_adobe_custom
 # define FT_ENCODING_ADOBE_STANDARD ft_encoding_adobe_standard
 #endif
-    if (FT_Select_Charmap( tfontp->face, FT_ENCODING_ADOBE_CUSTOM )
-	&& FT_Select_Charmap( tfontp->face, FT_ENCODING_ADOBE_STANDARD )) {
-      Warning("unable to set font encoding for %s", tfontp->name);
-      return(false);
+    if (FT_Select_Charmap( tfontp->face, FT_ENCODING_ADOBE_CUSTOM )) {
+      Warning("unable to set font encoding FT_ENCODING_ADOBE_CUSTOM for %s", 
+	      tfontp->name);
+      if(FT_Select_Charmap( tfontp->face, FT_ENCODING_ADOBE_STANDARD )) {
+	Warning("unable to set font encoding for %s", tfontp->name);
+	return(false);
+      }
     }
-  }
-  else if ((tfontp->enc=FindEncoding(encoding))==NULL) {
-    Warning("unable to set font encoding for %s", tfontp->name);
+  } else if ((tfontp->enc=FindEncoding(encoding))==NULL) {
+    Warning("unable to load font encoding '%s' for %s", 
+	    encoding,tfontp->name);
     return(false);
   }
   if (FT_Set_Char_Size( tfontp->face, /* handle to face object           */

@@ -14,22 +14,24 @@ unsigned char   dyn_f;
 int             repeatcount;
 int             poshalf;
 
+#define GREYS 255
+
 dviunits SetPK(int32_t c, int32_t hh,int32_t vv)
 {
   register struct pk_char *ptr = currentfont->chr[c];
                                       /* temporary pk_char pointer */
   int red,green,blue;
-  int *Color=alloca(sizeof(int)*(ptr->greys+1));
+  int *Color=alloca(sizeof(int)*(GREYS+1));
   int x,y;
   int pos=0;
   int bgColor,pixelcolor;
   hh -= ptr->xOffset/shrinkfactor;
   vv -= ptr->yOffset/shrinkfactor;
   
-  for( x=1; x<=ptr->greys ; x++) {
-    red = bRed-(bRed-Red)*x/ptr->greys;
-    green = bGreen-(bGreen-Green)*x/ptr->greys;
-    blue = bBlue-(bBlue-Blue)*x/ptr->greys;
+  for( x=1; x<=GREYS ; x++) {
+    red = bRed-(bRed-Red)*x/GREYS;
+    green = bGreen-(bGreen-Green)*x/GREYS;
+    blue = bBlue-(bBlue-Blue)*x/GREYS;
     Color[x] = gdImageColorResolve(page_imagep,red,green,blue);
   }  
   for( y=0; y<ptr->h; y++) {
@@ -40,9 +42,9 @@ dviunits SetPK(int32_t c, int32_t hh,int32_t vv)
 	  red=gdImageRed(page_imagep, bgColor);
 	  green=gdImageGreen(page_imagep, bgColor);
 	  blue=gdImageBlue(page_imagep, bgColor);
-	  red = red-(red-Red)*ptr->data[pos]/ptr->greys;
-	  green = green-(green-Green)*ptr->data[pos]/ptr->greys;
-	  blue = blue-(blue-Blue)*ptr->data[pos]/ptr->greys;
+	  red = red-(red-Red)*ptr->data[pos]/GREYS;
+	  green = green-(green-Green)*ptr->data[pos]/GREYS;
+	  blue = blue-(blue-Blue)*ptr->data[pos]/GREYS;
 	  pixelcolor = gdImageColorResolve(page_imagep, red, green, blue);
 	  gdImageSetPixel(page_imagep, hh + x, vv + y, pixelcolor);
 	} else
@@ -129,7 +131,7 @@ unsigned char* skip_specials(unsigned char* pos)
       i = 256 * i + *pos++;
     case 240:
       i = 256 * i + *pos++;
-      DEBUG_PRINT(DEBUG_PK,("\n  PK SPECIAL\t'%.*s' ",i,pos));
+      DEBUG_PRINT(DEBUG_PK,("\n  PK SPECIAL\t'%.*s' ",(int)i,pos));
       pos += i;
       break;
     case 244: 
@@ -236,7 +238,6 @@ void LoadPK(int32_t c, register struct pk_char * ptr)
   shrunk_height = (height + shrinkfactor - 1) / shrinkfactor;
   ptr->w = shrunk_width;
   ptr->h = shrunk_height;
-  ptr->greys = shrinkfactor*shrinkfactor;
   pos+=n;
   buffer = (char*)alloca(shrunk_width*shrunk_height*
 			 shrinkfactor*shrinkfactor*sizeof(char));
@@ -320,34 +321,33 @@ void LoadPK(int32_t c, register struct pk_char * ptr)
       Fatal("Wrong number of bits stored:  char. <%c>(%d), font %s, Dyn: %d", 
 	    (char)c, (int)c, currentfont->name,dyn_f);
     if (j>height)
-      Warning("Bad pk file (%s), too many bits", currentfont->name);
+      Fatal("Bad pk file (%s), too many bits", currentfont->name);
   }
   /*
     Shrink raster while doing antialiasing. (See above. The
     single-glyph output seems better than what xdvi at 300 dpi,
     shrinkfactor 3 produces.)
   */
-  if ((ptr->data = 
-       (char*)calloc(shrunk_width*shrunk_height,sizeof(char))) == NULL)
+  if ((ptr->data = calloc(shrunk_width*shrunk_height,sizeof(char))) == NULL)
     Fatal("Unable to allocate image space for char <%c>\n", (char)c);
   for (j = 0; j < (int) height; j++) {	
     for (i = 0; i < (int) width; i++) {    
-      if (((i % shrinkfactor) == 0) && ((j % shrinkfactor) == 0))
-	ptr->data[i/shrinkfactor+j/shrinkfactor*shrunk_width] =
-	  buffer[i+j*width];
-      else 
+      //      if (((i % shrinkfactor) == 0) && ((j % shrinkfactor) == 0))
+      //	ptr->data[i/shrinkfactor+j/shrinkfactor*shrunk_width] =
+      //	  buffer[i+j*width];
+      //      else 
 	ptr->data[i/shrinkfactor+j/shrinkfactor*shrunk_width] +=
 	  buffer[i+j*width];
     }
   }	
-#ifdef DEBUG
   for (j = 0; j < shrunk_height; j++) {	
     for (i = 0; i < shrunk_width; i++) {    
-      DEBUG_PRINT(DEBUG_GLYPH,("%d",ptr->data[i+j*shrunk_width]));
+      ptr->data[i+j*shrunk_width] = ptr->data[i+j*shrunk_width]
+	*255/shrinkfactor/shrinkfactor;
+      DEBUG_PRINT(DEBUG_GLYPH,("%3u ",ptr->data[i+j*shrunk_width]));
     }
     DEBUG_PRINT(DEBUG_GLYPH,("|\n"));
   }	 
-#endif
 }
 
 void InitPK(struct font_entry * tfontp)
@@ -361,18 +361,20 @@ void InitPK(struct font_entry * tfontp)
   DEBUG_PRINT((DEBUG_DVI|DEBUG_PK),("\n  OPEN FONT:\t'%s'", tfontp->name));
   Message(BE_VERBOSE,"<%s>", tfontp->name);
   if ((tfontp->filedes = open(tfontp->name,O_RDONLY)) == -1) 
-    Warning("font file %s could not be opened", tfontp->name);
+    Fatal("font file %s could not be opened", tfontp->name);
   fstat(tfontp->filedes,&stat);
   tfontp->mmap = position = 
     mmap(NULL,stat.st_size, PROT_READ, MAP_SHARED,tfontp->filedes,0);
   if (tfontp->mmap == (unsigned char *)-1) 
     Fatal("cannot mmap PK file <%s> !\n",currentfont->name);
+  if (stat.st_size < 2 || stat.st_size < 3+*(position+2)+16) 
+    Fatal("PK file %s ends prematurely",tfontp->name);
   tfontp->end=tfontp->mmap+stat.st_size;
   if (*position++ != PK_PRE) 
     Fatal("unknown font format in file <%s> !\n",currentfont->name);
   if (*position++ != PK_ID) 
-      Fatal( "wrong version of pk file!  (%d should be 89)\n",
-	     (int)*(position-1));
+    Fatal( "wrong version of pk file!  (%d should be 89)\n",
+	   (int)*(position-1));
   DEBUG_PRINT(DEBUG_PK,("\n  PK_PRE:\t'%.*s'",(int)*position, position+1));
   position += *position + 1;
 
@@ -388,9 +390,8 @@ void InitPK(struct font_entry * tfontp)
   vppp = UNumRead(position+12, 4);
   DEBUG_PRINT(DEBUG_PK,(" %d %d", hppp,vppp));
   if (hppp != vppp)
-    Warning("aspect ratio is %d:%d (should be 1:1)!", 
-	    hppp, vppp);
-  tfontp->magnification = (uint32_t)(hppp * 72.27 * 5 / 65536l + 0.5);
+    Warning("aspect ratio is %d:%d (should be 1:1)!", hppp, vppp);
+  tfontp->magnification = (uint32_t)((uint64_t)hppp * 7227 * 5 / 65536l + 50)/100;
   position+=16;
   /* Read char definitions */
   position = skip_specials(position);
