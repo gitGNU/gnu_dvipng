@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT([dvipng], [0.1], [preview-latex-bugs@lists.sf.net])
+AC_INIT([dvipng], [0.2], [preview-latex-bugs@lists.sf.net])
 AC_CONFIG_SRCDIR([dvipng.c])
 AC_CONFIG_HEADER([config.h])
 
@@ -11,7 +11,8 @@ AC_PROG_INSTALL
 
 # Checks for libraries.
 AC_CHECK_LIB([gd], [gdImageCreate],,
-             [AC_MSG_ERROR([cannot find/use libgd])],
+             [AC_MSG_ERROR([cannot find/use libgd
+This drawing library can be downloaded at http://www.boutell.com/gd])],
 	     [-lm])
 ######
 # Needed when statically linking against gd
