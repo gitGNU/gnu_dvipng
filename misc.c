@@ -309,14 +309,30 @@ bool DecodeArgs(int argc, char ** argv)
 	Message(PARSE_STDIN,"Magstep: %d\n",usermag);
 	/*overridemag = (c == 'x' ? 1 : -1) ;*/
 	break ;
-#ifdef HAVE_GDIMAGEGIF
       case 'g' :
-	if (strncmp(p,"if",2)==0) { /* --gif output */ 
+	if (strncmp(p,"amma",4)==0) { /* --gamma correction */ 
+	  double gamma=0.0;
+
+	  p+=4;
+	  if (*p == 0 && argv[i+1])
+	    p = argv[++i];
+	  if (p!=NULL)
+	    gamma=atof(p);
+	  if (gamma==0.0) {
+	    Warning("Bad gamma value, default is %f",DEFAULT_GAMMA);
+	    gamma=DEFAULT_GAMMA;
+	  }
+	  Gamma(gamma);
+	  Message(PARSE_STDIN,"Gamma value is %s\n", gamma);
+	  break;
+#ifdef HAVE_GDIMAGEGIF
+	} else if (strncmp(p,"if",2)==0) { /* --gif output */ 
 	  flags |= GIF_OUTPUT;
 	  Message(PARSE_STDIN,"GIF output\n");
-	}
-	break;
+	  break;
 #endif
+	}
+	goto DEFAULT;
       case 'p' :
 	if (*p == 'p') {  /* a -pp specifier for a page list */
 	  ppused=true;
