@@ -145,7 +145,7 @@ bool InitFT(struct font_entry * tfontp)
   } 
   if (FT_Set_Char_Size( tfontp->face, /* handle to face object           */
 			0,            /* char_width in 1/64th of points  */
-			tfontp->d/65536*64,
+			(tfontp->d*64)/65536,
 			/* char_height in 1/64th of points */
 			tfontp->dpi/shrinkfactor,   /* horizontal resolution */
 			tfontp->dpi/shrinkfactor )) /* vertical resolution   */ {
