@@ -63,7 +63,10 @@ typedef  int     bool;
 /*#define PIXROUND(x,c) ((((double)x+(double)(c>>1))/(double)c)+0.5)*/
 /*#define PIXROUND(x,c) (((x)+c)/(c))*/
 /*#define PIXROUND(x,c) ((x+c-1)/(c))*/
-#define PIXROUND(x,c) ((x)/(c))
+/*#define PIXROUND(x,c) ((x)/(c))*/
+/* integer round to the nearest number, not towards zero */
+#define PIXROUND(num,den) ((num)>0 ? ((num)+(den)/2)/(den) : -(((den)/2-(num))/(den)))
+
 
 /*************************************************************************/
 
@@ -319,6 +322,12 @@ EXTERN struct timeb timebuffer;
 
 EXTERN int   resolution INIT(300);
 EXTERN char *MFMODE     INIT("cx");
+#ifdef HAVE_GDIMAGEPNGEX
+EXTERN int   compression INIT(1);
+#endif
+#ifdef  HAVE_GDIMAGECREATETRUECOLOR
+EXTERN bool truecolor INIT(FALSE);
+#endif
 # define  max(x,y)       if ((y)>(x)) x = y
 # define  min(x,y)       if ((y)<(x)) x = y
 
