@@ -197,6 +197,8 @@ struct filemmap {
 
 bool    DecodeArgs(int, char *[]);
 void    DecodeString(char *);
+bool    MmapFile (char *filename,struct filemmap *fmmap);
+void    UnMmapFile(struct filemmap* fmmap);
 
 void    Message(int, char *fmt, ...);
 void    Warning(char *fmt, ...);
@@ -396,11 +398,14 @@ EXTERN struct internal_state {
 #define REPORT_HEIGHT                (1<<9)
 #define REPORT_DEPTH                 (1<<10)
 #define DVI_PAGENUM                  (1<<11)
-#define NO_IMAGE_ON_WARN             (1<<12)
+#define MODE_PICKY                   (1<<12)
 #define PAGE_GAVE_WARN               (1<<13)
 #define PREVIEW_LATEX_TIGHTPAGE      (1<<14)
 #define GIF_OUTPUT                   (1<<15)
-EXTERN unsigned int flags INIT(BE_NONQUIET | USE_FREETYPE | USE_LIBT1);
+#define MODE_STRICT                  (1<<16)
+#define NO_GHOSTSCRIPT               (1<<17)
+#define NO_GSSAFER                   (1<<18)
+EXTERN uint32_t flags INIT(BE_NONQUIET | USE_FREETYPE | USE_LIBT1);
 
 #ifdef DEBUG
 EXTERN unsigned int debug INIT(0);
@@ -504,10 +509,6 @@ EXTERN int32_t shrinkfactor INIT(4);
 
 EXTERN struct dvi_color cstack[STACK_SIZE];
 EXTERN int csp INIT(1);
-
-#define PASS_SKIP 0
-#define PASS_SCAN 1
-#define PASS_DRAW 2
 
 EXTERN struct font_entry* currentfont;
 EXTERN struct dvi_data* dvi INIT(NULL);
