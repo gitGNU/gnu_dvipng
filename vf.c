@@ -138,7 +138,7 @@ void InitVF(struct font_entry * tfontp)
 
 void DoneVF(struct font_entry *tfontp)
 {
-  int c=0;
+  int c=FIRSTFNTCHAR;
 
   if (munmap(tfontp->mmap,tfontp->end-tfontp->mmap))
     Warning("font file %s could not be munmapped", tfontp->name);
@@ -146,7 +146,7 @@ void DoneVF(struct font_entry *tfontp)
     Warning("font file %s could not be closed", tfontp->name);
   tfontp->mmap=NULL;
   tfontp->filedes=-1;
-  while(c<NFNTCHARS-1) {
+  while(c<=LASTFNTCHAR) {
     if (tfontp->chr[c]!=NULL) {
       free(tfontp->chr[c]);
       tfontp->chr[c]=NULL;

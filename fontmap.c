@@ -28,7 +28,8 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 
-static unsigned char* psfont_mmap = (unsigned char *)-1;
+static char* psfont_name=NULL;
+static unsigned char* psfont_mmap = NULL;
 static int psfont_filedes = -1;
 static struct stat psfont_stat;
 static struct psfontmap *psfontmap=NULL;
@@ -51,7 +52,7 @@ char* find_format(char* name)
 {
   /* Cater for both new (first case) and old (second case) kpathsea */
   char* format =
-     kpse_find_file(name,kpse_fontmap_format,false);
+    kpse_find_file(name,kpse_fontmap_format,false);
 
   if (format==NULL)
     format = kpse_find_file(name,kpse_dvips_config_format,false);
@@ -60,12 +61,12 @@ char* find_format(char* name)
 
 void InitPSFontMap(void)
 {
-  char *pos,*end,*psfont_name;
+  char *pos,*end;
   struct psfontmap *entry;
 
-  TEMPSTR(psfont_name,find_format("ps2pk.map"));
+  psfont_name=find_format("ps2pk.map");
   if (psfont_name==NULL)
-    TEMPSTR(psfont_name,find_format("psfonts.map"));
+    psfont_name=find_format("psfonts.map");
 
   if (psfont_name==NULL) {
     Warning("cannot find ps2pk.map, nor psfonts.map");
@@ -132,7 +133,18 @@ void ClearPSFontMap(void)
       free(entry->encname);
     free(entry);
   }
+  if (psfont_mmap!=NULL && munmap(psfont_mmap,psfont_stat.st_size))
+    Warning("fontmap file %s could not be munmapped", psfont_name);
+  psfont_mmap=NULL;
+  if (psfont_filedes!=-1 && close(psfont_filedes)) 
+    Warning("font file %s could not be closed", psfont_name);
+  psfont_filedes=-1;
+  if (psfont_name != NULL)
+    free(psfont_name);
+  printf("%lX\n",psfont_name);
+  psfont_name=NULL;
 }
+
 struct psfontmap* FindPSFontMap(char* fontname)
 {
   char *pos,*tfmname,*psname;
