@@ -190,19 +190,12 @@ struct vf_char {                   /* VF character                     */
   uint32_t       length;           /* Length of VF macro               */
 };
 
-#ifdef HAVE_FT2
+#ifdef HAVE_FT2_OR_LIBT1
 #define FONT_TYPE_FT            3
-struct ft_char {                   /* FT character */
-  dviunits       tfmw;             /* TFM width                         */
-  pixels         w,h;              /* width height in pixels            */
-  unsigned char *data;             /* glyph data                        */
-  pixels         xOffset, yOffset; /* x offset and y offset in pixels   */
-};
-#endif
-
-#ifdef HAVE_LIBT1
 #define FONT_TYPE_T1            4
-struct t1_char {                   /* T1 character */
+#define ft_char t1_tt_char
+#define t1_char t1_tt_char
+struct t1_tt_char {                /* Type1 or TrueType character */
   dviunits       tfmw;             /* TFM width                         */
   pixels         w,h;              /* width height in pixels            */
   unsigned char *data;             /* glyph data                        */
@@ -273,7 +266,7 @@ void    LoadFT(int32_t, struct ft_char *);
 bool    InitT1(struct font_entry *);
 void    DoneT1(struct font_entry *tfontp);
 int32_t SetT1(int32_t, int32_t, int32_t);
-void    LoadT1(int32_t, struct t1_char *, unsigned);
+void    LoadT1(int32_t, struct t1_char *);
 #endif
 
 /********************************************************/
