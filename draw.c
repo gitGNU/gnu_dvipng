@@ -381,6 +381,7 @@ void DrawPages(void)
 #endif
       CreateImage();
       Message(BE_NONQUIET,"[%d", dvi_pos->count[0]);
+      Message(REPORT_BASELINE,"(baseline=%d)", y_offset);
       PassNo=PASS_DRAW;
       DrawPage(x_offset*dvi->conv*shrinkfactor,
 	       y_offset*dvi->conv*shrinkfactor);

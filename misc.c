@@ -45,11 +45,11 @@ named COPYING and dvipng.c.");
 	  if (*p == 0 && argv[i+1])
 	    p = argv[i+1];
 	  debug = atoi(p);
-	  flags |= (debug>0) ? debug * LASTFLAG * 2 : DEBUG_DVI;
+	  flags |= (debug>0) ? debug * DEBUG_DEFAULT : DEBUG_DVI;
 	  if (debug > 0 && p == argv[i+1])
 	    i++;
 #ifdef HAVE_LIBKPATHSEA
-	  kpathsea_debug = ( debug * LASTFLAG * 2) / LASTDEBUG;
+	  kpathsea_debug = ( debug * DEBUG_DEFAULT) / LASTDEBUG;
 #endif
 	  Message(PARSE_STDIN,"Debug output enabled\n");
 	}
@@ -169,6 +169,16 @@ named COPYING and dvipng.c.");
 	    p = argv[++i] ;
 	  borderwidth = atoi(p);
 	  Message(PARSE_STDIN,"Transp. border: %d dots\n",borderwidth);
+	} else if (strncmp(p,"aseline",7)==0) { /* Baseline reporting */ 
+	  if (p[8] != '0')
+	    flags |= REPORT_BASELINE;
+	  else
+	    flags &= !REPORT_BASELINE;
+	  break;
+	  if (flags & REPORT_BASELINE )
+	    Message(PARSE_STDIN,"Baseline reporting on\n",p);
+	  else 
+	    Message(PARSE_STDIN,"Baseline reporting off\n");
 	}
 	break;
       case 'f':
@@ -413,6 +423,7 @@ void Fatal (char *fmt, ...)
   va_list args;
 
   va_start(args, fmt);
+  fflush(stdout);
   fprintf(stderr, "\n");
   fprintf(stderr, "%s: Fatal error, ", programname);
   vfprintf(stderr, fmt, args);
@@ -435,6 +446,7 @@ void Warning(char *fmt, ...)
   va_start(args, fmt);
 
   if ( flags & BE_NONQUIET ) {
+    fflush(stdout);
     fprintf(stderr, "%s warning: ", programname);
     vfprintf(stderr, fmt, args);
     fprintf(stderr, "\n");

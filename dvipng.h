@@ -300,23 +300,25 @@ EXTERN struct internal_state {
   int                passno;
 } current_state;
 
-#define BE_NONQUIET 1
-#define BE_VERBOSE  2
-#define PARSE_STDIN 4
-#define LASTFLAG    PARSE_STDIN
+#define BE_NONQUIET     1
+#define BE_VERBOSE      2
+#define PARSE_STDIN     4
+#define REPORT_BASELINE 8
+#define LASTFLAG        REPORT_BASELINE
 
 #ifdef DEBUG
 /*EXTERN unsigned int Debug INIT(0);*/
 #define DEBUG_PRINT(a) Message a
-#define DEBUG_DVI   LASTFLAG * 2
-#define DEBUG_VF    LASTFLAG * 4
-#define DEBUG_PK    LASTFLAG * 8
-#define DEBUG_TFM   LASTFLAG * 16
-#define DEBUG_GLYPH LASTFLAG * 32
-#define DEBUG_FT    LASTFLAG * 64
-#define DEBUG_ENC   LASTFLAG * 128
-#define DEBUG_GS    LASTFLAG * 256
-#define LASTDEBUG   DEBUG_GS
+#define DEBUG_DEFAULT LASTFLAG * 2
+#define DEBUG_DVI     DEBUG_DEFAULT
+#define DEBUG_VF      DEBUG_DEFAULT * 2
+#define DEBUG_PK      DEBUG_DEFAULT * 4
+#define DEBUG_TFM     DEBUG_DEFAULT * 8
+#define DEBUG_GLYPH   DEBUG_DEFAULT * 16
+#define DEBUG_FT      DEBUG_DEFAULT * 32
+#define DEBUG_ENC     DEBUG_DEFAULT * 64
+#define DEBUG_GS      DEBUG_DEFAULT * 128
+#define LASTDEBUG     DEBUG_GS
 #else
 #define DEBUG_PRINT(a)
 #endif
