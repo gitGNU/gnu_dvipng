@@ -1,4 +1,6 @@
 #include "dvipng.h"
+#include <sys/mman.h>
+#include <sys/stat.h>
 
 /*
 #define DRAWGLYPH
@@ -7,106 +9,163 @@
 #define PK_PRE 247
 #define PK_ID 89
 
-unsigned char   bitweight, dyn_f;
+unsigned char   dyn_f;
 int             repeatcount;
+int             poshalf;
 
-unsigned char getnyb P1C(FILE*, fp)
+int32_t SetPK P2C(int32_t, c, int, PassNo)
 {
-  register unsigned char  temp;
-  static unsigned char    inputbyte;
-  if ( bitweight == 0 ) {
-    inputbyte = fgetc(fp);
-    bitweight = 16;
+  register struct pk_char *ptr;  /* temporary pk_char pointer */
+  int red,green,blue;
+  int Color,i;
+
+  if ((ptr = currentfont->pk_ch[c]) != NULL) {
+    if (ptr->glyph.data == NULL) {
+      LoadAChar(c, ptr);
+    }
+    switch(PassNo) {
+    case PASS_BBOX:
+      /* Expand bounding box if necessary */
+      min(x_min,PIXROUND(h, dvi->conv*shrinkfactor)
+	  -PIXROUND(ptr->xOffset,shrinkfactor));
+      min(y_min,PIXROUND(v, dvi->conv*shrinkfactor)
+	  -PIXROUND(ptr->yOffset,shrinkfactor));
+      max(x_max,PIXROUND(h, dvi->conv*shrinkfactor)
+	  -PIXROUND(ptr->xOffset,shrinkfactor)+ptr->glyph.w);
+      max(y_max,PIXROUND(v, dvi->conv*shrinkfactor)
+	  -PIXROUND(ptr->yOffset,shrinkfactor)+ptr->glyph.h);
+      break;
+    case PASS_DRAW:
+      /*
+       * Draw character. Remember now, we have stored the different
+       * greyscales in glyph.data with darkest last.  Draw the character
+       * greyscale by greyscale, lightest first.
+       */
+      for( i=1; i<=ptr->glyph.nchars ; i++) {
+	red = bRed-(bRed-Red)*i/shrinkfactor/shrinkfactor;
+	green = bGreen-(bGreen-Green)*i/shrinkfactor/shrinkfactor;
+	blue = bBlue-(bBlue-Blue)*i/shrinkfactor/shrinkfactor;
+	Color = gdImageColorResolve(page_imagep,red,green,blue);
+	gdImageChar(page_imagep, &(ptr->glyph),
+		    PIXROUND(h, dvi->conv*shrinkfactor)
+		    -PIXROUND(ptr->xOffset,shrinkfactor)
+		    +x_offset,
+		    PIXROUND(v, dvi->conv*shrinkfactor)
+		    -PIXROUND(ptr->yOffset,shrinkfactor)
+		    +y_offset,
+		    i,Color);
+      }
+    }
   }
-  temp = inputbyte / bitweight;
-  inputbyte -= temp * bitweight;
-  bitweight /= 16;
-  return(temp);
+#ifdef DEBUG
+  if (Debug)
+    printf("(at (%d,%d)-(%d,%d) offset (%d,%d)) ",
+	   PIXROUND(h, dvi->conv*shrinkfactor),
+	   PIXROUND(v, ((dvi->conv)*shrinkfactor)),
+	   PIXROUND(ptr->xOffset,shrinkfactor),
+	   PIXROUND(ptr->yOffset,shrinkfactor),
+	   x_offset,y_offset);
+#endif
+
+  return(ptr->tfmw);
 }
 
 
-uint32_t pk_packed_num P1C(FILE*, fp)
-{ /*@<Packed number procedure@>= */
+unsigned char getnyb P1C(unsigned char**, pos)
+{
+  if (poshalf == 0) {
+    poshalf=1;
+    return(**pos / 16);
+  } else {
+    poshalf=0;
+    return(*(*pos)++ & 15);
+  }
+}
+
+uint32_t pk_packed_num P1C(unsigned char**, pos)
+{
   register int    i;
   uint32_t        j;
 
-  i = (int)getnyb(fp);
+  i = (int)getnyb(pos);
   if (i == 0) {
     do {
-      j = (uint32_t)getnyb(fp);
+      j = (uint32_t)getnyb(pos);
       i++;
     } while (j == 0);
     while (i > 0) {
-      j = j * 16 + (uint32_t)getnyb(fp);
+      j = j * 16 + (uint32_t)getnyb(pos);
       i--;
     };
     return (j - 15 + (13 - dyn_f) * 16 + dyn_f);
   } else if (i <= (int)dyn_f) {
     return ((uint32_t)i);
   } else if (i < 14) {
-    return ((i-(uint32_t)dyn_f - 1) * 16 + (uint32_t)getnyb(fp) + dyn_f + 1);
+    return ((i-(uint32_t)dyn_f - 1) * 16 + (uint32_t)getnyb(pos) 
+	    + dyn_f + 1);
   } else {
     if (i == 14) {
-      repeatcount = (int)pk_packed_num(fp);
+      repeatcount = (int)pk_packed_num(pos);
     } else {
       repeatcount = 1;
     }
     /*     fprintf(ERR_STREAM,"repeatcount = [%d]\n",repeatcount);    */
-    return (pk_packed_num(fp));    /* tail end recursion !! */
+    return (pk_packed_num(pos));    /* tail end recursion !! */
   }
 }
 
-unsigned char skip_specials P1H(void)
+unsigned char* skip_specials P1C(unsigned char*,pos)
 {
-  uint32_t    i, j;
-  register unsigned char  flag_byte;
-  do {
-    flag_byte = fgetc(vfstack[vfstackptr]->filep);
+  uint32_t    i;
 
-    if (flag_byte  >= 240)
-      switch (flag_byte) {
-      case 240:
-      case 241:
-      case 242:
-      case 243 : {
-        i = 0;
-        for (j = 240; j <= (uint32_t)flag_byte; j++) {
-          i = 256 * i + fgetc(vfstack[vfstackptr]->filep);
-        }
-        for (j = 1; j <= i; j++) {
-          (void) fgetc(vfstack[vfstackptr]->filep);
-        }
-        break;
+  while (*pos >= 240 && *pos != PK_POST) {
+    i=0;
+    switch (*pos++) {
+    case 243:
+      i = *pos++;
+    case 242: 
+      i = 256 * i + *pos++;
+    case 241:
+      i = 256 * i + *pos++;
+    case 240:
+      i = 256 * i + *pos++;
+#ifdef DEBUG
+      if (Debug)
+	printf("\nPK SPECIAL\t'%.*s' ",i,pos);
+#endif
+      pos += i;
+      break;
+    case 244: 
+#ifdef DEBUG
+      if (Debug) {
+	printf("\nPK SPECIAL\t");
+	(void)UNumRead(pos,4);
       }
-      case 244 : {
-        fseek(vfstack[vfstackptr]->filep, 4, SEEK_CUR);
-        break;
-      }
-      case 245 :
-        break;
-      case 246 :
-        break;
-      case 247:
-      case 248:
-      case 249:
-      case 250:
-      case 251:
-      case 252:
-      case 253:
-      case 254:
-      case 255: {
-        Fatal("Unexpected flagbyte %d!\n", (int)flag_byte);
-      }
-      }
-  } while (!((flag_byte < 240) || (flag_byte == PK_POST)));
-  return(flag_byte);
+#endif
+      pos += 4;
+      break;
+    case 245: 
+      break;
+    case 246:
+#ifdef DEBUG
+      if (Debug)
+	printf("\nPK\tNOP ");
+#endif      
+      break;
+    case 247: case 248: case 249: case 250:
+    case 251: case 252: case 253: case 254:
+    case 255: 
+      Fatal("Unexpected flagbyte %d!\n", (int)*pos);
+    }
+  }
+  return(pos);
 }
 
 /*-->LoadAChar*/
 /**********************************************************************/
 /***************************** LoadAChar ******************************/
 /**********************************************************************/
-void LoadAChar P2C(int32_t, c, register struct char_entry *, ptr)
+void LoadAChar P2C(int32_t, c, register struct pk_char *, ptr)
 {
   unsigned short   shrunk_width,shrunk_height;
   unsigned short   width,height;
@@ -115,21 +174,22 @@ void LoadAChar P2C(int32_t, c, register struct char_entry *, ptr)
   int   i,j,k,n;
   int   count=0;
   bool  paint_switch;
-  unsigned char    buffer[28];
+  unsigned char*   pos;
 
-  if (ptr->fileOffset == NONEXISTANT) {
+  /*  if (ptr->fileOffset == NONEXISTANT) {
     ptr->isloaded = _FALSE;
     return;
-  }
+    }*/
 
-  OpenFont(vfstack[vfstackptr]);
+  /*OpenFont(currentfont);*/
 
 #ifdef DEBUG
   if (Debug)
-    printf("(LOAD %d pos %d) ",c ,ptr->fileOffset);
+    printf("(LOAD CHAR %d ",c);
 #endif
 
-  FSEEK(vfstack[vfstackptr]->filep, ptr->fileOffset, SEEK_SET);
+  /*fseek(currentfont->filep, ptr->fileOffset, SEEK_SET);*/
+  pos=ptr->mmap;
 
   if ((ptr->flag_byte & 7) == 7) n=4;
   else if ((ptr->flag_byte & 4) == 4) n=2;
@@ -143,21 +203,21 @@ void LoadAChar P2C(int32_t, c, register struct char_entry *, ptr)
    */
 
   i= (n!=4) ? 3 : 8;
-  fread(buffer, 1, i+5*n, vfstack[vfstackptr]->filep);
+  /*  fread(buffer, 1, i+5*n, currentfont->filep);*/
 
   if (n != 4) {
-    ptr->tfmw = UNumRead(buffer, 3);
+    ptr->tfmw = UNumRead(pos, 3);
   } else {
-    ptr->tfmw = UNumRead(buffer, 4);
+    ptr->tfmw = UNumRead(pos, 4);
     /* +4:  horizontal escapement not used */
   }
   /* +n:   vertical escapement not used */
 
-  width   = UNumRead(buffer+i+n, n);
-  height  = UNumRead(buffer+i+2*n, n);
+  width   = UNumRead(pos+=i+n, n);
+  height  = UNumRead(pos+=n, n);
 
   if (width > 0x7fff || height > 0x7fff)
-    Fatal("Character %d too large in file %s", c, vfstack[vfstackptr]->name);
+    Fatal("Character %d too large in file %s", c, currentfont->name);
 
   /* 
    * Hotspot issues: Shrinking to the topleft corner rather than the
@@ -177,21 +237,20 @@ void LoadAChar P2C(int32_t, c, register struct char_entry *, ptr)
      differently by rounding their dvi positions, and they get moved
      sideways by the shrinkage. Will do for now, I suppose.
    */
-  
-  xoffset = SNumRead(buffer+i+3*n, n);
+  xoffset = SNumRead(pos+=n, n);
   i_offset = ( shrinkfactor - 
 	       (xoffset-shrinkfactor/2) % shrinkfactor ) % shrinkfactor;
   width += i_offset;
   ptr->xOffset = xoffset+i_offset;
 
-  yoffset = SNumRead(buffer+i+4*n, n);
+  yoffset = SNumRead(pos+=n, n);
   j_offset = ( shrinkfactor - 
 	       (yoffset-shrinkfactor/2) % shrinkfactor ) % shrinkfactor;
   height += j_offset;
   ptr->yOffset = yoffset+j_offset;
 
   ptr->tfmw = (int32_t)
-    ( ptr->tfmw * (double)vfstack[vfstackptr]->s / (double)0x100000 );
+    ( ptr->tfmw * (double)currentfont->s / (double)0x100000 );
   
   /* 
      Extra marginal so that we do not crop the image when shrinking.
@@ -211,10 +270,14 @@ void LoadAChar P2C(int32_t, c, register struct char_entry *, ptr)
 
   ptr->glyph.offset = 1;
   ptr->glyph.nchars = shrinkfactor*shrinkfactor;
-  /*
-  printf("PK: %s (%d) %dx%d\n",vfstack[vfstackptr]->name,
-         c,ptr->glyph.w,ptr->glyph.h);
-  */
+
+  pos+=n;
+
+#ifdef DEBUG
+  if (Debug)
+    printf(") ");
+#endif
+
   if ((ptr->glyph.data 
        = (char*) calloc(shrunk_width*shrunk_height*shrinkfactor*shrinkfactor,
 			sizeof(char))) == NULL)
@@ -222,7 +285,7 @@ void LoadAChar P2C(int32_t, c, register struct char_entry *, ptr)
 
 #ifdef DRAWGLYPH
   printf("Drawing character <%c>(%d), font %s\n",
-	 (char)c,(int)c,vfstack[vfstackptr]->name);
+	 (char)c,(int)c,currentfont->name);
   printf("Size:%dx%d\n",width,height);
 #endif
 
@@ -231,12 +294,12 @@ void LoadAChar P2C(int32_t, c, register struct char_entry *, ptr)
   */
 
   if (dyn_f == 14) {	/* get raster by bits */
-    bitweight = 0;
+    int bitweight = 0;
     for (j = j_offset; j < (int) height; j++) {	/* get all rows */
       for (i = i_offset; i < (int) width; i++) {    /* get one row */
 	bitweight /= 2;
 	if (bitweight == 0) {
-	  count = fgetc(vfstack[vfstackptr]->filep);
+	  count = *pos++;
 	  bitweight = 128;
 	}
 	if (count & bitweight) {
@@ -249,14 +312,14 @@ void LoadAChar P2C(int32_t, c, register struct char_entry *, ptr)
 	}
       }
 #ifdef DRAWGLYPH
-      printf("\n");
+      printf("|\n");
 #endif
     }
   } else {		/* get packed raster */
-    bitweight = 0;
+    poshalf=0;
     repeatcount = 0;
     for(i=i_offset, j=j_offset; j<height; ) {
-      count = pk_packed_num(vfstack[vfstackptr]->filep);
+      count = pk_packed_num(&pos);
       while (count > 0) {
 	if (i+count < width) {
 	  if (paint_switch) {
@@ -276,10 +339,10 @@ void LoadAChar P2C(int32_t, c, register struct char_entry *, ptr)
 	      ptr->glyph.data[k+j*width]++;
 #ifdef DRAWGLYPH
 	    for(k=i;k<width;k++) printf("*");
-	    printf("\n");
+	    printf("|\n");
 	  } else {
 	    for(k=i;k<width;k++) printf(" ");
-	    printf("\n");
+	    printf("|\n");
 #endif
 	  }
 	  j++;
@@ -297,7 +360,7 @@ void LoadAChar P2C(int32_t, c, register struct char_entry *, ptr)
 #endif
 	    }
 #ifdef DRAWGLYPH
-	    printf("\n");
+	    printf("|\n");
 #endif
 	  }
 	  i=i_offset;
@@ -307,9 +370,9 @@ void LoadAChar P2C(int32_t, c, register struct char_entry *, ptr)
     }
     if (i>i_offset)
       Fatal("Wrong number of bits stored:  char. <%c>(%d), font %s, Dyn: %d", 
-	    (char)c, (int)c, vfstack[vfstackptr]->name,dyn_f);
+	    (char)c, (int)c, currentfont->name,dyn_f);
     if (j>height)
-      Warning("Bad pk file (%s), too many bits", vfstack[vfstackptr]->name);
+      Warning("Bad pk file (%s), too many bits", currentfont->name);
   }
 
   /*
@@ -352,81 +415,94 @@ void LoadAChar P2C(int32_t, c, register struct char_entry *, ptr)
       }
     }
   }	
-
-  ptr->isloaded = _TRUE;
 }
 
 void InitPK  P1C(struct font_entry *,tfontp)
 {
-  int32_t    t;
-  struct char_entry *tcharptr; /* temporary char_entry pointer  */
-  char temp[16];
+  struct stat stat;
+  unsigned char* position;
+  struct pk_char *tcharptr; /* temporary pk_char pointer  */
+  uint32_t    hppp, vppp, packet_length;
+  int     car;
 
-  OpenFont(tfontp);
-  t = fgetc(tfontp->filep);
-  if (t != PK_PRE) 
-    Fatal("unknown font format in file <%s> !\n",vfstack[vfstackptr]->name);
+  /*OpenFont(tfontp);*/
+#ifdef DEBUG
+  if (Debug)
+    printf("(OPEN %s) ", tfontp->name);
+#endif
 
-  t = fgetc(tfontp->filep);
-  if (t != PK_ID) 
-    Fatal( "Wrong Version of pk file!  (%d should be 89)\n",t);
+  if ((tfontp->filedes = open(tfontp->name,O_RDONLY)) == -1) 
+    Warning("font file %s could not be opened", tfontp->name);
 
-  { /* PK 89 format */
-    register unsigned char  flag_byte;
-    uint32_t    hppp, vppp, packet_length;
-    int     car;
+  fstat(tfontp->filedes,&stat);
+  tfontp->mmap = position = 
+    mmap(NULL,stat.st_size, PROT_READ, MAP_SHARED,tfontp->filedes,0);
 
-    /* skip comment */
-    fseek(tfontp->filep,fgetc(tfontp->filep), SEEK_CUR);
+  if (*position++ != PK_PRE) 
+    Fatal("unknown font format in file <%s> !\n",currentfont->name);
+  if (*position++ != PK_ID) 
+      Fatal( "wrong version of pk file!  (%d should be 89)\n",
+	     (int)*(position-1));
 
-    fread(temp,1,16,tfontp->filep);
+#ifdef DEBUG
+  if (Debug) 
+    printf("(PK_PRE: '%.*s' ",(int)*position, position+1);
+#endif
+  position += *position + 1;
 
-    tfontp->designsize = UNumRead(temp, 4);
-    tfontp->is_vf = _FALSE;
-    t = UNumRead(temp+4, 4);
-    CheckChecksum (tfontp->c, t, tfontp->name);
+  tfontp->designsize = UNumRead(position, 4);
+  tfontp->type = FONT_TYPE_PK;
+  
+  CheckChecksum (tfontp->c, UNumRead(position+4, 4), tfontp->name);
 
-    hppp = UNumRead(temp+8, 4);
-    vppp = UNumRead(temp+12, 4);
-    if (hppp != vppp)
-      Warning("aspect ratio is %d:%d (should be 1:1)!", 
-              hppp, vppp);
-    tfontp->magnification = (uint32_t)(hppp * 72.27 * 5 / 65536l + 0.5);
+  hppp = UNumRead(position+8, 4);
+  vppp = UNumRead(position+12, 4);
+  if (hppp != vppp)
+    Warning("aspect ratio is %d:%d (should be 1:1)!", 
+	    hppp, vppp);
+  tfontp->magnification = (uint32_t)(hppp * 72.27 * 5 / 65536l + 0.5);
+  
+#ifdef DEBUG
+  if (Debug)
+    printf(")");
+#endif
 
-    flag_byte = skip_specials();
-
-    while (flag_byte != PK_POST) {
-      if ((flag_byte & 7) == 7) {
-        fread(temp,1,8,tfontp->filep);
-	packet_length = UNumRead(temp,4);
-        car = UNumRead(temp+4, 4);
-      } else if (flag_byte & 4) {
-	fread(temp,1,3,tfontp->filep);
-	packet_length = ((uint32_t)flag_byte & 3) * 65536l +
-          (unsigned short) UNumRead(temp, 2);
-        car = UNumRead(temp+2, 1);
-      } else {
-	fread(temp,1,2,tfontp->filep);
-        packet_length = ((uint32_t)flag_byte & 3) * 256 +
-          UNumRead(temp, 1);
-        car = UNumRead(temp+1, 1);
-      }
-      if (car > (LASTFNTCHAR))
-          Fatal("Bad character (%d) in PK-File\n",(int)car);
-      if ((tcharptr = tfontp->ch[car] = NEW(struct char_entry )) == NULL)
-	Fatal("can't malloc space for char_entry");
-      tcharptr->fileOffset = FTELL(tfontp->filep);
-      tcharptr->flag_byte = flag_byte;
-      tcharptr->isloaded = _FALSE;
-      fseek(tfontp->filep, (long)packet_length, SEEK_CUR);
-      flag_byte = skip_specials();
-    } /* end of while */
-    /*tfontp->max_height = max_depth ? tfontp->max_yoff+max_depth :
-      tfontp->max_yoff+1;*/
-    /*
-      printf("fontid=%d: max_width=%u, max_height=%d, max_yoff=%u\n",
-        tfontp->plusid, tfontp->max_width,
-        tfontp->max_height, tfontp->max_yoff);
-        */
+  position+=16;
+  /* Read char definitions */
+  position = skip_specials(position);
+  while (*position != PK_POST) {
+#ifdef DEBUG
+    if (Debug)
+      printf("\n@%ld PK CHAR:\t%d ", (long)(position - tfontp->mmap),
+	     *position);
+#endif
+    if ((tcharptr = NEW(struct pk_char)) == NULL)
+      Fatal("can't malloc space for pk_char");
+    tcharptr->flag_byte = *position;
+    tcharptr->glyph.data = NULL;
+    tcharptr->tfmw = 0;
+    if ((*position & 7) == 7) {
+      packet_length = UNumRead(position+1,4);
+      car = UNumRead(position+5, 4);
+      position += 9;
+    } else if (*position & 4) {
+      packet_length = (*position & 3) * 65536l +
+	UNumRead(position+1, 2);
+      car = UNumRead(position+3, 1);
+      position += 4;
+    } else {
+      packet_length = (*position & 3) * 256 +
+	UNumRead(position+1, 1);
+      car = UNumRead(position+2, 1);
+      position += 3;
+    }
+    if (car > (LASTFNTCHAR))
+      Fatal("Bad character (%d) in PK-File\n",(int)car);
+    tcharptr->length = packet_length;
+    tcharptr->mmap = position;
+    tfontp->pk_ch[car]=tcharptr;
+    position += packet_length;
+    position = skip_specials(position);
   }
 }
+
