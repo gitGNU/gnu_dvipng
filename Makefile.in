@@ -16,7 +16,8 @@ TEX=tex
 TEXINDEX=texindex
 TEXIHTML=texi2html
 DVIPS=dvips
-TEXIFILES = dvipng.texi install.texi macros.texi dvipng.help
+TEXIFILES = dvipng.texi install.texi macros.texi 
+# dvipng.help
 
 objects = dvipng.o color.o draw.o dvi.o font.o misc.o pk.o \
 	set.o special.o papersiz.o ppagelist.o vf.o
@@ -47,10 +48,10 @@ dvipng.ps: dvipng.dvi
 dvipng.info: $(TEXIFILES)
 	-$(MAKEINFO) dvipng.texi
 
-dvipng.help: 
-	rm dvipng.tmp
-	-./dvipng > dvipng.tmp
-	diff dvipng.tmp dvipng.help || cp dvipng.tmp dvipng.help
+#dvipng.help: 
+#	-rm dvipng.tmp
+#	-./dvipng > dvipng.tmp
+#	diff dvipng.tmp dvipng.help || cp dvipng.tmp dvipng.help
 
 clean:
 	rm -f *.o dvipng
