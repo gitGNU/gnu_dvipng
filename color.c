@@ -35,18 +35,24 @@ stringrgb(p,r,g,b)
     p+=5;
     *r = *g = *b = 255;
   } else if (strncmp(p,"gray",4)==0) {
-    p+=3;
-    *r =  *g = *b = (int) (255 * strtod(p,&p));
+    p+=4;
+    *r = *g = *b = (int) (255 * strtod(p,&p));
   } else if (strncmp(p,"rgb",3)==0) {
     p+=3;
     *r = (int) (255 * strtod(p,&p));
     *g = (int) (255 * strtod(p,&p));
     *b = (int) (255 * strtod(p,&p));
-  } else if (strncmp(p,"cmy",3)==0) {
-    p+=3;
-    *r = (int) (255 * (1-strtod(p,&p)));
-    *g = (int) (255 * (1-strtod(p,&p)));
-    *b = (int) (255 * (1-strtod(p,&p)));
+  } else if (strncmp(p,"cmyk",4)==0) {
+    double c,m,y,k;
+
+    p+=4;
+    c = strtod(p,&p);
+    m = strtod(p,&p);
+    y = strtod(p,&p);
+    k = strtod(p,&p);
+    *r = (int) (255 * ((1-c)*(1-k)));
+    *g = (int) (255 * ((1-m)*(1-k)));
+    *b = (int) (255 * ((1-y)*(1-k)));
   } else
     Warning("Unimplemented color specification '%s'\n",p);
 }
