@@ -31,7 +31,3 @@ corresponding base resolution.
 In short, choosing the output resolution has become simple even when
 using PK fonts (but remember, the created PK fonts are normally cached
 on disk).
-
-
-
-
