@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT([dvipng], [1.1], [preview-latex-bugs@lists.sf.net])
+AC_INIT([dvipng], [1.2], [dvipng-devel@lists.sf.net])
 AC_CONFIG_SRCDIR([dvipng.c])
 
 AC_ARG_ENABLE(debug, 
@@ -19,6 +19,7 @@ AC_ARG_ENABLE(timing,
 AC_SET_MAKE
 AC_PROG_CC
 AC_PROG_INSTALL
+AC_PROG_LN_S
 AC_PATH_PROG(GS, gs, :)
 AC_DEFINE_UNQUOTED(GS_PATH, "$GS", [Define as the path to GhostScript.])
 
@@ -92,7 +93,13 @@ AC_CHECK_FUNCS([dup2 strchr strrchr memchr memset putenv munmap strtol])
 if test "$enable_timing" = "yes"; then
   AC_CHECK_FUNCS([ftime gettimeofday])
 fi
-AC_CHECK_FUNCS([gdImagePngEx gdImageCreateTrueColor gdImageTrueColorToPalette])
+AC_CHECK_FUNCS([gdImagePngEx gdImageCreateTrueColor gdImageTrueColorToPalette gdImageGif])
+if test "$ac_cv_func_gdImageGif" = "yes"; then
+   INSTALL_BIN_TARGET="install-dvigif"
+else
+   INSTALL_BIN_TARGET="install-dvipng"
+fi
+AC_SUBST(INSTALL_BIN_TARGET)
 
 # Documentation-related checks
 AC_PATH_PROG(MAKEINFO, makeinfo, :)
@@ -156,9 +163,10 @@ AC_MSG_RESULT([
    Your gd is new enough to enable
         the -z (compression) switch:        $ac_cv_func_gdImagePngEx
    Your gd is new enough to enable
-        the -truecolor switch:              $ac_cv_func_gdImageCreateTrueColor
+        the --truecolor switch:             $ac_cv_func_gdImageCreateTrueColor
    FreeType font rendering available:       $ac_have_freetype2
    T1lib font rendering available:          $ac_cv_lib_t1_T1_InitLib
+   Gif support (dvigif):                    $ac_cv_func_gdImageGif
 ])
 
 AC_CONFIG_HEADER([config.h])
