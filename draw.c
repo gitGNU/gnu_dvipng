@@ -157,19 +157,20 @@ void DrawPage(int PassNo)
 
 void DoPages(void)
 {
-  struct page_list *tpagelistp=NULL;
-
-  if((tpagelistp=FindQdPage())!=NULL
-     && tpagelistp->count[10]!=-1) {
-    while(tpagelistp!=NULL && tpagelistp->count[10]!=-1) {
+  struct page_list *page;
+  
+  page=NextPPage(NULL);
+  
+  if (page!=NULL) {
+    while(page!=NULL) {
+      SeekPage(page);
       if (PassDefault == PASS_BBOX || PassDefault == PASS_TIGHT_BBOX) {
 	if (PassDefault == PASS_TIGHT_BBOX) {
 	  x_max = y_max = INT32_MIN;
 	  x_min = y_min = INT32_MAX;
 	}
 	DrawPage(PASS_BBOX);
-	/* Reset to after BOP of current page */
-	fseek(dvi->filep, tpagelistp->offset+45, SEEK_SET); 
+	SeekPage(page);
 	x_width = x_max-x_min;
 	y_width = y_max-y_min;
 	x_offset = -x_min; /* offset by moving topleft corner */
@@ -178,22 +179,23 @@ void DoPages(void)
 	y_max = y_min = -y_offset_def;
       }
       DEBUG_PRINTF2(DEBUG_DVI,"\n  IMAGE:\t%dx%d",x_width,y_width);
-      DEBUG_PRINTF(DEBUG_DVI,"\n@%d PAGE START:\tBOP",tpagelistp->offset);
+      DEBUG_PRINTF(DEBUG_DVI,"\n@%d PAGE START:\tBOP",page->offset);
 #ifdef DEBUG
       {int i; for (i=0;i<10;i++) 
-	DEBUG_PRINTF(DEBUG_DVI," %d",tpagelistp->count[i]);
-      DEBUG_PRINTF(DEBUG_DVI," (%d)\n",tpagelistp->count[10]);}
+	DEBUG_PRINTF(DEBUG_DVI," %d",page->count[i]);
+      DEBUG_PRINTF(DEBUG_DVI," (%d)\n",page->count[10]);}
 #endif
       DoBop();
-      Message(BE_NONQUIET,"[%d",  tpagelistp->count[0]);
+      Message(BE_NONQUIET,"[%d",  page->count[0]);
       DrawPage(PASS_DRAW);
-      FormFeed(dvi,tpagelistp->count[0]);
+      FormFeed(dvi,page->count[0]);
 #ifdef TIMING
       ++ndone;
 #endif
       Message(BE_NONQUIET,"] ");
-      tpagelistp=FindQdPage();
+      page=NextPPage(page);
     }
     Message(BE_NONQUIET,"\n");
+    ClearPpList();
   }
 }
