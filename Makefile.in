@@ -68,7 +68,7 @@ README: readme.texi
 	-$(MAKEINFO) -D rawfile --no-headers --no-validate \
 		readme.texi --output README
 
-install-docs:
+install-docs: docs
 	-$(MKINSTALLDIRS) $(infodir)
 	for x in dvipng.info* ; do \
 		$(INSTALL_DATA) $$x $(infodir) ; \
