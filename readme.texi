@@ -32,15 +32,15 @@ The benefits include
 
 @itemize @bullet
 @item 
-Speed. It is the fastest bitmap-rendering code for DVI files that I know
-of. On my fairly low-end laptop, it takes less than a second to generate
-150 one-formula images. This makes dvipng suitable for generating large
+Speed. It is a very fast bitmap-rendering code for DVI files. On a
+fairly low-end laptop, it takes less than a second to generate 150
+one-formula images. This makes dvipng suitable for generating large
 amounts of images on-the-fly, as needed in @previewlatex{}, WeBWorK and
 others.
 
 @item 
 It does not read the postamble, so it can be started before TeX
-finishes. There is a -follow switch that makes dvipng wait at EOF for
+finishes. There is a --follow switch that makes dvipng wait at EOF for
 further output, unless it finds the POST marker that indicates the end
 of the DVI.
 
@@ -50,8 +50,8 @@ through stdin, and all options are usable. It is even possible to change
 the input file through this interface.
 
 @item 
-Supports PK, VF and PostScript Type1 fonts, color specials and simple
-PostScript inclusion specials.
+Supports PK, VF, PostScript Type1, and TrueType fonts, color specials
+and simple PostScript inclusion specials.
 
 @item and more...
 
@@ -110,15 +110,21 @@ access, ask on @email{preview-latex-devel@@lists.sourceforge.net}.
 
 @itemize @bullet
 @item 
-TrueType fonts. The new Gd has a link to FreeType, so perhaps it's not
-too much work.
+Test the FreeType interface so that TrueType fonts work properly.
+
+@item
+Color stack that remains between pages. Or rather, works when processing
+pages in reverse order.
+
+@item
+Remove kpathsea dependence, use dvips' environment variables.
 
 @item 
-Non-integer shrinkfactors.
+Further speed improvements.
 
 @item 
-Further speed improvements, such as faster font scaling, and perhaps
-more efficient code overall.
+Non-integer shrinkfactors for bitmapped fonts, although with the new
+PostScript font support, this may not be needed.
 
 @item 
 Other output specials and source specials.
