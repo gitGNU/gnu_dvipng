@@ -19,12 +19,12 @@
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 #  02111-1307, USA.
 #
-#  Copyright (C) 2002-2004 Jan-Åke Larsson
+#  Copyright (C) 2002-2005 Jan-Åke Larsson
 #
 #************************************************************************
 
 # Process this file with autoconf to produce a configure script.
-AC_INIT([dvipng], [1.4], [dvipng-devel@lists.sf.net])
+AC_INIT([dvipng], [1.5], [dvipng-devel@lists.sf.net])
 AC_CONFIG_SRCDIR([dvipng.c])
 
 AC_ARG_ENABLE(debug, 

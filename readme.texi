@@ -126,7 +126,7 @@ This program is released under the GNU General Public License, see the
 COPYING file in the dvipng distribution or
 @url{http://www.gnu.org/licenses/gpl.html}.
 
-Copyright @copyright{} 2002-2004 Jan-@AA{}ke Larsson
+Copyright @copyright{} 2002-2005 Jan-@AA{}ke Larsson
 
 @section Todo
 

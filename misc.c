@@ -19,7 +19,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
   02111-1307, USA.
 
-  Copyright (C) 2002-2004 Jan-흆e Larsson
+  Copyright (C) 2002-2005 Jan-흆e Larsson
 
 ************************************************************************/
 
@@ -60,7 +60,7 @@ bool DecodeArgs(int argc, char ** argv)
     Message(BE_NONQUIET,"This is %s",programname);
     if (strcmp(basename(programname),PACKAGE_NAME)!=0)
       Message(BE_NONQUIET," (%s)", PACKAGE_NAME);
-    Message(BE_NONQUIET," %s Copyright 2002-2004 Jan-흆e Larsson\n",
+    Message(BE_NONQUIET," %s Copyright 2002-2005 Jan-흆e Larsson\n",
 	    PACKAGE_VERSION);
   }
 
@@ -463,7 +463,7 @@ bool DecodeArgs(int argc, char ** argv)
 #ifdef HAVE_LIBKPATHSEA
 	  puts (KPSEVERSION);
 #endif
-	  puts ("Copyright (C) 2002-2004 Jan-흆e Larsson.\n\
+	  puts ("Copyright (C) 2002-2005 Jan-흆e Larsson.\n\
 There is NO warranty.  You may redistribute this software\n\
 under the terms of the GNU General Public License.\n\
 For more information about these matters, see the files\n\

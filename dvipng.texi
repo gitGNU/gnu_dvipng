@@ -9,8 +9,8 @@ dvipng [options] [filename] -
 @c man end
 @end ifset
 
-@set version 1.4
-@set month-year December 2004
+@set version 1.5
+@set month-year February 2005
 
 @c Put everything in one index (arbitrarily chosen to be the concept index).
 @syncodeindex fn cp
@@ -39,7 +39,7 @@ dvipng [options] [filename] -
 @author by Jan-@AA{}ke Larsson.
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 2002-2004 Jan-@AA{}ke Larsson
+Copyright @copyright{} 2002-2005 Jan-@AA{}ke Larsson
  
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -1573,7 +1573,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 @sp 2
 @noindent
-Copyright @copyright{} 2002-2004 Jan-@AA{}ke Larsson
+Copyright @copyright{} 2002-2005 Jan-@AA{}ke Larsson
 
 @c man begin COPYRIGHT
 @ifset man
@@ -1581,7 +1581,7 @@ This program is released under the GNU General Public License, see the
 COPYING file in the dvipng distribution or
 @url{http://www.gnu.org/licenses/gpl.html}.
 
-Copyright @copyright{} 2002-2004 Jan-@AA{}ke Larsson
+Copyright @copyright{} 2002-2005 Jan-@AA{}ke Larsson
 @end ifset
 @c man end
 
