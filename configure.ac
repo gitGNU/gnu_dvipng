@@ -7,6 +7,11 @@ AC_SET_MAKE
 
 # Checks for programs.
 AC_PROG_CC
+AC_ARG_ENABLE(debug, 
+  AC_HELP_STRING([--disable-debug],[Compile without debug (-d) option]), 
+  [ if test "$enableval" = no ; then DEBUG="" ; else DEBUG="-DDEBUG"; fi ], 
+  [ DEBUG="-DDEBUG" ])	
+AC_SUBST(DEBUG)
 AC_PROG_INSTALL
 AC_PATH_PROG(GS, gs, :)
 AC_DEFINE_UNQUOTED(GS_PATH, "$GS", [Define as the path to GhostScript.])
