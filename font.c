@@ -185,7 +185,7 @@ void FontFind(struct font_entry * tfontptr)
 #ifdef HAVE_FT2_OR_LIBT1
   if ((flags & (USE_FREETYPE | USE_LIBT1)) && name==NULL) {
     tfontptr->psfontmap = FindPSFontMap(tfontptr->n);
-    if (tfontptr->psfontmap->psfile!=NULL) {
+    if (tfontptr->psfontmap!=NULL) {
       name = kpse_find_t1_or_tt(tfontptr->psfontmap->psfile);
     } else
       name = kpse_find_t1_or_tt(tfontptr->n);
@@ -207,7 +207,6 @@ void FontFind(struct font_entry * tfontptr)
 #endif
 	      /* if Freetype or T1 loading fails for some reason, fall
 		 back to PK font */
-	      printf("Hej!\n");
 	      free(name);
 	      name=NULL; 
 	    } else

@@ -61,11 +61,12 @@ void LoadFT(int32_t c, struct ft_char * ptr)
   char* bit;
 
   DEBUG_PRINT(DEBUG_FT,("\n  LOAD FT CHAR\t%d (%d)",c,ptr->tfmw));
-  if (currentfont->psfontmap->encoding == NULL)
-    glyph_i = FT_Get_Char_Index( currentfont->face, c );
-  else 
+  if (currentfont->psfontmap!=NULL
+      && currentfont->psfontmap->encoding != NULL)
     glyph_i = FT_Get_Name_Index(currentfont->face,
 				currentfont->psfontmap->encoding->charname[c]);
+  else 
+    glyph_i = FT_Get_Char_Index( currentfont->face, c );
   if (FT_Load_Glyph( currentfont->face,    /* handle to face object */
 		     glyph_i,              /* glyph index           */
 		     FT_LOAD_RENDER | FT_LOAD_NO_HINTING ))
@@ -128,7 +129,7 @@ bool InitFT(struct font_entry * tfontp)
     return(false);
   } 
   Message(BE_VERBOSE,"<%s>", tfontp->name);
-  if (tfontp->psfontmap->encoding == NULL) {
+  if (tfontp->psfontmap == NULL || tfontp->psfontmap->encoding == NULL) {
 #ifndef FT_ENCODING_ADOBE_CUSTOM
 # define FT_ENCODING_ADOBE_CUSTOM ft_encoding_adobe_custom
 # define FT_ENCODING_ADOBE_STANDARD ft_encoding_adobe_standard
@@ -151,7 +152,8 @@ bool InitFT(struct font_entry * tfontp)
     Warning("unable to set font size for %s", tfontp->name);
     return(false);
   }
-  FT_Set_Transform(tfontp->face, tfontp->psfontmap->ft_transformp, NULL);
+  if (tfontp->psfontmap!=NULL)
+    FT_Set_Transform(tfontp->face, tfontp->psfontmap->ft_transformp, NULL);
   tfontp->type = FONT_TYPE_FT;
   return(true);
 }

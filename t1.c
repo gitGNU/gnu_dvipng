@@ -66,7 +66,7 @@ void LoadT1(int32_t c, struct t1_char * ptr, unsigned dpi)
   DEBUG_PRINT(DEBUG_T1,("\n  LOAD T1 CHAR\t%d",c));
   if ((glyph=
        T1_SetChar( currentfont->T1id, c, (float)dpi*10/72 ,
-		   currentfont->psfontmap->t1_transformp))
+		   currentfont->psfontmap==NULL ? NULL : currentfont->psfontmap->t1_transformp))
       ==NULL)
       Fatal("can't load t1_char %d",c);
 
@@ -177,19 +177,8 @@ bool InitT1(struct font_entry * tfontp)
     return(false);
   } 
   Message(BE_VERBOSE,"<%s>", tfontp->name);
-  if (tfontp->psfontmap->encoding != NULL) {
-    //    char* enc=kpse_find_file(encoding,kpse_tex_ps_header_format,false);
-    //char** t1enc;
+  if (tfontp->psfontmap!=NULL && tfontp->psfontmap->encoding != NULL) {
     DEBUG_PRINT(DEBUG_T1,("\n  USE ENCODING:\t'%s'", tfontp->psfontmap->encoding->name));
-    /*    if (enc == NULL) {
-      Warning("unable to find font encoding '%s' for %s", 
-	      encoding,tfontp->name);
-      return(false);
-    } else if ((t1enc=T1_LoadEncoding(enc))==NULL) {
-      Warning("unable to load encoding file '%s' for %s", 
-	      enc,tfontp->name);
-      return(false);
-      } else */
     if (T1_ReencodeFont(tfontp->T1id,tfontp->psfontmap->encoding->charname)) {
       Warning("unable to use font encoding '%s' for %s", 
 	      tfontp->psfontmap->encoding->name,tfontp->name);
