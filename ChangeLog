@@ -1,3 +1,10 @@
+2004-05-14  Jan-Åke Larsson  <jalar@mai.liu.se>
+
+	* dvipng.1: Add documentation 
+
+	* dvipng.texi: Fix build. Revert to four-argument @node, my
+	makeinfo cannot handle the one-argument form (yet).
+
 2004-05-11  Jan-Åke Larsson  <jalar@mai.liu.se>
 
 	* configure.ac: More tests 
