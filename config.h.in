@@ -33,6 +33,15 @@
 /* Define to 1 if you have the `ftime' function. */
 #undef HAVE_FTIME
 
+/* Define to 1 if you have the `gdImageColorResolveAlpha' function. */
+#undef HAVE_GDIMAGECOLORRESOLVEALPHA
+
+/* Define to 1 if you have the `gdImageCreateTrueColor' function. */
+#undef HAVE_GDIMAGECREATETRUECOLOR
+
+/* Define to 1 if you have the `gdImagePngEx' function. */
+#undef HAVE_GDIMAGEPNGEX
+
 /* Define to 1 if you have the <gd.h> header file. */
 #undef HAVE_GD_H
 
