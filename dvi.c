@@ -55,7 +55,7 @@ void DVIInit(struct dvi_data* dvi)
   DEBUG_PRINT((DEBUG_DVI," (%d)",dvi->conv));
   k = UNumRead(pre+14,1);
   DEBUG_PRINT((DEBUG_DVI," '%.*s'",k,pre+15));
-  Message(BE_VERBOSE,"'%.*s' -> %s#.png\n",k,pre+15,dvi->outname);
+  Message(BE_VERBOSE,"'%.*s' -> %s\n",k,pre+15,dvi->outname);
   fstat(fileno(dvi->filep), &stat);
   dvi->mtime = stat.st_mtime;
 }
@@ -71,7 +71,7 @@ struct dvi_data* DVIOpen(char* dviname,char* outname)
   dvi->type = DVI_TYPE;
   dvi->fontnump=NULL;
 
-  dvi->name = malloc(strlen(dviname)+4);
+  dvi->name = malloc(strlen(dviname)+5);
   if (dvi->name==NULL)
     Fatal("cannot allocate space for DVI filename");
   strcpy(dvi->name, dviname);
@@ -80,7 +80,7 @@ struct dvi_data* DVIOpen(char* dviname,char* outname)
     strcat(dvi->name, ".dvi");
   
   if (outname==NULL) { 
-    dvi->outname = malloc(strlen(basename(dviname))+6);
+    dvi->outname = malloc(strlen(basename(dviname))+7);
     if (dvi->outname==NULL)
       Fatal("cannot allocate space for output filename");
     strcpy(dvi->outname,basename(dviname));
@@ -111,7 +111,7 @@ struct dvi_data* DVIOpen(char* dviname,char* outname)
     }
   }
   if (dvi->filep == NULL) {
-    perror(dvi->name);
+    perror(dviname);
     exit (EXIT_FAILURE);
   }
   DEBUG_PRINT((DEBUG_DVI,"OPEN FILE\t%s", dvi->name));
