@@ -161,7 +161,7 @@ unsigned char* DVIGetCommand(struct dvi_data* dvi)
     }
     if (strlength + (uint32_t)length >  (uint32_t)STRSIZE) {
       /* string + command length exceeds that of buffer */
-      if ((lcommand=malloc(length+strlength))==NULL) 
+      if ((lcommand=malloc(length+strlength+1))==NULL) 
 	Fatal("cannot allocate memory for DVI command");
       memcpy(lcommand,command,length);
       current = lcommand + length;
