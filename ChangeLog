@@ -4,9 +4,11 @@
 	
 	* RELEASE: Change for 1.2 
 
+	* config.h.in: Update
+
 	* dvipng.1: change help text 
 
-	* dvipng.texi: update mailing list text 
+	* dvipng.texi: update mailing list text. And version.
 
 	* README: 
 	* readme.texi: update info and todo list
