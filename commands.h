@@ -1,4 +1,6 @@
 /* DVI COMMANDS */
+#define  DVIFORMAT     2
+
 #define  SETC_000         0     /* typeset character 0 and move right */
 #define  SETC_127       127     /* typeset character 127 and move right */
 #define  SET1           128     /* typeset a character and move right */
@@ -45,7 +47,7 @@
 #define  Z3             169     /* ??? */
 #define  Z4             170     /* ??? */
 #define  FONT_00        171     /* set current font to 0 */
-#define  FONT_63        234     /* set current font to 0 */
+#define  FONT_63        234     /* set current font to 63 */
 #define  FNT1           235     /* set current font */
 #define  FNT2           236     /* Same as FNT1, except that arg is 2 bytes */
 #define  FNT3           237     /* Same as FNT1, except that arg is 3 bytes */
@@ -62,4 +64,5 @@
 #define  PRE            247     /* preamble */
 #define  POST           248     /* postamble beginning */
 #define  POST_POST      249     /* postamble ending */
-        /*  undefined_commands           250,251,252,253,254,255 */
+
+/*  undefined_commands           250,251,252,253,254,255 */
