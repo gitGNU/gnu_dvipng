@@ -181,50 +181,52 @@ typedef struct {
 /**********************************************************************/
 
 struct char_entry {             /* character entry */
-  unsigned short  width, height;      /* width and height in pixels */
-  short   xOffset, yOffset, yyOffset; /* x offset and y offset in pixels*/
-  bool isloaded;
-  long4    fileOffset;
-  long4    tfmw;             /* TFM width                 */
-  long4    cw;               /* character width in pixels */
-  unsigned char   flag_byte;          /* for PK-files    */
-  unsigned char   charsize;
-  gdFont  glyph;
+  gdFont  glyph;     /* contains width and height in pixels, number of
+		      * greylevels and the bitmaps for the greylevels
+		      */
+  short   xOffset, yOffset;        /* x offset and y offset in pixels   */
+  bool    isloaded;
+  long4   fileOffset;
+  long4   tfmw;                    /* TFM width                         */
+  unsigned char   flag_byte;       /* PK flagbyte                       */
+};
+
+struct vf_char {            /* VF character                            */
+  long4 macro_length;
+  unsigned char* macro;     /* Points to beginning of VF macro         */
+  bool free_me;             /* True if this macro is first in a 'batch'*/
+  long4   tfmw;             /* TFM width                               */
 };
 
 struct font_entry {    /* font entry */
   struct font_entry *next;
-  bool in_use;
-  long4  k, c, s, d;
-  int     a, l;
-  char n[STRSIZE];          /* FNT_DEF command parameters                */
-  long4    font_mag;         /* computed from FNT_DEF s and d parameters  */
-  /*char psname[STRSIZE];*/ /* PostScript name of the font               */
-  char    name[STRSIZE];    /* full name of PXL file                     */
-  FILEPTR font_file_id;      /* file identifier (NO_FILE if none)         */
-  long4    magnification;    /* magnification read from PXL file          */
-  long4    designsize;       /* design size read from PXL file            */
-  struct char_entry ch[NFNTCHARS];   /* character information            */
-  enum PxlId {
-    id1001, id1002, pk89    } id;
+  long4     c, s, d;
+  int       a, l;
+  char      n[STRSIZE];      /* FNT_DEF command parameters               */
+  long4     font_mag;        /* computed from FNT_DEF s and d parameters */
+  char      name[STRSIZE];   /* full name of PK/VF file                  */
+  FILEPTR   filep;    /* file identifier (NO_FILE if none)        */
+  long4     magnification;   /* magnification read from font file        */
+  long4     designsize;      /* design size read from font file          */
+  bool      is_vf;           /* _TRUE for VF font                        */
+  void      *ch[NFNTCHARS];  /* character information 
+			      * PK: points to struct char_entry 
+			      * VF: points to struct vf_char             */
+  struct font_num *hfontnump; /* VF local font numbering                 */
 };
 
+struct font_num {    /* Font number. Different for VF/DVI, and several
+			font_num can point to one font_entry */
+  struct font_num *next;
+  long4  k;
+  struct font_entry *fontp;
+};
 
 struct pixel_list {
     FILEPTR pixel_file_id;    /* file identifier  */
     int     use_count;        /* count of "opens" */
 };
 
-#ifdef __riscos
-typedef struct {
-  int scalex;
-  int scaley;
-  int cropl;
-  int cropb;
-  int cropr;
-  int cropt;
-} diagtrafo;                  /* to be passed to diagrams */
-#endif
 
 /**********************************************************************/
 /***********************  Page Data Structures  ***********************/
@@ -294,7 +296,9 @@ struct page_list {
 
 #endif /* function prototypes */
 
+void    CheckChecksum AA((unsigned, unsigned, const char*));
 void    CloseFiles AA((void));
+long4   CommandLength AA((unsigned char*));
 void    DecodeArgs AA((int, char *[]));
 /*#ifdef __riscos
 void    diagram AA((char *, diagtrafo *));
@@ -309,21 +313,29 @@ void    DelPageList AA((void));
 void    Fatal VA();
 struct page_list *FindPage AA((long4));
 void    FormFeed AA((int));
+void    FontDef AA((unsigned char*, struct font_entry*));
+void    FontFind AA((struct font_entry *));
 void    GetFontDef AA((void));
 struct page_list *InitPage AA((void));
+void    InitPK  AA((struct font_entry *));
+void    InitVF  AA((struct font_entry *));
 void    LoadAChar AA((long4, register struct char_entry *));
 long4   NoSignExtend AA((FILEPTR, int));
-void    OpenFontFile AA((void));
+void    OpenFont AA((struct font_entry *));
 bool    QueueParse AA((char*,bool));
 bool    QueueEmpty AA((void));
 void    QueuePage AA((int,int,bool));
-void    ReadFontDef AA((long4));
+void    ReadCommand AA((unsigned char*));
 long4   SetChar AA((long4, int));
+long4   SetPK AA((long4, int));
+long4   SetVF AA((long4, int));
 void    SetFntNum AA((long4));
 long4   SetRule AA((long4, long4, int));
-void    SkipPage AA((void));
 long4   SignExtend AA((FILEPTR, int));
+void    SkipPage AA((void));
+long4   SNumRead AA((unsigned char*, register int));
 int     TodoPage AA((void));
+long4   UNumRead AA((unsigned char*, register int));
 void    Warning VA();
 /*unsigned char   skip_specials AA((void));*/
 
@@ -354,7 +366,6 @@ EXTERN bool    LastPageSpecified INIT(_FALSE);
 EXTERN char   *PXLpath INIT(FONTAREA);
 #endif
 EXTERN char    G_progname[STRSIZE];     /* program name                     */
-EXTERN char    filename[STRSIZE];       /* DVI file name                    */
 EXTERN char    rootname[STRSIZE];       /* DVI filename without extension   */
 EXTERN char    pngname[STRSIZE];        /* current PNG filename             */
 
@@ -375,26 +386,14 @@ EXTERN short   G_errenc INIT(0);        /* has an error been encountered?  */
 EXTERN bool    G_quiet INIT(_FALSE);    /* for quiet operation             */
 EXTERN bool    G_verbose INIT(_FALSE);  /* inform user about pxl-files used*/
 EXTERN bool    G_nowarn INIT(_FALSE);   /* don't print out warnings        */
-EXTERN long4    hconv, vconv;           /* converts DVI units to pixels    */
+EXTERN long4    conv;                   /* converts DVI units to pixels    */
 EXTERN long4    den;                    /* denominator specified in preamble*/
 EXTERN long4    num;                    /* numerator specified in preamble */
 EXTERN long4    h;                      /* current horizontal position     */
 EXTERN long4    v;                      /* current vertical position       */
 EXTERN long4    mag;                    /* magstep specified in preamble   */
 EXTERN long     usermag INIT(0);        /* user specified magstep          */
-EXTERN int      ndone INIT(0);          /* number of pages converted       */
-EXTERN int      nopen INIT(0);          /* number of open PXL files        */
-EXTERN FILEPTR outfp INIT(FPNULL);      /* output file                     */
-EXTERN FILEPTR pxlfp;                   /* PXL file pointer                */
-EXTERN FILEPTR dvifp  INIT(FPNULL);     /* DVI file pointer                */
 EXTERN struct font_entry *hfontptr INIT(NULL); /* font list pointer        */
-EXTERN struct font_entry *fontptr;      /* font_entry pointer              */
-EXTERN struct font_entry *pfontptr INIT(NULL); /* previous font_entry      */
-EXTERN struct pixel_list pixel_files[MAXOPEN+1]; /* list of open PXL files */
-
-EXTERN int    G_ncdl INIT(0);
-
-EXTERN long     allocated_storage INIT(0); /* size of mallocated storage (statistics) */
 
 #ifdef DEBUG
 EXTERN int Debug INIT(0);
@@ -408,8 +407,6 @@ EXTERN int Debug INIT(0);
 #define DEBUG_PRINT(str)
 #define DEBUG_PRINT1(str, e1)
 #endif
-
-EXTERN long     used_fontstorage INIT(0);
 
 /************************timing stuff*********************/
 #ifdef TIMING
@@ -425,6 +422,7 @@ EXTERN double my_tic,my_toc INIT(0);
     my_tic= (float)Tp.tv_sec + ((float)(Tp.tv_usec))/ 1000000.0;}
 #define TOC() { gettimeofday(&Tp, NULL); \
     my_toc += ((float)Tp.tv_sec + ((float)(Tp.tv_usec))/ 1000000.0) - my_tic;}
+EXTERN int      ndone INIT(0);          /* number of pages converted       */
 #else
 #define TIC()
 #define TOC()
@@ -432,8 +430,6 @@ EXTERN double my_tic,my_toc INIT(0);
 
 EXTERN int   resolution INIT(300);
 EXTERN char *MFMODE     INIT("cx");
-# define  hconvRESOLUTION   resolution
-# define  vconvRESOLUTION   resolution
 # define  max(x,y)       if ((y)>(x)) x = y
 # define  min(x,y)       if ((y)<(x)) x = y
 
@@ -482,5 +478,11 @@ EXTERN bool ParseStdin INIT(_FALSE);
 
 EXTERN struct page_list* hpagelistp INIT(NULL);
 EXTERN long4 abspagenumber INIT(0);
+
+/* Virtual fonts */
+EXTERN struct font_entry* vfstack[100];
+EXTERN int vfstackptr INIT(1);
+
+EXTERN struct font_entry dvi;
 
 #endif /* DVIPNG_H */
