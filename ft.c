@@ -70,13 +70,14 @@ void LoadFT(int32_t c, struct ft_char * ptr)
     Fatal("Unable to allocate image space for char <%c>\n", (char)c);
   ptr->w = bitmap.width;
   ptr->h = bitmap.rows;
-  ptr->greys = 15;
+#define GREYLEVELS 16
+  ptr->greys = GREYLEVELS-1;
   
   DEBUG_PRINT((DEBUG_GLYPH, "\nDRAW GLYPH %d\n", (int)c));
   bit=ptr->data;
   for(i=0;i<bitmap.rows;i++) {
     for(j=0;j<bitmap.width;j++) {
-      k=bitmap.buffer[i*bitmap.pitch+j]/16;
+      k=bitmap.buffer[i*bitmap.pitch+j]/GREYLEVELS;
       DEBUG_PRINT((DEBUG_GLYPH,k>0?"*":" "));
       bit[i*bitmap.width+j]=k;
     }
@@ -103,7 +104,7 @@ void InitFT(struct font_entry * tfontp, unsigned dpi,
       Warning("unable to set font encoding for %s", tfontp->name);
   }
   else
-    tfontp->enc=InitEncoding(encoding);
+    tfontp->enc=FindEncoding(encoding);
   if (FT_Set_Char_Size( tfontp->face, /* handle to face object           */
 			0,            /* char_width in 1/64th of points  */
 			tfontp->d/65536*64,

@@ -141,6 +141,7 @@ uint32_t         CommandLength(unsigned char*);
 /********************************************************/
 struct encoding {
   struct encoding* next;
+  char*            name;
   char*            charname[256];
 };
 
@@ -216,7 +217,7 @@ char*   FindPSFontMap(char*, char**, FT_Matrix**);
 void    InitFT(struct font_entry *, unsigned, char*, FT_Matrix* );
 int32_t SetFT(int32_t, int32_t, int32_t);
 void    LoadFT(int32_t, struct ft_char *);
-struct encoding* InitEncoding(char*);
+struct encoding* FindEncoding(char*);
 void    ReadTFM(struct font_entry *, char*);
 #endif
 
