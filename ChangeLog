@@ -1,5 +1,14 @@
 2004-08-17  Jan-Åke Larsson  <jalar@mai.liu.se>
 
+	* misc.c: add --gamma switch
+
+	* special.c: Fix comment
+
+	* set.c: 
+	* dvipng.h: new Gamma function
+
+	* configure.ac: libm is needed by new gamma code
+
 	* dvipng.1:
 	* dvipng.texi: document new switches
 
