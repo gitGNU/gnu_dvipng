@@ -536,7 +536,8 @@ named COPYING and dvipng.c.");
     fprintf(stdout,"  -            Interactive query of options\n");
     fprintf(stdout,"\nThese do not correspond to dvips options:\n");
     fprintf(stdout,"  -bd #        Transparent border width in dots\n");
-    fprintf(stdout,"  -bdpi #      Set the base (Metafont) resolution\n");
+    fprintf(stdout,"  -bd s        Transparent border fallback color (TeX-style color)\n");
+    fprintf(stdout,"  --bdpi #     Set the base (Metafont) resolution\n");
     fprintf(stdout,"  -bg s        Background color (TeX-style color)\n");
     fprintf(stdout,"  --depth*     Output the image depth on stdout\n");
     fprintf(stdout,"  --dvinum*    Use TeX page numbers in output filenames\n");
@@ -545,13 +546,18 @@ named COPYING and dvipng.c.");
 #ifdef HAVE_FT2
     fprintf(stdout,"  --freetype*  FreeType font rendering (default on)\n");
 #endif
+    fprintf(stdout,"  --gamma #    Control color interpolation\n");
 #ifdef HAVE_GDIMAGEGIF
     fprintf(stdout,"  --gif        Output GIF images (dvigif default)\n");
 #endif
     fprintf(stdout,"  --height*    Output the image height on stdout\n");
+    fprintf(stdout,"  --noghostscript*  Don't use ghostscript for PostScript specials\n");
+    fprintf(stdout,"  --nogssafer* Don't use -dSAFER in ghostscript calls\n");
+    fprintf(stdout,"  --picky      When a warning occurs, don't output image\n");
 #ifdef HAVE_GDIMAGEGIF
     fprintf(stdout,"  --png        Output PNG images (dvipng default)\n");
 #endif
+    fprintf(stdout,"  --strict     When a warning occurs, exit\n");
 #ifdef HAVE_LIBT1
     fprintf(stdout,"  --t1lib*     T1lib font rendering (default on)\n");
 #endif
