@@ -43,7 +43,7 @@ void SetSpecial(char * special, int32_t length, int32_t h, int32_t v,
   /******************* Postscript inclusion ********************/
   if (strncmp(token,"PSfile=",7)==0) { /* PSfile */
     char* psfile = token+7;
-    int llx=0,lly=0,urx=0,ury=0,rwi=-1,rhi=-1;
+    int llx=0,lly=0,urx=0,ury=0,rwi=0,rhi=0;
     int hresolution,vresolution;
 
     /* Remove quotation marks around filename */
@@ -69,9 +69,9 @@ void SetSpecial(char * special, int32_t length, int32_t h, int32_t v,
     /* The factor 10 is magic, the dvips graphicx driver needs this.    */
     hresolution = resolution/shrinkfactor*rwi/(urx - llx)/10;
     vresolution = resolution/shrinkfactor*rhi/(ury - lly)/10;
-    if (vresolution<0) vresolution = hresolution;
-    if (hresolution<0) hresolution = vresolution;
-    if (hresolution<0) hresolution = vresolution = resolution/shrinkfactor;
+    if (vresolution==0) vresolution = hresolution;
+    if (hresolution==0) hresolution = vresolution;
+    if (hresolution==0) hresolution = vresolution = resolution/shrinkfactor;
     
     if (PassNo==PASS_DRAW) { /* PASS_DRAW */
       char cmd[255],tmp[255];
