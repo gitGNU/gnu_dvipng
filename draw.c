@@ -304,7 +304,7 @@ void BeginVFMacro(struct font_entry* currentvf)
   SetFntNum(currentvf->defaultfont,currentvf);
 }
 
-void EndVFMacro(struct font_entry* currentvf)
+void EndVFMacro(void)
 {
   --sp;
   if (sp < 0)
@@ -390,7 +390,7 @@ void DrawPages(void)
       ++ndone;
 #endif
       Message(BE_NONQUIET,"] ");
-      fflush(ERR_STREAM);
+      fflush(stdout);
       dvi_pos=NextPPage(dvi,dvi_pos);
     }
     Message(BE_NONQUIET,"\n");
