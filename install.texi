@@ -41,12 +41,11 @@ I have no experience with this, so I cannot help much here.
 
 While not strictly necessary, you may want to have FreeType 2
 available. Its presence will enable direct support for PostScript fonts
-in dvipng, rather than using @samp{gsftopk} for rendering the
-fonts. There are PostScript versons of Computer Modern around, and if
-you have them installed also, there will be no need to generate
-bitmapped variants on disk of these. Then, you can render images at
-different (and unusual) resolutions without cluttering the disk wit lots
-of bitmapped fonts.
+in dvipng, rather than using @samp{gsftopk} for rendering the fonts. If
+you have PostScript versons of Computer Modern installed, there will be
+no need to generate bitmapped variants on disk of these. Then, you can
+render images at different (and unusual) resolutions without cluttering
+the disk with lots of bitmapped fonts.
 
 @item libpng and libz
 
