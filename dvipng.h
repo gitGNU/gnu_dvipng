@@ -34,6 +34,12 @@
 #include <kpathsea/kpathsea.h>
 #endif
 
+#ifdef HAVE_FT2
+#include <freetype/freetype.h>
+FT_Library  libfreetype;
+#endif
+
+
 typedef  int     bool;
 #define  _TRUE      (bool) 1
 #define  _FALSE     (bool) 0
@@ -133,26 +139,41 @@ uint32_t         CommandLength(unsigned char*);
 /********************************************************/
 /***********************  font.h  ***********************/
 /********************************************************/
+struct encoding {
+  struct encoding* next;
+  char*            charname[256];
+};
+
 
 #define FONT_TYPE_PK            1
 struct pk_char {                   /* PK character */
-  unsigned char* mmap;             /* Points to beginning of PK data    */
-  uint32_t       length;           /* Length of PK data                 */
   int32_t        tfmw;             /* TFM width                         */
-  unsigned char  flag_byte;        /* PK flagbyte                       */
-  gdFont         glyph;            /* contains width and height in
-		                    * pixels, number of greylevels and
-		                    * the bitmaps for the greylevels
-				    */
+  unsigned char  greys;            /* ink is black at this value        */
+  int            w,h;              /* width height in pixels            */
+  char          *data;             /* glyph data                        */
   short          xOffset, yOffset; /* x offset and y offset in pixels   */
+  unsigned char *mmap;             /* Points to beginning of PK data    */
+  uint32_t       length;           /* Length of PK data                 */
+  unsigned char  flag_byte;        /* PK flagbyte                       */
 };
 
 #define FONT_TYPE_VF            2
 struct vf_char {                   /* VF character                     */
+  int32_t        tfmw;             /* TFM width                        */
   unsigned char* mmap;             /* Points to beginning of VF macro  */
   uint32_t       length;           /* Length of VF macro               */
-  int32_t        tfmw;             /* TFM width                        */
 };
+
+#ifdef HAVE_FT2
+#define FONT_TYPE_FT            3
+struct ft_char {                   /* FT character */
+  int32_t        tfmw;             /* TFM width                         */
+  unsigned char  greys;            /* ink is black at this value        */
+  int            w,h;              /* width height in pixels            */
+  char          *data;             /* glyph data                        */
+  short          xOffset, yOffset; /* x offset and y offset in pixels   */
+};
+#endif
 
 struct font_entry {    /* font entry */
   int          type;            /* PK/VF/Type1 ...                   */
@@ -167,6 +188,10 @@ struct font_entry {    /* font entry */
   uint32_t     magnification;   /* magnification read from font file */
   uint32_t     designsize;      /* design size read from font file   */
   void *       chr[NFNTCHARS];  /* character information             */ 
+#ifdef HAVE_FT2
+  FT_Face      face;            /* Type1/Truetype font               */
+  struct encoding *enc;         /* custom encoding array             */
+#endif
   struct font_num *vffontnump;  /* VF local font numbering           */
   int32_t      defaultfont;     /* VF default font number            */
 };
@@ -184,6 +209,16 @@ void    InitVF (struct font_entry *);
 
 void    FontDef(unsigned char*, void* /* dvi/vf */);
 void    SetFntNum(int32_t, void* /* dvi/vf */);      
+
+#ifdef HAVE_FT2
+void    InitPSFontMap(void);
+char*   FindPSFontMap(char*, char**, FT_Matrix**);
+void    InitFT(struct font_entry *, unsigned, char*, FT_Matrix* );
+int32_t SetFT(int32_t, int32_t, int32_t);
+void    LoadFT(int32_t, struct ft_char *);
+struct encoding* InitEncoding(char*);
+void    ReadTFM(struct font_entry *, char*);
+#endif
 
 /********************************************************/
 /*********************  pplist.h  ***********************/
@@ -227,7 +262,8 @@ void      CreateImage(void);
 void      DrawCommand(unsigned char*, void* /* dvi/vf */); 
 void      DrawPages(void);
 void      WriteImage(char*, int);
-void      LoadAChar(int32_t, register struct pk_char *);
+void      LoadPK(int32_t, register struct pk_char *);
+//void      LoadFT(int32_t, struct ft_char *);
 int32_t   SetChar(int32_t);
 int32_t   SetPK(int32_t,int32_t, int32_t);
 int32_t   SetVF(int32_t);
@@ -275,8 +311,11 @@ EXTERN struct internal_state {
 #define DEBUG_DVI   LASTFLAG * 2
 #define DEBUG_VF    LASTFLAG * 4
 #define DEBUG_PK    LASTFLAG * 8
-#define DEBUG_GLYPH LASTFLAG * 16
-#define DEBUG_GS    LASTFLAG * 32
+#define DEBUG_TFM   LASTFLAG * 16
+#define DEBUG_GLYPH LASTFLAG * 32
+#define DEBUG_FT    LASTFLAG * 64
+#define DEBUG_ENC   LASTFLAG * 128
+#define DEBUG_GS    LASTFLAG * 256
 #define LASTDEBUG   DEBUG_GS
 #else
 #define DEBUG_PRINT(a)
