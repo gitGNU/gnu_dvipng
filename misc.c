@@ -411,7 +411,7 @@ named COPYING and dvipng.c.");
     fprintf(stdout,"  -pp #,#..    Page list to be output\n");
     fprintf(stdout,"  -q*          Quiet operation\n");
     fprintf(stdout,"  -r*          Reverse order of pages\n");
-    fprintf(stdout,"  -t c         Paper format (also accepts e.g., '-t a4')\n");
+    /*    fprintf(stdout,"  -t c         Paper format (also accepts e.g., '-t a4')\n");*/
     fprintf(stdout,"  -T c         Image size (also accepts '-T bbox' and '-T tight')\n");
     fprintf(stdout,"  -v*          Verbose operation\n");
     fprintf(stdout,"  -x #         Override dvi magnification\n");
