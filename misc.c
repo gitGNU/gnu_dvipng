@@ -33,7 +33,6 @@ long4    unmodsize;                 /* actually factor * 1000 */
   return(realsize);
 }
 
-
 /*-->DecodeArgs*/
 /*********************************************************************/
 /***************************** DecodeArgs ****************************/
@@ -47,12 +46,10 @@ int     argc;
 char    *argv[];
 #endif
 {
-  int     argind;            /* argument index for flags      */
+  int     i;                 /* argument index for flags      */
   char    curarea[STRSIZE];  /* current file area             */
   char    curname[STRSIZE];  /* current file name             */
-  char    *tcp, *tcp1;       /* temporary character pointers  */
-  char    *this_arg;
-  double  x_offset = 0.0, y_offset = 0.0;
+  char    *p, *p1;           /* temporary character pointers  */
 #ifdef __riscos
   int     ddi;
 #endif
@@ -74,181 +71,230 @@ named COPYING and dvipng.c.");
     exit (0); 
   }
 
-  argind = 1;
-  while (argind < argc) {
-    tcp = argv[argind];
-    if (tcp[0] == '-' && tcp[1] != '\0') {
-      ++tcp;
-      switch (*tcp) {
+  for (i=1; i<argc; i++) {
+    if (*argv[i]=='-') {
+      char *p=argv[i]+2 ;
+      char c=argv[i][1] ;
+      switch (c) {
 #ifdef DEBUG
       case 'd':       /* selects Debug output */
 	Debug = _TRUE;
 #ifdef KPATHSEA
-	sscanf(tcp + 1, "%u", &kpathsea_debug);
+	sscanf(p, "%u", &kpathsea_debug);
 #endif
 	qfprintf(ERR_STREAM,"Debug output enabled\n");
         break;
 #endif
       case 'o':       /* Output file is specified */
-        EmitFileName = ++tcp;
-#ifdef MSDOS
-        /* delete trailing ':' (causing hangup) */
-        if (EmitFileName[strlen(EmitFileName)-1] == ':')
-          EmitFileName[strlen(EmitFileName)-1] = '\0';
-#endif
-#ifdef OS2  /* repeated to avoid problems with stupid c preprocessors  */
-        /* delete trailing ':' (causing hangup) */
-        if (EmitFileName[strlen(EmitFileName)-1] == ':')
-          EmitFileName[strlen(EmitFileName)-1] = '\0';
-#endif
+	if (*p == 0 && argv[i+1])
+	  p = argv[++i] ;
+        (void) strcpy(rootname, p);
+        /* remove .png extension */
+        p1 = strrchr(rootname, '.');
+        if (p1 != NULL && strcmp(p1,".png") == 0 ) {
+	  *p1='\0';
+        }
         break;
 #ifdef MAKETEXPK
       case 'M':
         /* -M, -M1 => don't make font; -M0 => do.  */
-        makeTexPK = *(tcp + 1) == '0';
+        makeTexPK = (*p == '0');
 #ifdef KPATHSEA
         kpse_set_program_enabled (kpse_pk_format, makeTexPK, kpse_src_cmdline);
 #endif /* KPATHSEA */
         break;
 #endif /* MAKETEXPK */
-      case 'O':       /* specify origin */
-	/*        this_arg = 0;
-        if (!(*++tcp)) {
-          this_arg = (++argind >= argc ? 0 : argv[argind]);
-        } else {
-          this_arg = tcp;
-        }
-        if (!this_arg || sscanf(this_arg,"%hd", &x_origin) != 1)
-	Fatal("Argument of -X is not a valid integer\n");*/
-	Fatal("Offset specification -O # is not yet implemented");
+      case 'O' : /* Offset */
+	if (*p == 0 && argv[i+1])
+	  p = argv[++i] ;
+	handlepapersize(p, &x_offset_def, &y_offset_def) ;
+	x_offset = x_offset_def; 
+	y_offset = y_offset_def; 
+	x_max = x_min = -x_offset_def; /* set BBOX */
+	y_max = y_min = -y_offset_def;
+	break ;
+      case 'T' :
+	if (*p == 0 && argv[i+1])
+	  p = argv[++i] ;
+	handlepapersize(p, &x_width, &y_width) ;
+	if (Landscape) {
+	  Warning(
+		"Both landscape and papersize specified; ignoring landscape") ;
+	  Landscape = _FALSE ;
+	}
+	/* Avoid PASS_BBOX */
+	PassDefault = PASS_DRAW;
+	break ;
+      case 't':       /* specify paper format, only for cropmarks */
+	/* cropmarks not implemented yet */
+	if (*p == 0 && argv[i+1])
+	  p = argv[++i] ;
+	if (strcmp(p,"a4")) {
+	  handlepapersize("210mm,297mm",x_pwidth,y_pwidth);
+	} else if (strcmp(p,"letter")) {
+	  handlepapersize("8.5in,11in",x_pwidth,y_pwidth);
+	} else if (strcmp(p,"legal")) {
+	  handlepapersize("8.5in,14in",x_pwidth,y_pwidth);
+	} else if (strcmp(p,"executive")) {
+	  handlepapersize("7.25in,10.5in",x_pwidth,y_pwidth);
+	} else if (strcmp(p,"landscape")) {
+	  /* Bug out on both papersize and Landscape? */
+	  Landscape = _TRUE;
+	} else 
+	  Fatal("The papersize %s is not implemented, sorry.\n",p);
         break;
-      case 'x':       /* specify magnification to use */
-	this_arg = 0;
-        if (!(*++tcp)) {
-          this_arg = (++argind >= argc ? 0 : argv[argind]);
-        } else {
-          this_arg = tcp;
-        }
-        if (!this_arg || sscanf(this_arg,"%hd", &usermag) != 1)
-            Fatal("Argument of -x is not a valid integer\n");
-        break;
-      case 'p':       /* first page  */
-        if ( sscanf(tcp + 1, "%ld", &FirstPage) != 1 )
-          Fatal("Argument is not a valid integer\n");
-        FirstPageSpecified = _TRUE;
-        break;
+      case 'x' : case 'y' :
+	if (*p == 0 && argv[i+1])
+	  p = argv[++i] ;
+	if (sscanf(p, "%ld", &usermag)==0 || usermag < 1 ||
+	    usermag > 1000000)
+	  Fatal("Bad magnification parameter (-x or -y).") ;
+	/*overridemag = (c == 'x' ? 1 : -1) ;*/
+	break ;
+      case 'p' :
+#if defined(MSDOS) || defined(OS2) || defined(ATARIST)
+	/* check for emTeX job file (-pj=filename) */
+	/*if (*p == 'j') {
+	  p++;
+	  if (*p == '=' || *p == ':')
+	    p++;
+	  mfjobname = newstring(p);
+	  break;
+	  }*/
+	/* must be page number instead */
+#endif
+	if (*p == 'p') {  /* a -pp specifier for a page list? */
+	  p++ ;
+	  if (*p == 0 && argv[i+1])
+	    p = argv[++i] ;
+	  if (ParsePages(p))
+	    Fatal("bad page list specifier (-pp).") ;
+	  Pagelist = _TRUE ;
+	  break ;
+	}
+	if (*p == 0 && argv[i+1])
+	  p = argv[++i] ;
+	if (*p == '=') {
+	  Abspage = _TRUE ;
+	  p++ ;
+	}
+	switch(sscanf(p,
+#ifdef SHORTINT
+		      "%ld.%ld",
+#else        /* ~SHORTINT */
+		      "%d.%d",
+#endif        /* ~SHORTINT */
+		      &FirstPage, &Firstseq)) {
+	case 1:           Firstseq = 0 ;
+	case 2:           break ;
+	default:     	  Fatal("bad first page option (-p %s).",p) ;
+	}
+	break ;
+      case 'l':
+	if (*p == 0 && argv[i+1])
+	  p = argv[++i] ;
+	if (*p == '=') {
+	  Abspage = _TRUE ;
+	  p++ ;
+	}
+	switch(sscanf(p, 
+#ifdef SHORTINT
+		      "%ld.%ld",
+#else        /* ~SHORTINT */
+		      "%d.%d",
+#endif        /* ~SHORTINT */
+		      &LastPage, &Lastseq)) {
+	case 1:           Lastseq = 0 ;
+	case 2:           break ;
+	default:	  Fatal("bad last page option (-l %s).",p);
+	}
+	break ;
       case 'q':       /* quiet operation */
         G_quiet = _TRUE;
+	G_verbose = _FALSE;
         break;
       case 'r':       /* switch order to process pages */
         Reverse = (bool)(!Reverse);
         break;
-      case 't':       /* specify paper format */
-        this_arg = ++tcp;
-	if (strcmp(this_arg,"a4")) {
-	  v_pgsiz_dots = 297*resolution/shrinkfactor/25.4;
-	  h_pgsiz_dots = 210*resolution/shrinkfactor/25.4;
-	} else if (strcmp(this_arg,"letter")) {
-	  v_pgsiz_dots = 8.5*resolution/shrinkfactor;
-	  h_pgsiz_dots = 11*resolution/shrinkfactor;
-	} else if (strcmp(this_arg,"legal")) {
-	  v_pgsiz_dots = 8.5*resolution/shrinkfactor;
-	  h_pgsiz_dots = 14*resolution/shrinkfactor;
-	} else if (strcmp(this_arg,"executive")) {
-	  v_pgsiz_dots = 7.25*resolution/shrinkfactor;
-	  h_pgsiz_dots = 10.5*resolution/shrinkfactor;
-	} else if (strcmp(this_arg,"landscape")) {
-	  Landscape = _TRUE;
-	} else 
-	  Fatal("The pagesize %s is not implemented, sorry.\n",this_arg);
-        break;
-      case 'l':       /* ending pagenumber */
-        if ( sscanf(tcp + 1, "%ld", &LastPage) != 1 )
-          Fatal("Argument of -l is not a valid integer\n");
-        LastPageSpecified = _TRUE;
-        break;
-      case 'v':    /* verbatim mode (print pxl-file names) */
+      case 'v':    /* verbatim mode */
         G_verbose = _TRUE;
         break;
-      case 'D':       /* resolution */
-        if ( sscanf(tcp + 1, "%d", &resolution) != 1 )
-          Fatal("Argument of -D is not a valid integer\n");
-	/*	MFMODE = MFMODE600; */
-	x_origin = resolution;
-	y_origin = resolution;
+      case 'D' :
+	if (*p == 0 && argv[i+1])
+	  p = argv[++i] ;
+	if (sscanf(p, "%d", &resolution)==0 || resolution < 10 ||
+	    resolution > 10000)
+	  Fatal("bad dpi parameter (-D).") ;
 	break;
       case 'Q':       /* quality (= shrinkfactor) */
-        if ( sscanf(tcp + 1, "%d", &shrinkfactor) != 1 )
-          Fatal("Argument of -Q is not a valid integer\n");
+        if ( sscanf(p, "%d", &shrinkfactor) != 1 )
+          Fatal("argument of -Q is not a valid integer\n");
 	break;
       default:
-        fprintf(ERR_STREAM, "%c is not a valid flag\n", *tcp);
+        Warning("%c is not a valid flag\n", *p);
       }
     } else {
 
 #ifdef KPATHSEA
-        /* split into directory + file name */
-	tcp = (char *)basename(argv[argind]);/* this knows about any kind of slashes */
-	if (tcp == argv[argind])
-	  curarea[0] = '\0';
-	else {
-	  (void) strcpy(curarea, argv[argind]);
-	  curarea[tcp-argv[argind]] = '\0';
+      /* split into directory + file name */
+      p = (char *)basename(argv[i]);/* this knows about any kind of slashes */
+      if (p == argv[i])
+	curarea[0] = '\0';
+      else {
+	(void) strcpy(curarea, argv[i]);
+	curarea[p-argv[i]] = '\0';
+      }
+#else
+      p = strrchr(argv[i], '/');
+      /* split into directory + file name */
+      if (p == NULL) {
+	curarea[0] = '\0';
+	p = argv[i];
+      } else {
+	(void) strcpy(curarea, argv[i]);
+	curarea[p-argv[i]+1] = '\0';
+	p += 1;
+      }
+#endif
+      
+      (void) strcpy(curname, p);
+      /* split into file name + extension */
+      p1 = strrchr(curname, '.');
+      if (p1 == NULL) {
+	if (*rootname == '\0') {
+	  (void) strcpy(rootname, curname);
 	}
-#else
-        tcp = strrchr(argv[argind], '/');
-        /* split into directory + file name */
-        if (tcp == NULL) {
-          curarea[0] = '\0';
-          tcp = argv[argind];
-        } else {
-          (void) strcpy(curarea, argv[argind]);
-          curarea[tcp-argv[argind]+1] = '\0';
-          tcp += 1;
-        }
-#endif
-
-        (void) strcpy(curname, tcp);
-        /* split into file name + extension */
-        tcp1 = strrchr(curname, '.');
-        if (tcp1 == NULL) {
-          (void) strcpy(rootname, curname);
-          strcat(curname, ".dvi");
-        } else {
-          *tcp1 = '\0';
-          (void) strcpy(rootname, curname);
-          *tcp1 = '.';
-        }
-
-        (void) strcpy(filename, curarea);
-        (void) strcat(filename, curname);
-
-        if ((dvifp = BINOPEN(filename)) == FPNULL) {
-          /* do not insist on .dvi */
-          if (tcp1 == NULL) {
-            int l = strlen(curname);
-            if (l > 4)
-              curname[l - 4] = '\0';
-            l = strlen(filename);
-            if (l > 4)
-              filename[l - 4] = '\0';
-          }
-          if (tcp1 != NULL || (dvifp = BINOPEN(filename)) == FPNULL) {
+	strcat(curname, ".dvi");
+      } else if (*rootname == '\0') {
+	*p1 = '\0';
+	(void) strcpy(rootname, curname);
+	*p1 = '.';
+      }
+      
+      (void) strcpy(filename, curarea);
+      (void) strcat(filename, curname);
+      
+      if ((dvifp = BINOPEN(filename)) == FPNULL) {
+	/* do not insist on .dvi */
+	if (p1 == NULL) {
+	  int l = strlen(curname);
+	  if (l > 4)
+	    curname[l - 4] = '\0';
+	  l = strlen(filename);
+	  if (l > 4)
+	    filename[l - 4] = '\0';
+	}
+	if (p1 != NULL || (dvifp = BINOPEN(filename)) == FPNULL) {
 #ifdef MSC5
-            Fatal("%s: can't find DVI file \"%s\"\n\n",
-                  G_progname, filename);
+	  Fatal("can't find DVI file \"%s\"\n\n", filename);
 #else
-            perror(filename);
-            exit (EXIT_FAILURE);
+	  perror(filename);
+	  exit (EXIT_FAILURE);
 #endif
-          }
-        }
+	}
+      }
     }
-    argind++;
   }
-
-  x_goffset = (short) MM_TO_PXL(x_offset)/shrinkfactor + x_origin/shrinkfactor;
-  y_goffset = (short) MM_TO_PXL(y_offset)/shrinkfactor + y_origin/shrinkfactor;
 
   if (dvifp == FPNULL) {
     fprintf(ERR_STREAM,"\nThis is the DVI to PNG converter version %s",
@@ -258,9 +304,9 @@ named COPYING and dvipng.c.");
 
     fprintf(ERR_STREAM,"OPTIONS are:\n");
 #ifdef DEBUG
-    fprintf(ERR_STREAM,"\t--D ..... turns debug output on\n");
+    fprintf(ERR_STREAM,"\t-d ..... turns debug output on\n");
 #endif
-    fprintf(ERR_STREAM,
+    /*    fprintf(ERR_STREAM,
             "\t-aX ..... X= searchpath leading to pixel-files (.pk or .pxl)\n");
     fprintf(ERR_STREAM,"\t-cX ..... X= number of copies\n");
     fprintf(ERR_STREAM,"\t-eX ..... X= output file\n");
@@ -289,10 +335,10 @@ named COPYING and dvipng.c.");
     fprintf(ERR_STREAM,"\t-xX ..... X= x-offset on printout in mm\n");
     fprintf(ERR_STREAM,"\t-yX ..... X= y-offset on printout in mm\n");
     fprintf(ERR_STREAM,"\t-XO ..... O= x page origin in dots (default=%d)\n",
-            XDEFAULTOFF );
+            0 );
     fprintf(ERR_STREAM,"\t-YO ..... O= y page origin in dots (default=%d)\n",
-            YDEFAULTOFF );
-    fprintf(ERR_STREAM,"\t-   ..... dvifile is stdin (must be seekable); implies -e-\n");
+            0 );
+	    fprintf(ERR_STREAM,"\t-   ..... dvifile is stdin (must be seekable); implies -e-\n");*/
     /*#ifdef KPATHSEA
     {
       extern DllImport char *kpse_bug_address;
@@ -302,18 +348,6 @@ named COPYING and dvipng.c.");
     #endif*/
     exit(1);
   }
-  if (EQ(EmitFileName, "")) {
-    if ((EmitFileName = (char *)malloc( STRSIZE )) != NULL)
-      allocated_storage += STRSIZE;
-    else
-      Fatal("Can't allocate storage of %d bytes\n",STRSIZE);
-    (void) strcpy(EmitFileName, curname);
-    if ((tcp1 = strrchr(EmitFileName, '.')))
-      *tcp1 = '\0';
-    strcat(EmitFileName, "png");
-  }
-  if (G_quiet)
-    G_verbose = _FALSE;
 }
 
 /*-->DoConv*/
