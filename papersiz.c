@@ -19,9 +19,9 @@
 
 #include "dvipng.h"
 
-static long scale(long whole, long num, long den, long sf)
+static int32_t scale(int32_t whole, int32_t num, int32_t den, int32_t sf)
 {
-   long v ;
+  int32_t v ;
 
    v = whole * sf + num * (sf / den) ;
    if (v / sf != whole || v < 0 || v > 0x40000000L)
@@ -31,13 +31,13 @@ static long scale(long whole, long num, long den, long sf)
    return(v) ;
 }
 /*
- *   Convert a sequence of digits into a long; return -1 if no digits.
+ *   Convert a sequence of digits into a int32_t; return -1 if no digits.
  *   Advance the passed pointer as well.
  */
-static long myatol(char ** s)
+static int32_t myatol(char ** s)
 {
    register char *p ;
-   register long result ;
+   register int32_t result ;
 
    result = 0 ;
    p = *s ;
@@ -58,12 +58,12 @@ static long myatol(char ** s)
  *   Get a dimension, allowing all the various extensions, and
  *   defaults.  Returns a value in dots (was scaled points).
  */
-static long scalevals[] = { 1864680L, 65536L, 786432L, 186468L,
+static int32_t scalevals[] = { 1864680L, 65536L, 786432L, 186468L,
   1L, 65782L, 70124L, 841489L, 4736286L } ;
 static char *scalenames = "cmptpcmmspbpddccin" ;
-long myatodim(char ** s)
+int32_t myatodim(char ** s)
 {
-   register long w, num, den, sc ;
+   register int32_t w, num, den, sc ;
    register char *q ;
    char *p ;
    int negative = 0, i ;
@@ -106,7 +106,8 @@ long myatodim(char ** s)
          break ;
       }
    /*w = scale(w, num, den, sc) ;*/
-   w = scale(w, num, den, sc)*resolution/shrinkfactor/4736286L ;
+   w = (int32_t)((int64_t) scale(w, num, den, sc)*resolution
+		 /shrinkfactor/4736286L);
    *s = p ;
    return(negative?-w:w) ;
 }
@@ -114,7 +115,7 @@ long myatodim(char ** s)
  *   The routine where we handle the paper size special.  We need to pass in
  *   the string after the `papersize=' specification.
  */
-void handlepapersize(char * p, int * x, int * y)
+void handlepapersize(char * p, int32_t * x, int32_t * y)
 { 
    while (*p == ' ')
       p++ ;
