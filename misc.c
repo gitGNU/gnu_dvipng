@@ -46,16 +46,23 @@ bool DecodeArgs(int argc, char ** argv)
   char *dviname=NULL;        /* Name of dvi file               */
   char *outname=NULL;        /* Name of output file            */
 
+  if (argv[0]) {
 #ifdef HAVE_GDIMAGEGIF
-  programname=strrchr(argv[0],'/');
-  if (programname!=NULL)
-    programname++;
-  else
-    programname=argv[0];
-  if (strncmp(programname,"dvigif",6)==0)
-    flags |= GIF_OUTPUT;
+    programname=strrchr(argv[0],'/');
+    if (programname!=NULL)
+      programname++;
+    else
+      programname=argv[0];
+    if (strncmp(programname,"dvigif",6)==0)
+      flags |= GIF_OUTPUT;
 #endif
-  programname=argv[0];
+    programname=argv[0];
+    Message(BE_NONQUIET,"This is %s",programname);
+    if (strcmp(basename(programname),PACKAGE_NAME)!=0)
+      Message(BE_NONQUIET," (%s)", PACKAGE_NAME);
+    Message(BE_NONQUIET," %s Copyright 2002-2004 Jan-Åke Larsson\n",
+	    PACKAGE_VERSION);
+  }
 
   for (i=1; i<argc; i++) {
     if (*argv[i]=='-') {
@@ -498,14 +505,6 @@ named COPYING and dvipng.c.");
     } else {
       dviname=argv[i];
     }
-  }
-
-  if (programname) {
-    Message(BE_NONQUIET,"This is %s",programname);
-    if (strcmp(basename(programname),PACKAGE_NAME)!=0)
-      Message(BE_NONQUIET," (%s)", PACKAGE_NAME);
-    Message(BE_NONQUIET," %s Copyright 2002-2004 Jan-Åke Larsson\n",
-	    PACKAGE_VERSION);
   }
   if (dviname != NULL) {
     if (dvi != NULL && dvi->filep != NULL) 
