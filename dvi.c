@@ -318,11 +318,16 @@ void DVIClose(struct dvi_data* dvi)
   free(dvi);
 }
 
-void DVIReInit(struct dvi_data* dvi)
+void DVIReOpen(struct dvi_data* dvi)
 {
   struct stat stat;
   fstat(fileno(dvi->filep), &stat);
   if (dvi->mtime != stat.st_mtime) {
+    fclose(dvi->filep);
+    if ((dvi->filep = fopen(dvi->name,"rb")) == NULL) {
+      perror(dvi->name);
+      exit (EXIT_FAILURE);
+    }
     Message(PARSE_STDIN,"Reopened file\n");
     DEBUG_PRINTF(DEBUG_DVI,"\nREOPEN FILE\t%s", dvi->name);
     DelPageList(dvi);
