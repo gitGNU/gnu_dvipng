@@ -1407,15 +1407,16 @@ Color specials
 @item 256
 GhostScript specials
 @item 512
-Kpathsea @code{stat} calls
+T1lib calls
 @item 1024
-Kpathsea hash table lookups
+Kpathsea @code{stat} calls
 @item 2048
-Kpathsea path element expansion
+Kpathsea hash table lookups
 @item 4096
+Kpathsea path element expansion
+@item 8192
 Kpathsea path searches
 @ignore
-@item 8192
 @item 16384
 @end ignore
 
