@@ -15,6 +15,8 @@ bool DecodeArgs(int argc, char ** argv)
   char *outname=NULL;        /* Name of output file (concatenated
 				with the page number and .png) */
 
+  programname=argv[0];
+
   if (argc == 2 && (strcmp (argv[1], "--version") == 0)) {
     puts (PACKAGE_STRING);
 #ifdef HAVE_LIBKPATHSEA
@@ -27,6 +29,7 @@ For more information about these matters, see the files\n\
 named COPYING and dvipng.c.");
     exit (0); 
   }
+
   for (i=1; i<argc; i++) {
     if (*argv[i]=='-') {
       char *p=argv[i]+2 ;
@@ -44,7 +47,7 @@ named COPYING and dvipng.c.");
 	  if (debug > 0 && p == argv[i+1])
 	    i++;
 #ifdef HAVE_LIBKPATHSEA
-	  kpathsea_debug = debug/LASTDEBUG;
+	  kpathsea_debug = ( debug * LASTFLAG * 2) / LASTDEBUG;
 #endif
 	  Message(PARSE_STDIN,"Debug output enabled\n");
 	}
@@ -235,24 +238,22 @@ named COPYING and dvipng.c.");
 	flags |= PARSE_STDIN;
 	break;
       default:
-	Warning("%c is not a valid flag\n", c);
+	Warning("%s is not a valid option", argv[i]);
       }
     } else {
       dviname=argv[i];
     }
   }
 
-  if (argv[0]!=NULL) {
-    programname=argv[0];
-    Message(BE_NONQUIET,"This is %s Copyright 2002-2003 Jan-Åke Larsson\n",
-	    PACKAGE_STRING);
-  }
+  Message(BE_NONQUIET,"This is %s Copyright 2002-2003 Jan-Åke Larsson\n",
+	  PACKAGE_STRING);
 
   if (dviname != NULL) {
     if (dvi != NULL && dvi->filep != NULL) 
       DVIClose(dvi);
     dvi=DVIOpen(dviname,outname);  
   }
+
   if (dvi==NULL) {
     fprintf(ERR_STREAM,"\nUsage: dvipng [OPTION]... FILENAME[.dvi]\n");
     fprintf(ERR_STREAM,"Options are chosen to be similar to dvips' options where possible:\n");
