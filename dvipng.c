@@ -29,7 +29,8 @@
 /**********************************************************************/
 int main(int argc, char ** argv)
 {
-
+  bool parsestdin;
+  
 #ifdef TIMING
 #ifdef BSD_TIME_CALLS
   ftime(&timebuffer);
@@ -41,10 +42,9 @@ int main(int argc, char ** argv)
 #endif
 
   setbuf(ERR_STREAM, NULL);
-  (void) strcpy(G_progname, argv[0]);
 
   initcolor();
-  DecodeArgs(argc, argv);
+  parsestdin=DecodeArgs(argc, argv);
 
 #ifdef KPATHSEA
   kpse_set_progname(argv[0]);
@@ -52,43 +52,28 @@ int main(int argc, char ** argv)
   kpse_init_prog("DVIPNG", resolution, MFMODE, "cmr10");
 #endif
 
-  if (!ParseStdin) {
-    /* If pages not given on commandline, insert all pages */
-    if (QueueEmpty()) {
-      if (!Reverse) {
-	QueuePage(1,PAGE_LASTPAGE,_TRUE);
-      } else {
-	struct page_list *tpagelistp;
-	
-	tpagelistp=FindPage(PAGE_LASTPAGE,_TRUE);
-	QueuePage(1,tpagelistp->count[10],_TRUE);
-      }
-    }
-    DoPages();
-  } else {
+  DoPages();
+
+  if (parsestdin) {
     char    line[STRSIZE];
-    char    *linev[3];
-    
-    if (!QueueEmpty()) 
-      DoPages();
-    printf("%s> ",dvi->name);
+#define PARSEARGS 10
+    char    *linev[PARSEARGS];
+    linev[0]=NULL;
+
+    printf("%s> ",dvi!=NULL?dvi->name:"");
     fgets(line,STRSIZE,stdin);
     while(!feof(stdin)) {
-      linev[0]=line;  /* OBSERVE linev[0] is never used in DecodeArgs */
-      while( *linev[0]!='\n' ) linev[0]++;
-      *linev[0]='\0';
-      linev[1]=line;
-      linev[2]=line+2;
-      while( *linev[2]!=' ' && *linev[2]!='\0' ) linev[2]++;
-      while( *linev[2]==' ') *(linev[2]++)='\0';
-      if (*linev[2]=='\0') {
-	DecodeArgs(2,linev);
-      } else {
-	DecodeArgs(3,linev);
-      }
-      if (!QueueEmpty()) 
+      int     i=1;
+      linev[i]=strtok(line," \t\n");
+      while(i<PARSEARGS-1 && linev[i]!=NULL) 
+	linev[++i]=strtok(NULL," \t\n");
+      if (linev[i]!=NULL) 
+	i++;
+      if (i>1) 
+	(void)DecodeArgs(i,linev);
+      if (dvi!=NULL) 
 	DoPages();
-      printf("%s> ",dvi->name);
+      printf("%s> ",dvi!=NULL?dvi->name:"");
       fgets(line,STRSIZE,stdin);
     }
   }
