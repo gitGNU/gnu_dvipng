@@ -72,6 +72,9 @@
 /* Define to 1 if you have the <kpathsea/kpathsea.h> header file. */
 #undef HAVE_KPATHSEA_KPATHSEA_H
 
+/* Define to 1 if your kpathsea has kpse_enc_format */
+#undef HAVE_KPSE_ENC_FORMATS
+
 /* Define to 1 if you have the `gd' library (-lgd). */
 #undef HAVE_LIBGD
 
@@ -81,7 +84,7 @@
 /* Define to 1 if you have the `png' library (-lpng). */
 #undef HAVE_LIBPNG
 
-/* Define to 1 if you have libt1 */
+/* Define to 1 if you have the `t1' library (-lt1). */
 #undef HAVE_LIBT1
 
 /* Define to 1 if your system has a GNU libc compatible `malloc' function, and
