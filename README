@@ -28,7 +28,8 @@ Benefits of dvipng
   for further output, unless it finds the POST marker that indicates
   the end of the DVI.
 
-* Supports PK and VF fonts. And color specials.
+* Supports PK, VF and PostScript type1 fonts, color specials and
+  simple PostScript inclusion specials.
 
 * and more...
 
@@ -87,10 +88,8 @@ page of preview-latex. Anonymous CVS is available as well.
 Todo
 ====
 
-* Postscript/TrueType fonts. The new Gd has those, so perhaps it's not
-  too much work. 
-
-* Postscript specials via gs.
+* TrueType fonts. The new Gd has a link to FreeType, so perhaps it's
+  not too much work.
 
 * Non-integer shrinkfactors.
 
