@@ -1,3 +1,13 @@
+2004-08-17  Jan-Åke Larsson  <jalar@pcbjalar>
+
+	* draw.c: change name of picky flag
+
+	* special.c: do not call ghostscript when switch given
+
+	* misc.c: add picky and ghostscript switches
+	
+	* dvipng.h: add picky and ghostscript flags 
+
 2004-08-06  Jan-Åke Larsson  <jalar@mai.liu.se>
 
 	* dvipng.texi: Document --png, --gif, and --picky
