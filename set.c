@@ -48,23 +48,37 @@ void FormFeed P1C(int, pagenum)
 long4 SetChar P2C(long4, c, int, PassNo)
 {
   register struct char_entry *ptr;  /* temporary char_entry pointer */
+
+  if ((ptr = vfstack[vfstackptr]->ch[c]) != NULL) {
+    if (vfstack[vfstackptr]->is_vf) {
+      return(SetVF(c, PassNo));
+    } else {
+      return(SetPK(c, PassNo));
+    }
+  } else {
+    return(0);
+  }
+}
+
+long4 SetPK P2C(long4, c, int, PassNo)
+{
+  register struct char_entry *ptr;  /* temporary char_entry pointer */
   int red,green,blue;
   int Color,i;
 
-  ptr = &(fontptr->ch[c]);
-  if (fontptr->font_file_id != NO_FILE) {
+  if ((ptr = vfstack[vfstackptr]->ch[c]) != NULL) {
     switch(PassNo) {
     case PASS_BBOX:
       if (!(ptr->isloaded)) {
 	LoadAChar(c, ptr);
       }
-      min(x_min,PIXROUND(h, hconv*shrinkfactor)
+      min(x_min,PIXROUND(h, conv*shrinkfactor)
 	  -PIXROUND(ptr->xOffset,shrinkfactor));
-      min(y_min,PIXROUND(v, hconv*shrinkfactor)
+      min(y_min,PIXROUND(v, conv*shrinkfactor)
 	  -PIXROUND(ptr->yOffset,shrinkfactor));
-      max(x_max,PIXROUND(h, hconv*shrinkfactor)
+      max(x_max,PIXROUND(h, conv*shrinkfactor)
 	  -PIXROUND(ptr->xOffset,shrinkfactor)+ptr->glyph.w);
-      max(y_max,PIXROUND(v, hconv*shrinkfactor)
+      max(y_max,PIXROUND(v, conv*shrinkfactor)
 	  -PIXROUND(ptr->yOffset,shrinkfactor)+ptr->glyph.h);
       break;
     case PASS_DRAW:
@@ -82,10 +96,10 @@ long4 SetChar P2C(long4, c, int, PassNo)
 	blue = bBlue-(bBlue-Blue)*i/shrinkfactor/shrinkfactor;
 	Color = gdImageColorResolve(page_imagep,red,green,blue);
 	gdImageChar(page_imagep, &(ptr->glyph),
-		    PIXROUND(h, hconv*shrinkfactor)
+		    PIXROUND(h, conv*shrinkfactor)
 		    -PIXROUND(ptr->xOffset,shrinkfactor)
 		    +x_offset,
-		    PIXROUND(v, vconv*shrinkfactor)
+		    PIXROUND(v, conv*shrinkfactor)
 		    -PIXROUND(ptr->yOffset,shrinkfactor)
 		    +y_offset,
 		    i,Color);
@@ -94,8 +108,8 @@ long4 SetChar P2C(long4, c, int, PassNo)
       if (Debug)
 	printf("<%c> at (%ld,%ld)-(%d,%d) offset (%d,%d)\n",
 	       (char)c,
-	       PIXROUND(h, hconv*shrinkfactor),
-	       PIXROUND(v, vconv*shrinkfactor),
+	       PIXROUND(h, conv*shrinkfactor),
+	       PIXROUND(v, conv*shrinkfactor),
 	       PIXROUND(ptr->xOffset,shrinkfactor),
 	       PIXROUND(ptr->yOffset,shrinkfactor),
 	       x_offset,y_offset);
@@ -117,15 +131,15 @@ long4 SetRule P3C(long4, a, long4, b, int, PassNo)
   int Color;
 
   if ( a > 0 && b > 0 ) {
-    xx = (long4)PIXROUND(b, hconv*shrinkfactor);     /* width */
-    yy = (long4)PIXROUND(a, vconv*shrinkfactor);     /* height */
+    xx = (long4)PIXROUND(b, conv*shrinkfactor);     /* width */
+    yy = (long4)PIXROUND(a, conv*shrinkfactor);     /* height */
   }
   switch(PassNo) {
   case PASS_BBOX:
-    min(x_min,PIXROUND(h, hconv*shrinkfactor)-1);
-    min(y_min,PIXROUND(v, hconv*shrinkfactor)-yy+1-1);
-    max(x_max,PIXROUND(h, hconv*shrinkfactor)+xx-1-1);
-    max(y_max,PIXROUND(v, hconv*shrinkfactor)-1);
+    min(x_min,PIXROUND(h, conv*shrinkfactor)-1);
+    min(y_min,PIXROUND(v, conv*shrinkfactor)-yy+1-1);
+    max(x_max,PIXROUND(h, conv*shrinkfactor)+xx-1-1);
+    max(y_max,PIXROUND(v, conv*shrinkfactor)-1);
     break;
   case PASS_DRAW:
     if ((yy>0) && (xx>0)) {
@@ -135,17 +149,17 @@ long4 SetRule P3C(long4, a, long4, b, int, PassNo)
       */
       Color = gdImageColorResolve(page_imagep, Red,Green,Blue);
       gdImageFilledRectangle(page_imagep,
-			     PIXROUND(h, hconv*shrinkfactor)+x_offset-1,
-			     PIXROUND(v, vconv*shrinkfactor)-yy+1+y_offset-1,
-			     PIXROUND(h, hconv*shrinkfactor)+xx-1+x_offset-1,
-			     PIXROUND(v, vconv*shrinkfactor)+y_offset-1,
+			     PIXROUND(h, conv*shrinkfactor)+x_offset-1,
+			     PIXROUND(v, conv*shrinkfactor)-yy+1+y_offset-1,
+			     PIXROUND(h, conv*shrinkfactor)+xx-1+x_offset-1,
+			     PIXROUND(v, conv*shrinkfactor)+y_offset-1,
 			     Color);
 #ifdef DEBUG
       if (Debug)
 	printf("Rule (%ld,%ld) at (%ld,%ld) offset (%d,%d)\n",
 	       (long)xx, (long)yy,
-	       PIXROUND(h, hconv*shrinkfactor),
-	       PIXROUND(v, vconv*shrinkfactor),
+	       PIXROUND(h, conv*shrinkfactor),
+	       PIXROUND(v, conv*shrinkfactor),
 	       x_offset,y_offset);
 #endif
     }

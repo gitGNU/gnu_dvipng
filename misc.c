@@ -281,59 +281,58 @@ named COPYING and dvipng.c.");
 	*p1 = '.';
       }
       
-      (void) strcpy(filename, curarea);
-      (void) strcat(filename, curname);
+      (void) strcpy(dvi.n, curarea);
+      (void) strcat(dvi.n, curname);
       
-      if (dvifp != FPNULL) {
+      if (dvi.filep != FPNULL) {
 	DelPageList();
-	fclose(dvifp);
+	fclose(dvi.filep);
       }
 
-      if ((dvifp = BINOPEN(filename)) == FPNULL) {
+      if ((dvi.filep = BINOPEN(dvi.n)) == FPNULL) {
 	/* do not insist on .dvi */
 	if (p1 == NULL) {
 	  int l = strlen(curname);
 	  if (l > 4)
 	    curname[l - 4] = '\0';
-	  l = strlen(filename);
+	  l = strlen(dvi.n);
 	  if (l > 4)
-	    filename[l - 4] = '\0';
+	    dvi.n[l - 4] = '\0';
 	}
-	if (p1 != NULL || (dvifp = BINOPEN(filename)) == FPNULL) {
+	if (p1 != NULL || (dvi.filep = BINOPEN(dvi.n)) == FPNULL) {
 #ifdef MSC5
-	  Fatal("can't find DVI file \"%s\"\n\n", filename);
+	  Fatal("can't find DVI file \"%s\"\n\n", dvi.n);
 #else
-	  perror(filename);
+	  perror(dvi.n);
 	  exit (EXIT_FAILURE);
 #endif
 	}
       }
 #ifdef DEBUG
       if (Debug)
-	printf("OPEN FILE\t%s\n", filename);
+	printf("OPEN FILE\t%s\n", dvi.n);
 #endif
 
-      if ((k = (int)NoSignExtend(dvifp, 1)) != PRE) {
+      if ((k = (int)NoSignExtend(dvi.filep, 1)) != PRE) {
 	Fatal("PRE doesn't occur first--are you sure this is a DVI file?\n\n");
       }
-      k = (int)SignExtend(dvifp, 1);
+      k = (int)SignExtend(dvi.filep, 1);
       if (k != DVIFORMAT) {
 	Fatal("DVI format = %d, can only process DVI format %d files\n\n",
 	      k, DVIFORMAT);
       }
-      num = NoSignExtend(dvifp, 4);
-      den = NoSignExtend(dvifp, 4);
-      mag = NoSignExtend(dvifp, 4);
+      num = NoSignExtend(dvi.filep, 4);
+      den = NoSignExtend(dvi.filep, 4);
+      mag = NoSignExtend(dvi.filep, 4);
       if ( usermag > 0 && usermag != mag )
 	Warning("DVI magnification of %ld over-ridden by user (%ld)",
 		(long)mag, usermag );
       if ( usermag > 0 )
 	mag = usermag;
-      hconv = DoConv(num, den, hconvRESOLUTION);
-      vconv = DoConv(num, den, vconvRESOLUTION);
+      conv = DoConv(num, den, resolution);
       
-      k = (int)NoSignExtend(dvifp, 1);
-      GetBytes(dvifp, curname, k);
+      k = (int)NoSignExtend(dvi.filep, 1);
+      GetBytes(dvi.filep, curname, k);
       curname[k]='\0';
       if (G_verbose)
 	printf("'%s' -> %sN.png\n",curname,rootname);
@@ -343,7 +342,7 @@ named COPYING and dvipng.c.");
     }
   }
 
-  if (dvifp == FPNULL) {
+  if (dvi.filep == FPNULL) {
     fprintf(ERR_STREAM,"\nThis is the DVI to PNG converter version %s",
              VERSION);
     fprintf(ERR_STREAM," (%s)\n", OS);
@@ -411,6 +410,17 @@ long4 DoConv P3C(long4, num, long4, den, int, convResolution)
   return((long4)((1.0/conv)+0.5));
 }
 
+
+/*
+char * xmalloc P1C(unsigned, size)
+{
+  char *mem;
+  
+  if ((mem = malloc(size)) == NULL)
+    Fatal("cannot allocate %d bytes", size);
+  return mem;
+}
+*/
 
 /*-->Fatal*/
 /**********************************************************************/

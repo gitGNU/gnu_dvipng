@@ -9,13 +9,7 @@ unsigned char   dyn_f;
 unsigned char   *pkloc;
 int             repeatcount;
 
-unsigned char
-#if NeedFunctionPrototypes
-getnyb(FILE* fp)
-#else
-getnyb(fp)
-FILE* fp;
-#endif
+unsigned char getnyb P1C(FILE*, fp)
 {
   register unsigned char  temp;
   if ( bitweight == 0 ) {
@@ -29,13 +23,7 @@ FILE* fp;
 }
 
 
-long4 
-#if NeedFunctionPrototypes
-pk_packed_num(FILE* fp)
-#else
-pk_packed_num(fp)
-     FILE* fp;
-#endif
+long4 pk_packed_num P1C(FILE*, fp)
 { /*@<Packed number procedure@>= */
   register int    i;
   long4    j;
@@ -66,26 +54,63 @@ pk_packed_num(fp)
   }
 }
 
+unsigned char skip_specials P1H(void)
+{
+  long4    i, j;
+  register unsigned char  flag_byte;
+  do {
+    flag_byte = (unsigned char) NoSignExtend(vfstack[vfstackptr]->filep, 1);
+
+    if (flag_byte  >= 240)
+      switch (flag_byte) {
+      case 240:
+      case 241:
+      case 242:
+      case 243 : {
+        i = 0;
+        for (j = 240; j <= (long4)flag_byte; j++) {
+          i = 256 * i + NoSignExtend(vfstack[vfstackptr]->filep, 1);
+        }
+        for (j = 1; j <= i; j++) {
+          (void) NoSignExtend(vfstack[vfstackptr]->filep, 1);
+        }
+        break;
+      }
+      case 244 : {
+        i = NoSignExtend(vfstack[vfstackptr]->filep, 4);
+        break;
+      }
+      case 245 :
+        break;
+      case 246 :
+        break;
+      case 247:
+      case 248:
+      case 249:
+      case 250:
+      case 251:
+      case 252:
+      case 253:
+      case 254:
+      case 255: {
+        Fatal("Unexpected flagbyte %d!\n", (int)flag_byte);
+      }
+      }
+  } while (!((flag_byte < 240) || (flag_byte == PK_POST)));
+  return(flag_byte);
+}
 
 /*-->LoadAChar*/
 /**********************************************************************/
 /***************************** LoadAChar ******************************/
 /**********************************************************************/
-void
-#if NeedFunctionPrototypes
-LoadAChar(long4 c, register struct char_entry *ptr)
-#else
-LoadAChar(c, ptr)
-long4    c;
-register struct char_entry *ptr;
-#endif
+void LoadAChar P2C(long4, c, register struct char_entry *, ptr)
 {
-  long  bytes;
   unsigned short   shrunk_width,shrunk_height;
   unsigned short   width,height;
   short   xoffset,yoffset;
   unsigned short   i_offset,j_offset;
-  int   i,j,k,l,n;
+  int   i,j,k,n;
   int   count=0;
   bool  paint_switch;
 
@@ -94,7 +119,7 @@ register struct char_entry *ptr;
     return;
   }
 
-  OpenFontFile();
+  OpenFont(vfstack[vfstackptr]);
 
 #ifdef DEBUG
   if (Debug)
@@ -102,7 +127,7 @@ register struct char_entry *ptr;
             (char)c,(long)c,(long)ptr->fileOffset);
 #endif
 
-  FSEEK(pxlfp, ptr->fileOffset, SEEK_SET);
+  FSEEK(vfstack[vfstackptr]->filep, ptr->fileOffset, SEEK_SET);
 
   if ((ptr->flag_byte & 7) == 7) n=4;
   else if ((ptr->flag_byte & 4) == 4) n=2;
@@ -115,18 +140,18 @@ register struct char_entry *ptr;
    *  Read character preamble
    */
 
-  if (n != 4)     ptr->tfmw = NoSignExtend(pxlfp, 3);
+  if (n != 4)     ptr->tfmw = NoSignExtend(vfstack[vfstackptr]->filep, 3);
   else {
-    ptr->tfmw = NoSignExtend(pxlfp, 4);
-    (void) NoSignExtend(pxlfp, 4); /* horizontal escapement not used */
+    ptr->tfmw = NoSignExtend(vfstack[vfstackptr]->filep, 4);
+    (void) NoSignExtend(vfstack[vfstackptr]->filep, 4); /* horizontal escapement not used */
   }
-  (void) NoSignExtend(pxlfp, n); /* vertical escapement not used */
+  (void) NoSignExtend(vfstack[vfstackptr]->filep, n); /* vertical escapement not used */
 
-  width   = (unsigned short) NoSignExtend(pxlfp, n);
-  height  = (unsigned short) NoSignExtend(pxlfp, n);
+  width   = (unsigned short) NoSignExtend(vfstack[vfstackptr]->filep, n);
+  height  = (unsigned short) NoSignExtend(vfstack[vfstackptr]->filep, n);
 
   if (width > 0x7fff || height > 0x7fff)
-    Fatal("Character %d too large in file %s", c, fontptr->name);
+    Fatal("Character %d too large in file %s", c, vfstack[vfstackptr]->name);
 
   /* 
    * Hotspot issues: Shrinking to the topleft corner rather than the
@@ -147,20 +172,20 @@ register struct char_entry *ptr;
      sideways by the shrinkage. Will do for now, I suppose.
    */
   
-  xoffset = (short) SignExtend(pxlfp, n);
+  xoffset = (short) SignExtend(vfstack[vfstackptr]->filep, n);
   i_offset = ( shrinkfactor - 
 	       (xoffset-shrinkfactor/2) % shrinkfactor ) % shrinkfactor;
   width += i_offset;
   ptr->xOffset = xoffset+i_offset;
 
-  yoffset = (short) SignExtend(pxlfp, n);
+  yoffset = (short) SignExtend(vfstack[vfstackptr]->filep, n);
   j_offset = ( shrinkfactor - 
 	       (yoffset-shrinkfactor/2) % shrinkfactor ) % shrinkfactor;
   height += j_offset;
   ptr->yOffset = yoffset+j_offset;
 
   ptr->tfmw = (long4)
-    ( ptr->tfmw * (double)fontptr->s / (double)0x100000 );
+    ( ptr->tfmw * (double)vfstack[vfstackptr]->s / (double)0x100000 );
   
   /* 
      Extra marginal so that we do not crop the image when shrinking.
@@ -179,15 +204,16 @@ register struct char_entry *ptr;
   ptr->glyph.h = shrunk_height;
   ptr->glyph.offset = 1;
   ptr->glyph.nchars = shrinkfactor*shrinkfactor;
-
-
+  /*
+  printf("PK: %s (%d) %dx%d\n",vfstack[vfstackptr]->name,c,ptr->glyph.w,ptr->glyph.h);
+  */
   if ((ptr->glyph.data 
        = (char*) calloc(shrunk_width*shrunk_height*shrinkfactor*shrinkfactor,
 			sizeof(char))) == NULL)
     Fatal("Unable to allocate image space for char <%c>\n", (char)c);
 
 #ifdef DRAWGLYPH
-  printf("Drawing character <%c>(%d), font %s\n",(char)c,(int)c,fontptr->name);
+  printf("Drawing character <%c>(%d), font %s\n",(char)c,(int)c,vfstack[vfstackptr]->name);
   printf("Size:%dx%d\n",width,height);
 #endif
 
@@ -201,7 +227,7 @@ register struct char_entry *ptr;
       for (i = i_offset; i < (int) width; i++) {    /* get one row */
 	bitweight /= 2;
 	if (bitweight == 0) {
-	  count = NoSignExtend(pxlfp,1);
+	  count = NoSignExtend(vfstack[vfstackptr]->filep,1);
 	  bitweight = 128;
 	}
 	if (count & bitweight) {
@@ -221,7 +247,7 @@ register struct char_entry *ptr;
     bitweight = 0;
     repeatcount = 0;
     for(i=i_offset, j=j_offset; j<height; ) {
-      count = pk_packed_num(pxlfp);
+      count = pk_packed_num(vfstack[vfstackptr]->filep);
       while (count > 0) {
 	if (i+count < width) {
 	  if (paint_switch) {
@@ -272,9 +298,9 @@ register struct char_entry *ptr;
     }
     if (i>i_offset)
       Fatal("Wrong number of bits stored:  char. <%c>(%d), font %s, Dyn: %d", 
-	    (char)c, (int)c, fontptr->name,dyn_f);
+	    (char)c, (int)c, vfstack[vfstackptr]->name,dyn_f);
     if (j>height)
-      Warning("Bad pk file (%s), too many bits", fontptr->name);
+      Warning("Bad pk file (%s), too many bits", vfstack[vfstackptr]->name);
   }
 
   /*
@@ -318,13 +344,86 @@ register struct char_entry *ptr;
     }
   }	
 
-#ifdef DEBUG
-  if (Debug)
-    fprintf(ERR_STREAM,
-	    "Allocating Char <%c>, FileOffset=%lX, Bytes=%ld (%d) <%d>\n",
-	    (char)c, ptr->fileOffset, bytes,
-	    (int)bytes, (unsigned int)bytes);
-#endif
   ptr->isloaded = _TRUE;
 }
 
+void InitPK  P1C(struct font_entry *,tfontp)
+{
+  long4    t;
+  struct char_entry *tcharptr; /* temporary char_entry pointer  */
+
+  OpenFont(tfontp);
+  t = NoSignExtend(tfontp->filep, 1);
+  if (t == PK_PRE) {
+    unsigned char   temp_byte;
+    temp_byte = (unsigned char) NoSignExtend(tfontp->filep, 1);
+    if (temp_byte != PK_ID) 
+      Fatal( "Wrong Version of pk file!  (%d should be 89)\n",
+	     (int)temp_byte);
+  } else
+    Fatal("unknown font format in file <%s> !\n",vfstack[vfstackptr]->name);
+
+  { /* PK 89 format */
+    /*    unsigned char   temp_byte;*/
+    register unsigned char  flag_byte;
+    long4    hppp, vppp, packet_length;
+    int     car, ii;
+
+    /* read comment */
+    for ( ii /*= temp_byte*/ = (unsigned char)NoSignExtend(tfontp->filep, 1);
+	  ii>0; ii--) {
+      flag_byte = (unsigned char) NoSignExtend(tfontp->filep, 1);
+#ifdef DEBUG
+      if (Debug) fprintf(ERR_STREAM, "%c", flag_byte );
+#endif
+    }
+#ifdef DEBUG
+    if (Debug) fprintf(ERR_STREAM, "\n");
+#endif
+    tfontp->designsize = NoSignExtend(tfontp->filep, 4);
+    tfontp->is_vf = _FALSE;
+
+    t = NoSignExtend(tfontp->filep, 4);
+    CheckChecksum (tfontp->c, t, tfontp->name);
+
+    hppp = NoSignExtend(tfontp->filep, 4);
+    vppp = NoSignExtend(tfontp->filep, 4);
+    if (hppp != vppp)
+      Warning("aspect ratio is %ld:%ld (should be 1:1)!", 
+              (long)hppp, (long)vppp);
+    tfontp->magnification = (long4)(hppp * 72.27 * 5 / 65536l + 0.5);
+
+    flag_byte = skip_specials();
+
+    while (flag_byte != PK_POST) {
+      if ((flag_byte & 7) == 7) {
+        packet_length = (unsigned long4)NoSignExtend(tfontp->filep,4);
+        car = (int)NoSignExtend(tfontp->filep, 4);
+      } else if (flag_byte & 4) {
+        packet_length = ((long4)flag_byte & 3) * 65536l +
+          (unsigned short) NoSignExtend(tfontp->filep, 2);
+        car = (int)NoSignExtend(tfontp->filep, 1);
+      } else {
+        packet_length = ((long4)flag_byte & 3) * 256 +
+          NoSignExtend(tfontp->filep, 1);
+        car = (int)NoSignExtend(tfontp->filep, 1);
+      }
+      if (car > (LASTFNTCHAR))
+          Fatal("Bad character (%d) in PK-File\n",(int)car);
+      if ((tcharptr = tfontp->ch[car] = NEW(struct char_entry )) == NULL)
+	Fatal("can't malloc space for char_entry");
+      tcharptr->fileOffset = FTELL(tfontp->filep);
+      tcharptr->flag_byte = flag_byte;
+      tcharptr->isloaded = _FALSE;
+      FSEEK(tfontp->filep, (long)packet_length, SEEK_CUR);
+      flag_byte = skip_specials();
+    } /* end of while */
+    /*tfontp->max_height = max_depth ? tfontp->max_yoff+max_depth :
+      tfontp->max_yoff+1;*/
+    /*
+      printf("fontid=%d: max_width=%u, max_height=%d, max_yoff=%u\n",
+        tfontp->plusid, tfontp->max_width,
+        tfontp->max_height, tfontp->max_yoff);
+        */
+  }
+}
