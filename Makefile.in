@@ -71,7 +71,9 @@ install-dvipng: dvipng
 	$(INSTALL) dvipng $(DESTDIR)$(bindir)
 
 install-dvigif: install-dvipng
-	(cd $(DESTDIR)$(bindir) && $(LN_S) dvipng dvigif) 
+	cd $(DESTDIR)$(bindir)
+	rm -f dvigif
+	$(LN_S) dvipng dvigif
 
 ####################################### The documentation
 

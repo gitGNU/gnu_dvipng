@@ -1,3 +1,8 @@
+2004-11-05  David Kastrup  <dakas@users.sourceforge.net>
+
+	* Makefile.in (install-dvigif): Don't fail if dvigif already
+	exists.
+
 2004-11-02  Jan-Åke Larsson  <jalar@mai.liu.se>
 
 	* dvipng.h: Fix boolean type
