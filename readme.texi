@@ -99,26 +99,26 @@ dvipng --help
 
 @section Availability
 
-The dvipng package is available at SourceForge, at
-@url{http://sourceforge.net/projects/dvipng}. This is the project
-page of dvipng. Anonymous CVS is available from
-@url{http://sourceforge.net/projects/preview-latex}, but this will
-change in the future.
+The dvipng package is available at Savannah, the GNU project site. Since
+dvipng is not part of the GNU project, although released under the GNU
+GPL, the web address is
+@url{http://savannah.nongnu.org/projects/dvipng}. Instructions for
+anonymous CVS access can be found at 
+@url{http://savannah.nongnu.org/cvs/?group=dvipng}.
 
 @section Contacts
 
 Bug reports should be sent to
-@email{dvipng-devel@@lists.sourceforge.net}. 
+@email{dvipng@@nongnu.org}. 
 
 Questions, suggestions for new features, pleas for help, and/or praise
-should go to @email{dvipng-devel@@lists.sourceforge.net} (the dvipng
-devel team). For more information on this mailing list, send a message
-with just the word `help' as subject or body to
-@email{dvipng-devel-request@@lists.sourceforge.net} or look at
-@url{http://lists.sourceforge.net/lists/listinfo/dvipng-devel}.
+should go to @email{dvipng@@nongnu.org}. For more information on this
+mailing list, send a message with just the word `help' as subject or
+body to @email{dvipng-request@@nongnu.org} or look at
+@url{http://lists.nongnu.org/mailman/listinfo/dvipng}.
 
 Offers to support further development will be appreciated. For developer
-access, ask on @email{dvipng-devel@@lists.sourceforge.net}.
+access, ask on @email{dvipng@@nongnu.org}.
 
 @section Copying
 
@@ -134,15 +134,15 @@ Copyright @copyright{} 2002-2005 Jan-@AA{}ke Larsson
 @item 
 Test the FreeType interface so that TrueType fonts work properly.
 
-@item
-Remove kpathsea dependence, use dvips' environment variables (this is
-maybe less of an issue now with working MiKTeX support).
-
 @item 
 Further speed improvements.
 
 @item 
 Other output specials and source specials.
+
+@item
+Remove kpathsea dependence, use dvips' environment variables (this is
+maybe less of an issue now with working MiKTeX support).
 @end itemize
 
 

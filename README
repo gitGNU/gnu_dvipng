@@ -72,26 +72,24 @@ summary of available options, just type
 Availability
 ============
 
-   The dvipng package is available at SourceForge, at
-`http://sourceforge.net/projects/dvipng'. This is the project page of
-dvipng. Anonymous CVS is available from
-`http://sourceforge.net/projects/preview-latex', but this will change
-in the future.
+   The dvipng package is available at Savannah, from the project page of
+dvipng `http://savannah.nongnu.org/projects/dvipng'. Instructions for
+anonymous CVS access can be found at
+`http://savannah.nongnu.org/cvs/?group=dvipng'.
 
 Contacts
 ========
 
-   Bug reports should be sent to <dvipng-devel@lists.sourceforge.net>.
+   Bug reports should be sent to <dvipng@nongnu.org>.
 
    Questions, suggestions for new features, pleas for help, and/or
-praise should go to <dvipng-devel@lists.sourceforge.net> (the dvipng
-devel team). For more information on this mailing list, send a message
-with just the word `help' as subject or body to
-<dvipng-devel-request@lists.sourceforge.net> or look at
-`http://lists.sourceforge.net/lists/listinfo/dvipng-devel'.
+praise should go to <dvipng@nongnu.org>. For more information on this
+mailing list, send a message with just the word `help' as subject or
+body to <dvipng-request@nongnu.org> or look at
+`http://lists.nongnu.org/mailman/listinfo/dvipng'.
 
    Offers to support further development will be appreciated. For
-developer access, ask on <dvipng-devel@lists.sourceforge.net>.
+developer access, ask on <dvipng@nongnu.org>.
 
 Copying
 =======
@@ -107,10 +105,10 @@ Todo
 
    * Test the FreeType interface so that TrueType fonts work properly.
 
-   * Remove kpathsea dependence, use dvips' environment variables (this
-     is maybe less of an issue now with working MiKTeX support).
-
    * Further speed improvements.
 
    * Other output specials and source specials.
+
+   * Remove kpathsea dependence, use dvips' environment variables (this
+     is maybe less of an issue now with working MiKTeX support).
 
