@@ -1,13 +1,11 @@
-Release notes for version 0.4 of the dvipng package:
+Release notes for version 0.5 of the dvipng package:
 
 This program makes PNG graphics from DVI files as obtained from TeX
 and its relatives.
 
-This release is mainly to provide documentation. It does also
-introduce "drift", compensating for rounding errors along the lines
-described in 'dvitype'. Also, on systems with a fairly new gd
-(>=2.0.14), the PNG compression can be specified on the commandline,
-the default is to opt for speed.
+This release is a bugfix release. The bounding boxes were "off" on
+some machines in the previous release. Preliminary truecolor support
+has been added if gd allows it. 
 
 It has been tested but will probably need further testing. Report any
 bugs you find, see README for instructions.
