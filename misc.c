@@ -15,7 +15,7 @@ bool DecodeArgs(int argc, char ** argv)
   char *outname=NULL;
 
   if (argc == 2 && (strcmp (argv[1], "--version") == 0)) {
-    puts (VERSION);
+    puts (PACKAGE_STRING);
 #ifdef HAVE_LIBKPATHSEA
     puts (KPSEVERSION);
 #endif
@@ -36,11 +36,9 @@ named COPYING and dvipng.c.");
 	{ 
 	  int debug = 0;
 	  
-	  if (*p == 0 && argv[i+1] 
-	      && sscanf(argv[i+1], "%u", &debug)==1) 
-	    i++;
-	  else
-	    sscanf(p, "%u", &debug);
+	  if (*p == 0 && argv[i+1])
+	    p = argv[++i];
+	  debug = atoi(p);
 	  flags |= debug!=0 ? debug * LASTFLAG * 2 : DEBUG_DVI;
 #ifdef HAVE_LIBKPATHSEA
 	  kpathsea_debug = debug/LASTDEBUG;
@@ -138,8 +136,7 @@ named COPYING and dvipng.c.");
 	  p++;
 	  if (*p == 0 && argv[i+1])
 	    p = argv[++i] ;
-	  if ( sscanf(p, "%d", &borderwidth) != 1 )
-	    Fatal("argument of -bd is not a valid integer\n");
+	  borderwidth = atoi(p);
 	  Message(PARSE_STDIN,"Transp. border: %d dots\n",borderwidth);
 	}
 	break;
@@ -155,8 +152,8 @@ named COPYING and dvipng.c.");
       case 'x' : case 'y' :
 	if (*p == 0 && argv[i+1])
 	  p = argv[++i] ;
-	if (sscanf(p, "%d", &usermag)==0 || usermag < 1 ||
-	    usermag > 1000000)
+	usermag = atoi(p);
+	if (usermag < 1 || usermag > 1000000)
 	  Fatal("Bad magnification parameter (-x or -y).") ;
 	Message(PARSE_STDIN,"Magstep: %d\n",usermag);
 	/*overridemag = (c == 'x' ? 1 : -1) ;*/
@@ -181,8 +178,7 @@ named COPYING and dvipng.c.");
 	    abspage=_TRUE;
 	    p++ ;
 	  }
-	  if (sscanf(p, "%d", &firstpage)!=1) 
-	    Fatal("bad first page option (-p %s).",p) ;
+	  firstpage = atoi(p);
 	  FirstPage(firstpage,abspage);
 	  Message(PARSE_STDIN,"First page: %d\n",firstpage);
 	}
@@ -198,8 +194,7 @@ named COPYING and dvipng.c.");
 	    abspage=_TRUE;
 	    p++ ;
 	  } 
-	  if (sscanf(p, "%d", &lastpage)!=1)
-	    Fatal("bad last page option (-l %s).",p) ;
+	  lastpage = atoi(p);
 	  LastPage(lastpage,abspage);
 	  Message(PARSE_STDIN,"Last page: %d\n",lastpage);
 	}
@@ -219,14 +214,13 @@ named COPYING and dvipng.c.");
       case 'D' :
 	if (*p == 0 && argv[i+1])
 	  p = argv[++i] ;
-	if (sscanf(p, "%d", &resolution)==0 || resolution < 10 ||
-	    resolution > 10000)
+	resolution = atoi(p);
+	if (resolution < 10 || resolution > 10000)
 	  Fatal("bad dpi parameter (-D).") ;
 	Message(PARSE_STDIN,"Dpi: %d\n",resolution);
 	break;
       case 'Q':       /* quality (= shrinkfactor) */
-        if ( sscanf(p, "%d", &shrinkfactor) != 1 )
-          Fatal("argument of -Q is not a valid integer\n");
+        shrinkfactor = atoi(p);
 	Message(PARSE_STDIN,"Shrinkfactor: %d\n",shrinkfactor);
 	break;
       case '\0':
@@ -242,7 +236,8 @@ named COPYING and dvipng.c.");
 
   if (argv[0]!=NULL) {
     programname=argv[0];
-    Message(BE_NONQUIET,"This is %s Copyright 2002 Jan-Åke Larsson\n",VERSION);
+    Message(BE_NONQUIET,"This is %s Copyright 2002 Jan-Åke Larsson\n",
+	    PACKAGE_STRING);
   }
 
   if (dviname != NULL) {
@@ -385,15 +380,13 @@ void Warning(char *fmt, ...)
 
   va_start(args, fmt);
 
-  if ( flags & BE_NONQUIET )
-    return;
-  
-  fprintf(ERR_STREAM, "%s warning: ", programname);
-  vfprintf(ERR_STREAM, fmt, args);
-  fprintf(ERR_STREAM, "\n");
-  va_end(args);
+  if ( flags & BE_NONQUIET ) {
+    fprintf(ERR_STREAM, "%s warning: ", programname);
+    vfprintf(ERR_STREAM, fmt, args);
+    fprintf(ERR_STREAM, "\n");
+    va_end(args);
+  }
 }
-
 
 /*-->Message*/
 /**********************************************************************/
@@ -404,8 +397,10 @@ void Message(int activeflags, char *fmt, ...)
   va_list args;
 
   va_start(args, fmt);
-  if ( flags & activeflags )
+  if ( flags & activeflags ) {
     vfprintf(ERR_STREAM, fmt, args);
+    fflush(ERR_STREAM);
+  }
   va_end(args);
 }
 
