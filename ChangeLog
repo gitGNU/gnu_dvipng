@@ -1,3 +1,10 @@
+2004-05-31  Jan-Åke Larsson  <jalar@pcbjalar>
+
+	* dvipng.1:
+	* configure.ac:
+	* RELEASE:
+	* INSTALL: Release 1.1 
+
 2004-05-26  Jan-Åke Larsson  <jalar@pcbjalar>
 
 	* special.c: Handle source specials
