@@ -1,3 +1,24 @@
+2004-11-24  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* config.h.in:
+	* configure.ac: Test for 64-bit types.
+
+	* dvipng.h: Use char* arithmetic, not void*. And enable use of
+	gcc -ansi -pedantic.
+
+	* special.c: Don't use C++ comments. 
+
+	* papersiz.c: Rewrite
+
+	* draw.c:
+	* dvi.c:
+	* font.c:
+	* ft.c:
+	* misc.c:
+	* pk.c:
+	* tfm.c:
+	* vf.c: Fix signedness
+
 2004-11-15  Reiner Steib  <Reiner.Steib@gmx.de>
 
 	* draw.c, dvipng.c, enc.c, font.c, ft.c, pk.c, special.c, t1.c:
