@@ -70,7 +70,7 @@ bool DecodeArgs(int argc, char ** argv)
 	    debug = DEBUG_DEFAULT;
 	  Message(PARSE_STDIN,"Debug output enabled\n");
 #ifdef HAVE_LIBKPATHSEA
-	  kpathsea_debug = debug / LASTDEBUG;
+	  kpathsea_debug = debug / LASTDEBUG / 2 ;
 #endif
 #else
 	  Warning("This instance of %s was compiled without the debug (-d) option",
@@ -389,7 +389,7 @@ named COPYING and dvipng.c.");
 #ifdef DEBUG
     fprintf(stdout,"  -d #         Debug (# is the debug bitmap, 1 if not given)\n");
 #endif
-    fprintf(stdout,"  -D #         Resolution\n");
+    fprintf(stdout,"  -D #         Output resolution\n");
     fprintf(stdout,"  -M*          Don't make fonts\n");
     fprintf(stdout,"  -l #         Last page to be output\n");
     fprintf(stdout,"  -mode s      MetaFont mode (default cx)\n");
