@@ -182,52 +182,53 @@ void FontFind(struct font_entry * tfontptr)
   tfontptr->font_mag = dpi * 5; /* save correct dpi */
   DEBUG_PRINT((DEBUG_DVI,"\n  FIND FONT:\t%s %d",tfontptr->n,dpi));
 
-#ifdef HAVE_FT2
-  psfile = FindPSFontMap(tfontptr->n, &encoding, &transform);
-  if (psfile!=NULL) {
-    name = kpse_find_ft(psfile);
-    free(psfile);
-  } else
-    name = kpse_find_ft(tfontptr->n);
+  name = kpse_find_vf (tfontptr->n);
   if (name!=NULL) {
     strcpy (tfontptr->name, name);
     free (name);
-    name = kpse_find_file(tfontptr->n, kpse_tfm_format, false);
-    if (name!=NULL) {
-      InitFT(tfontptr,dpi,encoding,transform);
-      free(transform);
-      ReadTFM(tfontptr,name);
-      free(name);
-    }
-  }
-#endif
-  if (name==NULL) {
-    name = kpse_find_vf (tfontptr->n);
+    InitVF(tfontptr);
+  } else {
+#ifdef HAVE_FT2
+    psfile = FindPSFontMap(tfontptr->n, &encoding, &transform);
+    if (psfile!=NULL) {
+      name = kpse_find_ft(psfile);
+      free(psfile);
+    } else
+      name = kpse_find_ft(tfontptr->n);
     if (name!=NULL) {
       strcpy (tfontptr->name, name);
       free (name);
-      InitVF(tfontptr);
-    } else {
-      name = kpse_find_pk (tfontptr->n, dpi, &font_ret);
-      if (name) {
-	strcpy (tfontptr->name, name);
-	free (name);
-	
-	if (!FILESTRCASEEQ (tfontptr->n, font_ret.name)) {
-	  Warning("font %s not found, using %s at %d instead.\n",
-		  tfontptr->n, font_ret.name, font_ret.dpi);
-	  tfontptr->c = 0; /* no checksum warning */
-	} else if (!kpse_bitmap_tolerance ((double)font_ret.dpi, (double) dpi))
-	  Warning("font %s at %d not found, using %d instead.\n",
-		  tfontptr->name, dpi, font_ret.dpi);
-	InitPK(tfontptr);
-      } else {
-	Warning("font %s at %u not found, characters will be left blank.\n",
-		tfontptr->n, dpi);
-	tfontptr->filedes = 0;
-	tfontptr->magnification = 0;
-	tfontptr->designsize = 0;
+      name = kpse_find_file(tfontptr->n, kpse_tfm_format, false);
+      if (name!=NULL) {
+	InitFT(tfontptr,dpi,encoding,transform);
+	if (transform!=NULL)
+	  free(transform);
+	ReadTFM(tfontptr,name);
+	free(name);
       }
+    }
+  }
+  if (name==NULL) {
+#endif
+    name = kpse_find_pk (tfontptr->n, dpi, &font_ret);
+    if (name!=NULL) {
+      strcpy (tfontptr->name, name);
+      free (name);
+      
+      if (!FILESTRCASEEQ (tfontptr->n, font_ret.name)) {
+	Warning("font %s not found, using %s at %d instead.\n",
+		tfontptr->n, font_ret.name, font_ret.dpi);
+	tfontptr->c = 0; /* no checksum warning */
+      } else if (!kpse_bitmap_tolerance ((double)font_ret.dpi, (double) dpi))
+	Warning("font %s at %d not found, using %d instead.\n",
+		tfontptr->name, dpi, font_ret.dpi);
+      InitPK(tfontptr);
+    } else {
+      Warning("font %s at %u not found, characters will be left blank.\n",
+	      tfontptr->n, dpi);
+      tfontptr->filedes = 0;
+      tfontptr->magnification = 0;
+      tfontptr->designsize = 0;
     }
   }
 #else /* not HAVE_LIBKPATHSEA */
