@@ -90,7 +90,9 @@ char* FindPSFontMap(char* fontname, char** encoding, FT_Matrix** transform)
   *transform=NULL;
 
   entry=psfontmap;
-  while(entry!=NULL && strncmp(entry->tfmname,fontname,strlen(fontname))!=0) 
+  while(entry!=NULL && (strncmp(entry->tfmname,fontname,strlen(fontname))!=0
+			|| (entry->tfmname[strlen(fontname)] != ' ' 
+			    && entry->tfmname[strlen(fontname)] != '\t')))
     entry=entry->next;
   if (entry!=NULL) {
     int nameno = 0;
