@@ -2,6 +2,7 @@
 *.dvi
 *.log
 *.png
+*.gif
 *.ps
 *.tex
 *.cp*
