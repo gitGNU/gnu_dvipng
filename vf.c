@@ -28,17 +28,17 @@ int32_t SetVF(int32_t c, int PassNo)
 #endif
 
   currentvf=currentfont;
-  SetFntNum(currentvf->defaultfont,(struct dvi_vf_entry*)currentvf);
-  DrawCommand(&push,PassNo,(struct dvi_vf_entry*)NULL);
+  SetFntNum(currentvf->defaultfont,currentvf);
+  DrawCommand(&push,PassNo,NULL);
   w = x = y = z = 0;
   command = currentvf->vf_ch[c]->mmap;
   end = command + currentvf->vf_ch[c]->length;
   while (command < end)  {
     DEBUG_PRINTF(DEBUG_DVI,"\n  VF MACRO:\t%s ", dvi_commands[*command]);
-    DrawCommand(command,PassNo,(struct dvi_vf_entry*)currentvf);
+    DrawCommand(command,PassNo,currentvf);
     command += CommandLength(command);
   } 
-  DrawCommand(&pop,PassNo,(struct dvi_vf_entry*)NULL);
+  DrawCommand(&pop,PassNo,NULL);
   currentfont=currentvf;
   return(currentvf->vf_ch[c]->tfmw);
 }
@@ -84,7 +84,7 @@ void InitVF(struct font_entry * tfontp)
     DEBUG_PRINTF2(DEBUG_VF,"\n  @%ld VF:\t%s", 
 		  (long)(position - tfontp->mmap), 
 		  dvi_commands[*position]);
-    FontDef(position,(struct dvi_vf_entry*)tfontp);	
+    FontDef(position,tfontp);	
     length = dvi_commandlength[*position];
     position += length + *(position + length-1) + *(position+length-2);
   }
