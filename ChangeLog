@@ -1,3 +1,8 @@
+2005-04-03  jalar  <jalar@mai.liu.se>
+
+	* special.c: Try to detect all preview-latex versions tightpage
+	code
+
 2005-03-02  jalar  <jalar@mai.liu.se>
 
 	* set.c: Remove extra debug printout
