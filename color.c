@@ -63,9 +63,9 @@ background(p)
 {
   stringrgb(p, &bRed, &bGreen, &bBlue);
   if (page_imagep) {
-    DoBop(); 
+    CreateImage(); 
     Warning("Setting background inside page will clear the image, sorry.");
-    /*FSEEK(dvi->filep,cpagep,SEEK_SET);*/ /* Restart page output */
+    /*fseek(dvi->filep,cpagep,SEEK_SET);*/ /* Restart page output */
     /* GdImageFilledRectangle(...); will take forever to finish and
       will clear the image */
     /* The below probably works only on color-indexed gdImages, and
