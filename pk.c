@@ -10,6 +10,8 @@ unsigned char   dyn_f;
 int             repeatcount;
 int             poshalf;
 
+void    LoadAChar(int32_t, register struct pk_char *);
+
 int32_t SetPK(int32_t c, int PassNo)
 {
   register struct pk_char *ptr;  /* temporary pk_char pointer */
