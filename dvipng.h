@@ -321,8 +321,8 @@ long4   NoSignExtend AA((FILEPTR, int));
 void    OpenFontFile AA((void));
 void    ReadFontDef AA((long4));
 void    ReadPostAmble AA((bool));
-void    SetChar AA((long4, short, int));
-void    SetFntNum AA((long4, bool));
+long4   SetChar AA((long4, int));
+void    SetFntNum AA((long4));
 void    SetRule AA((long4, long4, int, int));
 long4   SignExtend AA((FILEPTR, int));
 void    SkipFontDef AA((void));
@@ -480,6 +480,9 @@ EXTERN  int y_offset_def INIT(0);
 /* This has yet to be written */
 EXTERN  int x_pwidth INIT(0); 
 EXTERN  int y_pwidth INIT(0);
+
+/* The transparent border preview-latex desires */
+EXTERN  int borderwidth INIT(0);
 
 #define VERSION "0.0 (dvipngk)"
 
