@@ -12,6 +12,7 @@ Installing dvipng should be simple: merely @code{./configure},
 * Prerequisites::               
 * Configure::                   
 * Build/install::               
+* Installation outside the texmf tree::
 * Advice for non-privileged users::  
 @end menu
 @end ifclear
@@ -127,7 +128,7 @@ On my SUN Solaris workstation, I had to combine this into
 @noindent
 where the backslash denotes a continuation of the line.
 
-@node Build/install, Advice for non-privileged users, Configure, Installation
+@node Build/install, Installation outside the texmf tree, Configure, Installation
 @section Build/install
 
 Once @file{configure} has been run, simply enter
@@ -147,7 +148,19 @@ make install
 You may need special privileges to install, e.g., if you are installing
 into system directories.
 
-@node Advice for non-privileged users,  , Build/install, Installation
+@node Installation outside the texmf tree, Advice for non-privileged users, Build/install, Installation
+@section Installation outside the texmf tree
+
+In some cases, a dvipng binary installed outside the texmf tree will not
+be able to find virtual fonts, or the PostScript font maps (normally
+used by dvips). This may be because one or more of $SELFAUTOLOC,
+$SELFAUTODIR or $SELFAUTOPARENT are used in the texmf tree configuration
+file @samp{texmf.cnf}. If so, give the switch
+@samp{--enable-selfauto-set} to @samp{./configure}, which will make
+dvipng adjust these internally so that kpathsea thinks that dvipng
+@emph{is} installed in the texmf tree.
+
+@node Advice for non-privileged users,  , Installation outside the texmf tree, Installation
 @section Installation for non-privileged users
 
 Often people without system administration privileges want to install
