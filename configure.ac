@@ -24,30 +24,13 @@ AC_PATH_PROG(GS, gs, :)
 AC_DEFINE_UNQUOTED(GS_PATH, "$GS", [Define as the path to GhostScript.])
 
 # Checks for libraries.
+AC_CHECK_LIB(m, pow)
 AC_CHECK_LIB(gen, basename)
 AC_CHECK_LIB([png], [png_read_image],,
-             [AC_MSG_ERROR([cannot find/use libpng])],
-	     [-lm])
-######
-# Needed when statically linking against libpng
-AC_MSG_CHECKING([if -lpng needs -lm])
-AC_TRY_LINK(, [png_read_image()], 
-   AC_MSG_RESULT([no]),	
-   LIBS="-lm $LIBS" 
-   AC_MSG_RESULT([yes]))
-######
+             [AC_MSG_ERROR([cannot find/use libpng])])
 AC_CHECK_LIB([gd], [gdImageCreate],,
              [AC_MSG_ERROR([cannot find/use libgd
-This drawing library can be downloaded at http://www.boutell.com/gd])],
-	     [-lm])
-######
-# Needed when statically linking against libgd
-AC_MSG_CHECKING([if -lgd needs -lm])
-AC_TRY_LINK(, [gdImageCreate()], 
-   AC_MSG_RESULT([no]),	
-   LIBS="-lm $LIBS" 
-   AC_MSG_RESULT([yes]))
-######
+This drawing library can be downloaded at http://www.boutell.com/gd])])
 AC_CHECK_LIB([kpathsea], [kpse_set_progname],, 
              AC_MSG_ERROR([cannot find/use libkpathsea]))
 AC_CHECK_LIB([t1], [T1_InitLib])
