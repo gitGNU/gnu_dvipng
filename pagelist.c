@@ -145,7 +145,8 @@ struct page_list* FindPage P1C(long4,pagenum)
 
 #ifdef DEBUG
   if (Debug)
-    printf("FIND PAGE@%ld:\t%ld\t(%ld)\n", tpagelistp->offset,
+    if (tpagelistp!=NULL)
+      printf("FIND PAGE@%ld:\t%ld\t(%ld)\n", tpagelistp->offset,
 	     tpagelistp->count[0],tpagelistp->count[10]);
 #endif
 
