@@ -130,7 +130,7 @@ dviunits SetChar(int32_t c)
   case FONT_TYPE_T1: {
     struct t1_char* ptr = currentfont->chr[c];
     if (ptr->data == NULL) 
-      LoadT1(c, ptr, currentfont->dpi);
+      LoadT1(c, ptr);
     DEBUG_PRINT(DEBUG_DVI,("\n  T1 CHAR:\t"));
     if (isprint(c))
       DEBUG_PRINT(DEBUG_DVI,("'%c' ",c));
