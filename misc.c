@@ -216,8 +216,8 @@ named COPYING and dvipng.c.");
         else
 	  flags |= BE_NONQUIET;
 	break;
-      case 'r':       /* switch order to process pages */
-	if (Reverse() && *p != '0') 
+      case 'r':       /* process pages in reverse order */
+	if (*p != '0') 
 	  Message(PARSE_STDIN,"Reverse order\n");
 	else
 	  Message(PARSE_STDIN,"Normal order\n");
@@ -242,6 +242,13 @@ named COPYING and dvipng.c.");
         shrinkfactor = atoi(p);
 	Message(PARSE_STDIN,"Shrinkfactor: %d\n",shrinkfactor);
 	break;
+#ifdef HAVE_GDIMAGEPNGEX
+      case 'z':
+	if (*p == 0 && argv[i+1])
+	  p = argv[++i];
+	compression = atoi(p);
+	break;
+#endif
       case '\0':
 	flags |= PARSE_STDIN;
 	break;
@@ -289,6 +296,9 @@ named COPYING and dvipng.c.");
     fprintf(stdout,"  -fg s     Foreground color (TeX-style color)\n");
     fprintf(stdout,"  -follow   Follow mode\n");
     fprintf(stdout,"  -Q #      Quality (~xdvi's shrinkfactor)\n");
+#ifdef HAVE_GDIMAGEPNGEX
+    fprintf(stdout,"  -z #      PNG compression level\n");
+#endif
     
     fprintf(stdout,"\n   # = number   f = file   s = string  * = suffix, '0' to turn off\n");
     fprintf(stdout,"       c = comma-separated dimension pair (e.g., 3.2in,-32.1cm)\n\n");
