@@ -87,7 +87,7 @@ typedef struct {
   ValTyp  Typ;
 } KeyDesc;
 
-void    SetSpecial(char *, int, int32_t, int32_t);
+void    SetSpecial(char *, int, int32_t, int32_t,bool);
 
 /********************************************************/
 /***********************  dvi.h  ************************/
@@ -227,6 +227,7 @@ void      CreateImage(void);
 void      DrawCommand(unsigned char*, void* /* dvi/vf */); 
 void      DrawPages(void);
 void      WriteImage(char*, int);
+void      LoadAChar(int32_t c, register struct pk_char * ptr);
 int32_t   SetChar(int32_t);
 int32_t   SetPK(int32_t,int32_t, int32_t);
 int32_t   SetVF(int32_t);
