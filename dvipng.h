@@ -41,8 +41,20 @@
 #define MAKETEXPK "mktexpk"
 
 #ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#else
+#  include <inttypes.h>
+#  ifndef HAVE_INT64_T
+/* Sometimes we want to use gcc -ansi -pedantic as a portability test
+ * The typedef of int64_t is not in the system header file in that
+ * case. Then, define int64_t as "long long" here. "long long" is
+ * non-ansi, but is present in most modern compilers */
+#    ifdef HAVE_LONG_LONG
+typedef long long                int64_t;
+typedef unsigned long long      uint64_t;
+#    else
+#      error Your system lacks 64-bit integer types
+#    endif
+#  endif
+#else /* HAVE_INTTYPES_H */
 typedef signed char               int8_t;
 typedef unsigned char            uint8_t;
 typedef short                    int16_t;
@@ -51,7 +63,8 @@ typedef int                      int32_t;
 typedef unsigned int            uint32_t;
 typedef long long                int64_t;
 typedef unsigned long long      uint64_t;
-#endif
+#endif /* HAVE_INTTYPES_H */
+
 
 #ifndef INT32_MIN
 #define INT32_MIN   (-2147483647-1)
@@ -203,7 +216,7 @@ struct filemmap {
 #else  /* MIKTEX */
   int fd;
 #endif	/* MIKTEX */
-  void* mmap;
+  char* mmap;
   size_t size;
 };
 
