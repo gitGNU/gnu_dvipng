@@ -30,9 +30,6 @@
 /**********************************************************************/
 int main P2C(int, argc, char **, argv)
 {
-  int     i;
-
-
 
 #ifdef TIMING
 #ifdef BSD_TIME_CALLS
@@ -44,14 +41,14 @@ int main P2C(int, argc, char **, argv)
 #endif
 #endif
 
-  /* Initialize pixel_files */   
-  for (i = 0; i <= MAXOPEN; i++)
-    pixel_files[i].pixel_file_id = FPNULL;
-
   setbuf(ERR_STREAM, NULL);
   (void) strcpy(G_progname, argv[0]);
 
   initcolor();
+  vfstack[0] = &dvi;
+  dvi.d = 65536; /* Natural scaling on dvi lengths */
+  dvi.hfontnump=NULL;
+
 
   DecodeArgs(argc, argv);
 
@@ -86,7 +83,7 @@ int main P2C(int, argc, char **, argv)
     
     if (!QueueEmpty()) 
       DoPages();
-    printf("%s> ",filename);
+    printf("%s> ",dvi.n);
     fgets(line,STRSIZE,stdin);
     while(!FEOF(stdin)) {
       linev[0]=line;  /* OBSERVE linev[0] is never used in DecodeArgs */
@@ -103,7 +100,7 @@ int main P2C(int, argc, char **, argv)
       }
       if (!QueueEmpty()) 
 	DoPages();
-      printf("%s> ",filename);
+      printf("%s> ",dvi.n);
       fgets(line,STRSIZE,stdin);
     }
   }
