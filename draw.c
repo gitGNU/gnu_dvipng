@@ -159,7 +159,11 @@ void DoPages(void)
 
   while((tpagelistp=FindPage(TodoPage()))!=NULL
 	&& tpagelistp->count[10]!=-1) {
-    if (PassDefault == PASS_BBOX) {
+    if (PassDefault == PASS_BBOX || PassDefault == PASS_TIGHT_BBOX) {
+      if (PassDefault == PASS_TIGHT_BBOX) {
+	x_max = y_max = INT32_MIN;
+	x_min = y_min = INT32_MAX;
+      }
       DrawPage(PASS_BBOX);
       /* Reset to after BOP of current page */
       fseek(dvi->filep, tpagelistp->offset+45, SEEK_SET); 

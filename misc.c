@@ -97,6 +97,10 @@ named COPYING and dvipng.c.");
 	  PassDefault=PASS_BBOX;
 	  if (ParseStdin)
 	    printf("Pagesize: (bbox)\n");
+	} else if (strcmp(p,"tight")==0) {
+	  PassDefault=PASS_TIGHT_BBOX;
+	  if (ParseStdin)
+	    printf("Pagesize: (tight bbox)\n");
 	} else { 
 	  handlepapersize(p, &x_width, &y_width) ;
 	  if (Landscape) {

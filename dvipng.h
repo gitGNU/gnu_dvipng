@@ -391,7 +391,8 @@ EXTERN int bBlue  INIT(255);
 
 #define PASS_SKIP 0
 #define PASS_BBOX 1
-#define PASS_DRAW 2
+#define PASS_TIGHT_BBOX 2
+#define PASS_DRAW 4
 EXTERN int PassDefault INIT(PASS_BBOX);
 
 EXTERN bool ParseStdin INIT(_FALSE);
