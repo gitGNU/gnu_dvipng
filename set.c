@@ -68,6 +68,9 @@ long4 SetChar P2C(long4, c, int, PassNo)
 	  -PIXROUND(ptr->yOffset,shrinkfactor)+ptr->glyph.h);
       break;
     case PASS_DRAW:
+      if (!(ptr->isloaded)) {
+	LoadAChar(c, ptr);
+      }
       /*
        * Draw character. Remember now, we have stored the different
        * greyscales in glyph.data with darkest last.  Draw the character
@@ -89,10 +92,13 @@ long4 SetChar P2C(long4, c, int, PassNo)
       }
 #ifdef DEBUG
       if (Debug)
-	printf("<%c> at (%d,%d)-(%d,%d)\n",(char)c,
+	printf("<%c> at (%d,%d)-(%d,%d) offset (%d,%d)\n",
+	       (char)c,
 	       PIXROUND(h, hconv*shrinkfactor),
 	       PIXROUND(v, vconv*shrinkfactor),
-	       ptr->xOffset,ptr->yOffset);
+	       PIXROUND(ptr->xOffset,shrinkfactor),
+	       PIXROUND(ptr->yOffset,shrinkfactor),
+	       x_offset,y_offset);
 #endif
     }
   }
@@ -122,10 +128,6 @@ long4 SetRule P3C(long4, a, long4, b, int, PassNo)
     max(y_max,PIXROUND(v, hconv*shrinkfactor)-1);
     break;
   case PASS_DRAW:
-#ifdef DEBUG
-    if (Debug)
-      fprintf(ERR_STREAM,"Rule xx=%ld, yy=%ld\n", (long)xx, (long)yy);
-#endif
     if ((yy>0) && (xx>0)) {
       /*
 	Oh, bugger. Shrink rule properly. Currently produces too dark
@@ -138,6 +140,14 @@ long4 SetRule P3C(long4, a, long4, b, int, PassNo)
 			     PIXROUND(h, hconv*shrinkfactor)+xx-1+x_offset-1,
 			     PIXROUND(v, vconv*shrinkfactor)+y_offset-1,
 			     Color);
+#ifdef DEBUG
+      if (Debug)
+	printf("Rule (%ld,%ld) at (%d,%d) offset (%d,%d)\n",
+	       (long)xx, (long)yy,
+	       PIXROUND(h, hconv*shrinkfactor),
+	       PIXROUND(v, vconv*shrinkfactor),
+	       x_offset,y_offset);
+#endif
     }
   }
   return(b);
