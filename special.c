@@ -258,7 +258,7 @@ void DoSpecial(char * str, int n)
         }
 #endif
 	else
-#ifdef KPATHSEA
+#ifdef HAVE_LIBKPATHSEA
 	  if (!kpse_tex_hush ("special"))
 #endif
           Warning( "Invalid orientation (%d)given; ignored.", k.v.i);
@@ -289,7 +289,7 @@ void DoSpecial(char * str, int n)
           p_x[j]=x_pos;
           p_y[j]=y_pos;
         } else
-#ifdef KPATHSEA
+#ifdef HAVE_LIBKPATHSEA
               if (!kpse_tex_hush ("special"))
 #endif
           Warning("invalid point definition\n");
@@ -319,7 +319,7 @@ void DoSpecial(char * str, int n)
           GrayScale = k.v.i;
           GrayFill = _TRUE;
         } else
-#ifdef KPATHSEA
+#ifdef HAVE_LIBKPATHSEA
            if (!kpse_tex_hush ("special"))
 #endif
           Warning( "Invalid gray scale (%d) given; ignored.", k.v.i);
@@ -330,7 +330,7 @@ void DoSpecial(char * str, int n)
           Pattern = k.v.i;
           GrayFill = _FALSE;
         } else
-#ifdef KPATHSEA
+#ifdef HAVE_LIBKPATHSEA
            if (!kpse_tex_hush ("special"))
 #endif
           Warning( "Invalid pattern (%d) given; ignored.", k.v.i);
@@ -344,7 +344,7 @@ void DoSpecial(char * str, int n)
       case RHI: rhi = k.v.i; break;
 
       default:
-#ifdef KPATHSEA
+#ifdef HAVE_LIBKPATHSEA
            if (!kpse_tex_hush ("special"))
 #endif
         Warning("Can't handle %s=%s command; ignored.", k.Key, k.Val);
@@ -352,7 +352,7 @@ void DoSpecial(char * str, int n)
       }
     
     else
-#ifdef KPATHSEA
+#ifdef HAVE_LIBKPATHSEA
       if (!kpse_tex_hush ("special"))
 #endif
 	Warning("Invalid keyword or value in \\special - <%s> ignored", k.Key);
@@ -368,7 +368,7 @@ void DoSpecial(char * str, int n)
         int adjusted_llx    = llx    * 300/scale_factor;
         char *printer = "ljetplus"; /* use the most stupid one */
         char scale_file_name[255];
-        char *scale_file = tmpnam(scale_file_name);
+        char *scale_file = tmpnam(scale_file_name); /* mkstemp */
         char *pcl_file = tmpnam(NULL);  
         FILE* scalef;
 

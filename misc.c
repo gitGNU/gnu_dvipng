@@ -16,7 +16,7 @@ bool DecodeArgs(int argc, char ** argv)
 
   if (argc == 2 && (strcmp (argv[1], "--version") == 0)) {
     puts (VERSION);
-#ifdef KPATHSEA
+#ifdef HAVE_LIBKPATHSEA
     puts (KPSEVERSION);
 #endif
     puts ("Copyright (C) 2002 Jan-Åke Larsson.\n\
@@ -42,7 +42,7 @@ named COPYING and dvipng.c.");
 	  else
 	    sscanf(p, "%u", &debug);
 	  flags |= debug!=0 ? debug * LASTFLAG * 2 : DEBUG_DVI;
-#ifdef KPATHSEA
+#ifdef HAVE_LIBKPATHSEA
 	  kpathsea_debug = debug/LASTDEBUG;
 #endif
 	  Message(PARSE_STDIN,"Debug output enabled\n");
@@ -61,9 +61,9 @@ named COPYING and dvipng.c.");
       case 'M':
         /* -M, -M1 => don't make font; -M0 => do.  */
         makeTexPK = (*p == '0');
-#ifdef KPATHSEA
+#ifdef HAVE_LIBKPATHSEA
         kpse_set_program_enabled (kpse_pk_format, makeTexPK, kpse_src_cmdline);
-#endif /* KPATHSEA */
+#endif 
 	if (makeTexPK)
 	  Message(PARSE_STDIN,"MakeTeXPK enabled\n");
 	else
@@ -279,7 +279,7 @@ named COPYING and dvipng.c.");
     
     fprintf(ERR_STREAM,"\n     # = number   f = file   s = string  * = suffix, '0' to turn off\n");
     fprintf(ERR_STREAM,"         c = comma-separated dimension pair (e.g., 3.2in,-32.1cm)\n\n");
-    /*#ifdef KPATHSEA
+    /*#ifdef HAVE_LIBKPATHSEA
       {
       extern DllImport char *kpse_bug_address;
       putc ('\n', ERR_STREAM);
