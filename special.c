@@ -8,9 +8,17 @@ ps2png(const char *psfile, int hresolution, int vresolution,
   int status, downpipe[2], uppipe[2];
   pid_t pid;
   char resolution[STRSIZE]; 
+  /* For some reason, png256 gives inferior result */
+  char *device="-sDEVICE=png16m";  
   gdImagePtr psimage=NULL;
 
   status=snprintf(resolution, STRSIZE, "-r%dx%d",hresolution,vresolution);
+  /* png16m being the default, this code is not needed
+   * #ifdef HAVE_GDIMAGECREATETRUECOLOR
+   * if (truecolor) 
+   * device="-sDEVICE=png16m";
+   * #endif  
+   */
   if (status>0 && status<STRSIZE 
       && pipe(downpipe)==0 && pipe(uppipe)==0) { /* Ready to fork */
     pid = fork ();
@@ -19,8 +27,7 @@ ps2png(const char *psfile, int hresolution, int vresolution,
       dup2(downpipe[0], STDIN_FILENO);
       close(downpipe[0]);
       DEBUG_PRINT((DEBUG_GS,"\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s %s",
-		   GS_PATH,
-		   "-sDEVICE=png16m", resolution,
+		   GS_PATH, device, resolution,
 		   "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
 		   "-sOutputFile=-", 
 		   "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
@@ -28,8 +35,7 @@ ps2png(const char *psfile, int hresolution, int vresolution,
       close(uppipe[0]);
       dup2(uppipe[1], STDOUT_FILENO);
       close(uppipe[1]);
-      execl (GS_PATH, GS_PATH,
-	     "-sDEVICE=png16m", resolution,
+      execl (GS_PATH, GS_PATH, device, resolution,
 	     "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
 	     "-sOutputFile=-", 
 	     "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
@@ -142,33 +148,67 @@ void SetSpecial(char * special, int32_t length, int32_t h, int32_t v,
     
     if (PassNo==PASS_DRAW) { /* PASS_DRAW */
       char* psfile = kpse_find_file(psname,kpse_pict_format,0);
+      char* pngname = NULL;
+      gdImagePtr psimage=NULL;
 
-      Message(BE_NONQUIET,"<%s",psname);
-      if (psfile == NULL) 
-	Warning("PS file %s not found, image will be left blank", psname );
-      else {
-	gdImagePtr psimage = ps2png(psfile, hresolution, vresolution, 
-				    urx, ury, llx, lly);
-	if ( psimage == NULL ) 
-	  Warning("Unable to convert %s to PNG, image will be left blank", 
-		  psfile );
+      if (cacheimages) {
+	char* pngfile;
+
+	pngname = malloc(sizeof(char)*(strlen(psname+5)));
+	if (pngname==NULL) 
+	  Fatal("Cannot allocate space for cached image filename");
+	strcpy(pngname,psname);
+	pngfile = strrchr(pngname,'.');
+	if (pngfile==NULL)
+	  strcat(pngname,".png");
 	else {
-	  DEBUG_PRINT((DEBUG_DVI,
-       "\n  PS-PNG INCLUDE \t%s (%d,%d) res %dx%d at (%d,%d) offset (%d,%d)",
-		       psfile,
-		       gdImageSX(psimage),gdImageSY(psimage),
-		       hresolution,vresolution,
-		       PIXROUND(h, dvi->conv*shrinkfactor),
-		       PIXROUND(v, dvi->conv*shrinkfactor),
-		       x_offset,y_offset));
-	  gdImageCopy(page_imagep, psimage,
-		      PIXROUND(h,dvi->conv*shrinkfactor)+x_offset,
-		      PIXROUND(v,dvi->conv*shrinkfactor)-gdImageSY(psimage)
-		      +y_offset,
-		      0,0,
-		      gdImageSX(psimage),gdImageSY(psimage));
-	  gdImageDestroy(psimage);
+	  pngfile[1] = 'p';
+	  pngfile[2] = 'n';
+	  pngfile[3] = 'g';
+	  pngfile[4] = '\0';
 	}
+	pngfile = kpse_find_file(pngname,kpse_pict_format,0);
+	if (pngfile!=NULL) {
+	  FILE* pngfilep = fopen(pngfile,"rb");
+
+	  if (pngfilep!=NULL)
+	    psimage = gdImageCreateFromPng(pngfilep);
+	}
+      }
+      Message(BE_NONQUIET,"<%s",psname);
+      if (psimage==NULL) {
+	if (psfile == NULL) 
+	  Warning("PS file %s not found, image will be left blank", psname );
+	else {
+	  psimage = ps2png(psfile, hresolution, vresolution, 
+			   urx, ury, llx, lly);
+	  if ( psimage == NULL ) 
+	    Warning("Unable to convert %s to PNG, image will be left blank", 
+		    psfile );
+	  else if (!truecolor)
+	    gdImageTrueColorToPalette(psimage,0,256);
+	}
+      }
+      if (pngname !=NULL && psimage != NULL) {
+	FILE* pngfilep = fopen(pngname,"wb");
+	gdImagePng(psimage,pngfilep);
+      } 
+      if (psimage!=NULL) {
+	DEBUG_PRINT((DEBUG_DVI,
+		     "\n  PS-PNG INCLUDE \t%s (%d,%d) res %dx%d at (%d,%d) offset (%d,%d)",
+		     psfile,
+		     gdImageSX(psimage),gdImageSY(psimage),
+		     hresolution,vresolution,
+		     PIXROUND(h, dvi->conv*shrinkfactor),
+		     PIXROUND(v, dvi->conv*shrinkfactor),
+		     x_offset,y_offset));
+	gdImageCopy(page_imagep, psimage,
+		    PIXROUND(h,dvi->conv*shrinkfactor)+x_offset,
+		    PIXROUND(v,dvi->conv*shrinkfactor)-gdImageSY(psimage)
+		    +y_offset,
+		    0,0,
+		    gdImageSX(psimage),gdImageSY(psimage));
+	gdImageDestroy(psimage);
       }
       Message(BE_NONQUIET,">",psfile);
     } else { /* Not PASS_DRAW */

@@ -108,21 +108,41 @@ named COPYING and dvipng.c.");
 	}
 	break ;
       case 't':       /* specify paper format, only for cropmarks */
-	/* cropmarks not implemented yet */
-	if (*p == 0 && argv[i+1])
-	  p = argv[++i] ;
-	if (strcmp(p,"a4")) {
-	  handlepapersize("210mm,297mm",&x_pwidth,&y_pwidth);
-	} else if (strcmp(p,"letter")) {
-	  handlepapersize("8.5in,11in",&x_pwidth,&y_pwidth);
-	} else if (strcmp(p,"legal")) {
-	  handlepapersize("8.5in,14in",&x_pwidth,&y_pwidth);
-	} else if (strcmp(p,"executive")) {
-	  handlepapersize("7.25in,10.5in",&x_pwidth,&y_pwidth);
+#if HAVE_GDIMAGECREATETRUECOLOR
+	/* Truecolor */
+	if (strncmp(p,"ruecolor",8)==0) { 
+	  truecolor = (p[9] != '0');
+	  if (truecolor)
+	    Message(PARSE_STDIN,"Truecolor mode on\n",p);
+	  else 
+	    Message(PARSE_STDIN,"Truecolor mode off\n");
 	} else 
-	  Fatal("The papersize %s is not implemented, sorry.\n",p);
-	Message(PARSE_STDIN,"Papersize: %s\n",p);
-        break;
+#endif
+	  { /* cropmarks not implemented yet */
+	    if (*p == 0 && argv[i+1])
+	      p = argv[++i] ;
+	    if (strcmp(p,"a4")==0) {
+	      handlepapersize("210mm,297mm",&x_pwidth,&y_pwidth);
+	    } else if (strcmp(p,"letter")==0) {
+	      handlepapersize("8.5in,11in",&x_pwidth,&y_pwidth);
+	    } else if (strcmp(p,"legal")==0) {
+	      handlepapersize("8.5in,14in",&x_pwidth,&y_pwidth);
+	    } else if (strcmp(p,"executive")==0) {
+	      handlepapersize("7.25in,10.5in",&x_pwidth,&y_pwidth);
+	    } else
+	      Fatal("The papersize %s is not implemented, sorry.\n",p);
+	    Message(PARSE_STDIN,"Papersize: %s\n",p);
+	  }
+	break;
+      case 'c':
+	if (strncmp(p,"acheimages",10)==0) { 
+	  cacheimages = (p[11] != '0');
+	  if (cacheimages)
+	    Message(PARSE_STDIN,"Caching images\n",p);
+	  else 
+	    Message(PARSE_STDIN,"Not caching images\n");
+	  break;
+	}
       case 'b':
 	if ( *p == 'g' ) { /* -bg background color */
 	  p++;

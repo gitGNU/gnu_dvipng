@@ -327,7 +327,8 @@ EXTERN char *MFMODE     INIT("cx");
 EXTERN int   compression INIT(1);
 #endif
 #ifdef  HAVE_GDIMAGECREATETRUECOLOR
-EXTERN bool truecolor INIT(FALSE);
+EXTERN bool truecolor   INIT(FALSE);
+EXTERN bool cacheimages INIT(FALSE);
 #endif
 # define  max(x,y)       if ((y)>(x)) x = y
 # define  min(x,y)       if ((y)<(x)) x = y
