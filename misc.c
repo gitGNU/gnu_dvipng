@@ -640,7 +640,7 @@ void Fatal (char *fmt, ...)
   if (libt1)
     (void) T1_CloseLib(); /* at this point, ignore error */
 #endif  
-  exit(EXIT_FAILURE);
+  exit(EXIT_FATAL);
 }
 
 /*-->Warning*/

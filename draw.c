@@ -418,8 +418,10 @@ void DrawPages(void)
 #ifdef TIMING
 	++ndone;
 #endif
-      } else 
+      } else {
+	exitcode=EXIT_FAILURE;
 	Message(BE_NONQUIET," not rendered");
+      }
       Message(BE_NONQUIET,"] ");
       fflush(stdout);
       flags &= ~PAGE_GAVE_WARN;

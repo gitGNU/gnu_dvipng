@@ -162,7 +162,7 @@ int main(int argc, char ** argv)
   libt1 = NULL;
 #endif  
 
-  exit(EXIT_SUCCESS);
+  exit(exitcode);
 }
 
 

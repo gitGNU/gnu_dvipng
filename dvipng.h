@@ -528,4 +528,7 @@ EXTERN FT_Library libfreetype INIT(NULL);
 EXTERN void* libt1 INIT(NULL);
 #endif
 
+#define  EXIT_FATAL    EXIT_FAILURE+1
+EXTERN int exitcode INIT(EXIT_SUCCESS);
+
 #endif /* DVIPNG_H */
