@@ -17,23 +17,6 @@ bool DecodeArgs(int argc, char ** argv)
 
   programname=argv[0];
 
-  if (argc == 2 && (strcmp (argv[1], "--version") == 0)) {
-    if (strcmp(basename(programname),PACKAGE_NAME)!=0)
-      printf("%s (%s) %s\n",basename(programname),
-	     PACKAGE_NAME,PACKAGE_VERSION);
-    else
-      puts(PACKAGE_STRING);
-#ifdef HAVE_LIBKPATHSEA
-    puts (KPSEVERSION);
-#endif
-    puts ("Copyright (C) 2002-2003 Jan-Åke Larsson.\n\
-There is NO warranty.  You may redistribute this software\n\
-under the terms of the GNU General Public License.\n\
-For more information about these matters, see the files\n\
-named COPYING and dvipng.c.");
-    exit (EXIT_SUCCESS); 
-  }
-
   for (i=1; i<argc; i++) {
     if (*argv[i]=='-') {
       char *p=argv[i]+2 ;
@@ -89,6 +72,11 @@ named COPYING and dvipng.c.");
 	  if (argv[i+1])
 	    MFMODE = argv[++i] ;
 	  Message(PARSE_STDIN,"MetaFont mode: %s\n",MFMODE);
+	  break;
+	}
+	goto DEFAULT;
+      case 'h':
+	if (strcmp(p,"elp") == 0 ) {
 	  break;
 	}
 	goto DEFAULT;
@@ -270,6 +258,22 @@ named COPYING and dvipng.c.");
 	  Message(PARSE_STDIN,"Normal order\n");
         break;
       case 'v':    /* verbatim mode */
+	if (strcmp(p, "ersion")==0) {
+	  if (strcmp(basename(programname),PACKAGE_NAME)!=0)
+	    printf("%s (%s) %s\n",basename(programname),
+		   PACKAGE_NAME,PACKAGE_VERSION);
+	  else
+	    puts(PACKAGE_STRING);
+#ifdef HAVE_LIBKPATHSEA
+	  puts (KPSEVERSION);
+#endif
+	  puts ("Copyright (C) 2002-2003 Jan-Åke Larsson.\n\
+There is NO warranty.  You may redistribute this software\n\
+under the terms of the GNU General Public License.\n\
+For more information about these matters, see the files\n\
+named COPYING and dvipng.c.");
+	  exit (EXIT_SUCCESS); 
+	}
 	if (*p != '0')
 	  flags |= BE_NONQUIET | BE_VERBOSE;
 	else

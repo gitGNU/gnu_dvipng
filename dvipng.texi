@@ -199,7 +199,7 @@ Choose background color for the images. This option will be ignored if
 there is a background color \special in the DVI. The color spec should
 be in @TeX{} syntax, e.g., 'rgb 1.0 0.0 0.0'. See @xref{Color}.
 
-@item -baseline*
+@item --baseline*
 @cindex baseline reporting
 Report baseline of the image. This only works reliably when the @LaTeX{}
 style @samp{preview.sty} from @previewlatex{} is used. It reports the
@@ -269,7 +269,7 @@ Choose foreground color for the images. This option will be ignored if
 there is a foreground color \special in the DVI. The color spec should
 be in @TeX{} syntax, e.g., 'rgb 1.0 0.0 0.0'. See @xref{Color}.
 
-@item -follow*
+@item --follow*
 @cindex follow mode
 Enable follow mode. One of the benefits of dvipng is that it does not
 read the postamble, so it can be started before @TeX{} finishes. This
@@ -290,7 +290,7 @@ compare with the @TeX{} @samp{\count0} values stored in the DVI file.
 Thus, using @samp{-l =9} will end with the ninth page of the document,
 no matter what the pages are actually numbered.
 
-@item -mode @var{mode}
+@item --mode @var{mode}
 @cindex mode name, specifying
 @cindex Metafont mode, specifying
 Use @var{mode} as the Metafont device name for path searching and font
@@ -447,7 +447,7 @@ of dimensions such as @samp{.1in,-.3cm}.
 @c (@pxref{papersize special}).  
 It overrides any paper size special in the DVI file.
 
-@item -truecolor*
+@item --truecolor*
 @cindex truecolor output
 On systems with a fairly new @samp{libgd}, one can choose to generate
 truecolor output. This will not be necessary in general unless you
