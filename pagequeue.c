@@ -18,7 +18,7 @@ struct pagequeue {
 /**********************************************************************/
 /* Return the page in turn on our queue */
 
-int TodoPage P1H(void)
+int32_t TodoPage P1H(void)
 {
   int val;
 
