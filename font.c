@@ -226,14 +226,18 @@ void FontFind(struct font_entry * tfontptr)
       free (name);
       
       if (!FILESTRCASEEQ (tfontptr->n, font_ret.name)) {
+	flags |= PAGE_GAVE_WARN;
 	Warning("font %s not found, using %s at %d instead.\n",
 		tfontptr->n, font_ret.name, font_ret.dpi);
 	tfontptr->c = 0; /* no checksum warning */
-      } else if (!kpse_bitmap_tolerance ((double)font_ret.dpi, (double) dpi))
+      } else if (!kpse_bitmap_tolerance ((double)font_ret.dpi, (double) dpi)) {
+	flags |= PAGE_GAVE_WARN;
 	Warning("font %s at %d not found, using %d instead.\n",
 		tfontptr->name, dpi, font_ret.dpi);
+      }
       InitPK(tfontptr);
     } else {
+      flags |= PAGE_GAVE_WARN;
       Warning("font %s at %u not found, characters will be left blank.\n",
 	      tfontptr->n, dpi);
       tfontptr->filedes = 0;

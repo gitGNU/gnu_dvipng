@@ -25,6 +25,18 @@ bool DecodeArgs(int argc, char ** argv)
 	c=argv[i][2];
       }
       switch (c) {
+      case 'n':       /* no-image-on-warn */
+	if (strncmp(p,"o-image-on-warn",18)==0) { 
+	  if (p[9] != '0') {
+	    flags |= NO_IMAGE_ON_WARN;
+	    Message(PARSE_STDIN,"No images output for pages with warnings\n",p);
+	  } else {
+	    flags &= ~NO_IMAGE_ON_WARN;
+	    Message(PARSE_STDIN,"Images output even for pages with warnings\n");
+	  }
+	  break;
+	}
+	goto DEFAULT;
       case 'd':       /* selects Debug output */
 	if (*p>'9' && *p!='-') {
 	  if (strncmp(p,"vinum",8)==0) { 
@@ -49,8 +61,6 @@ bool DecodeArgs(int argc, char ** argv)
 	  goto DEFAULT;
 	} else { 
 #ifdef DEBUG
-	  int debug = 0;
-	  
 	  if (*p == 0 && argv[i+1])
 	    p = argv[i+1];
 	  debug = atoi(p);

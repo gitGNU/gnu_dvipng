@@ -139,8 +139,10 @@ void stringrgb(char* p,int *r,int *g,int *b)
     if (tmp!=NULL)
       /* One-level recursion */
       stringrgb(tmp->color,r,g,b);
-    else
+    else {
+      flags |= PAGE_GAVE_WARN;
       Warning("Unimplemented color specification '%s'\n",p);
+    }
   }
 }
 
