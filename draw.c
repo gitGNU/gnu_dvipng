@@ -27,22 +27,21 @@ subpixels   vv;                  /* current rounded vertical position       */
 # define hh PIXROUND(h,dvi->conv*shrinkfactor)
 # define vv PIXROUND(v,dvi->conv*shrinkfactor)
 #endif
-int PassNo;
 
 
 #ifndef NO_DRIFT
 #define MAXDRIFT 1
 #define CHECK_MAXDRIFT(x,xx) if ( xx-PIXROUND(x,dvi->conv*shrinkfactor) < -MAXDRIFT ) { \
-                               DEBUG_PRINT((DEBUG_DVI, " add 1 to")); \
+                               DEBUG_PRINT(DEBUG_DVI,(" add 1 to")); \
 			       xx += 1; \
                              } \
                              if ( xx-PIXROUND(x,dvi->conv*shrinkfactor) > MAXDRIFT ) { \
-                               DEBUG_PRINT((DEBUG_DVI, " sub 1 to")); \
+                               DEBUG_PRINT(DEBUG_DVI,(" sub 1 to")); \
 			       xx -= 1; \
                              } \
                              if (PIXROUND(h,dvi->conv*shrinkfactor) != hh \
                                  || PIXROUND(v,dvi->conv*shrinkfactor) != vv) \
-                                DEBUG_PRINT((DEBUG_DVI, " drift (%d,%d)", \
+                                DEBUG_PRINT(DEBUG_DVI,(" drift (%d,%d)", \
                                              hh-PIXROUND(h,dvi->conv*shrinkfactor), \
                                              vv-PIXROUND(v,dvi->conv*shrinkfactor))); 
 #define MoveRight(x)  temp=x; h += temp; \
@@ -75,10 +74,10 @@ dviunits SetChar(int32_t c)
     Fatal("faulty DVI, trying to set character from null font");
   switch (currentfont->type) {
   case FONT_TYPE_VF:
-    DEBUG_PRINT((DEBUG_DVI,"\n  VF CHAR:\t"));
+    DEBUG_PRINT(DEBUG_DVI,("\n  VF CHAR:\t"));
     if (isprint(c))
-      DEBUG_PRINT((DEBUG_DVI,"'%c' ",c));
-    DEBUG_PRINT((DEBUG_DVI,"%d at (%d,%d) tfmw %d", c,hh,vv,
+      DEBUG_PRINT(DEBUG_DVI,("'%c' ",c));
+    DEBUG_PRINT(DEBUG_DVI,("%d at (%d,%d) tfmw %d", c,hh,vv,
 		 ((struct vf_char*)currentfont->chr[c])->tfmw));
     return(SetVF(c));
     break;
@@ -87,12 +86,12 @@ dviunits SetChar(int32_t c)
     if (ptr) {
       if (ptr->data == NULL) 
 	LoadPK(c, ptr);
-      DEBUG_PRINT((DEBUG_DVI,"\n  PK CHAR:\t"));
+      DEBUG_PRINT(DEBUG_DVI,("\n  PK CHAR:\t"));
       if (isprint(c))
-	DEBUG_PRINT((DEBUG_DVI,"'%c' ",c));
-      DEBUG_PRINT((DEBUG_DVI,"%d at (%d,%d) tfmw %d", c,hh,vv,
+	DEBUG_PRINT(DEBUG_DVI,("'%c' ",c));
+      DEBUG_PRINT(DEBUG_DVI,("%d at (%d,%d) tfmw %d", c,hh,vv,
 		   ptr->tfmw));
-      if (PassNo==PASS_DRAW)
+      if (page_imagep != NULL)
 	return(SetPK(c, hh, vv));
       else {
 	/* Expand bounding box if necessary */
@@ -110,11 +109,11 @@ dviunits SetChar(int32_t c)
     struct ft_char* ptr = currentfont->chr[c];
     if (ptr->data == NULL) 
     LoadFT(c, ptr);
-    DEBUG_PRINT((DEBUG_DVI,"\n  FT CHAR:\t"));
+    DEBUG_PRINT(DEBUG_DVI,("\n  FT CHAR:\t"));
     if (isprint(c))
-      DEBUG_PRINT((DEBUG_DVI,"'%c' ",c));
-    DEBUG_PRINT((DEBUG_DVI,"%d at (%d,%d) tfmw %d", c,hh,vv,ptr->tfmw));
-    if (PassNo==PASS_DRAW) 
+      DEBUG_PRINT(DEBUG_DVI,("'%c' ",c));
+    DEBUG_PRINT(DEBUG_DVI,("%d at (%d,%d) tfmw %d", c,hh,vv,ptr->tfmw));
+    if (page_imagep != NULL) 
       return(SetFT(c, hh, vv));
     else {
       /* Expand bounding box if necessary */
@@ -149,12 +148,12 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
     SetFntNum((int32_t)*command - FONT_00,parent);
   } else switch (*command)  {
   case PUT1: case PUT2: case PUT3: case PUT4:
-    DEBUG_PRINT((DEBUG_DVI," %d",
+    DEBUG_PRINT(DEBUG_DVI,(" %d",
 		 UNumRead(command+1, dvi_commandlength[*command]-1)));
     (void) SetChar(UNumRead(command+1, dvi_commandlength[*command]-1));
     break;
   case SET1: case SET2: case SET3: case SET4:
-    DEBUG_PRINT((DEBUG_DVI," %d",
+    DEBUG_PRINT(DEBUG_DVI,(" %d",
 		 UNumRead(command+1, dvi_commandlength[*command]-1)));
     {
       temp = SetChar(UNumRead(command+1, dvi_commandlength[*command]-1));
@@ -166,11 +165,11 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
     }    
     break;
   case SET_RULE:
-    DEBUG_PRINT((DEBUG_DVI," %d %d",
+    DEBUG_PRINT(DEBUG_DVI,(" %d %d",
 		 UNumRead(command+1, 4), UNumRead(command+5, 4)));
     temp = SetRule(DO_VFCONV(UNumRead(command+1, 4)),
 		   DO_VFCONV(UNumRead(command+5, 4)),
-		   hh, vv, PassNo);
+		   hh, vv);
     h += temp;
 #ifndef NO_DRIFT
     hh += PIXROUND(temp,dvi->conv*shrinkfactor);
@@ -178,11 +177,11 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
 #endif
     break;
   case PUT_RULE:
-    DEBUG_PRINT((DEBUG_DVI," %d %d",
+    DEBUG_PRINT(DEBUG_DVI,(" %d %d",
 		 UNumRead(command+1, 4), UNumRead(command+5, 4)));
     (void) SetRule(DO_VFCONV(UNumRead(command+1, 4)),
 		   DO_VFCONV(UNumRead(command+5, 4)),
-		   hh, vv, PassNo);
+		   hh, vv);
     break;
   case BOP:
     Fatal("BOP occurs within page");
@@ -220,50 +219,50 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
 #endif
     break;
   case RIGHT1: case RIGHT2: case RIGHT3: case RIGHT4:
-    DEBUG_PRINT((DEBUG_DVI," %d",
+    DEBUG_PRINT(DEBUG_DVI,(" %d",
 		 SNumRead(command+1, dvi_commandlength[*command]-1)));
     MoveRight(DO_VFCONV(SNumRead(command+1, dvi_commandlength[*command]-1)));
     break;
   case W1: case W2: case W3: case W4:
     w = SNumRead(command+1, dvi_commandlength[*command]-1);
-    DEBUG_PRINT((DEBUG_DVI," %d",w));
+    DEBUG_PRINT(DEBUG_DVI,(" %d",w));
   case W0:
     MoveRight(DO_VFCONV(w));
     break;
   case X1: case X2: case X3: case X4:
     x = SNumRead(command+1, dvi_commandlength[*command]-1);
-    DEBUG_PRINT((DEBUG_DVI," %d",x));
+    DEBUG_PRINT(DEBUG_DVI,(" %d",x));
   case X0:
     MoveRight(DO_VFCONV(x));
     break;
   case DOWN1: case DOWN2: case DOWN3: case DOWN4:
-    DEBUG_PRINT((DEBUG_DVI," %d",
+    DEBUG_PRINT(DEBUG_DVI,(" %d",
 		 SNumRead(command+1, dvi_commandlength[*command]-1)));
     MoveDown(DO_VFCONV(SNumRead(command+1, dvi_commandlength[*command]-1)));
     break;
   case Y1: case Y2: case Y3: case Y4:
     y = SNumRead(command+1, dvi_commandlength[*command]-1);
-    DEBUG_PRINT((DEBUG_DVI," %d",y));
+    DEBUG_PRINT(DEBUG_DVI,(" %d",y));
   case Y0:
     MoveDown(DO_VFCONV(y));
     break;
   case Z1: case Z2: case Z3: case Z4:
     z = SNumRead(command+1, dvi_commandlength[*command]-1);
-    DEBUG_PRINT((DEBUG_DVI," %d",z));
+    DEBUG_PRINT(DEBUG_DVI,(" %d",z));
   case Z0:
     MoveDown(DO_VFCONV(z));
     break;
   case FNT1: case FNT2: case FNT3: case FNT4:
-    DEBUG_PRINT((DEBUG_DVI," %d",
+    DEBUG_PRINT(DEBUG_DVI,(" %d",
 		 UNumRead(command+1, dvi_commandlength[*command]-1)));
     SetFntNum(UNumRead(command+1, dvi_commandlength[*command]-1),parent);
     break;
   case XXX1: case XXX2: case XXX3: case XXX4:
-    DEBUG_PRINT((DEBUG_DVI," %d",
+    DEBUG_PRINT(DEBUG_DVI,(" %d",
 		 UNumRead(command+1, dvi_commandlength[*command]-1)));
     SetSpecial(command + dvi_commandlength[*command], 
 	       UNumRead(command+1, dvi_commandlength[*command]-1),
-	       hh,vv,PassNo);
+	       hh,vv);
     break;
   case FNT_DEF1: case FNT_DEF2: case FNT_DEF3: case FNT_DEF4:
     if (((struct font_entry*)parent)->type==DVI_TYPE) {
@@ -300,7 +299,7 @@ void BeginVFMacro(struct font_entry* currentvf)
 #endif
   sp++;
   w = x = y = z = 0;
-  DEBUG_PRINT((DEBUG_DVI,"\n  START VF:\tPUSH, W = X = Y = Z = 0"));
+  DEBUG_PRINT(DEBUG_DVI,("\n  START VF:\tPUSH, W = X = Y = Z = 0"));
   SetFntNum(currentvf->defaultfont,currentvf);
 }
 
@@ -319,7 +318,7 @@ void EndVFMacro(void)
   hh = stack[sp].hh;
   vv = stack[sp].vv;
 #endif
-  DEBUG_PRINT((DEBUG_DVI,"\n  END VF:\tPOP                                  "));
+  DEBUG_PRINT(DEBUG_DVI,("\n  END VF:\tPOP                                  "));
 }
 
 
@@ -340,57 +339,63 @@ void DrawPage(dviunits hoffset, dviunits voffset)
   currentfont = NULL;    /* No default font                  */
 
   command=DVIGetCommand(dvi);
-  DEBUG_PRINT((DEBUG_DVI,"DRAW CMD:\t%s", dvi_commands[*command]));
+  DEBUG_PRINT(DEBUG_DVI,("DRAW CMD:\t%s", dvi_commands[*command]));
   while (*command != EOP)  {
     DrawCommand(command,dvi);
     command=DVIGetCommand(dvi);
-    DEBUG_PRINT((DEBUG_DVI,"DRAW CMD:\t%s", dvi_commands[*command]));
+    DEBUG_PRINT(DEBUG_DVI,("DRAW CMD:\t%s", dvi_commands[*command]));
   } 
 }
 
 void DrawPages(void)
 {
   struct page_list *dvi_pos;
-  
+  pixels x_width,y_width,x_offset,y_offset;
+
   dvi_pos=NextPPage(dvi,NULL);
   if (dvi_pos!=NULL) {
     while(dvi_pos!=NULL) {
       SeekPage(dvi,dvi_pos);
-      if (PassDefault == PASS_BBOX || PassDefault == PASS_TIGHT_BBOX) {
-	if (PassDefault == PASS_TIGHT_BBOX) {
-	  x_max = y_max = INT32_MIN;
-	  x_min = y_min = INT32_MAX;
-	}
-	PassNo=PASS_BBOX;
-	DrawPage((dviunits) 0, (dviunits) 0);
-	SeekPage(dvi,dvi_pos);
+      x_max = y_max = INT32_MIN;
+      x_min = y_min = INT32_MAX;
+      DrawPage((dviunits)0,(dviunits)0);
+      if (x_width_def >= 0) { /* extend BBOX */
+	min(x_min,-x_offset_def); 
+	max(x_max,x_min + x_width_def);
+	min(y_min,-y_offset_def);
+	max(y_max,y_min + y_width_def);
+      }
+      if (x_width_def <= 0 || flags & EXPAND_BBOX) {
 	x_width = x_max-x_min;
 	y_width = y_max-y_min;
 	x_offset = -x_min; /* offset by moving topleft corner */ 
 	y_offset = -y_min; /* offset by moving topleft corner */
-	x_max = x_min = -x_offset_def; /* reset BBOX */
-	y_max = y_min = -y_offset_def;
-      }
+      } else {
+	x_width=x_width_def;
+	y_width=y_width_def;
+	x_offset=x_offset_def;
+	y_offset=y_offset_def;
+      } 
+      SeekPage(dvi,dvi_pos);
 #ifdef DEBUG
-      DEBUG_PRINT((DEBUG_DVI,"\n  IMAGE:\t%dx%d",x_width,y_width));
-      DEBUG_PRINT((DEBUG_DVI,"\n@%d PAGE START:\tBOP",dvi_pos->offset));
+      DEBUG_PRINT(DEBUG_DVI,("\n  IMAGE:\t%dx%d",x_width,y_width));
+      DEBUG_PRINT(DEBUG_DVI,("\n@%d PAGE START:\tBOP",dvi_pos->offset));
       { 
 	int i;
 	for (i=0;i<10;i++) 
-	  DEBUG_PRINT((DEBUG_DVI," %d",dvi_pos->count[i]));
-	DEBUG_PRINT((DEBUG_DVI," (%d)\n",dvi_pos->count[10]));
+	  DEBUG_PRINT(DEBUG_DVI,(" %d",dvi_pos->count[i]));
+	DEBUG_PRINT(DEBUG_DVI,(" (%d)\n",dvi_pos->count[10]));
       }
 #endif
-      CreateImage();
-      Message(BE_NONQUIET,"[%d", dvi_pos->count[dvipagenum?0:10]);
-      if (dvi_pos->count[dvipagenum?0:10]!=dvi_pos->count[0])
+      CreateImage(x_width,y_width);
+      Message(BE_NONQUIET,"[%d", dvi_pos->count[(flags & DVI_PAGENUM)?0:10]);
+      if (dvi_pos->count[(flags & DVI_PAGENUM)?0:10]!=dvi_pos->count[0])
 	Message(BE_NONQUIET," (%d)", dvi_pos->count[0]);
       Message(REPORT_DEPTH," depth=%d", y_width-y_offset-1);
       Message(REPORT_HEIGHT," height=%d", y_offset+1);
-      PassNo=PASS_DRAW;
       DrawPage(x_offset*dvi->conv*shrinkfactor,
 	       y_offset*dvi->conv*shrinkfactor);
-      WriteImage(dvi->outname,dvi_pos->count[dvipagenum?0:10]);
+      WriteImage(dvi->outname,dvi_pos->count[(flags & DVI_PAGENUM)?0:10]);
 #ifdef TIMING
       ++ndone;
 #endif
