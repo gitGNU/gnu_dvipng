@@ -2,7 +2,6 @@
 #include <libgen.h>
 
 static char *programname;
-static int   flags=BE_NONQUIET;
 
 /*-->DecodeArgs*/
 /*********************************************************************/
@@ -10,7 +9,7 @@ static int   flags=BE_NONQUIET;
 /*********************************************************************/
 bool DecodeArgs(int argc, char ** argv)
 {
-  int     i;                 /* argument index for flags       */
+  int     i;                 /* argument index for options     */
   bool ppused=_FALSE;        /* Flag when -pp is used          */
   char *dviname=NULL;        /* Name of dvi file               */
   char *outname=NULL;        /* Name of output file            */
@@ -29,24 +28,24 @@ bool DecodeArgs(int argc, char ** argv)
       case 'd':       /* selects Debug output */
 	if (*p>'9' && *p!='-') {
 	  if (strncmp(p,"vinum",8)==0) { 
-	    dvipagenum = (p[9] != '0');
-	    if (dvipagenum)
+	    if (p[9] != '0') {
+	      flags |= DVI_PAGENUM;
 	      Message(PARSE_STDIN,"DVI page number output on\n",p);
-	    else 
+	    } else {
+	      flags &= ~DVI_PAGENUM;
 	      Message(PARSE_STDIN,"DVI page number output off\n");
+	    }
 	    break;
 	  } else if (strncmp(p,"epth",4)==0) { /* Depth reporting */ 
-	  if (p[8] != '0')
-	    flags |= REPORT_DEPTH;
-	  else
-	    flags &= !REPORT_DEPTH;
-	  break;
-	  if (flags & REPORT_DEPTH )
-	    Message(PARSE_STDIN,"Depth reporting on\n",p);
-	  else 
-	    Message(PARSE_STDIN,"Depth reporting off\n");
-	  break;
-	}
+	    if (p[8] != '0') {
+	      flags |= REPORT_DEPTH;
+	      Message(PARSE_STDIN,"Depth reporting on\n",p);
+	    } else {
+	      flags &= ~REPORT_DEPTH;
+	      Message(PARSE_STDIN,"Depth reporting off\n");
+	    }
+	    break;
+	  }
 	  goto DEFAULT;
 	} else { 
 #ifdef DEBUG
@@ -55,12 +54,13 @@ bool DecodeArgs(int argc, char ** argv)
 	  if (*p == 0 && argv[i+1])
 	    p = argv[i+1];
 	  debug = atoi(p);
-	  flags |= (debug>0) ? debug * DEBUG_DEFAULT : DEBUG_DVI;
-	  if (debug > 0 && p == argv[i+1])
-	    i++;
+	  if (debug > 0) {
+	    if (p == argv[i+1]) i++;
+	  } else 
+	    debug = DEBUG_DEFAULT;
 	  Message(PARSE_STDIN,"Debug output enabled\n");
 #ifdef HAVE_LIBKPATHSEA
-	  kpathsea_debug = ( debug * DEBUG_DEFAULT) / LASTDEBUG;
+	  kpathsea_debug = debug / LASTDEBUG;
 #endif
 #else
 	  Warning("This instance of %s was compiled without the debug (-d) option",
@@ -100,15 +100,13 @@ bool DecodeArgs(int argc, char ** argv)
 	if (strcmp(p,"elp") == 0 ) {
 	  break;
 	} else if (strncmp(p,"eight",5) == 0 ) { /* Height reporting */ 
-	  if (p[8] != '0')
+	  if (p[8] != '0') {
 	    flags |= REPORT_HEIGHT;
-	  else
-	    flags &= !REPORT_HEIGHT;
-	  break;
-	  if (flags & REPORT_HEIGHT )
 	    Message(PARSE_STDIN,"Height reporting on\n",p);
-	  else 
+	  } else {
+	    flags &= ~REPORT_HEIGHT;
 	    Message(PARSE_STDIN,"Height reporting off\n");
+	  }
 	  break;
 	}
 	goto DEFAULT;
@@ -117,37 +115,44 @@ bool DecodeArgs(int argc, char ** argv)
 	if (*p == 0 && argv[i+1])
 	  p = argv[++i] ;
 	handlepapersize(p, &x_offset_def, &y_offset_def) ;
-	x_offset = x_offset_def; 
-	y_offset = y_offset_def; 
-	x_max = x_min = -x_offset_def; /* set BBOX */
-	y_max = y_min = -y_offset_def;
 	Message(PARSE_STDIN,"Offset: (%d,%d)\n",x_offset_def,y_offset_def);
         break ;
       case 'T' :
+	flags &= ~EXPAND_BBOX;
+	if (*p == 'x') {
+	  flags |= EXPAND_BBOX;
+	  p++;
+	}
 	if (*p == 0 && argv[i+1])
-	  p = argv[++i] ;
+	  p = argv[++i];
 	if (strcmp(p,"bbox")==0) {
-	  PassDefault=PASS_BBOX; 
+	  x_width_def=0;
+	  y_width_def=0;
 	  Message(PARSE_STDIN,"Pagesize: (bbox)\n");
 	} else if (strcmp(p,"tight")==0) {
-	  PassDefault=PASS_TIGHT_BBOX;
+	  x_width_def=-1;
+	  y_width_def=-1;
 	  Message(PARSE_STDIN,"Pagesize: (tight bbox)\n");
-	} else { 
-	  handlepapersize(p, &x_width, &y_width) ;
-	  /* Avoid PASS_BBOX */
-	  PassDefault = PASS_DRAW;
-	  Message(PARSE_STDIN,"Pagesize: (%d,%d)\n",x_width,y_width);
+	} else {
+	  handlepapersize(p, &x_width_def, &y_width_def) ;
+	  Message(PARSE_STDIN,"Pagesize: ");
+	  if (flags & EXPAND_BBOX)
+	    Message(PARSE_STDIN,"expanded from ");
+	  Message(PARSE_STDIN,"(%d,%d)\n",
+		  x_width_def,y_width_def);
 	}
 	break ;
       case 't':       /* specify paper format, only for cropmarks */
 #if HAVE_GDIMAGECREATETRUECOLOR
 	/* Truecolor */
 	if (strncmp(p,"ruecolor",8)==0) { 
-	  truecolor = (p[9] != '0');
-	  if (truecolor)
+	  if (p[9] != '0') {
+	    flags |= RENDER_TRUECOLOR; 
 	    Message(PARSE_STDIN,"Truecolor mode on\n",p);
-	  else 
+	  } else { 
+	    flags &= ~RENDER_TRUECOLOR; 
 	    Message(PARSE_STDIN,"Truecolor mode off\n");
+	  }
 	} else 
 #endif
 	  { /* cropmarks not implemented yet */
@@ -168,11 +173,13 @@ bool DecodeArgs(int argc, char ** argv)
 	break;
       case 'c':
 	if (strncmp(p,"acheimages",10)==0) { 
-	  cacheimages = (p[11] != '0');
-	  if (cacheimages)
+	  if (p[11] != '0') {
+	    flags |= CACHE_IMAGES;
 	    Message(PARSE_STDIN,"Caching images\n",p);
-	  else 
+	  } else { 
+	    flags &= ~CACHE_IMAGES;
 	    Message(PARSE_STDIN,"Not caching images\n");
+	  }
 	  break;
 	}
 	goto DEFAULT;
@@ -211,11 +218,13 @@ bool DecodeArgs(int argc, char ** argv)
 	  break;
 #ifdef HAVE_FT2
 	} else if ( strncmp(p,"reetype",7) == 0 ) { /* -freetype activation */
-	  freetype = (p[7] != '0');
-	  if (freetype)
+	  if (p[7] != '0') {
+	    flags |= USE_FREETYPE;
 	    Message(PARSE_STDIN,"FreeType rendering on\n",p);
-	  else 
+	  } else { 
+	    flags &= ~USE_FREETYPE;
 	    Message(PARSE_STDIN,"FreeType rendering off\n");
+	  }
 	  break;
 #endif
 	} else if (strcmp(p,"ollow") == 0 ) {
@@ -277,7 +286,7 @@ bool DecodeArgs(int argc, char ** argv)
 	break ;
       case 'q':       /* quiet operation */
 	if (*p != '0')
-	  flags &= !BE_NONQUIET & !BE_VERBOSE;
+	  flags &= (~BE_NONQUIET & ~BE_VERBOSE);
         else
 	  flags |= BE_NONQUIET;
 	break;
@@ -307,7 +316,7 @@ named COPYING and dvipng.c.");
 	if (*p != '0')
 	  flags |= BE_NONQUIET | BE_VERBOSE;
 	else
-	  flags &= !BE_VERBOSE;
+	  flags &= ~BE_VERBOSE;
         break;
       case 'D' :
 	if (*p == 0 && argv[i+1])
@@ -401,7 +410,7 @@ named COPYING and dvipng.c.");
       exit(EXIT_SUCCESS);
     }
   }
-  if ((flags & PARSE_STDIN) == 0 && (! ppused)) 
+  if ((flags & PARSE_STDIN) == 0 && (!ppused)) 
     ParsePages("-");
   return((flags & PARSE_STDIN) != 0);
 }
@@ -520,10 +529,6 @@ void Message(int activeflags, char *fmt, ...)
   va_start(args, fmt);
   if ( flags & activeflags ) {
     vfprintf(stdout, fmt, args);
-#ifdef DEBUG
-    if (flags & (LASTDEBUG-LASTFLAG)*2)
-      fflush(stdout);
-#endif
   }
   va_end(args);
 }
