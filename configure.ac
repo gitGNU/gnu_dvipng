@@ -46,8 +46,10 @@ AC_CHECK_HEADERS([gd.h png.h kpathsea/kpathsea.h],,
 AC_CHECK_FT2(,[CFLAGS="$FT2_CFLAGS $CFLAGS"
 	LIBS="$FT2_LIBS $LIBS"
 	FT_O="ft.o enc.o fontmap.o tfm.o"	
-	AC_DEFINE(HAVE_FT2, 1, [Define to 1 if you have freetype2])],
-	[FT_O=""])
+	AC_DEFINE(HAVE_FT2, 1, [Define to 1 if you have freetype2])
+	ac_have_freetype2="yes"],
+	[FT_O=""
+	ac_have_freetype2="no"])
 AC_SUBST(FT_O)
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS([fcntl.h sys/time.h])
@@ -125,6 +127,7 @@ AC_MSG_RESULT([
         the -z (compression) switch:        $ac_cv_func_gdImagePngEx
    Your gd is new enough to enable
         the -truecolor switch:              $ac_cv_func_gdImageCreateTrueColor
+   FreeType font rendering available:       $ac_have_freetype2
 ])
 
 AC_CONFIG_HEADER([config.h])
