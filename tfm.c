@@ -2,6 +2,9 @@
 #include <fcntl.h> // open/close
 #include <sys/mman.h>
 #include <sys/stat.h>
+#if HAVE_ALLOCA_H
+# include <alloca.h>
+#endif
 
 bool ReadTFM(struct font_entry * tfontp, char* tfmname)
 {
