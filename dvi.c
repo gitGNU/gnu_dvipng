@@ -254,7 +254,7 @@ void SkipPage(struct dvi_data* dvi)
     case XXX1: case XXX2: case XXX3: case XXX4:
       DEBUG_PRINT(DEBUG_DVI,("NOSKIP CMD:\t%s %d", dvi_commands[*command],
 			     UNumRead(command+1, dvi_commandlength[*command]-1)));
-      SetSpecial(command + dvi_commandlength[*command], 
+      SetSpecial((char*)command + dvi_commandlength[*command], 
 		 UNumRead(command+1, dvi_commandlength[*command]-1),
 		 0,0);
       break;
