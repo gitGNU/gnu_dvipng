@@ -1232,7 +1232,7 @@ Offers to support further development will be appreciated. For developer
 access, ask on @email{preview-latex-devel@@lists.sourceforge.net}.
 
 For details on the @TeX{} path-searching library, and @code{mktexpk}
-problems, @pxref{Bugs,,, kpathsea, Kpathsea}.
+problems, @pxref{Common problems,,, kpathsea, Kpathsea}.
 
 @menu
 * Debug options::               Getting diagnostics.
@@ -1251,9 +1251,7 @@ parameter to this flag is an integer that tells what errors are
 currently being tracked.  To track a certain class of debug messages,
 simply provide the appropriate number given below; if you wish to track
 multiple classes, sum the numbers of the classes you wish to track.  To
-track all classes, you can use @code{-1}.  Another useful value is
-@code{3650}, which tracks everything having to do with file searching
-and opening.
+track all classes, you can use @code{-1}.  
 
 Some of these debugging options are actually provided by Kpathsea
 (@pxref{Debugging, , , kpathsea, Kpathsea}).
