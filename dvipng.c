@@ -89,7 +89,6 @@ int main(int argc, char ** argv)
   }
 #endif
 
-  CloseFiles();
   exit(EXIT_SUCCESS);
 }
 
