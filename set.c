@@ -144,7 +144,6 @@ void Gamma(double gamma)
 {
   int i=0;
   
-  printf("GAMMA\n");
   while (i<=255) {
     gammatable[i]=255-(int)(pow((double)(255-i)/255.0,gamma)*255);
     DEBUG_PRINT(DEBUG_GLYPH,("\n  GAMMA GREYSCALE: %d -> %d ",i,gammatable[i]));
