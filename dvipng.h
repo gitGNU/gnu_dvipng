@@ -134,7 +134,7 @@ struct page_list {
 
 struct dvi_data* DVIOpen(char*,char*);
 void             DVIClose(struct dvi_data*);
-void             DVIReOpen(struct dvi_data*);
+bool             DVIReOpen(struct dvi_data*);
 struct page_list*FindPage(struct dvi_data*, int32_t, bool);
 struct page_list*NextPage(struct dvi_data*, struct page_list*);
 struct page_list*PrevPage(struct dvi_data*, struct page_list*);
@@ -313,39 +313,36 @@ EXTERN struct internal_state {
   struct font_entry* currentfont;
 } current_state;
 
-#define BE_NONQUIET      1
-#define BE_VERBOSE       2
-#define PARSE_STDIN      4
-#define EXPAND_BBOX      8
-#define TIGHT_BBOX       16
-#define REPORT_HEIGHT    32
-#define REPORT_DEPTH     64
-#define CACHE_IMAGES     128
-#define DVI_PAGENUM      256
-#ifdef  HAVE_GDIMAGECREATETRUECOLOR
-#define RENDER_TRUECOLOR 512
-#endif
-#ifdef HAVE_FT2
-#define USE_FREETYPE     1024
+#define BE_NONQUIET                  1
+#define BE_VERBOSE                   (1<<1)
+#define PARSE_STDIN                  (1<<2)
+#define EXPAND_BBOX                  (1<<3)
+#define TIGHT_BBOX                   (1<<4)
+#define CACHE_IMAGES                 (1<<5)
+#define RENDER_TRUECOLOR             (1<<6)
+#define USE_FREETYPE                 (1<<7)
+#define REPORT_HEIGHT                (1<<8)
+#define REPORT_DEPTH                 (1<<9)
+#define DVI_PAGENUM                  (1<<10)
+#define NO_IMAGE_ON_WARN             (1<<11)
+#define PAGE_GAVE_WARN               (1<<12)
+#define PREVIEW_LATEX_TIGHTPAGE      (1<<13)
 EXTERN unsigned int flags INIT(BE_NONQUIET | USE_FREETYPE);
-#else
-EXTERN unsigned int flags INIT(BE_NONQUIET);
-#endif
 
 #ifdef DEBUG
 EXTERN unsigned int debug INIT(0);
 #define DEBUG_PRINT(a,b) if (debug & a) { printf b; fflush(stdout); }
-#define DEBUG_DVI     1
-#define DEBUG_VF      2
-#define DEBUG_PK      4
-#define DEBUG_TFM     8
-#define DEBUG_GLYPH   16
-#define DEBUG_FT      32
-#define DEBUG_ENC     64
-#define DEBUG_COLOR   128
-#define DEBUG_GS      256
-#define LASTDEBUG     DEBUG_GS
-#define DEBUG_DEFAULT DEBUG_DVI
+#define DEBUG_DVI                    1
+#define DEBUG_VF                     (1<<1)
+#define DEBUG_PK                     (1<<2)
+#define DEBUG_TFM                    (1<<3)
+#define DEBUG_GLYPH                  (1<<4)
+#define DEBUG_FT                     (1<<5)
+#define DEBUG_ENC                    (1<<6)
+#define DEBUG_COLOR                  (1<<7)
+#define DEBUG_GS                     (1<<8)
+#define LASTDEBUG                    DEBUG_GS
+#define DEBUG_DEFAULT                DEBUG_DVI
 #else
 #define DEBUG_PRINT(a,b)
 #endif
@@ -406,6 +403,12 @@ EXTERN  int y_width_def INIT(0);
 /* Offset: default set by -O and -T bbox */
 EXTERN  int x_offset_def INIT(0);
 EXTERN  int y_offset_def INIT(0);
+
+/* Preview-latex's tightpage */
+EXTERN  int x_width_tightpage INIT(0); 
+EXTERN  int y_width_tightpage INIT(0);
+EXTERN  int x_offset_tightpage INIT(0);
+EXTERN  int y_offset_tightpage INIT(0);
 
 /* Paper size: set by -t, for cropmark purposes only */
 /* This has yet to be written */

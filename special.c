@@ -195,14 +195,17 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
       }
       Message(BE_NONQUIET,"<%s",psname);
       if (psimage==NULL) {
-	if (psfile == NULL) 
+	if (psfile == NULL) {
 	  Warning("PS file %s not found, image will be left blank", psname );
-	else {
+	  flags |= PAGE_GAVE_WARN;
+	} else {
 	  psimage = ps2png(psfile, hresolution, vresolution, 
 			   urx, ury, llx, lly);
-	  if ( psimage == NULL ) 
+	  if ( psimage == NULL ) {
 	    Warning("Unable to convert %s to PNG, image will be left blank", 
 		    psfile );
+	    flags |= PAGE_GAVE_WARN;
+	  }
 	}
       }
       if (pngname !=NULL && psimage != NULL) {
@@ -211,8 +214,7 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 	  gdImagePng(psimage,pngfilep);
 	  fclose(pngfilep);
 	} else
-	  Warning("Unable to cache %s as PNG", 
-		  psfile );
+	  Warning("Unable to cache %s as PNG", psfile );
       } 
       if (psimage!=NULL) {
 	DEBUG_PRINT(DEBUG_DVI,
@@ -243,11 +245,13 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
     }
     return;
   }
+
   /* preview-latex' tightpage option */
   if (strcmp(buffer,"!userdict")==0 
       && strcmp(buffer+10,"begin/bop-hook{7{currentfile token not{stop}if 65781.76 div DVImag mul}repeat 72 add 72 2 copy gt{exch}if 4 2 roll neg 2 copy lt{exch}if dup 0 gt{pop 0 exch}{exch dup 0 lt{pop 0}if}ifelse 720 add exch 720 add 3 1 roll 4{5 -1 roll add 4 1 roll}repeat <</PageSize[5 -1 roll 6 index sub 5 -1 roll 5 index sub]/PageOffset[7 -2 roll [1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice//bop-hook exec}bind def end")==0) {
     if (page_imagep==NULL) 
       Message(BE_NONQUIET,"preview-latex's tightpage option detected, will use its bounding box.\n");
+    flags |= PREVIEW_LATEX_TIGHTPAGE;
     return;
   }
   if (strncmp(token,"ps::",4)==0) {
@@ -267,26 +271,41 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
     token = strtok(NULL," ");
     wd = atoi(token);
     if (wd>0) {
-      x_offset_def = 
+      x_offset_tightpage = 
 	(-adj_llx+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor;
-      x_width_def  = x_offset_def
+      x_width_tightpage  = x_offset_tightpage
 	+(wd+adj_urx+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor;
     } else {
-      x_offset_def = 
+      x_offset_tightpage = 
 	(-wd+adj_urx+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor;
-      x_width_def  = x_offset_def
+      x_width_tightpage  = x_offset_tightpage
 	+(-adj_llx+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor;
     }
-    y_offset_def = 
+    /* y-offset = height - 1 */
+    y_offset_tightpage = 
       (((ht>0)?ht:0)+adj_ury+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor-1;
-    y_width_def  = y_offset_def+1
+    y_width_tightpage  = y_offset_tightpage+1
       +(((dp>0)?dp:0)-adj_lly+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor;
     return;
   }
 
-  if (page_imagep != NULL)
+  if (strncmp(token,"header=",7)==0) { /* header, ignored */
+    if ( page_imagep != NULL )
+      Warning("at (%ld,%ld) unimplemented \\special{%.*s}.",
+	      hh, vv, length,special);
+    return;
+  }
+  if (strncmp(token,"!",7)==0) { /* literal PostScript, ignored */
+    if ( page_imagep != NULL )
+      Warning("at (%ld,%ld) unimplemented \\special{%.*s}.",
+	      hh, vv, length,special);
+    return;
+  }
+  if ( page_imagep != NULL || flags & NO_IMAGE_ON_WARN ) {
     Warning("at (%ld,%ld) unimplemented \\special{%.*s}.",
 	    hh, vv, length,special);
+    flags |= PAGE_GAVE_WARN;
+  }
 }
 
 

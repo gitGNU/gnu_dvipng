@@ -359,6 +359,12 @@ void DrawPages(void)
       x_max = y_max = INT32_MIN;
       x_min = y_min = INT32_MAX;
       DrawPage((dviunits)0,(dviunits)0);
+      if (flags & PREVIEW_LATEX_TIGHTPAGE) {
+	x_width_def=x_width_tightpage;
+	y_width_def=y_width_tightpage;
+	x_offset_def=x_offset_tightpage;
+	y_offset_def=y_offset_tightpage;
+      }
       if (x_width_def >= 0) { /* extend BBOX */
 	min(x_min,-x_offset_def); 
 	max(x_max,x_min + x_width_def);
@@ -387,21 +393,24 @@ void DrawPages(void)
 	DEBUG_PRINT(DEBUG_DVI,(" (%d)\n",dvi_pos->count[10]));
       }
 #endif
-      CreateImage(x_width,y_width);
-      Message(BE_NONQUIET,"[%d", dvi_pos->count[(flags & DVI_PAGENUM)?0:10]);
-      if (dvi_pos->count[(flags & DVI_PAGENUM)?0:10]!=dvi_pos->count[0])
-	Message(BE_NONQUIET," (%d)", dvi_pos->count[0]);
-      Message(REPORT_DEPTH," depth=%d", y_width-y_offset-1);
-      Message(REPORT_HEIGHT," height=%d", y_offset+1);
-      DrawPage(x_offset*dvi->conv*shrinkfactor,
-	       y_offset*dvi->conv*shrinkfactor);
-      WriteImage(dvi->outname,dvi_pos->count[(flags & DVI_PAGENUM)?0:10]);
+      if ( ! (flags & NO_IMAGE_ON_WARN && flags & PAGE_GAVE_WARN )) {
+	CreateImage(x_width,y_width);
+	Message(BE_NONQUIET,"[%d", dvi_pos->count[(flags & DVI_PAGENUM)?0:10]);
+	if (dvi_pos->count[(flags & DVI_PAGENUM)?0:10]!=dvi_pos->count[0])
+	  Message(BE_NONQUIET," (%d)", dvi_pos->count[0]);
+	Message(REPORT_DEPTH," depth=%d", y_width-y_offset-1);
+	Message(REPORT_HEIGHT," height=%d", y_offset+1);
+	DrawPage(x_offset*dvi->conv*shrinkfactor,
+		 y_offset*dvi->conv*shrinkfactor);
+	WriteImage(dvi->outname,dvi_pos->count[(flags & DVI_PAGENUM)?0:10]);
 #ifdef TIMING
-      ++ndone;
+	++ndone;
 #endif
-      Message(BE_NONQUIET,"] ");
-      if (dvi_pos->count[0] % 10 == 0)
-	fflush(stdout);
+	Message(BE_NONQUIET,"] ");
+	if (dvi_pos->count[0] % 10 == 0)
+	  fflush(stdout);
+      }
+      flags &= ~PAGE_GAVE_WARN;
       dvi_pos=NextPPage(dvi,dvi_pos);
     }
     Message(BE_NONQUIET,"\n");
