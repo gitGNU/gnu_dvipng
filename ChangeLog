@@ -1,3 +1,8 @@
+2004-12-10  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* misc.c: Use mmap test. Hopefully, it will fail on ULTRIX, mmap
+	only works on character special devices (and not on regular files)
+
 2004-12-02  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* config.h.in:
