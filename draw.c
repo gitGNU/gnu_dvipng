@@ -421,6 +421,7 @@ void DrawPages(void)
       } else {
 	exitcode=EXIT_FAILURE;
 	Message(BE_NONQUIET," not rendered");
+	DestroyImage();
       }
       Message(BE_NONQUIET,"] ");
       fflush(stdout);

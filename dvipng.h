@@ -357,6 +357,7 @@ struct page_list*   NextPPage(void* /* dvi */, struct page_list*);
 #include "commands.h"
 
 void      CreateImage(pixels width, pixels height);
+void      DestroyImage(void);
 void      DrawCommand(unsigned char*, void* /* dvi/vf */); 
 void      DrawPages(void);
 void      WriteImage(char*, int);

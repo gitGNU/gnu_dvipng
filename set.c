@@ -135,6 +135,11 @@ void WriteImage(char *pngname, int pagenum)
 #endif
   fclose(outfp);
   DEBUG_PRINT(DEBUG_DVI,("\n  WROTE:   \t%s\n",pngname));
+  DestroyImage();
+}
+
+void DestroyImage(void)
+{
   gdImageDestroy(page_imagep);
   page_imagep=NULL;
 }
