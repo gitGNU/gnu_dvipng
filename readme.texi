@@ -1,3 +1,7 @@
+@c readme.texi
+@c
+@c Part of the dvipng distribution
+
 @ifclear man
 @include macros.texi
 @ifset rawfile
@@ -111,6 +115,13 @@ with just the word `help' as subject or body to
 Offers to support further development will be appreciated. For developer
 access, ask on @email{dvipng-devel@@lists.sourceforge.net}.
 
+@section Copying
+
+This program is released under the GNU General Public License, see the
+COPYING file in the dvipng distribution or
+@url{http://www.gnu.org/licenses/gpl.html}.
+
+Copyright @copyright{} 2002-2004 Jan-@AA{}ke Larsson
 
 @section Todo
 

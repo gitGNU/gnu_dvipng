@@ -1,3 +1,7 @@
+@c install.texi
+@c 
+@c Part of the dvipng distribution
+
 @include macros.texi
 @ifset rawfile
 @chapter Installing dvipng
@@ -177,3 +181,13 @@ prefix argument is supported by most @file{configure} scripts.
 You'll have to add something like @file{/home/myself/bin} to your
 @code{PATH} shell variable, if it isn't there already, and similarly set
 the @code{INFOPATH} variable to be able to access the documentation.
+
+@ifset rawfile
+@section Copying
+
+This program is released under the GNU General Public License, see the
+COPYING file in the dvipng distribution or
+@url{http://www.gnu.org/licenses/gpl.html}.
+
+Copyright @copyright{} 2002-2004 Jan-@AA{}ke Larsson
+@end ifset
