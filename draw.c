@@ -23,6 +23,9 @@ int32_t     z INIT(0);           /* current vertical spacing        */
 #ifndef NO_DRIFT
 int32_t     hh;                  /* current rounded horizontal position     */
 int32_t     vv;                  /* current rounded vertical position       */
+#else
+# define hh PIXROUND(h,dvi->conv*shrinkfactor)
+# define vv PIXROUND(v,dvi->conv*shrinkfactor)
 #endif
 int PassNo;
 
@@ -76,12 +79,7 @@ int32_t SetChar(int32_t c)
   if (isprint(c))
     DEBUG_PRINT((DEBUG_DVI,"'%c' ",c));
   DEBUG_PRINT((DEBUG_DVI,"%d ", (int)c));
-#ifndef NO_DRIFT
   DEBUG_PRINT((DEBUG_DVI,"at (%d,%d) ", hh,vv));
-#else
-  DEBUG_PRINT((DEBUG_DVI,"at (%d,%d) ", 
-	       PIXROUND(h,dvi->conv*shrinkfactor), PIXROUND(v,dvi->conv*shrinkfactor)));
-#endif
 #endif
 
   if (currentfont->type==FONT_TYPE_VF) { 
@@ -94,7 +92,6 @@ int32_t SetChar(int32_t c)
       if (ptr->glyph.data == NULL) 
 	LoadAChar(c, ptr);
       DEBUG_PRINT((DEBUG_DVI," tfmw %d", ptr->tfmw));
-#ifndef NO_DRIFT
       if (PassNo==PASS_DRAW)
 	return(SetPK(c, hh, vv));
       else {
@@ -105,19 +102,6 @@ int32_t SetChar(int32_t c)
 	max(y_max,vv - ptr->yOffset/shrinkfactor + ptr->glyph.h);
 	return(ptr->tfmw);
       }
-#else
-      if (PassNo==PASS_DRAW)
-	return(SetPK(c, PIXROUND(h,dvi->conv*shrinkfactor), 
-		     PIXROUND(v,dvi->conv*shrinkfactor)));
-      else {
-	/* Expand bounding box if necessary */
-	min(x_min,(PIXROUND(h,dvi->conv) - ptr->xOffset)/shrinkfactor);
-	min(y_min,(PIXROUND(v,dvi->conv) - ptr->yOffset)/shrinkfactor);
-	max(x_max,(PIXROUND(h,dvi->conv) - ptr->xOffset)/shrinkfactor+ptr->glyph.w);
-	max(y_max,(PIXROUND(v,dvi->conv) - ptr->yOffset)/shrinkfactor+ptr->glyph.h);
-	return(ptr->tfmw);
-      }
-#endif
     }
   }
   return(0);
@@ -158,33 +142,21 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
   case SET_RULE:
     DEBUG_PRINT((DEBUG_DVI," %d %d",
 		 UNumRead(command+1, 4), UNumRead(command+5, 4)));
-#ifndef NO_DRIFT
     temp = SetRule(DO_VFCONV(UNumRead(command+1, 4)),
 		   DO_VFCONV(UNumRead(command+5, 4)),
 		   hh, vv, PassNo);
     h += temp;
+#ifndef NO_DRIFT
     hh += PIXROUND(temp,dvi->conv*shrinkfactor);
     CHECK_MAXDRIFT(h,hh);
-#else
-    h += SetRule(DO_VFCONV(UNumRead(command+1, 4)),
-		 DO_VFCONV(UNumRead(command+5, 4)),
-		 PIXROUND(h,dvi->conv*shrinkfactor), 
-		 PIXROUND(v,dvi->conv*shrinkfactor), PassNo);
 #endif
     break;
   case PUT_RULE:
     DEBUG_PRINT((DEBUG_DVI," %d %d",
 		 UNumRead(command+1, 4), UNumRead(command+5, 4)));
-#ifndef NO_DRIFT
     (void) SetRule(DO_VFCONV(UNumRead(command+1, 4)),
 		   DO_VFCONV(UNumRead(command+5, 4)),
 		   hh, vv, PassNo);
-#else
-    (void) SetRule(DO_VFCONV(UNumRead(command+1, 4)),
-		   DO_VFCONV(UNumRead(command+5, 4)),
-		   PIXROUND(h,dvi->conv*shrinkfactor),
-		   PIXROUND(v,dvi->conv*shrinkfactor), PassNo);
-#endif
     break;
   case BOP:
     Fatal("BOP occurs within page");
@@ -264,7 +236,8 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
     DEBUG_PRINT((DEBUG_DVI," %d",
 		 UNumRead(command+1, dvi_commandlength[*command]-1)));
     SetSpecial(command + dvi_commandlength[*command], 
-	       UNumRead(command+1, dvi_commandlength[*command]-1),h,v,PassNo);
+	       UNumRead(command+1, dvi_commandlength[*command]-1),
+	       hh,vv,PassNo);
     break;
   case FNT_DEF1: case FNT_DEF2: case FNT_DEF3: case FNT_DEF4:
     if (((struct font_entry*)parent)->type==DVI_TYPE) {
