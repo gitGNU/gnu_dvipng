@@ -135,7 +135,7 @@ struct page_list {
 
 struct dvi_data* DVIOpen(char*,char*);
 void             DVIClose(struct dvi_data*);
-void             DVIReInit(struct dvi_data*);
+void             DVIReOpen(struct dvi_data*);
 struct page_list*FindPage(int32_t, bool);
 struct page_list*NextPage(struct page_list*);
 struct page_list*PrevPage(struct page_list*);
