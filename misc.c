@@ -10,15 +10,9 @@ static int   flags=BE_NONQUIET;
 bool DecodeArgs(int argc, char ** argv)
 {
   int     i;                 /* argument index for flags      */
-  int32_t firstpage=PAGE_MINPAGE;
-  int32_t lastpage=PAGE_LASTPAGE;
-  bool abspage=_TRUE;
-  static bool reverse=_FALSE;
-  char *dviname=NULL;
-
-#ifndef KPATHSEA
-  if ((tcp = getenv("TEXPXL")) != NULL) PXLpath = tcp;
-#endif
+  bool ppused=_FALSE;
+  char *dviname=NULL; 
+  char *outname=NULL;
 
   if (argc == 2 && (strcmp (argv[1], "--version") == 0)) {
     puts (VERSION);
@@ -55,19 +49,14 @@ named COPYING and dvipng.c.");
 	}
         break;
 #endif
-#if 0 /* -o disabled for now. rootname is dvi->outname nowadays */
       case 'o':       /* Output file is specified */
 	if (*p == 0 && argv[i+1])
 	  p = argv[++i] ;
-        (void) strcpy(rootname, p);
+        outname=p;
         /* remove .png extension */
-        p1 = strrchr(rootname, '.');
-        if (p1 != NULL && strcmp(p1,".png") == 0 ) {
-	  *p1='\0';
-        }
-	Message(PARSE_STDIN,"Output file: %s#.png (#=page number)\n",rootname);
+	Message(PARSE_STDIN,"Output file: %s (will include page number)\n",
+		outname);
         break;
-#endif
 #ifdef MAKETEXPK
       case 'M':
         /* -M, -M1 => don't make font; -M0 => do.  */
@@ -109,10 +98,6 @@ named COPYING and dvipng.c.");
 	  Message(PARSE_STDIN,"Pagesize: (tight bbox)\n");
 	} else { 
 	  handlepapersize(p, &x_width, &y_width) ;
-	  if (Landscape) {
-	    Warning("Both landscape and pagesize specified; using pagesize") ;
-	    Landscape = _FALSE ;
-	  }
 	  /* Avoid PASS_BBOX */
 	  PassDefault = PASS_DRAW;
 	  Message(PARSE_STDIN,"Pagesize: (%d,%d)\n",x_width,y_width);
@@ -130,9 +115,6 @@ named COPYING and dvipng.c.");
 	  handlepapersize("8.5in,14in",&x_pwidth,&y_pwidth);
 	} else if (strcmp(p,"executive")) {
 	  handlepapersize("7.25in,10.5in",&x_pwidth,&y_pwidth);
-	} else if (strcmp(p,"landscape")) {
-	  /* Bug out on both papersize and Landscape? */
-	  Landscape = _TRUE;
 	} else 
 	  Fatal("The papersize %s is not implemented, sorry.\n",p);
 	Message(PARSE_STDIN,"Papersize: %s\n",p);
@@ -180,63 +162,53 @@ named COPYING and dvipng.c.");
 	/*overridemag = (c == 'x' ? 1 : -1) ;*/
 	break ;
       case 'p' :
-#if defined(MSDOS) || defined(OS2) || defined(ATARIST)
-	/* check for emTeX job file (-pj=filename) */
-	/*if (*p == 'j') {
-	  p++;
-	  if (*p == '=' || *p == ':')
-	    p++;
-	  mfjobname = newstring(p);
-	  break;
-	  }*/
-	/* must be page number instead */
-#endif
 	if (*p == 'p') {  /* a -pp specifier for a page list */
-	  int pp_abspage = _FALSE;
-
+	  ppused=_TRUE;
 	  p++ ;
 	  if (*p == 0 && argv[i+1])
-	    p = argv[++i] ;
-	  if (*p == '=') {
-	    pp_abspage = _TRUE ;
-	    p++ ;
-	  }
-	  if (QueueParse(p,pp_abspage,reverse))
-	    Fatal("bad page list specifier (-pp).") ;
+	    p = argv[++i];
+	  Message(PARSE_STDIN,"Page list: %s\n",p);
+	  if (ParsePages(p))
+	    Fatal("bad page list specifier (-pp).");
 	  break ;
 	} else {   /* a -p specifier for first page */
+	  int32_t firstpage;
+	  bool abspage=_FALSE;
+
 	  if (*p == 0 && argv[i+1])
 	    p = argv[++i] ;
 	  if (*p == '=') {
+	    abspage=_TRUE;
 	    p++ ;
-	  } else {
-	    abspage = _FALSE;
 	  }
-	  if (sscanf(p, "%d", &firstpage)!=1) {
+	  if (sscanf(p, "%d", &firstpage)!=1) 
 	    Fatal("bad first page option (-p %s).",p) ;
-	  }
-	Message(PARSE_STDIN,"First page: %d\n",firstpage);
+	  FirstPage(firstpage,abspage);
+	  Message(PARSE_STDIN,"First page: %d\n",firstpage);
 	}
 	break ;
       case 'l':
-	if (*p == 0 && argv[i+1])
-	  p = argv[++i] ;
-	if (*p == '=') {
-	  p++ ;
-	} else {
-	  abspage = _FALSE ;
+	{
+	  int32_t lastpage;
+	  bool abspage=_FALSE;
+
+	  if (*p == 0 && argv[i+1])
+	    p = argv[++i] ;
+	  if (*p == '=') {
+	    abspage=_TRUE;
+	    p++ ;
+	  } 
+	  if (sscanf(p, "%d", &lastpage)!=1)
+	    Fatal("bad last page option (-l %s).",p) ;
+	  LastPage(lastpage,abspage);
+	  Message(PARSE_STDIN,"Last page: %d\n",lastpage);
 	}
-	if (sscanf(p, "%d", &lastpage)!=1) {
-	  Fatal("bad last page option (-l %s).",p) ;
-	}
-	Message(PARSE_STDIN,"Last page: %d\n",lastpage);
 	break ;
       case 'q':       /* quiet operation */
         flags &= !BE_NONQUIET & !BE_VERBOSE;
         break;
       case 'r':       /* switch order to process pages */
-        reverse = (bool)(!reverse);
-	if (reverse) 
+	if (Reverse()) 
 	  Message(PARSE_STDIN,"Reverse order\n");
 	else
 	  Message(PARSE_STDIN,"Normal order\n");
@@ -276,7 +248,7 @@ named COPYING and dvipng.c.");
   if (dviname != NULL) {
     if (dvi != NULL && dvi->filep != NULL) 
       DVIClose(dvi);
-    dvi=DVIOpen(dviname);  
+    dvi=DVIOpen(dviname,outname);  
   }
   if (dvi==NULL) {
     fprintf(ERR_STREAM,"\nUsage: dvipng [OPTION]... FILENAME[.dvi]\n");
@@ -318,18 +290,8 @@ named COPYING and dvipng.c.");
       exit(1);
     }
   }
-
-  /* dvips' behaviour:
-   * -pp outputs _all_ pages with the correct numbers,
-   *   '=' does not work there
-   * -p, -l outputs from the first occurrence of firstpage to the first
-   * occurrence of lastpage.
-   */
-  if (((flags & PARSE_STDIN) == 0 && QueueEmpty()) || 
-      firstpage != PAGE_MINPAGE || lastpage != PAGE_LASTPAGE) {
-    QueuePage(firstpage!=PAGE_MINPAGE ? firstpage : 1,
-	      lastpage,abspage,reverse);
-  }
+  if ((flags & PARSE_STDIN) == 0 && (! ppused)) 
+    ParsePages("--");
   return((flags & PARSE_STDIN) != 0);
 }
 /*
@@ -373,6 +335,26 @@ void DecodeString(char *string)
     (void) DecodeArgs(strc,strv);
 }
 
+
+
+uint32_t UNumRead(unsigned char* current, register int n)
+{
+  uint32_t x = (unsigned char) *(current)++; /* number being constructed */
+  while(--n) 
+    x = (x << 8) | *(current)++;
+  return(x);
+}
+
+int32_t SNumRead(unsigned char* current, register int n)
+{
+  int32_t x = (signed char) *(current)++; /* number being constructed */
+  while(--n)
+    x = (x << 8) | *(current)++;
+  return(x);
+}
+
+
+
 /*-->Fatal*/
 /**********************************************************************/
 /******************************  Fatal  *******************************/
@@ -388,8 +370,6 @@ void Fatal (char *fmt, ...)
 
   fprintf(ERR_STREAM, "\n\n");
   va_end(args);
-  CloseFiles();
-
   exit(EXIT_FAILURE);
 }
 
