@@ -35,6 +35,8 @@
 
 #define  STACK_SIZE      100     /* DVI-stack size                     */
 
+#define DEFAULT_GAMMA 1.0
+
 /* Name of the program which is called to generate missing pk files */
 #define MAKETEXPK "mktexpk"
 
@@ -207,6 +209,10 @@ void    Fatal(char *fmt, ...);
 int32_t   SNumRead(unsigned char*, register int);
 uint32_t   UNumRead(unsigned char*, register int);
 
+bool MmapFile (char *filename,struct filemmap *fmmap);
+void UnMmapFile(struct filemmap* fmmap);
+
+
 /********************************************************/
 /***********************  font.h  ***********************/
 /********************************************************/
@@ -347,6 +353,7 @@ void      WriteImage(char*, int);
 void      LoadPK(int32_t, register struct char_entry *);
 int32_t   SetChar(int32_t);
 dviunits  SetGlyph(int32_t c, int32_t hh,int32_t vv);
+void      Gamma(double gamma);
 int32_t   SetVF(int32_t);
 int32_t   SetRule(int32_t, int32_t, int32_t, int32_t);
 void      SetSpecial(char *, int32_t, int32_t, int32_t);

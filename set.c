@@ -27,6 +27,7 @@
 #if HAVE_ALLOCA_H
 # include <alloca.h>
 #endif
+#include <math.h>
 
 void CreateImage(pixels x_width,pixels y_width)
 {
@@ -116,6 +117,42 @@ void WriteImage(char *pngname, int pagenum)
   page_imagep=NULL;
 }
 
+static int gammatable[]=
+  {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,
+   20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,
+   40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,
+   60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,
+   80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,
+   100,101,102,103,104,105,106,107,108,109,
+   110,111,112,113,114,115,116,117,118,119,
+   120,121,122,123,124,125,126,127,128,129,
+   130,131,132,133,134,135,136,137,138,139,
+   140,141,142,143,144,145,146,147,148,149,
+   150,151,152,153,154,155,156,157,158,159,
+   160,161,162,163,164,165,166,167,168,169,
+   170,171,172,173,174,175,176,177,178,179,
+   180,181,182,183,184,185,186,187,188,189,
+   190,191,192,193,194,195,196,197,198,199,
+   200,201,202,203,204,205,206,207,208,209,
+   210,211,212,213,214,215,216,217,218,219,
+   220,221,222,223,224,225,226,227,228,229,
+   230,231,232,233,234,235,236,237,238,239,
+   240,241,242,243,244,245,246,247,248,249,
+   250,251,252,253,254,255};
+
+void Gamma(double gamma)
+{
+  int i=0;
+  
+  printf("GAMMA\n");
+  while (i<=255) {
+    gammatable[i]=255-(int)(pow((double)(255-i)/255.0,gamma)*255);
+    DEBUG_PRINT(DEBUG_GLYPH,("\n  GAMMA GREYSCALE: %d -> %d ",i,gammatable[i]));
+    i++;
+  }
+}
+
+
 #define GREYS 255
 dviunits SetGlyph(int32_t c, int32_t hh,int32_t vv)
 {
@@ -125,7 +162,7 @@ dviunits SetGlyph(int32_t c, int32_t hh,int32_t vv)
   int *Color=alloca(sizeof(int)*(GREYS+1));
   int x,y;
   int pos=0;
-  int bgColor,pixelcolor;
+  int bgColor,pixelgrey,pixelcolor;
   hh -= ptr->xOffset/shrinkfactor;
   vv -= ptr->yOffset/shrinkfactor;
   
@@ -136,29 +173,31 @@ dviunits SetGlyph(int32_t c, int32_t hh,int32_t vv)
   for( y=0; y<ptr->h; y++) {
     for( x=0; x<ptr->w; x++) {
       if (ptr->data[pos]>0) {
+	pixelgrey=gammatable[(int)ptr->data[pos]];
+	DEBUG_PRINT(DEBUG_GLYPH,("\n  GAMMA GREYSCALE: %d -> %d ",ptr->data[pos],pixelgrey));
 	bgColor = gdImageGetPixel(page_imagep, hh + x, vv + y);
 	if (bgColor == Color[0]) {
 	  /* Standard background: use cached value if present */
-	  pixelcolor=Color[(int)ptr->data[pos]];
+	  pixelcolor=Color[pixelgrey];
 	  if (pixelcolor==-1) {
 	    red = cstack[0].red 
-	      - (cstack[0].red-cstack[csp].red)*ptr->data[pos]/GREYS;
+	      - (cstack[0].red-cstack[csp].red)*pixelgrey/GREYS;
 	    green = cstack[0].green
-	      - (cstack[0].green-cstack[csp].green)*ptr->data[pos]/GREYS;
+	      - (cstack[0].green-cstack[csp].green)*pixelgrey/GREYS;
 	    blue = cstack[0].blue
-	      - (cstack[0].blue-cstack[csp].blue)*ptr->data[pos]/GREYS;
-	    Color[ptr->data[pos]] = 
+	      - (cstack[0].blue-cstack[csp].blue)*pixelgrey/GREYS;
+	    Color[pixelgrey] = 
 	      gdImageColorResolve(page_imagep,red,green,blue);
-	    pixelcolor=Color[ptr->data[pos]];
+	    pixelcolor=Color[pixelgrey];
 	  }
 	} else {
 	  /* Overstrike: No cache */
 	  red=gdImageRed(page_imagep, bgColor);
 	  green=gdImageGreen(page_imagep, bgColor);
 	  blue=gdImageBlue(page_imagep, bgColor);
-	  red = red-(red-cstack[csp].red)*ptr->data[pos]/GREYS;
-	  green = green-(green-cstack[csp].green)*ptr->data[pos]/GREYS;
-	  blue = blue-(blue-cstack[csp].blue)*ptr->data[pos]/GREYS;
+	  red = red-(red-cstack[csp].red)*pixelgrey/GREYS;
+	  green = green-(green-cstack[csp].green)*pixelgrey/GREYS;
+	  blue = blue-(blue-cstack[csp].blue)*pixelgrey/GREYS;
 	  pixelcolor = gdImageColorResolve(page_imagep, red, green, blue);
 	}
 	gdImageSetPixel(page_imagep, hh + x, vv + y, pixelcolor);
@@ -167,6 +206,7 @@ dviunits SetGlyph(int32_t c, int32_t hh,int32_t vv)
     }
   }
   /* This code saved _no_ execution time, strangely.
+   * Also, it cannot gamma correct; needs that in loaded glyphs
    *
    * #ifdef HAVE_GDIMAGECREATETRUECOLOR 
    *   if (truecolor) 
@@ -199,7 +239,9 @@ dviunits SetRule(dviunits a, dviunits b, subpixels hh,subpixels vv)
       /* This code produces too dark rules. But what the hell. Grey
        * rules look fuzzy. */
       Color = gdImageColorResolve(page_imagep, 
-				  cstack[csp].red,cstack[csp].green,cstack[csp].blue);
+				  cstack[csp].red,
+				  cstack[csp].green,
+				  cstack[csp].blue);
       /* +1 and -1 are because the Rectangle coords include last pixels */
       gdImageFilledRectangle(page_imagep,hh,vv-height+1,hh+width-1,vv,Color);
       DEBUG_PRINT(DEBUG_DVI,("\n  RULE \t%dx%d at (%d,%d)",
