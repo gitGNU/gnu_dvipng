@@ -3,6 +3,7 @@ PACKAGE_STRING="@PACKAGE_STRING@"
 CC = @CC@
 CFLAGS = @CFLAGS@ -Wall
 CPPFLAGS = @CPPFLAGS@ -I.
+LN_S = @LN_S@
 
 LIBS = @LIBS@
 LDFLAGS = @LDFLAGS@
@@ -31,7 +32,7 @@ objects = dvipng.o color.o draw.o dvi.o font.o misc.o pk.o \
 
 all: dvipng docs
 
-install: install-dvipng install-docs
+install: @INSTALL_BIN_TARGET@ install-docs
 
 ####################################### The program
 
@@ -43,6 +44,9 @@ $(objects): dvipng.h commands.h config.h
 install-dvipng: dvipng
 	-$(MKINSTALLDIRS) $(DESTDIR)$(bindir)
 	$(INSTALL) dvipng $(DESTDIR)$(bindir)
+
+install-dvigif: install-dvipng
+	(cd $(DESTDIR)$(bindir) && $(LN_S) dvipng dvigif) 
 
 ####################################### The documentation
 
@@ -64,6 +68,13 @@ dvipng.help: dvipng
 	( test -r dvipng.help && diff dvipng.tmp dvipng.help ) \
 		|| cp dvipng.tmp dvipng.help
 	rm -f dvipng.tmp
+
+dvipng.html: $(TEXIFILES) dvipng.help
+	texi2html dvipng.texi
+
+dvipng_mono.html: $(TEXIFILES) dvipng.help
+	texi2html --monolithic -nomenu -nosec_nav -o dvipng_mono.html \
+		dvipng.texi
 
 INSTALL: install.texi
 	-$(MAKEINFO) -D rawfile --no-headers --no-validate \
