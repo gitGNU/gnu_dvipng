@@ -104,6 +104,44 @@ typedef struct {
 void    DoSpecial(char *, int);
 
 /********************************************************/
+/***********************  dvi.h  ************************/
+/********************************************************/
+
+#define DVI_TYPE            0
+struct dvi_data {    /* dvi entry */
+  int          type;            /* This is a DVI                    */
+  struct dvi_data *next;
+  uint32_t     num, den, mag;   /* PRE command parameters            */
+  int32_t     conv;             /* computed from num and den         */
+  char         name[STRSIZE];   /* full name of DVI file             */
+  char         outname[STRSIZE];/* output filename (basename)        */
+  FILE *       filep;           /* file pointer                      */
+  struct font_num  *fontnump;   /* DVI font numbering                */
+  struct page_list *pagelistp;  /* DVI page list                     */
+};
+
+#define PAGE_POST      INT32_MAX
+#define PAGE_LASTPAGE  INT32_MAX-1
+#define PAGE_MAXPAGE   INT32_MAX-2    /* assume no pages out of this range */
+#define PAGE_FIRSTPAGE INT32_MIN  
+#define PAGE_MINPAGE   INT32_MIN+1    /* assume no pages out of this range */
+
+struct page_list {
+  struct page_list* next;
+  int     offset;           /* file offset to BOP */
+  int32_t count[11];        /* 10 dvi counters + absolute pagenum in file */
+};
+
+struct dvi_data* DVIOpen(char*,char*);
+void             DVIClose(struct dvi_data*);
+struct page_list*FindPage(int32_t, bool);
+struct page_list*NextPage(struct page_list*);
+struct page_list*PrevPage(struct page_list*);
+void             SeekPage(struct page_list*);
+unsigned char*   DVIGetCommand(struct dvi_data*);
+uint32_t         CommandLength(unsigned char*); 
+
+/********************************************************/
 /***********************  font.h  ***********************/
 /********************************************************/
 
@@ -158,23 +196,6 @@ void    CheckChecksum(unsigned, unsigned, const char*);
 void    InitPK (struct font_entry *);
 void    InitVF (struct font_entry *);
 
-/********************************************************/
-/***********************  dvi.h  ************************/
-/********************************************************/
-
-#define DVI_TYPE            0
-struct dvi_data {    /* dvi entry */
-  int          type;            /* This is a DVI                    */
-  struct dvi_data *next;
-  uint32_t     num, den, mag;   /* PRE command parameters            */
-  int32_t     conv;             /* computed from num and den         */
-  char         name[STRSIZE];   /* full name of DVI file             */
-  char         outname[STRSIZE];/* output filename (basename)        */
-  FILE *       filep;           /* file pointer                      */
-  struct font_num  *fontnump;   /* DVI font numbering                */
-  struct page_list *pagelistp;  /* DVI page list                     */
-};
-
 struct dvi_vf_entry {
   union {
     struct dvi_data;
@@ -182,61 +203,65 @@ struct dvi_vf_entry {
   };
 };
 
-#define PAGE_POST     INT32_MAX
-#define PAGE_LASTPAGE INT32_MAX-1
-#define PAGE_MAXPAGE  INT32_MAX-2    /* assume no pages out of this range */
-#define PAGE_MINPAGE  INT32_MIN      /* assume no pages out of this range */
+void    FontDef(unsigned char*, struct dvi_vf_entry*);
+void    SetFntNum(int32_t, struct dvi_vf_entry*);
 
-struct page_list {
-  struct page_list* next;
-  int     offset;           /* file offset to BOP */
-  int32_t count[11];        /* 10 dvi counters + absolute pagenum in file */
-};
+/********************************************************/
+/*********************  pplist.h  ***********************/
+/********************************************************/
 
-uint32_t         CommandLength(unsigned char*); 
-struct dvi_data* DVIOpen(char*);
-unsigned char*   DVIGetCommand(struct dvi_data*);
-void             DVIClose(struct dvi_data*);
-struct page_list*FindPage(int32_t, bool);
+bool    ParsePages(char*);
+void    FirstPage(int32_t,bool);
+void    LastPage(int32_t,bool);
+void    ClearPpList(void);
+bool    Reverse(void);
+struct page_list*   NextPPage(struct page_list*);
 
+/********************************************************/
+/**********************  misc.h  ************************/
+/********************************************************/
 
-/***************** general crap ******************/
-
-void    CloseFiles(void);
 bool    DecodeArgs(int, char *[]);
 void    DecodeString(char *);
-/*#ifdef __riscos
-void    diagram(char *, diagtrafo *);
-void   *xosfile_set_type(char *, int);
-void    MakeMetafontFile(char *, char *, int);
-#endif*/
-void    DoBop(void);
-void    DrawCommand(unsigned char*, int, struct dvi_vf_entry*);
-void    DoPages(void);
-void    Fatal(char *fmt, ...);
-struct page_list*   FindQdPage(void);
-void    FormFeed(struct dvi_data*,int);
-void    FontDef(unsigned char*, struct dvi_vf_entry*);
-struct page_list *InitPage(void);
-void    LoadAChar(int32_t, register struct pk_char *);
+
 void    Message(int, char *fmt, ...);
-uint32_t   NoSignExtend(FILE*, int);
-void       OpenFont(struct font_entry *);
-bool       QueueParse(char*,bool,bool);
-bool       QueueEmpty(void);
-void       QueuePage(int,int,bool,bool);
-int32_t    SetChar(int32_t, int);
-int32_t    SetPK(int32_t, int);
-int32_t    SetVF(int32_t, int);
-void    SetFntNum(int32_t, struct dvi_vf_entry*);
-int32_t   SetRule(int32_t, int32_t, int);
-int32_t   SignExtend(FILE*, int);
-void    SkipPage(void);
+void    Warning(char *fmt, ...);
+void    Fatal(char *fmt, ...);
+
 int32_t   SNumRead(unsigned char*, register int);
 uint32_t   UNumRead(unsigned char*, register int);
-void    Warning(char *fmt, ...);
-/*unsigned char   skip_specials(void);*/
 
+/********************************************************/
+/***********************  set.h  ************************/
+/********************************************************/
+#ifdef MAIN
+#define EXTERN
+#define INIT(x) =x
+#else
+#define EXTERN extern
+#define INIT(x)
+#endif
+
+#include "commands.h"
+
+EXTERN int32_t     h;                   /* current horizontal position     */
+EXTERN int32_t     v;                   /* current vertical position       */
+EXTERN int32_t     w INIT(0);           /* current horizontal spacing      */
+EXTERN int32_t     x INIT(0);           /* current horizontal spacing      */
+EXTERN int32_t     y INIT(0);           /* current vertical spacing        */
+EXTERN int32_t     z INIT(0);           /* current vertical spacing        */
+
+void      DoBop(void);
+void      DrawCommand(unsigned char*, int, struct dvi_vf_entry*);
+void      DoPages(void);
+void      FormFeed(struct dvi_data*,int);
+int32_t   SetChar(int32_t, int);
+int32_t   SetPK(int32_t, int);
+int32_t   SetVF(int32_t, int);
+int32_t   SetRule(int32_t, int32_t, int);
+
+
+/**************************************************/
 void handlepapersize(char*,int*,int*);
 
 void background(char *);
@@ -248,20 +273,7 @@ void resetcolorstack(char *);
 /**********************************************************************/
 /*************************  Global Variables  *************************/
 /**********************************************************************/
-#ifdef MAIN
-#define EXTERN
-#define INIT(x) =x
-#else
-#define EXTERN extern
-#define INIT(x)
-#endif
 
-#include "commands.h"
-
-#ifndef KPATHSEA
-EXTERN char   *PXLpath INIT(FONTAREA);
-#endif
-EXTERN bool    Landscape INIT(_FALSE);  /* print document in ladscape mode  */
 #ifdef MAKETEXPK
 #ifdef KPATHSEA
 EXTERN bool    makeTexPK INIT(MAKE_TEX_PK_BY_DEFAULT);
@@ -270,12 +282,6 @@ EXTERN bool    makeTexPK INIT(_TRUE);
 #endif
 #endif
 
-EXTERN int32_t     h;                   /* current horizontal position     */
-EXTERN int32_t     v;                   /* current vertical position       */
-EXTERN int32_t     w INIT(0);           /* current horizontal spacing      */
-EXTERN int32_t     x INIT(0);           /* current horizontal spacing      */
-EXTERN int32_t     y INIT(0);           /* current vertical spacing        */
-EXTERN int32_t     z INIT(0);           /* current vertical spacing        */
 EXTERN uint32_t    usermag INIT(0);     /* user specified magstep          */
 EXTERN struct font_entry *hfontptr INIT(NULL); /* font list pointer        */
 
