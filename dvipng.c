@@ -112,6 +112,9 @@ char    *argv[];
     char    line[STRSIZE];
     char    *linev[3];
     
+    if (!QueueEmpty()) 
+      DoPages();
+    printf("%s> ",filename);
     fgets(line,STRSIZE,stdin);
     while(!FEOF(stdin)) {
       linev[0]=line;  /* OBSERVE linev[0] is never used in DecodeArgs */
@@ -128,12 +131,12 @@ char    *argv[];
       }
       if (!QueueEmpty()) 
 	DoPages();
+      printf("%s> ",filename);
       fgets(line,STRSIZE,stdin);
     }
   }
 
   AllDone(_FALSE);
-  qfprintf(ERR_STREAM,"\n");
   exit(0);
 }
 
@@ -163,6 +166,7 @@ void DoPages P1H(void)
     if (tpagelistp->next==NULL) 
       tpagelistp->next=InitPage();
   }
+  qfprintf(ERR_STREAM,"\n");
 }
 
 
