@@ -1,6 +1,10 @@
 2004-06-27  Jan-Åke Larsson  <jalar@mai.liu.se>
 
-	* draw.c: Fix for case of absent font lib(s)
+	* dvipng.c: Fix case of missing font libs
+
+	* fontmap.c: Remove debug printf
+
+	* draw.c: Fix for case of absent font lib(s), correct typo
 
 2004-06-24  Jan-Åke Larsson  <jalar@mai.liu.se>
 
