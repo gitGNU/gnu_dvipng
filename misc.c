@@ -1,6 +1,7 @@
 #include "dvipng.h"
 
 static char *programname;
+static int   flags=BE_NONQUIET;
 
 /*-->DecodeArgs*/
 /*********************************************************************/
@@ -13,7 +14,7 @@ bool DecodeArgs(int argc, char ** argv)
   int32_t lastpage=PAGE_LASTPAGE;
   bool abspage=_TRUE;
   static bool reverse=_FALSE;
-  static bool parsestdin=_FALSE;
+  char *dviname=NULL;
 
 #ifndef KPATHSEA
   if ((tcp = getenv("TEXPXL")) != NULL) PXLpath = tcp;
@@ -38,13 +39,20 @@ named COPYING and dvipng.c.");
       switch (c) {
 #ifdef DEBUG
       case 'd':       /* selects Debug output */
-	sscanf(p, "%u", &Debug);
-	if(Debug==0) 
-	  Debug = DEBUG_DVI;
+	{ 
+	  int debug = 0;
+	  
+	  if (*p == 0 && argv[i+1] 
+	      && sscanf(argv[i+1], "%u", &debug)==1) 
+	    i++;
+	  else
+	    sscanf(p, "%u", &debug);
+	  flags |= debug!=0 ? debug * LASTFLAG * 2 : DEBUG_DVI;
 #ifdef KPATHSEA
-	kpathsea_debug = Debug/DEBUG_GLYPH;
+	  kpathsea_debug = debug/LASTDEBUG;
 #endif
-	printf("Debug output enabled\n");
+	  Message(PARSE_STDIN,"Debug output enabled\n");
+	}
         break;
 #endif
 #if 0 /* -o disabled for now. rootname is dvi->outname nowadays */
@@ -57,8 +65,7 @@ named COPYING and dvipng.c.");
         if (p1 != NULL && strcmp(p1,".png") == 0 ) {
 	  *p1='\0';
         }
-	if (parsestdin)
-	  printf("Output file: %s#.png (#=page number)\n",rootname);
+	Message(PARSE_STDIN,"Output file: %s#.png (#=page number)\n",rootname);
         break;
 #endif
 #ifdef MAKETEXPK
@@ -68,20 +75,16 @@ named COPYING and dvipng.c.");
 #ifdef KPATHSEA
         kpse_set_program_enabled (kpse_pk_format, makeTexPK, kpse_src_cmdline);
 #endif /* KPATHSEA */
-	if (parsestdin) {
-	  if (makeTexPK)
-	    printf("MakeTeXPK enabled\n");
-	  else
-	    printf("MakeTeXPK disabled\n");
-	}
+	if (makeTexPK)
+	  Message(PARSE_STDIN,"MakeTeXPK enabled\n");
+	else
+	  Message(PARSE_STDIN,"MakeTeXPK disabled\n");
         break;
       case 'm':
 	if (strcmp(p,"ode") == 0 ) {
 	  if (argv[i+1])
 	    MFMODE = argv[++i] ;
-	  if (parsestdin)
-	    printf("MetaFont mode: %s\n",MFMODE);
-	  break ;
+	  Message(PARSE_STDIN,"MetaFont mode: %s\n",MFMODE);
 	}
 	break;
 #endif /* MAKETEXPK */
@@ -93,20 +96,17 @@ named COPYING and dvipng.c.");
 	y_offset = y_offset_def; 
 	x_max = x_min = -x_offset_def; /* set BBOX */
 	y_max = y_min = -y_offset_def;
-	if (parsestdin)
-	  printf("Offset: (%d,%d)\n",x_offset_def,y_offset_def);
+	Message(PARSE_STDIN,"Offset: (%d,%d)\n",x_offset_def,y_offset_def);
         break ;
       case 'T' :
 	if (*p == 0 && argv[i+1])
 	  p = argv[++i] ;
 	if (strcmp(p,"bbox")==0) {
-	  PassDefault=PASS_BBOX;
-	  if (parsestdin)
-	    printf("Pagesize: (bbox)\n");
+	  PassDefault=PASS_BBOX; 
+	  Message(PARSE_STDIN,"Pagesize: (bbox)\n");
 	} else if (strcmp(p,"tight")==0) {
 	  PassDefault=PASS_TIGHT_BBOX;
-	  if (parsestdin)
-	    printf("Pagesize: (tight bbox)\n");
+	  Message(PARSE_STDIN,"Pagesize: (tight bbox)\n");
 	} else { 
 	  handlepapersize(p, &x_width, &y_width) ;
 	  if (Landscape) {
@@ -115,8 +115,7 @@ named COPYING and dvipng.c.");
 	  }
 	  /* Avoid PASS_BBOX */
 	  PassDefault = PASS_DRAW;
-	  if (parsestdin)
-	    printf("Pagesize: (%d,%d)\n",x_width,y_width);
+	  Message(PARSE_STDIN,"Pagesize: (%d,%d)\n",x_width,y_width);
 	}
 	break ;
       case 't':       /* specify paper format, only for cropmarks */
@@ -136,35 +135,30 @@ named COPYING and dvipng.c.");
 	  Landscape = _TRUE;
 	} else 
 	  Fatal("The papersize %s is not implemented, sorry.\n",p);
-	if (parsestdin)
-	  printf("Papersize: %s\n",p);
+	Message(PARSE_STDIN,"Papersize: %s\n",p);
         break;
       case 'b':
 	if ( *p == 'g' ) { /* -bg background color */
 	  p++;
 	  if (*p == 0 && argv[i+1])
 	    p = argv[++i] ;
-	  if (strncmp(p,"Transparent",11) == 0 ) {
+	  if (strncmp(p,"Transparent",11) == 0 ) 
 	    borderwidth=-1;
-	  } else {
+	  else
 	    background(p);
-	  }
-	  if (parsestdin) {
-	    if (borderwidth>=0) {
-	      printf("Background: rgb %d,%d,%d\n",bRed,bGreen,bBlue);
-	    } else {
-	      printf("Transp. background (fallback rgb %d,%d,%d)\n",
-		     bRed,bGreen,bBlue);
-	    }
-	  } 
+	  if (borderwidth>=0) 
+	    Message(PARSE_STDIN,"Background: rgb %d,%d,%d\n",
+		    bRed,bGreen,bBlue);
+	  else 
+	    Message(PARSE_STDIN,"Transp. background (fallback rgb %d,%d,%d)\n",
+		    bRed,bGreen,bBlue);
 	} else if ( *p == 'd' ) { /* -bd border width */
 	  p++;
 	  if (*p == 0 && argv[i+1])
 	    p = argv[++i] ;
 	  if ( sscanf(p, "%d", &borderwidth) != 1 )
 	    Fatal("argument of -bd is not a valid integer\n");
-	  if (parsestdin)
-	    printf("Transp. border: %d dots\n",borderwidth);
+	  Message(PARSE_STDIN,"Transp. border: %d dots\n",borderwidth);
 	}
 	break;
       case 'f':
@@ -173,8 +167,7 @@ named COPYING and dvipng.c.");
 	  if (*p == 0 && argv[i+1])
 	    p = argv[++i] ;
 	  resetcolorstack(p);
-	  if (parsestdin)
-	    printf("Foreground: rgb %d,%d,%d\n",Red,Green,Blue);
+	  Message(PARSE_STDIN,"Foreground: rgb %d,%d,%d\n",Red,Green,Blue);
 	}
 	break;
       case 'x' : case 'y' :
@@ -183,8 +176,7 @@ named COPYING and dvipng.c.");
 	if (sscanf(p, "%d", &usermag)==0 || usermag < 1 ||
 	    usermag > 1000000)
 	  Fatal("Bad magnification parameter (-x or -y).") ;
-	if (parsestdin)
-	  printf("Magstep: %d\n",usermag);
+	Message(PARSE_STDIN,"Magstep: %d\n",usermag);
 	/*overridemag = (c == 'x' ? 1 : -1) ;*/
 	break ;
       case 'p' :
@@ -223,8 +215,7 @@ named COPYING and dvipng.c.");
 	  if (sscanf(p, "%d", &firstpage)!=1) {
 	    Fatal("bad first page option (-p %s).",p) ;
 	  }
-	if (parsestdin) 
-	  printf("First page: %d\n",firstpage);
+	Message(PARSE_STDIN,"First page: %d\n",firstpage);
 	}
 	break ;
       case 'l':
@@ -238,24 +229,20 @@ named COPYING and dvipng.c.");
 	if (sscanf(p, "%d", &lastpage)!=1) {
 	  Fatal("bad last page option (-l %s).",p) ;
 	}
-	if (parsestdin) 
-	  printf("Last page: %d\n",lastpage);
+	Message(PARSE_STDIN,"Last page: %d\n",lastpage);
 	break ;
       case 'q':       /* quiet operation */
-        G_quiet = _TRUE;
-	G_verbose = _FALSE;
+        flags &= !BE_NONQUIET & !BE_VERBOSE;
         break;
       case 'r':       /* switch order to process pages */
         reverse = (bool)(!reverse);
-	if (parsestdin) {
-	  if (reverse) 
-	    printf("Reverse order\n");
-	  else
-	    printf("Normal order\n");
-	}
+	if (reverse) 
+	  Message(PARSE_STDIN,"Reverse order\n");
+	else
+	  Message(PARSE_STDIN,"Normal order\n");
         break;
       case 'v':    /* verbatim mode */
-        G_verbose = _TRUE;
+	flags |= BE_NONQUIET | BE_VERBOSE;
         break;
       case 'D' :
 	if (*p == 0 && argv[i+1])
@@ -263,35 +250,34 @@ named COPYING and dvipng.c.");
 	if (sscanf(p, "%d", &resolution)==0 || resolution < 10 ||
 	    resolution > 10000)
 	  Fatal("bad dpi parameter (-D).") ;
-	if (parsestdin) 
-	  printf("Dpi: %d\n",resolution);
+	Message(PARSE_STDIN,"Dpi: %d\n",resolution);
 	break;
       case 'Q':       /* quality (= shrinkfactor) */
         if ( sscanf(p, "%d", &shrinkfactor) != 1 )
           Fatal("argument of -Q is not a valid integer\n");
-	if (parsestdin) 
-	  printf("Shrinkfactor: %d\n",shrinkfactor);
+	Message(PARSE_STDIN,"Shrinkfactor: %d\n",shrinkfactor);
 	break;
       case '\0':
-	parsestdin=_TRUE;
+	flags |= PARSE_STDIN;
 	break;
       default:
 	Warning("%c is not a valid flag\n", c);
       }
     } else {
-      if (dvi != NULL && dvi->filep != NULL) {
-	DVIClose(dvi);
-      }
-      dvi=DVIOpen(argv[i]);
+      dviname=argv[i];
     }
   }
 
   if (argv[0]!=NULL) {
     programname=argv[0];
-    qfprintf(ERR_STREAM,"This is %s Copyright 2002 Jan-Åke Larsson\n", 
-	     VERSION);
+    Message(BE_NONQUIET,"This is %s Copyright 2002 Jan-Åke Larsson\n",VERSION);
   }
 
+  if (dviname != NULL) {
+    if (dvi != NULL && dvi->filep != NULL) 
+      DVIClose(dvi);
+    dvi=DVIOpen(dviname);  
+  }
   if (dvi==NULL) {
     fprintf(ERR_STREAM,"\nUsage: dvipng [OPTION]... FILENAME[.dvi]\n");
     fprintf(ERR_STREAM,"Options are chosen to be similar to dvips' options where possible:\n");
@@ -328,16 +314,23 @@ named COPYING and dvipng.c.");
       fputs (kpse_bug_address, ERR_STREAM);
       }
       #endif*/
-    if (!parsestdin) {
+    if ((flags & PARSE_STDIN) == 0) {
       exit(1);
     }
   }
 
-  if (!parsestdin || firstpage!=PAGE_MINPAGE || lastpage!=PAGE_LASTPAGE) {
+  /* dvips' behaviour:
+   * -pp outputs _all_ pages with the correct numbers,
+   *   '=' does not work there
+   * -p, -l outputs from the first occurrence of firstpage to the first
+   * occurrence of lastpage.
+   */
+  if (((flags & PARSE_STDIN) == 0 && QueueEmpty()) || 
+      firstpage != PAGE_MINPAGE || lastpage != PAGE_LASTPAGE) {
     QueuePage(firstpage!=PAGE_MINPAGE ? firstpage : 1,
 	      lastpage,abspage,reverse);
   }
-  return(parsestdin);
+  return((flags & PARSE_STDIN) != 0);
 }
 /*
 char * xmalloc(unsigned size)
@@ -366,11 +359,8 @@ void Fatal (char *fmt, ...)
   fprintf(ERR_STREAM, "\n\n");
   va_end(args);
   CloseFiles();
-#ifndef vms
-  exit(2);
-#else
-  exit(SS$_ABORT);
-#endif
+
+  exit(EXIT_FAILURE);
 }
 
 
@@ -385,12 +375,7 @@ void Warning(char *fmt, ...)
 
   va_start(args, fmt);
 
-#ifndef vms
-  G_errenc = 1;
-#else
-  G_errenc = (SS$_ABORT | STS$M_INHIB_MSG);  /* no message on screen */
-#endif
-  if ( G_nowarn || G_quiet )
+  if ( flags & BE_NONQUIET )
     return;
   
   fprintf(ERR_STREAM, "%s warning: ", programname);
@@ -398,3 +383,19 @@ void Warning(char *fmt, ...)
   fprintf(ERR_STREAM, "\n");
   va_end(args);
 }
+
+
+/*-->Message*/
+/**********************************************************************/
+/*****************************  Message  ******************************/
+/**********************************************************************/
+void Message(int activeflags, char *fmt, ...)
+{
+  va_list args;
+
+  va_start(args, fmt);
+  if ( flags & activeflags )
+    vfprintf(ERR_STREAM, fmt, args);
+  va_end(args);
+}
+
