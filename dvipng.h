@@ -17,7 +17,14 @@
 
 #define ERR_STREAM stdout   /* ???? */
 
+#include <stdlib.h>
+#include <stdarg.h>
+
+#ifdef HAVE_STDINT_H
 #include <stdint.h>
+#else
+#include <inttypes.h>
+#endif
 
 #include <gd.h>
 
@@ -28,17 +35,7 @@
 #include <ctype.h> // isprint
 
 #ifdef HAVE_LIBKPATHSEA
-#include <kpathsea/config.h>
-#include <kpathsea/c-auto.h>
-#include <kpathsea/c-limits.h>
-#include <kpathsea/c-memstr.h>
-#include <kpathsea/magstep.h>
-#include <kpathsea/proginit.h>
-#include <kpathsea/progname.h>
-#include <kpathsea/tex-glyph.h>
-#include <kpathsea/tex-hush.h>
-#include <kpathsea/tex-make.h>
-#include <kpathsea/c-vararg.h>
+#include <kpathsea/kpathsea.h>
 #endif
 
 typedef  int     bool;
@@ -168,10 +165,7 @@ struct font_entry {    /* font entry */
   unsigned char* mmap;          /* memory map                        */
   uint32_t     magnification;   /* magnification read from font file */
   uint32_t     designsize;      /* design size read from font file   */
-  union {                       /* character information             */ 
-    struct pk_char *pk_ch[NFNTCHARS];  
-    struct vf_char *vf_ch[NFNTCHARS]; 
-  };
+  void *       chr[NFNTCHARS];  /* character information             */ 
   struct font_num *vffontnump;  /* VF local font numbering           */
   int32_t      defaultfont;     /* VF default font number            */
 };
