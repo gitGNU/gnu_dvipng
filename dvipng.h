@@ -200,20 +200,22 @@ struct char_entry {             /* character entry */
   unsigned char   charsize;
   gdFont  glyph;
 };
+
 struct font_entry {    /* font entry */
-    long4    k, c, s, d;
-    int     a, l;
-    char n[STRSIZE];          /* FNT_DEF command parameters                */
-    long4    font_mag;         /* computed from FNT_DEF s and d parameters  */
-    /*char psname[STRSIZE];*/ /* PostScript name of the font               */
-    char    name[STRSIZE];    /* full name of PXL file                     */
-    FILEPTR font_file_id;      /* file identifier (NO_FILE if none)         */
-    long4    magnification;    /* magnification read from PXL file          */
-    long4    designsize;       /* design size read from PXL file            */
-    struct char_entry ch[NFNTCHARS];   /* character information            */
-    struct font_entry *next;
+  struct font_entry *next;
+  bool in_use;
+  long4  k, c, s, d;
+  int     a, l;
+  char n[STRSIZE];          /* FNT_DEF command parameters                */
+  long4    font_mag;         /* computed from FNT_DEF s and d parameters  */
+  /*char psname[STRSIZE];*/ /* PostScript name of the font               */
+  char    name[STRSIZE];    /* full name of PXL file                     */
+  FILEPTR font_file_id;      /* file identifier (NO_FILE if none)         */
+  long4    magnification;    /* magnification read from PXL file          */
+  long4    designsize;       /* design size read from PXL file            */
+  struct char_entry ch[NFNTCHARS];   /* character information            */
   enum PxlId {
-        id1001, id1002, pk89    } id;
+    id1001, id1002, pk89    } id;
 };
 
 

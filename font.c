@@ -1,65 +1,14 @@
 #include "dvipng.h"
 
-/*-->GetFontDef*/
-/**********************************************************************/
-/**************************** GetFontDef  *****************************/
-/**********************************************************************/
-void GetFontDef P1H(void)
-/***********************************************************************
-   Read the font  definitions as they  are in the  postamble of the  DVI
-   file.
-***********************************************************************/
-{
-  unsigned char   byte;
-  while (((byte = (unsigned char) NoSignExtend(dvifp, 1)) >= FNT_DEF1) &&
-         (byte <= FNT_DEF4)) {
-
-    switch (byte) {
-    case FNT_DEF1:
-      /*  ReadFontDef( NoSignExtend(dvifp, 1));
-	  break;*/
-    case FNT_DEF2:
-      /*      ReadFontDef( NoSignExtend(dvifp, 2));
-	      break;*/
-    case FNT_DEF3:
-      /*      ReadFontDef( NoSignExtend(dvifp, 3));
-	      break;*/
-    case FNT_DEF4:
-      /*      ReadFontDef( NoSignExtend(dvifp, 4));
-	      break;*/
-      (void)NoSignExtend(dvifp, (int)byte - FNT_DEF1 + 1);
-      SkipFontDef();    /* SkipFontDef(k); */
-      break;
-    default:
-      Fatal("Bad byte value in font defs");
-      break;
-      }
-  }
-  if (byte != POST_POST)
-    Fatal("POST_POST missing after fontdefs");
-}
-
-
-
-
 /*-->OpenFontFile*/
 /**********************************************************************/
 /************************** OpenFontFile  *****************************/
 /**********************************************************************/
 void OpenFontFile P1H(void)
 /***********************************************************************
-    The original version of this dvi driver reopened the font file  each
-    time the font changed, resulting in an enormous number of relatively
-    expensive file  openings.   This version  keeps  a cache  of  up  to
-    MAXOPEN open files,  so that when  a font change  is made, the  file
-    pointer, pxlfp, can  usually be  updated from the  cache.  When  the
-    file is not found in  the cache, it must  be opened.  In this  case,
-    the next empty slot  in the cache  is assigned, or  if the cache  is
-    full, the least used font file is closed and its slot reassigned for
-    the new file.  Identification of the least used file is based on the
-    counts of the number  of times each file  has been "opened" by  this
-    routine.  On return, the file pointer is always repositioned to  the
-    beginning of the file.
+     Taken from dvilj. Is this necessary in modern OS'es? What is
+     MAXOPEN generally? We're aiming for deamon mode in the long run,
+     so caching like this is perhaps not the way?
 ***********************************************************************/
 
 #if MAXOPEN > 1
@@ -264,52 +213,75 @@ void ReadFontDef P1C(long4, k)
   GetBytes(dvifp,n,a+l);
   n[a+l] = '\0';
 
+  /* Find entry with this font number in use */
   tfontptr = hfontptr;
-  while ((tfontptr != NULL) && (tfontptr->k != k))
+  while (tfontptr != NULL && (tfontptr->k != k || !tfontptr->in_use))
     tfontptr = tfontptr->next;
 
-  if ( tfontptr != NULL 
-       && ( tfontptr->s != s 
-	    || tfontptr->d != d
-	    || strcmp(tfontptr->n,n) != 0 ) ) {
+  /* If found, return if it is correct */
+  if (tfontptr != NULL && tfontptr->s == s && tfontptr->d == d 
+      && strcmp(tfontptr->n,n) == 0) {
+    return;
+  }
+
+  /* otherwise mark it unused */
+  if (tfontptr != NULL) {
+    tfontptr->in_use=_FALSE;
 #ifdef DEBUG
     if (Debug)
-      fprintf(ERR_STREAM,"Font %d redefined\n",k);
+      printf("Font %d moved to unused list\n",k);
 #endif
-    tfontptr->k = -1; /*NOFONT*/
-    tfontptr = NULL;
   }
-  if ( tfontptr == NULL ) {
+
+  /* Find font in unused list */
+  tfontptr = hfontptr;
+  while (tfontptr != NULL && ( tfontptr->in_use || tfontptr->s != s 
+	   || tfontptr->d != d || strcmp(tfontptr->n,n) != 0 ) ) {
+    tfontptr = tfontptr->next;
+  }
+
+  /* If found, set its number and return */
+  if (tfontptr!=NULL) {
 #ifdef DEBUG
     if (Debug)
-      fprintf(ERR_STREAM,"Mallocating %d Bytes)...\n", 
-	      sizeof(struct font_entry ));
+      printf("Font %d resurrected from unused list\n",k);
+#endif
+    tfontptr->k = k; 
+    tfontptr->in_use=_TRUE;
+    return;
+  }
+
+  /* No fitting font found, create new entry. */
+#ifdef DEBUG
+  if (Debug)
+    printf("Mallocating %d Bytes)...\n", 
+	   sizeof(struct font_entry ));
 #endif
 
-    if ((tfontptr = NEW(struct font_entry )) == NULL)
-      Fatal("can't malloc space for font_entry");
-    allocated_storage += sizeof(struct font_entry );
+  if ((tfontptr = NEW(struct font_entry )) == NULL)
+    Fatal("can't malloc space for font_entry");
+  allocated_storage += sizeof(struct font_entry );
 
-    tfontptr->next = hfontptr;
-    tfontptr->font_file_id = FPNULL;
-    fontptr = hfontptr = tfontptr;
-    tfontptr->k = k;
-    tfontptr->c = c; /* checksum */
-    tfontptr->s = s; /* space size */
-    tfontptr->d = d; /* design size */
-    tfontptr->a = a; /* length for font name */
-    tfontptr->l = l; /* device length */
-    strcpy(tfontptr->n,n);
-
-    tfontptr->font_mag = 
-      (long4)((ActualFactor((long4)(1000.0*tfontptr->s
-				    /(double)tfontptr->d+0.5))
-	       * ActualFactor(mag) * resolution * 5.0) + 0.5);
-
-    fontptr->name[0]='\0';
-    /*FontFind(tfontptr);*/
-  }
+  tfontptr->next = hfontptr;
+  tfontptr->font_file_id = FPNULL;
+  hfontptr = tfontptr;
+  tfontptr->k = k;
+  tfontptr->in_use = _TRUE;
+  tfontptr->c = c; /* checksum */
+  tfontptr->s = s; /* space size */
+  tfontptr->d = d; /* design size */
+  tfontptr->a = a; /* length for font name */
+  tfontptr->l = l; /* device length */
+  strcpy(tfontptr->n,n);
+  
+  tfontptr->font_mag = 
+    (long4)((ActualFactor((long4)(1000.0*tfontptr->s
+				  /(double)tfontptr->d+0.5))
+	     * ActualFactor(mag) * resolution * 5.0) + 0.5);
+  
+  tfontptr->name[0]='\0';
 }
+
 
 void FontFind P1C(struct font_entry *,tfontptr)
 {
@@ -482,7 +454,8 @@ void SetFntNum P1C(long4, k)
     characters */
 {
   fontptr = hfontptr;
-  while ((fontptr != NULL) && (fontptr->k != k))
+  while ((fontptr != NULL) 
+	 && (fontptr->k != k || fontptr->in_use == _FALSE))
     fontptr = fontptr->next;
   if (fontptr == NULL)
     Fatal("font %ld undefined", (long)k);
