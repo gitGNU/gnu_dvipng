@@ -1,6 +1,6 @@
 #include "dvipng.h"
 
-void DoBop(void)
+void CreateImage(void)
 {
   int Background;
 
@@ -29,16 +29,12 @@ void DoBop(void)
   }
 }
 
-/*-->FormFeed*/
-/**********************************************************************/
-/*****************************  FormFeed ******************************/
-/**********************************************************************/
-void FormFeed(struct dvi_data* dvi, int pagenum)
+void WriteImage(char *outname, int pagenum)
 {
   char  pngname[STRSIZE];       
   FILE* outfp=NULL;
 
-  (void)sprintf(pngname,"%s%d.png",dvi->outname,pagenum);
+  (void)sprintf(pngname,"%s%d.png",outname,pagenum);
   if ((outfp = fopen(pngname,"wb")) == NULL)
       Fatal("Cannot open output file %s",pngname);
   gdImagePng(page_imagep,outfp);
@@ -47,7 +43,6 @@ void FormFeed(struct dvi_data* dvi, int pagenum)
   gdImageDestroy(page_imagep);
   page_imagep=NULL;
 }
-
 
 /*-->SetChar*/
 /**********************************************************************/
@@ -61,9 +56,6 @@ int32_t SetChar(int32_t c, int PassNo)
     break;
   case FONT_TYPE_VF:
     return(SetVF(c, PassNo));
-    break;
-  default:
-    break;
   }
   return(0);
 }
