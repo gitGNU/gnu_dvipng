@@ -407,8 +407,7 @@ void DrawPages(void)
 	++ndone;
 #endif
 	Message(BE_NONQUIET,"] ");
-	if (dvi_pos->count[0] % 10 == 0)
-	  fflush(stdout);
+	fflush(stdout);
       }
       flags &= ~PAGE_GAVE_WARN;
       dvi_pos=NextPPage(dvi,dvi_pos);
