@@ -84,11 +84,11 @@ AC_CHECK_HEADERS([fcntl.h sys/time.h inttypes.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
-AC_C_INLINE
 AC_TYPE_PID_T
 AC_HEADER_TIME
 AC_HEADER_STDBOOL
 AC_HAS_KPSE_ENC_FORMATS
+AC_CHECK_TYPES([int64_t, long long])
 
 # Checks for library functions.
 AC_FUNC_ALLOCA
