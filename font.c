@@ -156,6 +156,16 @@ void FontDef(unsigned char* command, void* parent)
 	     * ActualFactor(dvi->mag) * resolution * 5.0) + 0.5);
 }
 
+#ifdef HAVE_FT2
+inline char* kpse_find_ft(char* filename) 
+{
+    char* filepath = kpse_find_file(filename, kpse_type1_format, false);
+    if (filepath==NULL) 
+      filepath = kpse_find_file(filename, kpse_truetype_format, false);
+    return(filepath);
+}
+#endif
+
 void FontFind(struct font_entry * tfontptr)
 {
 #ifdef HAVE_LIBKPATHSEA
@@ -175,28 +185,25 @@ void FontFind(struct font_entry * tfontptr)
 #ifdef HAVE_FT2
   psfile = FindPSFontMap(tfontptr->n, &encoding, &transform);
   if (psfile!=NULL) {
-    name = kpse_find_file(psfile, kpse_type1_format, false);
+    name = kpse_find_ft(psfile);
     free(psfile);
   } else
-    name = kpse_find_file(tfontptr->n, kpse_type1_format, false);
-  if (name==NULL) {
-    name = kpse_find_file(tfontptr->n, kpse_truetype_format, false);
-  }
-  if (name) {
+    name = kpse_find_ft(tfontptr->n);
+  if (name!=NULL) {
     strcpy (tfontptr->name, name);
     free (name);
     name = kpse_find_file(tfontptr->n, kpse_tfm_format, false);
+    if (name!=NULL) {
+      InitFT(tfontptr,dpi,encoding,transform);
+      free(transform);
+      ReadTFM(tfontptr,name);
+      free(name);
+    }
   }
-  if (name) {
-    InitFT(tfontptr,dpi,encoding,transform);
-    free(transform);
-    ReadTFM(tfontptr,name);
-    free(name);
-  } else 
 #endif
-    {
+  if (name==NULL) {
     name = kpse_find_vf (tfontptr->n);
-    if (name) {
+    if (name!=NULL) {
       strcpy (tfontptr->name, name);
       free (name);
       InitVF(tfontptr);
