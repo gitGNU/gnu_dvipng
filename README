@@ -46,12 +46,12 @@ Benefits of dvipng
 Installation
 ============
 
-   Read `INSTALL', included in the distribution.
+Read `INSTALL', included in the distribution.
 
 Usage
 =====
 
-   To use dvipng at its simplest, simply type
+To use dvipng at its simplest, simply type
 
      dvipng foo
 
@@ -68,14 +68,14 @@ summary of available options, just type
 Availability
 ============
 
-   The dvipng package is available at SourceForge, at
+The dvipng package is available at SourceForge, at
 <http://sourceforge.net/projects/preview-latex>. This is the project
 page of preview-latex. Anonymous CVS is available as well.
 
 Contacts
 ========
 
-   Bug reports should be sent to
+Bug reports should be sent to
 <preview-latex-bugs@lists.sourceforge.net>. This is still a sub-project
 of preview-latex.
 
@@ -90,6 +90,9 @@ developer access, ask on <preview-latex-devel@lists.sourceforge.net>.
 
 Todo
 ====
+
+   * Some specials affect the overall behaviour of dvipng, these should
+     be read also in SkipPage.  Not a fatal bug, but annoying.
 
    * Test the FreeType interface so that TrueType fonts work properly.
 
