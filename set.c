@@ -90,8 +90,21 @@ void WriteImage(char *pngname, int pagenum)
       Fatal("unacceptible format spec. in output file name");
     }
   }
+#ifdef HAVE_GDIMAGEGIF
+  if (flags & GIF_OUTPUT && (pos=strrchr(pngname,'.')) != NULL 
+      && strcmp(pos,".png")==0) {
+    *(pos+1)='g';
+    *(pos+2)='i';
+    *(pos+3)='f';
+  }
+#endif
   if ((outfp = fopen(pngname,"wb")) == NULL)
       Fatal("Cannot open output file %s",pngname);
+#ifdef HAVE_GDIMAGEGIF
+  if (flags & GIF_OUTPUT) 
+    gdImageGif(page_imagep,outfp);
+  else
+#endif
 #ifdef HAVE_GDIMAGEPNGEX
   gdImagePngEx(page_imagep,outfp,compression);
 #else
