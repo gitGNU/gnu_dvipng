@@ -8,13 +8,15 @@
 void DecodeArgs(int argc, char ** argv)
 {
   int     i;                 /* argument index for flags      */
+  int32_t firstpage=PAGE_NOPAGE, lastpage=PAGE_NOPAGE;
+  bool abspage=_FALSE;
 
 #ifndef KPATHSEA
   if ((tcp = getenv("TEXPXL")) != NULL) PXLpath = tcp;
 #endif
 
   if (argc == 2 && (strcmp (argv[1], "--version") == 0)) {
-    puts ("dvipng(k) 0.0");
+    puts (VERSION);
 #ifdef KPATHSEA
     puts (KPSEVERSION);
 #endif
@@ -194,40 +196,38 @@ named COPYING and dvipng.c.");
 	/* must be page number instead */
 #endif
 	if (*p == 'p') {  /* a -pp specifier for a page list? */
+	  int pp_abspage = _FALSE;
+
 	  p++ ;
 	  if (*p == 0 && argv[i+1])
 	    p = argv[++i] ;
 	  if (*p == '=') {
-	    Abspage = _TRUE ;
+	    pp_abspage = _TRUE ;
 	    p++ ;
 	  }
-	  if (QueueParse(p,Abspage))
+	  if (QueueParse(p,pp_abspage))
 	    Fatal("bad page list specifier (-pp).") ;
 	  break ;
 	}
 	if (*p == 0 && argv[i+1])
 	  p = argv[++i] ;
 	if (*p == '=') {
-	  Abspage = _TRUE ;
+	  abspage = _TRUE ;
 	  p++ ;
 	}
-	switch(sscanf(p, "%d.%d", &FirstPage, &Firstseq)) {
-	case 1:           Firstseq = 0 ;
-	case 2:           break ;
-	default:     	  Fatal("bad first page option (-p %s).",p) ;
+	if (sscanf(p, "%d", &firstpage)!=1) {
+	  Fatal("bad first page option (-p %s).",p) ;
 	}
 	break ;
       case 'l':
 	if (*p == 0 && argv[i+1])
 	  p = argv[++i] ;
 	if (*p == '=') {
-	  Abspage = _TRUE ;
+	  abspage = _TRUE ;
 	  p++ ;
 	}
-	switch(sscanf(p, "%d.%d", &LastPage, &Lastseq)) {
-	case 1:           Lastseq = 0 ;
-	case 2:           break ;
-	default:	  Fatal("bad last page option (-l %s).",p);
+	if (sscanf(p, "%d", &lastpage)!=1) {
+	  Fatal("bad last page option (-l %s).",p) ;
 	}
 	break ;
       case 'q':       /* quiet operation */
@@ -265,7 +265,7 @@ named COPYING and dvipng.c.");
 	ParseStdin=_TRUE;
 	break;
       default:
-        Warning("%c is not a valid flag\n", c);
+	Warning("%c is not a valid flag\n", c);
       }
     } else {
       if (dvi != NULL && dvi->filep != NULL) {
@@ -274,61 +274,55 @@ named COPYING and dvipng.c.");
       dvi=DVIOpen(argv[i]);
     }
   }
-
-  if (dvi->filep == NULL) {
-    fprintf(ERR_STREAM,"\nThis is the DVI to PNG converter version %s\n",
-             VERSION);
-    /*fprintf(ERR_STREAM," (%s)\n", OS);*/
-    fprintf(ERR_STREAM,"usage: %s [OPTION]... DVIFILE\n", G_progname);
-
-    fprintf(ERR_STREAM,"OPTIONS are:\n");
+  qfprintf(ERR_STREAM,"This is %s Copyright 2002 Jan-Åke Larsson\n", VERSION);
+  if (dvi==NULL) {
+    fprintf(ERR_STREAM,"Usage: dvipng [OPTION]... FILENAME[.dvi]\n");
+    fprintf(ERR_STREAM,"Options are chosen to be similar to dvips' options where possible:\n");
 #ifdef DEBUG
-    fprintf(ERR_STREAM,"\t-d ..... turns debug output on\n");
+    fprintf(ERR_STREAM,"  -d #      Debug (# is the debug bitmap, 1 if not given)\n");
 #endif
-    /*    fprintf(ERR_STREAM,
-            "\t-aX ..... X= searchpath leading to pixel-files (.pk or .pxl)\n");
-    fprintf(ERR_STREAM,"\t-cX ..... X= number of copies\n");
-    fprintf(ERR_STREAM,"\t-eX ..... X= output file\n");
-    fprintf(ERR_STREAM,"\t-fX ..... print from begin of page number X\n");
-#ifdef __riscos
-    fprintf(ERR_STREAM,"\t-iX ..... X= name of dir to cache diagrams in\n");
-    fprintf(ERR_STREAM,"\t-j  ..... don't print diagrams\n");
-    fprintf(ERR_STREAM,"\t-k  ..... cache diagram bitmaps\n");
-#endif
-    fprintf(ERR_STREAM,"\t-l  ..... landscape mode\n");
-#ifdef MAKETEXPK
-    fprintf(ERR_STREAM,"\t-MX ..... Don't generate missing PK files\n");
-#endif
-    fprintf(ERR_STREAM,"\t-mX ..... magnification X=0;h;1;2;3;4;5;#xxxx\n");
-    fprintf(ERR_STREAM,"\t-pX ..... print X pages\n");
-#ifdef __riscos
-    fprintf(ERR_STREAM,"\t-P  ..... Process printouts in 2 passes\n");
-#endif
-    fprintf(ERR_STREAM,"\t-q  ..... quiet operation\n");
-    fprintf(ERR_STREAM,"\t-r  ..... process pages in reverse order\n");
-    fprintf(ERR_STREAM,"\t-RX ..... set resolution to X dpi\n");
-    fprintf(ERR_STREAM,"\t-sX ..... set paper size to X (see documentation)\n");
-    fprintf(ERR_STREAM,"\t-tX ..... print to end of page number X\n");
-    fprintf(ERR_STREAM,"\t-w  ..... don't print out warnings\n");
-    fprintf(ERR_STREAM,"\t-v  ..... tell user which pixel-files are used\n");
-    fprintf(ERR_STREAM,"\t-xX ..... X= x-offset on printout in mm\n");
-    fprintf(ERR_STREAM,"\t-yX ..... X= y-offset on printout in mm\n");
-    fprintf(ERR_STREAM,"\t-XO ..... O= x page origin in dots (default=%d)\n",
-            0 );
-    fprintf(ERR_STREAM,"\t-YO ..... O= y page origin in dots (default=%d)\n",
-            0 );
-	    fprintf(ERR_STREAM,"\t-   ..... dvifile is stdin (must be seekable); implies -e-\n");*/
+    fprintf(ERR_STREAM,"  -D #      Resolution\n");
+    fprintf(ERR_STREAM,"  -M*       Don't make fonts\n");
+    fprintf(ERR_STREAM,"  -l #      Last page to be output\n");
+    fprintf(ERR_STREAM,"  -mode s   MetaFont mode (default cx)\n");
+    fprintf(ERR_STREAM,"  -o f      Output file (currently disabled)\n");
+    fprintf(ERR_STREAM,"  -O c      Image offset\n");
+    fprintf(ERR_STREAM,"  -p #      First page to be output\n");
+    fprintf(ERR_STREAM,"  -pp #,#.. Page list to be output\n");
+    fprintf(ERR_STREAM,"  -q        Quiet operation\n");
+    fprintf(ERR_STREAM,"  -r        Reverse order of pages\n");
+    fprintf(ERR_STREAM,"  -t c      Paper format (also accepts e.g., '-t a4')\n");
+    fprintf(ERR_STREAM,"  -T c      Image size (also accepts '-T bbox' and '-T tight')\n");
+    fprintf(ERR_STREAM,"  -v        Verbose operation\n");
+    fprintf(ERR_STREAM,"  -x #      Override dvi magnification\n");
+    fprintf(ERR_STREAM,"  -         Interactive query of options\n");
+    fprintf(ERR_STREAM,"\nThese do not correspond to dvips options:\n");
+    fprintf(ERR_STREAM,"  -bd #     Transparent border width in dots\n");
+    fprintf(ERR_STREAM,"  -bg s     Background color (TeX-style color)\n");
+    fprintf(ERR_STREAM,"  -fg s     Foreground color (TeX-style color)\n");
+    fprintf(ERR_STREAM,"  -Q #      Quality (~xdvi's shrinkfactor)\n");
+    
+    fprintf(ERR_STREAM,"\n     # = number   f = file   s = string  * = suffix, '0' to turn off\n");
+    fprintf(ERR_STREAM,"         c = comma-separated dimension pair (e.g., 3.2in,-32.1cm)\n\n");
     /*#ifdef KPATHSEA
-    {
+      {
       extern DllImport char *kpse_bug_address;
       putc ('\n', ERR_STREAM);
       fputs (kpse_bug_address, ERR_STREAM);
-    }
-    #endif*/
+      }
+      #endif*/
     exit(1);
   }
+  if (firstpage!=PAGE_NOPAGE) {
+    if (lastpage!=PAGE_NOPAGE) {
+      QueuePage(firstpage,lastpage,abspage);
+    } else {
+      QueuePage(firstpage,PAGE_LASTPAGE,abspage);
+    }
+  } else if (lastpage!=PAGE_NOPAGE) {
+    QueuePage(1,lastpage,abspage);
+  } 
 }
-
 /*
 char * xmalloc(unsigned size)
 {
