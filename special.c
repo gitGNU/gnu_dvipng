@@ -42,8 +42,8 @@ ps2png(const char *psfile, int hresolution, int vresolution,
   gdImagePtr psimage=NULL;
   static bool showpage;
 
-  status=snprintf(resolution, STRSIZE, "-r%dx%d",hresolution,vresolution);
-  status=snprintf(devicesize, STRSIZE, "-g%dx%d",
+  status=sprintf(resolution, "-r%dx%d",hresolution,vresolution);
+  status=sprintf(devicesize, "-g%dx%d",
 		  //(int)((sin(atan(1.0))+1)*
 		  (urx - llx)*hresolution/72,//), 
 		  //(int)((sin(atan(1.0))+1)*
