@@ -109,12 +109,12 @@ AC_ARG_ENABLE(selfauto-set,
   AC_MSG_RESULT([$TEXMF_CNF])
   AC_MSG_CHECKING([for psfonts.map])
   cp `which kpsewhich` .
-  PSFONT_MAP=`./kpsewhich psfonts.map`
+  PSFONTS_MAP=`./kpsewhich psfonts.map`
   rm ./kpsewhich
-  if test -n "$PSFONT_MAP"; then
-    AC_MSG_RESULT([yes])
+  if test -n "$PSFONTS_MAP"; then
+    AC_MSG_RESULT([$PSFONTS_MAP])
   else
-    AC_MSG_RESULT([not from outside the texmf tree])
+    AC_MSG_RESULT([not found from outside the texmf tree])
     AC_MSG_CHECKING([for \$SELFAUTO in texmf.cnf])
     if grep SELFAUTO "$TEXMF_CNF" > /dev/null 2> /dev/null; then
       AC_MSG_RESULT([yes
