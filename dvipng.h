@@ -1,3 +1,28 @@
+/* dvipng.h */
+
+/************************************************************************
+
+  Part of the dvipng distribution
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+  02111-1307, USA.
+
+  Copyright © 2002-2004 Jan-Åke Larsson
+
+************************************************************************/
+
 #ifndef DVIPNG_H
 #define DVIPNG_H
 #include "config.h"
@@ -45,16 +70,19 @@
 #include <t1lib.h>
 #endif
 
+#ifdef HAVE_STDBOOL_H
+#include <stdbool.h>
+#else
 typedef  int     bool;
-#define  _TRUE      (bool) 1
-#define  _FALSE     (bool) 0
-#define  UNKNOWN     -1
+#define  true      (bool) 1
+#define  false     (bool) 0
+#endif
 
 #ifndef HAVE_VPRINTF
 # ifdef HAVE_DOPRNT
 #  define   vfprintf(stream, message, args)  _doprnt(message, args, stream)
 # else
-#  error: vprintf AND _doprnt are missing!!!
+#  error: vfprintf AND _doprnt are missing!!!
    /* If we have neither, should fall back to fprintf with fixed args.  */
 # endif
 #endif
@@ -86,31 +114,14 @@ typedef int32_t dviunits;
 /* integer round to the nearest number, not towards zero */
 #define PIXROUND(num,den) ((num)>0 ? ((num)+(den)/2)/(den) : -(((den)/2-(num))/(den)))
 
+#define TEMPSTR(s,a) { char* tmp=a; \
+               if (tmp!=NULL) {\
+                 s=alloca(strlen(tmp)+1);strcpy(s,tmp);free(tmp);\
+               } else \
+                 s=NULL;}
 
 /*************************************************************************/
 
-/********************************************************/
-/********************** special.h ***********************/
-/********************************************************/
-
-typedef enum  { None, String, Integer /*, Number, Dimension*/ } ValTyp;
-
-typedef struct {
-  char    *Key;       /* the keyword string */
-  char    *Val;       /* the value string */
-  ValTyp  vt;         /* the value type */
-  union {         /* the decoded value */
-    int     i;
-    float   n;
-  } v;
-} KeyWord;
-
-typedef struct {
-  char    *Entry;
-  ValTyp  Typ;
-} KeyDesc;
-
-void    SetSpecial(char *, int, int32_t, int32_t);
 
 /********************************************************/
 /***********************  dvi.h  ************************/
@@ -138,11 +149,20 @@ struct dvi_data {    /* dvi entry */
 #define PAGE_FIRSTPAGE INT32_MIN  
 #define PAGE_MINPAGE   INT32_MIN+1    /* assume no pages out of this range */
 
+struct dvi_color {
+  int red,green,blue;
+};
+
 struct page_list {
   struct page_list* next;
-  int     offset;           /* file offset to BOP */
-  int32_t count[11];        /* 10 dvi counters + absolute pagenum in file */
+  int               offset;           /* file offset to BOP */
+  int32_t           count[11];        /* 10 dvi counters + absolute pagenum in file */
+  int               csp;              /* color stack pointer at BOP */
+  struct dvi_color  cstack[2];        /* color stack at BOP, may be longer */
 };
+
+
+
 
 struct dvi_data* DVIOpen(char*,char*);
 void             DVIClose(struct dvi_data*);
@@ -181,35 +201,21 @@ struct psfontmap {
 #endif
 
 #define FONT_TYPE_PK            1
-struct pk_char {                   /* PK character */
-  dviunits       tfmw;             /* TFM width                         */
-  pixels         w,h;              /* width height in pixels            */
-  unsigned char *data;             /* glyph data (0=transp, 255=max ink)*/
-  pixels         xOffset, yOffset; /* x offset and y offset in pixels   */
-  unsigned char *mmap;             /* Points to beginning of PK data    */
-  uint32_t       length;           /* Length of PK data                 */
-  unsigned char  flag_byte;        /* PK flagbyte                       */
-};
-
 #define FONT_TYPE_VF            2
-struct vf_char {                   /* VF character                     */
-  dviunits       tfmw;             /* TFM width                        */
-  unsigned char* mmap;             /* Points to beginning of VF macro  */
-  uint32_t       length;           /* Length of VF macro               */
-};
-
-#ifdef HAVE_FT2_OR_LIBT1
 #define FONT_TYPE_FT            3
 #define FONT_TYPE_T1            4
-#define ft_char t1_tt_char
-#define t1_char t1_tt_char
-struct t1_tt_char {                /* Type1 or TrueType character */
-  dviunits       tfmw;             /* TFM width                         */
-  pixels         w,h;              /* width height in pixels            */
-  unsigned char *data;             /* glyph data                        */
-  pixels         xOffset, yOffset; /* x offset and y offset in pixels   */
+struct char_entry {                /* PK/FT/T1 Glyph/VF Macro             */
+  dviunits       tfmw;             /* TFM width                           */
+  unsigned char *data;             /* glyph data, either pixel data
+				    * (0=transp, 255=max ink) or VF macro */
+  uint32_t       length;           /* Length of PK data or VF macro       */
+  /* Only used in pixel fonts */
+  pixels         w,h;              /* width and height in pixels          */
+  subpixels      xOffset, yOffset; /* x offset and y offset in subpixels  */
+  /* Only used in PK fonts */
+  unsigned char *pkdata;           /* Points to beginning of PK data      */
+  unsigned char  flag_byte;        /* PK flagbyte                         */
 };
-#endif
 
 struct font_entry {    /* font entry */
   int          type;            /* PK/VF/Type1 ...                   */
@@ -258,23 +264,23 @@ void    FreeFontNumP(struct font_num *hfontnump);
 
 #ifdef HAVE_FT2_OR_LIBT1
 void    InitPSFontMap(void);
+void    ClearPSFontMap(void);
 struct psfontmap* FindPSFontMap(char*);
 struct encoding* FindEncoding(char*);
+void    ClearEncoding(void);
 bool    ReadTFM(struct font_entry *, char*);
 #endif
 
 #ifdef HAVE_FT2
 bool    InitFT(struct font_entry *);
 void    DoneFT(struct font_entry *tfontp);
-int32_t SetFT(int32_t, int32_t, int32_t);
-void    LoadFT(int32_t, struct ft_char *);
+void    LoadFT(int32_t, struct char_entry *);
 #endif
 
 #ifdef HAVE_LIBT1
 bool    InitT1(struct font_entry *);
 void    DoneT1(struct font_entry *tfontp);
-int32_t SetT1(int32_t, int32_t, int32_t);
-void    LoadT1(int32_t, struct t1_char *);
+void    LoadT1(int32_t, struct char_entry *);
 #endif
 
 /********************************************************/
@@ -285,7 +291,7 @@ bool    ParsePages(char*);
 void    FirstPage(int32_t,bool);
 void    LastPage(int32_t,bool);
 void    ClearPpList(void);
-bool    Reverse(void);
+void    Reverse(bool);
 struct page_list*   NextPPage(void* /* dvi */, struct page_list*);
 
 /********************************************************/
@@ -319,12 +325,12 @@ void      CreateImage(pixels width, pixels height);
 void      DrawCommand(unsigned char*, void* /* dvi/vf */); 
 void      DrawPages(void);
 void      WriteImage(char*, int);
-void      LoadPK(int32_t, register struct pk_char *);
-//void      LoadFT(int32_t, struct ft_char *);
+void      LoadPK(int32_t, register struct char_entry *);
 int32_t   SetChar(int32_t);
-int32_t   SetPK(int32_t,int32_t, int32_t);
+dviunits  SetGlyph(int32_t c, int32_t hh,int32_t vv);
 int32_t   SetVF(int32_t);
 int32_t   SetRule(int32_t, int32_t, int32_t, int32_t);
+void      SetSpecial(char *, int, int32_t, int32_t);
 void      BeginVFMacro(struct font_entry*);
 void      EndVFMacro(void);
 
@@ -336,6 +342,11 @@ void initcolor(void);
 void popcolor(void);
 void pushcolor(char *);
 void resetcolorstack(char *);
+void StoreColorStack(struct page_list *tpagep);
+void ReadColorStack(struct page_list *tpagep);
+void StoreBackgroundColor(struct page_list *tpagep);
+void ClearDvipsNam(void);
+
 
 /**********************************************************************/
 /*************************  Global Variables  *************************/
@@ -469,12 +480,8 @@ EXTERN  int borderwidth INIT(0);
 EXTERN gdImagePtr page_imagep INIT(NULL);
 EXTERN int32_t shrinkfactor INIT(4);
 
-EXTERN int Red    INIT(0);
-EXTERN int Green  INIT(0);
-EXTERN int Blue   INIT(0);
-EXTERN int bRed   INIT(255);
-EXTERN int bGreen INIT(255);
-EXTERN int bBlue  INIT(255);
+EXTERN struct dvi_color cstack[STACK_SIZE];
+EXTERN int csp INIT(1);
 
 #define PASS_SKIP 0
 #define PASS_SCAN 1
