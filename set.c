@@ -2,10 +2,16 @@
 
 void DoBop P1H(void)
 {
+  int Background;
+
   if (page_imagep) 
     gdImageDestroy(page_imagep);
   page_imagep=gdImageCreate(x_width,y_width);
-  gdImageColorAllocate(page_imagep,bRed,bGreen,bBlue); /* Set bg color */
+  /* Set bg color */
+  Background = gdImageColorAllocate(page_imagep,bRed,bGreen,bBlue);
+  if (borderwidth<0) {
+    gdImageColorTransparent(page_imagep,Background); 
+  }
   if (borderwidth>0) {
     int Transparent;
 
@@ -27,13 +33,18 @@ void DoBop P1H(void)
 /**********************************************************************/
 /*****************************  FormFeed ******************************/
 /**********************************************************************/
-void FormFeed P1C(int, pagenum)
+void FormFeed P2C(struct font_entry*, dvi, int, pagenum)
 {
   FILE* outfp=NULL;
 
-  (void)sprintf(pngname,"%s%d.png",rootname,pagenum);
+  (void)sprintf(pngname,"%s%d.png",dvi->n,pagenum);
   if ((outfp = fopen(pngname,"wb")) == NULL)
       Fatal("Cannot open output file %s",pngname);
+#ifdef DEBUG
+  if (Debug)
+    printf("WRITE FILE:\t%s\n",pngname);
+#endif
+  
   gdImagePng(page_imagep,outfp);
   fclose(outfp);
   gdImageDestroy(page_imagep);
