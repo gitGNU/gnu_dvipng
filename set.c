@@ -101,7 +101,7 @@ void WriteImage(char *pngname, int pagenum)
 
   if ((pos=strchr(pngname,'%')) != NULL) {
     if (strchr(++pos,'%'))
-      Fatal("too many %%'s in output file name");
+      Fatal("too many %%s in output file name");
     if (*pos == 'd' 
 	|| (*pos=='0' && pos[1]>='1' && pos[1]<='9' && pos[2]=='d')) {
       /* %d -> pagenumber, so add 9 string positions 
@@ -110,7 +110,7 @@ void WriteImage(char *pngname, int pagenum)
       sprintf(tempname,pngname,pagenum);
       pngname = tempname;
     } else {
-      Fatal("unacceptible format spec. in output file name");
+      Fatal("unacceptible format spec in output file name");
     }
   }
 #ifdef HAVE_GDIMAGEGIF
@@ -122,7 +122,7 @@ void WriteImage(char *pngname, int pagenum)
   }
 #endif
   if ((outfp = fopen(pngname,"wb")) == NULL)
-      Fatal("Cannot open output file %s",pngname);
+      Fatal("cannot open output file %s",pngname);
 #ifdef HAVE_GDIMAGEGIF
   if (flags & GIF_OUTPUT) 
     gdImageGif(page_imagep,outfp);

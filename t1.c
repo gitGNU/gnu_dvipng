@@ -42,7 +42,7 @@ void LoadT1(int32_t c, struct char_entry * ptr)
        T1_SetChar(currentfont->T1id, c, (float)currentfont->dpi*currentfont->d/65536/72 ,
 		  currentfont->psfontmap==NULL ? NULL : currentfont->psfontmap->t1_transformp))
       ==NULL)
-      Fatal("can't load T1 char %d",c);
+      Fatal("cannot load T1 char %d",c);
 
   DEBUG_PRINT(DEBUG_T1,(" (%d)",ptr->tfmw));
   
@@ -52,7 +52,7 @@ void LoadT1(int32_t c, struct char_entry * ptr)
   DEBUG_PRINT(DEBUG_T1,(" %dx%d",original_width,original_height));
 
   if (original_width > 0x7fff || original_height > 0x7fff)
-    Fatal("Character %d too large in file %s", c, currentfont->name);
+    Fatal("character %d too large in file %s", c, currentfont->name);
 
   /* 
    * Hotspot issues: Shrinking to the topleft corner rather than the
@@ -100,7 +100,7 @@ void LoadT1(int32_t c, struct char_entry * ptr)
     Shrink raster while doing antialiasing. 
   */
   if ((ptr->data = calloc(shrunk_width*shrunk_height,sizeof(char))) == NULL)
-    Fatal("Unable to allocate image space for char <%c>\n", (char)c);
+    Fatal("unable to allocate image space for char %c", (char)c);
   for (j = 0; j < original_height; j++) {	
     for (i = 0; i < (original_width+7)/8 ; i++) {    
       for (k = 0; k < 8 ; k++) {

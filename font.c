@@ -34,7 +34,7 @@ void CheckChecksum(uint32_t c1, uint32_t c2, const char* name)
       && !kpse_tex_hush ("checksum")
 #endif
       ) {
-     Warning ("Checksum mismatch in %s", name) ;
+     Warning ("checksum mismatch in %s", name) ;
    }
 }
 
@@ -101,7 +101,7 @@ void FontDef(unsigned char* command, void* parent)
 #endif
   }
   if (a+l > STRSIZE-1)
-    Fatal("too long font name for font %ld\n",k);
+    Fatal("too long font name for font %ld",k);
 
   /* Find entry with this font number in use */
   switch (((struct font_entry*)parent)->type) {
@@ -156,7 +156,7 @@ void FontDef(unsigned char* command, void* parent)
   DEBUG_PRINT((DEBUG_DVI|DEBUG_VF),("\n  FONT %d:\tNew entry created",k));
   /* No fitting font found, create new entry. */
   if ((tfontptr = calloc(1,sizeof(struct font_entry))) == NULL)
-    Fatal("can't malloc space for font_entry");
+    Fatal("cannot malloc space for font_entry");
   tfontptr->next = hfontptr;
   hfontptr = tfontptr;
   tfontnump->fontp = tfontptr;
@@ -253,18 +253,18 @@ void FontFind(struct font_entry * tfontptr)
       strcpy (tfontptr->name, name);
       if (!FILESTRCASEEQ (tfontptr->n, font_ret.name)) {
 	flags |= PAGE_GAVE_WARN;
-	Warning("font %s not found, using %s at %d dpi instead.\n",
+	Warning("font %s not found, using %s at %d dpi instead",
 		tfontptr->n, font_ret.name, font_ret.dpi);
 	tfontptr->c = 0; /* no checksum warning */
       } else if (!kpse_bitmap_tolerance ((double)font_ret.dpi, (double) tfontptr->dpi)) {
 	flags |= PAGE_GAVE_WARN;
-	Warning("font %s at %d dpi not found, using %d dpi instead.\n",
+	Warning("font %s at %d dpi not found, using %d dpi instead",
 		tfontptr->name, tfontptr->dpi, font_ret.dpi);
       }
       InitPK(tfontptr);
     } else {
       flags |= PAGE_GAVE_WARN;
-      Warning("font %s at %d dpi not found, characters will be left blank.\n",
+      Warning("font %s at %d dpi not found, characters will be left blank",
 	      tfontptr->n, tfontptr->dpi);
       strcpy (tfontptr->name, "None");
 #ifndef MIKTEX

@@ -116,7 +116,7 @@ float toktof(char* token)
   if (token!=NULL)
     return(atof(token));
   flags |= PAGE_GAVE_WARN;
-  Warning("Missing color-specification value, treated as zero\n");
+  Warning("missing color-specification value, treated as zero");
   return(0.0);
 }
 
@@ -167,9 +167,9 @@ void stringrgb(char* p,int *r,int *g,int *b)
     } else {
       char* t2=strtok(NULL,"");  
       if (t2!=NULL) 
-	Warning("Unimplemented color specification '%s %s'\n",p,t2);
+	Warning("unimplemented color specification '%s %s'",p,t2);
       else 
-	Warning("Unimplemented color specification '%s'\n",p);
+	Warning("unimplemented color specification '%s'",p);
       flags |= PAGE_GAVE_WARN;
     }
   }
@@ -186,7 +186,7 @@ void background(char* p)
 void pushcolor(char * p)
 {
   if ( ++csp == STACK_SIZE )
-    Fatal("Out of color stack space") ;
+    Fatal("out of color stack space") ;
   stringrgb(p, &cstack[csp].red, &cstack[csp].green, &cstack[csp].blue);
   DEBUG_PRINT(DEBUG_COLOR,("\n  COLOR PUSH:\t(%d %d %d) ",
 			   cstack[csp].red, cstack[csp].green, cstack[csp].blue))
@@ -201,7 +201,7 @@ void popcolor()
 void resetcolorstack(char * p)
 {
   if ( csp > 1 )
-    Warning("Global color change within nested colors\n");
+    Warning("global color change within nested colors");
   csp=0;
   pushcolor(p) ;
   DEBUG_PRINT(DEBUG_COLOR,("\n  RESET COLOR:\tbottom of stack:"))

@@ -241,7 +241,7 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 
   buffer = alloca(sizeof(char)*(length+1));
   if (buffer==NULL) 
-    Fatal("Cannot allocate space for special string");
+    Fatal("cannot allocate space for special string");
 
   strncpy(buffer,special,length);
   buffer[length]='\0';
@@ -313,7 +313,7 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 
 	cachename = alloca(sizeof(char)*(strlen(psname+5)));
 	if (cachename==NULL) 
-	  Fatal("Cannot allocate space for cached image filename");
+	  Fatal("cannot allocate space for cached image filename");
 	strcpy(cachename,psname);
 	separator = strrchr(cachename,'.');
 	if (separator!=NULL)
@@ -439,7 +439,7 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 
   if (strncmp(token,"header=",7)==0 || token[0]=='!') { /* header, ignored */
     if ( page_imagep != NULL )
-      Warning("at (%ld,%ld) ignored header \\special{%.*s}.",
+      Warning("at (%ld,%ld) ignored header \\special{%.*s}",
 	      hh, vv, length,special);
     return;
   }
@@ -449,8 +449,8 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 	      hh, vv, length,special);
     return;
   }
-  if ( page_imagep != NULL || flags & MODE_PICKY ) {
-    Warning("at (%ld,%ld) unimplemented \\special{%.*s}.",
+  if ( page_imagep != NULL ) {
+    Warning("at (%ld,%ld) unimplemented \\special{%.*s}",
 	    hh, vv, length,special);
     flags |= PAGE_GAVE_WARN;
   }

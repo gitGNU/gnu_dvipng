@@ -198,7 +198,7 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
     break;
   case PUSH:
     if (sp >= STACK_SIZE)
-      Fatal("stack overflow");
+      Fatal("DVI stack overflow");
     stack[sp].h = h;
     stack[sp].v = v;
     stack[sp].w = w;
@@ -214,7 +214,7 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
   case POP:
     --sp;
     if (sp < 0)
-      Fatal("stack underflow");
+      Fatal("DVI stack underflow");
     h = stack[sp].h;
     v = stack[sp].v;
     w = stack[sp].w;
@@ -364,6 +364,9 @@ void DrawPages(void)
   if (dvi_pos!=NULL) {
     while(dvi_pos!=NULL) {
       SeekPage(dvi,dvi_pos);
+      Message(BE_NONQUIET,"[%d", dvi_pos->count[(flags & DVI_PAGENUM)?0:10]);
+      if (dvi_pos->count[(flags & DVI_PAGENUM)?0:10]!=dvi_pos->count[0])
+	Message(BE_NONQUIET," (%d)", dvi_pos->count[0]);
       x_max = y_max = INT32_MIN;
       x_min = y_min = INT32_MAX;
       DrawPage((dviunits)0,(dviunits)0);
@@ -406,9 +409,6 @@ void DrawPages(void)
 	DEBUG_PRINT(DEBUG_DVI,(" (%d)\n",dvi_pos->count[10]));
       }
 #endif
-      Message(BE_NONQUIET,"[%d", dvi_pos->count[(flags & DVI_PAGENUM)?0:10]);
-      if (dvi_pos->count[(flags & DVI_PAGENUM)?0:10]!=dvi_pos->count[0])
-	Message(BE_NONQUIET," (%d)", dvi_pos->count[0]);
       Message(REPORT_DEPTH," depth=%d", y_width-y_offset-1);
       Message(REPORT_HEIGHT," height=%d", y_offset+1);
       DrawPage(x_offset*dvi->conv*shrinkfactor,
@@ -420,7 +420,7 @@ void DrawPages(void)
 #endif
       } else {
 	exitcode=EXIT_FAILURE;
-	Message(BE_NONQUIET," not rendered");
+	Message(BE_NONQUIET,"(page not rendered)");
 	DestroyImage();
       }
       Message(BE_NONQUIET,"] ");

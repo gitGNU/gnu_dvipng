@@ -66,12 +66,12 @@ void DVIInit(struct dvi_data* dvi)
   fseek(dvi->filep,0,SEEK_SET);
   pre=DVIGetCommand(dvi);
   if (*pre != PRE) {
-    Fatal("PRE doesn't occur first--are you sure this is a DVI file?\n\n");
+    Fatal("PRE does not occur first - are you sure this is a DVI file?");
   }
   k = UNumRead(pre+1,1);
   DEBUG_PRINT(DEBUG_DVI,("DVI START:\tPRE %d",k));
   if (k != DVIFORMAT) {
-    Fatal("DVI format = %d, can only process DVI format %d files\n\n",
+    Fatal("DVI format = %d, can only process DVI format %d files",
 	  k, DVIFORMAT);
   }
   dvi->num = UNumRead(pre+2, 4);
@@ -102,7 +102,7 @@ struct dvi_data* DVIOpen(char* dviname,char* outname)
   struct dvi_data* dvi;
 
   if ((dvi = calloc(1,sizeof(struct dvi_data)))==NULL)
-    Fatal("cannot allocate memory for dvi struct");
+    Fatal("cannot allocate memory for DVI struct");
 
   dvi->type = DVI_TYPE;
   dvi->fontnump=NULL;

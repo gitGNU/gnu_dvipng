@@ -229,7 +229,7 @@ bool DecodeArgs(int argc, char ** argv)
 	    } else if (strcmp(p,"executive")==0) {
 	      handlepapersize("7.25in,10.5in",&x_pwidth,&y_pwidth);
 	    } else
-	      Fatal("The papersize %s is not implemented, sorry.\n",p);
+	      Fatal("papersize %s is not implemented",p);
 	    Message(PARSE_STDIN,"Papersize: %s\n",p);
 	  }
 	break;
@@ -267,7 +267,7 @@ bool DecodeArgs(int argc, char ** argv)
 	    p = argv[++i] ;
 	  user_bdpi = atoi(p);
 	  if (user_bdpi < 10 || user_bdpi > 10000)
-	    Fatal("bad --bdpi parameter (-D).") ;
+	    Fatal("bad --bdpi parameter") ;
 	  Message(PARSE_STDIN,"Bdpi: %d\n",user_bdpi);
 	  break;
 	} else if ( *p == 'd' ) { /* -bd border width */
@@ -327,7 +327,7 @@ bool DecodeArgs(int argc, char ** argv)
 	  p = argv[++i] ;
 	usermag = atoi(p);
 	if (usermag < 1 || usermag > 1000000)
-	  Fatal("Bad magnification parameter (-x or -y).") ;
+	  Fatal("bad magnification parameter (-x or -y)") ;
 	Message(PARSE_STDIN,"Magstep: %d\n",usermag);
 	/*overridemag = (c == 'x' ? 1 : -1) ;*/
 	break ;
@@ -363,7 +363,7 @@ bool DecodeArgs(int argc, char ** argv)
 	    p = argv[++i];
 	  Message(PARSE_STDIN,"Page list: %s\n",p);
 	  if (ParsePages(p))
-	    Fatal("bad page list specifier (-pp).");
+	    Fatal("bad page list specifier (-pp)");
 	} else if (strncmp(p,"ng",2)==0) { /* --png output */ 
 	  flags &= ~GIF_OUTPUT;
 	  Message(PARSE_STDIN,"PNG output\n");
@@ -480,7 +480,7 @@ named COPYING and dvipng.c.");
 	  p = argv[++i] ;
 	dpi = atoi(p);
 	if (dpi < 10 || dpi > 10000)
-	  Fatal("bad -D parameter.") ;
+	  Fatal("bad -D parameter") ;
 	Message(PARSE_STDIN,"Dpi: %d\n",dpi);
 	break;
       case 'Q':       /* quality (= shrinkfactor) */
@@ -677,7 +677,7 @@ void Warning(char *fmt, ...)
     fflush(stdout);
     fprintf(stderr, "%s warning: ", programname);
     vfprintf(stderr, fmt, args);
-    fprintf(stderr, "\n");
+    fprintf(stderr, " ");
     va_end(args);
   }
 }

@@ -68,7 +68,7 @@ bool ReadTFM(struct font_entry * tfontp, char* tfmname)
       ((int64_t) tcharptr->tfmw * tfontp->s / (1 << 20));
     DEBUG_PRINT(DEBUG_TFM,(" (%d)",tcharptr->tfmw));
     if (c > NFNTCHARS) /* Only positive for now */
-      Fatal("tfm character exceeds numbering limit");
+      Fatal("tfm file %s exceeds char numbering limit",tfmname);
     tfontp->chr[c] = tcharptr;
     c++;
     position += 4;

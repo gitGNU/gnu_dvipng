@@ -46,14 +46,14 @@ void LoadFT(int32_t c, struct char_entry * ptr)
 		     glyph_i,              /* glyph index           */
 		     FT_LOAD_RENDER | FT_LOAD_NO_HINTING ))
                                            /* load flags            */
-    Fatal("can't load char_entry %d",c);
+    Fatal("cannot load FT char %d",c);
   ptr->xOffset = -currentfont->face->glyph->bitmap_left*shrinkfactor;
   ptr->yOffset = (currentfont->face->glyph->bitmap_top-1)*shrinkfactor;
   bitmap=currentfont->face->glyph->bitmap;
   DEBUG_PRINT(DEBUG_FT,(" (%dx%d)",bitmap.width,bitmap.rows));
     
   if ((ptr->data = calloc(bitmap.width*bitmap.rows,sizeof(char))) == NULL)
-    Fatal("Unable to allocate image space for char <%c>\n", (char)c);
+    Fatal("unable to allocate image space for char %c", (char)c);
   ptr->w = bitmap.width;
   ptr->h = bitmap.rows;
 

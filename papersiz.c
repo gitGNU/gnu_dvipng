@@ -48,7 +48,7 @@ int32_t myatodim(char ** p)
   while (i<8 && ((*p)[0]!=lengthnames[i][0] || (*p)[1]!=lengthnames[i][1]))
     i++; 
   if (i==8 && ((*p)[0]!=lengthnames[i][0] || (*p)[1]!=lengthnames[i][1]))
-    Warning("Unrecognized length unit \"%.2s\", assuming inches.",*p);
+    Warning("unrecognized length unit \"%.2s\", assuming inches",*p);
   while (**p != ',' && **p !='\0')
     (*p)++;
   tmp *= lengthsp[i]*dpi/4736286L; /* convert sp to pixels */

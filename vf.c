@@ -64,10 +64,10 @@ void InitVF(struct font_entry * tfontp)
     Fatal("font file %s unusable", tfontp->name);
   position=(unsigned char*)tfontp->fmmap.mmap;
   if (*(position) != PRE) 
-    Fatal("unknown font format in file <%s> !\n",currentfont->name);
+    Fatal("unknown font format in file %s",tfontp->name);
   if (*(position+1) != VF_ID) 
-      Fatal( "wrong version of vf file!  (%d should be 202)\n",
-	     (int)*(position+1));
+      Fatal( "wrong version %d of vf file %s (should be 202)",
+	     (int)*(position+1),tfontp->name);
   DEBUG_PRINT(DEBUG_VF,("\n  VF_PRE:\t'%.*s'", 
 		(int)*(position+2), position+3));
   position = position+3 + *(position+2);
@@ -118,7 +118,7 @@ void InitVF(struct font_entry * tfontp)
       ((int64_t) tcharptr->tfmw * tfontp->s / (1 << 20));
     DEBUG_PRINT(DEBUG_VF,(" (%d)",tcharptr->tfmw));
     if (c > NFNTCHARS) /* Only positive for now */
-      Fatal("vf character exceeds numbering limit");
+      Fatal("VF font %s exceeds char numbering limit",tfontp->name);
     tfontp->chr[c] = tcharptr;
     tcharptr->data=position;
     position += tcharptr->length;

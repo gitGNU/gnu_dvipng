@@ -93,7 +93,7 @@ int main(int argc, char ** argv)
     if (user_bdpi)
       kpse_init_prog("DVIPNG", user_bdpi, user_mfmode, "cmr10");
     else {
-      Warning("--mfmode given without --bdpi.");
+      Warning("--mfmode given without --bdpi");
       /* this will give a lot of warnings but... */
       kpse_init_prog("DVIPNG", 300, user_mfmode, "cmr10");
     }

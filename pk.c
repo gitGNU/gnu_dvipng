@@ -114,7 +114,7 @@ unsigned char* skip_specials(unsigned char* pos)
     case 247: case 248: case 249: case 250:
     case 251: case 252: case 253: case 254:
     case 255: 
-      Fatal("Unexpected flagbyte %d!\n", (int)*pos);
+      Fatal("unexpected PK flagbyte %d", (int)*pos);
     }
   }
   return(pos);
@@ -162,7 +162,7 @@ void LoadPK(int32_t c, register struct char_entry * ptr)
   DEBUG_PRINT(DEBUG_PK,(" %dx%d",width,height));
 
   if (width > 0x7fff || height > 0x7fff)
-    Fatal("Character %d too large in file %s", c, currentfont->name);
+    Fatal("character %d too large in file %s", c, currentfont->name);
 
   /* 
    * Hotspot issues: Shrinking to the topleft corner rather than the
@@ -280,10 +280,10 @@ void LoadPK(int32_t c, register struct char_entry * ptr)
       paint_switch = 1 - paint_switch;
     }
     if (i>i_offset)
-      Fatal("Wrong number of bits stored:  char. <%c>(%d), font %s, Dyn: %d", 
-	    (char)c, (int)c, currentfont->name,dyn_f);
+      Fatal("wrong number of bits stored: char. %c, font %s", 
+	    (char)c, currentfont->name);
     if (j>height)
-      Fatal("Bad pk file (%s), too many bits", currentfont->name);
+      Fatal("bad PK file %s, too many bits", currentfont->name);
   }
   /*
     Shrink raster while doing antialiasing. (See above. The
@@ -291,7 +291,7 @@ void LoadPK(int32_t c, register struct char_entry * ptr)
     shrinkfactor 3 produces.)
   */
   if ((ptr->data = calloc(shrunk_width*shrunk_height,sizeof(char))) == NULL)
-    Fatal("Unable to allocate image space for char <%c>\n", (char)c);
+    Fatal("unable to allocate image space for char %c", (char)c);
   for (j = 0; j < (int) height; j++) {	
     for (i = 0; i < (int) width; i++) {    
       /* if (((i % shrinkfactor) == 0) && ((j % shrinkfactor) == 0))
@@ -327,10 +327,10 @@ void InitPK(struct font_entry * tfontp)
   if (tfontp->fmmap.size < 2 || tfontp->fmmap.size < 3+*(position+2)+16) 
     Fatal("PK file %s ends prematurely",tfontp->name);
   if (*position++ != PK_PRE) 
-    Fatal("unknown font format in file <%s> !\n",currentfont->name);
+    Fatal("unknown font format in file %s",tfontp->name);
   if (*position++ != PK_ID) 
-    Fatal( "wrong version of pk file!  (%d should be 89)\n",
-	   (int)*(position-1));
+    Fatal( "wrong version %d of PK file %s (should be 89)",
+	   (int)*(position-1),tfontp->name);
   DEBUG_PRINT(DEBUG_PK,("\n  PK_PRE:\t'%.*s'",(int)*position, position+1));
   position += *position + 1;
 
@@ -346,7 +346,7 @@ void InitPK(struct font_entry * tfontp)
   vppp = UNumRead(position+12, 4);
   DEBUG_PRINT(DEBUG_PK,(" %d %d", hppp,vppp));
   if (hppp != vppp)
-    Warning("aspect ratio is %d:%d (should be 1:1)!", hppp, vppp);
+    Warning("aspect ratio is %d:%d (should be 1:1)", hppp, vppp);
   tfontp->magnification = (uint32_t)((uint64_t)hppp * 7227 * 5 / 65536l + 50)/100;
   position+=16;
   /* Read char definitions */
@@ -355,7 +355,7 @@ void InitPK(struct font_entry * tfontp)
     DEBUG_PRINT(DEBUG_PK,("\n  @%ld PK CHAR:\t%d",
 			  (long)position - (long)tfontp->fmmap.mmap, *position));
     if ((tcharptr = malloc(sizeof(struct char_entry))) == NULL)
-      Fatal("can't malloc space for char_entry");
+      Fatal("cannot malloc space for char_entry");
     tcharptr->flag_byte = *position;
     tcharptr->data = NULL;
     tcharptr->tfmw = 0;
@@ -376,7 +376,7 @@ void InitPK(struct font_entry * tfontp)
     }
   DEBUG_PRINT(DEBUG_PK,(" %d %d",packet_length,c));
   if (c > (LASTFNTCHAR))
-    Fatal("Bad character (%d) in PK-File\n",(int)c);
+    Fatal("PK font %s exceeds char numbering limit",tfontp->name);
   tcharptr->length = packet_length;
   tcharptr->pkdata = position;
   tfontp->chr[c]=tcharptr;
