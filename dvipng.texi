@@ -420,10 +420,10 @@ having any effect.
 @cindex output, redirecting
 @cindex standard output, output to
 Send output to the file @var{name}. A single occurrence of @samp{%d} or
-@samp{%01d}-@samp{%09d} will be exchanged for the physical page number
-(this can be changed, see the @samp{--dvinum} switch). The default
-output filename is @samp{@var{file}%d.png} where the input DVI file was
-@samp{@var{file}.dvi}.
+@samp{%01d}, @dots{}, @samp{%09d} will be exchanged for the physical
+page number (this can be changed, see the @samp{--dvinum} switch). The
+default output filename is @samp{@var{file}%d.png} where the input DVI
+file was @samp{@var{file}.dvi}.
 
 @item -O @var{x-offset},@var{y-offset}
 @cindex offset pages
