@@ -44,11 +44,30 @@ void CreateImage(pixels x_width,pixels y_width)
 #endif
     page_imagep=gdImageCreate(x_width,y_width);
   /* Set bg color */
-  Background = gdImageColorAllocate(page_imagep,
-				    cstack[0].red,cstack[0].green,cstack[0].blue);
-  if (flags & BG_TRANSPARENT) {
-    gdImageColorTransparent(page_imagep,Background); 
-  }
+#ifdef HAVE_GDIMAGECOLORRESOLVEALPHA
+  if (flags & BG_TRANSPARENT_ALPHA
+#ifdef HAVE_GDIMAGEGIF
+    /* GIFs cannot handle an alpha channel, resort to transparent
+       color index */
+      && ~flags & GIF_OUTPUT
+#endif /* HAVE_GDIMAGEGIF */
+      )
+    Background = gdImageColorAllocateAlpha(page_imagep,
+					   cstack[0].red,
+					   cstack[0].green,
+					   cstack[0].blue,127);
+  else 
+#endif /* HAVE_GDIMAGECOLORRESOLVEALPHA */
+    {
+      Background = gdImageColorAllocate(page_imagep,
+					cstack[0].red,
+					cstack[0].green,
+					cstack[0].blue);
+      /* maybe alpha is not available or perhaps we are producing
+	 GIFs, so test for BG_TRANSPARENT_ALPHA too */
+      if (flags & (BG_TRANSPARENT|BG_TRANSPARENT_ALPHA))
+	gdImageColorTransparent(page_imagep,Background); 
+    }
 #ifdef HAVE_GDIMAGECREATETRUECOLOR
   if (flags & RENDER_TRUECOLOR) 
     /* Truecolor: there is no background color index, fill image instead. */
@@ -86,6 +105,8 @@ void WriteImage(char *pngname, int pagenum)
     bgcolor = gdImageColorResolve(page_imagep,
 				  cstack[0].red,cstack[0].green,cstack[0].blue);
     /* Set ANOTHER bg color, transparent this time */
+    /* No semi-transparency here, given the motivation for this code
+       * (box cursor visibility in Emacs) */
     if (userbordercolor)
       Transparent = gdImageColorAllocate(page_imagep,
 					 bordercolor.red,bordercolor.green,bordercolor.blue); 
@@ -191,46 +212,102 @@ dviunits SetGlyph(int32_t c, int32_t hh,int32_t vv)
   int bgColor,pixelgrey,pixelcolor;
   hh -= ptr->xOffset/shrinkfactor;
   vv -= ptr->yOffset/shrinkfactor;
-  
-  Color[0] = gdImageColorResolve(page_imagep,
-				 cstack[0].red,cstack[0].green,cstack[0].blue);
+
   for( x=1; x<=GREYS ; x++) 
     Color[x] = -1;
-  for( y=0; y<ptr->h; y++) {
-    for( x=0; x<ptr->w; x++) {
-      if (ptr->data[pos]>0) {
-	pixelgrey=gammatable[(int)ptr->data[pos]];
-	DEBUG_PRINT(DEBUG_GLYPH,("\n  GAMMA GREYSCALE: %d -> %d ",ptr->data[pos],pixelgrey));
-	bgColor = gdImageGetPixel(page_imagep, hh + x, vv + y);
-	if (bgColor == Color[0]) {
-	  /* Standard background: use cached value if present */
-	  pixelcolor=Color[pixelgrey];
-	  if (pixelcolor==-1) {
-	    red = cstack[0].red 
-	      - (cstack[0].red-cstack[csp].red)*pixelgrey/GREYS;
-	    green = cstack[0].green
-	      - (cstack[0].green-cstack[csp].green)*pixelgrey/GREYS;
-	    blue = cstack[0].blue
-	      - (cstack[0].blue-cstack[csp].blue)*pixelgrey/GREYS;
-	    Color[pixelgrey] = 
-	      gdImageColorResolve(page_imagep,red,green,blue);
+#ifdef HAVE_GDIMAGECOLORRESOLVEALPHA
+  if (flags & BG_TRANSPARENT_ALPHA
+#ifdef HAVE_GDIMAGEGIF
+    /* GIFs cannot handle an alpha channel, resort to transparent
+       color index */
+      && ~flags & GIF_OUTPUT
+#endif /* HAVE_GDIMAGEGIF */
+      ) {
+    int alpha;
+    Color[0] = gdImageColorResolveAlpha(page_imagep,
+					cstack[0].red,
+					cstack[0].green,
+					cstack[0].blue,127);
+    for( y=0; y<ptr->h; y++) {
+      for( x=0; x<ptr->w; x++) {
+	if (ptr->data[pos]>0) {
+	  pixelgrey=gammatable[(int)ptr->data[pos]];
+	  DEBUG_PRINT(DEBUG_GLYPH,("\n  GAMMA GREYSCALE: %d -> %d ",ptr->data[pos],pixelgrey));
+	  bgColor = gdImageGetPixel(page_imagep, hh + x, vv + y);
+	  if (bgColor == Color[0]) {
+	    if  (Color[pixelgrey]==-1) {
+	      DEBUG_PRINT(DEBUG_GLYPH,("\n  GAMMA GREYSCALE: %d -> %d ",ptr->data[pos],pixelgrey));
+	      /* Standard background: use cached value if present */
+	      /* 127-alpha/2: 0=opaque,127=full_trans */
+	      Color[pixelgrey]=gdImageColorResolveAlpha(page_imagep,
+							cstack[csp].red,
+							cstack[csp].green,
+							cstack[csp].blue,
+							127-pixelgrey/2);
+	    }
 	    pixelcolor=Color[pixelgrey];
+	  } else {
+	    /* Overstrike: No cache */
+	    red  =gdImageRed(page_imagep, bgColor);
+	    green=gdImageGreen(page_imagep, bgColor);
+	    blue =gdImageBlue(page_imagep, bgColor);
+	    alpha=255-2*gdImageAlpha(page_imagep, bgColor);
+	    red  =red-(red-cstack[csp].red)*pixelgrey/GREYS;
+	    green=green-(green-cstack[csp].green)*pixelgrey/GREYS;
+	    blue =blue-(blue-cstack[csp].blue)*pixelgrey/GREYS;
+	    /* 255=opaque */
+	    alpha=alpha-(alpha-255)*pixelgrey/GREYS;
+	    /* 127-alpha/2: 0=opaque,127=full_trans */
+	    pixelcolor = gdImageColorResolveAlpha(page_imagep,
+						  red,green,blue,127-alpha/2);
 	  }
-	} else {
-	  /* Overstrike: No cache */
-	  red=gdImageRed(page_imagep, bgColor);
-	  green=gdImageGreen(page_imagep, bgColor);
-	  blue=gdImageBlue(page_imagep, bgColor);
-	  red = red-(red-cstack[csp].red)*pixelgrey/GREYS;
-	  green = green-(green-cstack[csp].green)*pixelgrey/GREYS;
-	  blue = blue-(blue-cstack[csp].blue)*pixelgrey/GREYS;
-	  pixelcolor = gdImageColorResolve(page_imagep, red, green, blue);
+	  gdImageSetPixel(page_imagep, hh + x, vv + y, pixelcolor);
 	}
-	gdImageSetPixel(page_imagep, hh + x, vv + y, pixelcolor);
+	pos++;
       }
-      pos++;
     }
-  }
+  } else
+#endif /* HAVE_GDIMAGECOLORRESOLVEALPHA */
+    {
+      Color[0] = gdImageColorResolve(page_imagep,
+				     cstack[0].red,
+				     cstack[0].green,
+				     cstack[0].blue);
+      for( y=0; y<ptr->h; y++) {
+	for( x=0; x<ptr->w; x++) {
+	  if (ptr->data[pos]>0) {
+	    pixelgrey=gammatable[(int)ptr->data[pos]];
+	    bgColor = gdImageGetPixel(page_imagep, hh + x, vv + y);
+	    if (bgColor == Color[0]) {
+	      /* Standard background: use cached value if present */
+	      if (Color[pixelgrey]==-1) {
+		DEBUG_PRINT(DEBUG_GLYPH,("\n  GAMMA GREYSCALE: %d -> %d ",ptr->data[pos],pixelgrey));
+		red = cstack[0].red 
+		  - (cstack[0].red-cstack[csp].red)*pixelgrey/GREYS;
+		green = cstack[0].green
+		  - (cstack[0].green-cstack[csp].green)*pixelgrey/GREYS;
+		blue = cstack[0].blue
+		  - (cstack[0].blue-cstack[csp].blue)*pixelgrey/GREYS;
+		Color[pixelgrey] = 
+		  gdImageColorResolve(page_imagep,red,green,blue);
+	      }
+	      pixelcolor=Color[pixelgrey];
+	    } else {
+	      /* Overstrike: No cache */
+	      red=gdImageRed(page_imagep, bgColor);
+	      green=gdImageGreen(page_imagep, bgColor);
+	      blue=gdImageBlue(page_imagep, bgColor);
+	      red = red-(red-cstack[csp].red)*pixelgrey/GREYS;
+	      green = green-(green-cstack[csp].green)*pixelgrey/GREYS;
+	      blue = blue-(blue-cstack[csp].blue)*pixelgrey/GREYS;
+	      pixelcolor = gdImageColorResolve(page_imagep, red, green, blue);
+	    }
+	    gdImageSetPixel(page_imagep, hh + x, vv + y, pixelcolor);
+	  }
+	  pos++;
+	}
+      }
+    }
   /* This code saved _no_ execution time, strangely.
    * Also, it cannot gamma correct; needs that in loaded glyphs
    *

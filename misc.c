@@ -251,6 +251,8 @@ bool DecodeArgs(int argc, char ** argv)
 	  if (*p == 0 && argv[i+1])
 	    p = argv[++i] ;
 	  if (strncmp(p,"Transparent",11) == 0 ) 
+	    flags |= BG_TRANSPARENT_ALPHA;
+	  else if (strncmp(p,"transparent",11) == 0 ) 
 	    flags |= BG_TRANSPARENT;
 	  else
 	    background(p);

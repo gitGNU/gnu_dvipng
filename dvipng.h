@@ -425,6 +425,7 @@ EXTERN struct internal_state {
 #define NO_GHOSTSCRIPT               (1<<17)
 #define NO_GSSAFER                   (1<<18)
 #define BG_TRANSPARENT               (1<<19)
+#define BG_TRANSPARENT_ALPHA         (1<<20)
 EXTERN uint32_t flags INIT(BE_NONQUIET | USE_FREETYPE | USE_LIBT1);
 
 #ifdef DEBUG

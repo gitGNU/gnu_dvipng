@@ -121,7 +121,7 @@ AC_CHECK_FUNCS([dup2 memset munmap pow putenv strchr strrchr strtol])
 if test "$enable_timing" = "yes"; then
   AC_CHECK_FUNCS([ftime gettimeofday])
 fi
-AC_CHECK_FUNCS([gdImagePngEx gdImageCreateTrueColor gdImageTrueColorToPalette gdImageGif])
+AC_CHECK_FUNCS([gdImageColorResolveAlpha gdImagePngEx gdImageCreateTrueColor gdImageTrueColorToPalette gdImageGif])
 if test "$ac_cv_func_gdImageGif" = "yes"; then
    INSTALL_BIN_TARGET="install-dvigif"
 else
@@ -192,6 +192,8 @@ AC_MSG_RESULT([
         the -z (compression) switch:        $ac_cv_func_gdImagePngEx
    Your gd is new enough to enable
         the --truecolor switch:             $ac_cv_func_gdImageCreateTrueColor
+   Your gd is new enough to enable
+        full alpha transparency:            $ac_cv_func_gdImageColorResolveAlpha
    Your gd is new enough to enable
         gif support (dvigif):               $ac_cv_func_gdImageGif
    FreeType font rendering available:       $ac_have_freetype2

@@ -220,8 +220,14 @@ selecting Metafont mode with the --mode option (see below).
 Choose background color for the images. This option will be ignored if
 there is a background color \special in the DVI. The color spec should
 be in @TeX{} color \special syntax, e.g., 'rgb 1.0 0.0 0.0'. You can
-also specify 'Transparent' which will give you a transparent background
-with the normal background as a fallback color. @xref{Color}.
+also specify 'Transparent' or 'transparent' which will give you a
+transparent background with the normal background as a fallback color. A
+capitalized 'Transparent' will give a full-alpha transparency, while an
+all-lowercase 'transparent' will give a simple fully transparent
+background with non-transparent antialiased pixels. The latter would be
+suitable for viewers who cannot cope with a true alpha channel.  GIF
+images do not support full alpha transparency, so in case of GIF output,
+both variants will use the latter behaviour.  @xref{Color}.
 
 @item -d @var{num}
 @cindex debugging
