@@ -1,4 +1,10 @@
 #include "dvipng.h"
+
+/*char    *GetKeyStr AA((char *, KeyWord *));
+  bool    GetKeyVal AA((KeyWord *, KeyDesc[], int, int *));*/
+/*bool    IsSame AA((char *, char *));*/
+
+
 /*-->DoSpecial*/
 /*********************************************************************/
 /*****************************  DoSpecial  ***************************/
@@ -258,7 +264,7 @@ int  n;
 #endif
 #endif
  
-  while ( (str = GetKeyStr(str, &k)) != NULL ) {
+while ( (str = GetKeyStr(str, &k)) != NULL ) {*/
     /* get all keyword-value pairs */
     /* for compatibility, single words are taken as file names */
 /*    if ( GetKeyVal( &k, KeyTab, NKEYS, &i ) && i != -1 )
@@ -270,10 +276,10 @@ int  n;
         
       case ORIENTATION:
 #ifdef LJ
-        if ((k.v.i >= 0) && (k.v.i < 2)) {
+if ((k.v.i >= 0) && (k.v.i < 2)) {*/
           /*EMIT2("\033&l%dO\033*rF", (unsigned char)k.v.i);*/
 /*        }
-#endif
+	  #endif*/
 	/*        else*/
 /*#ifdef KPATHSEA
            if (!kpse_tex_hush ("special"))
@@ -316,13 +322,13 @@ int  n;
         (void) strcpy(spbuf, k.Val);
         i = sscanf(spbuf,"%d/%d %s",&j,&j1,xs);
         if (i>1) {
-#ifdef LJ
+	#ifdef LJ*/
 	  /*          SetPosn(p_x[j], p_y[j]); */
 /*          x_pos = (long4)PIXROUND(p_x[j1]-p_x[j], hconv*shrinkfactor);
           y_pos = (long4)PIXROUND(p_y[j1]-p_y[j], vconv*shrinkfactor);
           if (labs(x_pos)<labs(y_pos)) x_pos = x_pos+3;
           else                         y_pos = y_pos+3;
-          if (GrayFill) {
+          if (GrayFill) {*/
 	    /*  EMIT4("\033*c%lda%ldb%dg2P", x_pos, y_pos, GrayScale);
           } else {
 	  EMIT4("\033*c%lda%ldb%dg3P", x_pos, y_pos, Pattern);*/
@@ -375,7 +381,7 @@ int  n;
       Warning("Invalid keyword or value in \\special - <%s> ignored", k.Key);
   }
 #ifdef LJ
-      if (psfile) {
+if (psfile) {*/
         /* int height = rwi * (urx - llx) / (ury - lly);*/
 /*      int width  = urx - llx;
         int height = ury - lly;
@@ -383,7 +389,7 @@ int  n;
         int scale_factor    = 3000 * width / rwi;
         int adjusted_height = height * 300/scale_factor;
         int adjusted_llx    = llx    * 300/scale_factor;
-        char *printer = "ljetplus"; /* use the most stupid one */
+        char *printer = "ljetplus"; *//* use the most stupid one */
 
 /*
         char scale_file_name[255];
@@ -427,22 +433,22 @@ int  n;
                   (int)PIXROUND(h, hconv*shrinkfactor) + x_goffset,
                   (int)PIXROUND(v, vconv*shrinkfactor) + y_goffset);
 #endif  
-          v -= 65536l*adjusted_height; /**300/scale_factor;*/
-/*        h -= 65536l*adjusted_llx; /* *300/scale_factor;*/
+          v -= 65536l*adjusted_height;*/ /**300/scale_factor;*/
+/*        h -= 65536l*adjusted_llx; *//* *300/scale_factor;*/
 	  /* SetPosn(h, v);*/
 /*#ifdef DEBUGGS   
           fprintf(stderr, "NEW x=%d, y=%d\n", 
                   (int)PIXROUND(h, hconv*shrinkfactor) + x_goffset,
                   (int)PIXROUND(v, vconv*shrinkfactor) + y_goffset);
 #endif
-
+*/
           /*CopyHPFile( pcl_file );*/
           /* unlink(pcl_file); */
           /* unlink(scale_file); */
 /*      }
       }
-#endif /* LJ */
-/*}
+#endif*/ /* LJ */
+/*}*/
 
 /*-->GetKeyStr*/
 /**********************************************************************/
@@ -499,6 +505,29 @@ KeyWord *kw;
 }
 
 
+
+/*-->IsSame*/
+/**********************************************************************/
+/*******************************  IsSame  *****************************/
+/**********************************************************************/
+/* compare strings, ignore case */
+#if NeedFunctionPrototypes
+bool IsSame(char *a, char *b)
+#else
+bool IsSame(a, b)
+char    *a, *b;
+#endif
+{
+  char *x, *y;
+  
+  for (x = a, y = b; *a; a++, b++)
+    if ( tolower(*a) != tolower(*b) )
+      return( _FALSE );
+
+  return( *a == *b ? _TRUE : _FALSE );
+}
+
+
 /*-->GetKeyVal*/
 /**********************************************************************/
 /*****************************  GetKeyVal  ****************************/
@@ -541,26 +570,3 @@ int     *tno;
     }
   return( _TRUE );
 }
-
-
-/*-->IsSame*/
-/**********************************************************************/
-/*******************************  IsSame  *****************************/
-/**********************************************************************/
-/* compare strings, ignore case */
-#if NeedFunctionPrototypes
-bool IsSame(char *a, char *b)
-#else
-bool IsSame(a, b)
-char    *a, *b;
-#endif
-{
-  char *x, *y;
-  
-  for (x = a, y = b; *a; a++, b++)
-    if ( tolower(*a) != tolower(*b) )
-      return( _FALSE );
-
-  return( *a == *b ? _TRUE : _FALSE );
-}
-

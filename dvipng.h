@@ -1,10 +1,9 @@
 #ifndef DVIPNG_H
 #define DVIPNG_H
-/**********************************************************************
- ************************  Global Definitions  ************************
- **********************************************************************/
-/* #define DRAWGLYPH */
+
+#define VERSION "0.0 (dvipngk)"
 #define TIMING
+/* #define DRAWGLYPH */
 
 #ifdef KPATHSEA
 #include <kpathsea/config.h>
@@ -45,16 +44,12 @@
 #include <limits.h>
 #endif
 
-
 #include "config.h"
 #include "commands.h"
 
-#define  DVIFORMAT     2
-#ifndef UNKNOWN
-#define  UNKNOWN      -1
-#endif
 #define  FIRSTFNTCHAR  0
 
+/* Is any of the below really necessary? */
 #ifdef __riscos
 # ifdef RISC_USE_OSL
 #  define MAXOPEN_OS    16
@@ -158,19 +153,14 @@ int     intdos();
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#undef CopyFile
-#define CopyFile LJCopyFile
-#define ResetPrinter LJResetPrinter
 #endif
 
 /**********************************************************************/
 /********************** Special Data Structures ***********************/
 /**********************************************************************/
 
-typedef enum  { None, String, Integer /*, Number, Dimension*/ }
+typedef enum  { None, String, Integer /*, Number, Dimension*/ } ValTyp;
 
-
-ValTyp;
 typedef struct {
   char    *Key;       /* the keyword string */
   char    *Val;       /* the value string */
@@ -180,6 +170,7 @@ typedef struct {
     float   n;
   } v;
 } KeyWord;
+
 typedef struct {
   char    *Entry;
   ValTyp  Typ;
@@ -303,43 +294,42 @@ struct page_list {
 
 #endif /* function prototypes */
 
-double  ActualFactor AA((long4));
-void    AllDone AA((bool));
 void    CloseFiles AA((void));
 void    DecodeArgs AA((int, char *[]));
-#ifdef __riscos
+/*#ifdef __riscos
 void    diagram AA((char *, diagtrafo *));
 void   *xosfile_set_type AA((char *, int));
 void    MakeMetafontFile AA((char *, char *, int));
-#endif
+#endif*/
 void    DoBop AA((void));
 long4   DoConv AA((long4, long4, int));
+void    DoPages AA((void));
 void    DoSpecial AA((char *, int));
-void    EmitChar AA((long4, struct char_entry *));
+void    DelPageList AA((void));
 void    Fatal VA();
-void    FindPostAmblePtr AA((long *));
+struct page_list *FindPage AA((long4));
 void    FormFeed AA((int));
 void    GetFontDef AA((void));
-char    *GetKeyStr AA((char *, KeyWord *));
-bool    GetKeyVal AA((KeyWord *, KeyDesc[], int, int *));
-bool    IsSame AA((char *, char *));
+struct page_list *InitPage AA((void));
 void    LoadAChar AA((long4, register struct char_entry *));
 long4   NoSignExtend AA((FILEPTR, int));
 void    OpenFontFile AA((void));
+bool    QueueParse AA((char*,bool));
+bool    QueueEmpty AA((void));
+void    QueuePage AA((int,int,bool));
 void    ReadFontDef AA((long4));
-void    ReadPostAmble AA((bool));
-/*long4   SetChar AA((long4, int));*/
 long4   SetChar AA((long4, int));
 void    SetFntNum AA((long4));
-/*void    SetRule AA((long4, long4, int, int));*/
 long4   SetRule AA((long4, long4, int));
+void    SkipPage AA((void));
 long4   SignExtend AA((FILEPTR, int));
-void    SkipFontDef AA((void));
+int     TodoPage AA((void));
 void    Warning VA();
-unsigned char   skip_specials AA((void));
+/*unsigned char   skip_specials AA((void));*/
+
+void handlepapersize AA((char*,int*,int*));
 
 void background AA((char *));
-void bopcolor AA((void));
 void initcolor AA((void));
 void popcolor AA((void));
 void pushcolor AA((char *));
@@ -355,24 +345,23 @@ void resetcolorstack AA((char *));
 #define EXTERN extern
 #define INIT(x)
 #endif
-EXTERN long4    FirstPage  INIT(-1000000);  /* first page to print (uses count0)   */
-EXTERN long4    LastPage   INIT(1000000);   /* last page to print                  */
+#define MAXPAGE 1000000000 /* assume no pages out of this range */
+EXTERN long4    FirstPage  INIT(-MAXPAGE);  /* first page to print (count0) */
+EXTERN long4    LastPage   INIT(MAXPAGE);   /* last page to print           */
 EXTERN bool    FirstPageSpecified INIT(_FALSE);
 EXTERN bool    LastPageSpecified INIT(_FALSE);
 #ifndef KPATHSEA
 EXTERN char   *PXLpath INIT(FONTAREA);
 #endif
-EXTERN char    G_progname[STRSIZE];     /* program name                        */
-EXTERN char    filename[STRSIZE];       /* DVI file name                       */
-EXTERN char    rootname[STRSIZE];       /* DVI filename without extension      */
-EXTERN char    pngname[STRSIZE];        /* current PNG filename                */
-EXTERN char   *HeaderFileName INIT("");     /* file name & path of Headerfile      */
-EXTERN char   *EmitFileName INIT("");       /* file name & path for output         */
-EXTERN bool    Reverse INIT(_FALSE);        /* process DVI pages in reverse order?   */
-EXTERN bool    Landscape INIT(_FALSE);      /* print document in ladscape mode       */
-EXTERN bool    Pagelist INIT(_FALSE);      /* page list exists       */
-EXTERN bool    Abspage INIT(_FALSE);      /* absolute page numbers       */
-EXTERN int     Firstseq INIT(0);      /* FIXME       */
+EXTERN char    G_progname[STRSIZE];     /* program name                     */
+EXTERN char    filename[STRSIZE];       /* DVI file name                    */
+EXTERN char    rootname[STRSIZE];       /* DVI filename without extension   */
+EXTERN char    pngname[STRSIZE];        /* current PNG filename             */
+
+EXTERN bool    Reverse INIT(_FALSE);    /* process DVI in reverse order?    */
+EXTERN bool    Landscape INIT(_FALSE);  /* print document in ladscape mode  */
+EXTERN bool    Abspage INIT(_FALSE);    /* use absolute page numbers        */
+EXTERN int     Firstseq INIT(0);        /* FIXME       */
 EXTERN int     Lastseq INIT(1000);      /* FIXME       */
 #ifdef MAKETEXPK
 #ifdef KPATHSEA
@@ -382,51 +371,30 @@ EXTERN bool    makeTexPK INIT(_TRUE);
 #endif
 #endif
 
-#ifndef vms
-EXTERN short   G_errenc INIT(0);           /* has an error been encountered?      */
-#else
-EXTERN long4    G_errenc INIT(SS$_NORMAL);  /* has an error been encountered?      */
-#endif
-EXTERN bool    G_quiet INIT(_FALSE);       /* for quiet operation                 */
-EXTERN bool    G_verbose INIT(_FALSE);     /* inform user about pxl-files used    */
-EXTERN bool    G_nowarn INIT(_FALSE);      /* don't print out warnings            */
-EXTERN long4    hconv, vconv;           /* converts DVI units to pixels        */
-EXTERN long4    den;                    /* denominator specified in preamble   */
-EXTERN long4    num;                    /* numerator specified in preamble     */
-EXTERN long4    h;                      /* current horizontal position         */
-EXTERN long4    v;                      /* current vertical position           */
-EXTERN long4    mag;                    /* magnification specified in preamble */
-EXTERN long     usermag INIT(0);            /* user specified magnification        */
-EXTERN int      ndone INIT(0);              /* number of pages converted           */
-EXTERN int      nopen INIT(0);              /* number of open PXL files            */
-EXTERN FILEPTR outfp INIT(FPNULL);          /* output file                         */
-EXTERN FILEPTR pxlfp;                   /* PXL file pointer                    */
-EXTERN FILEPTR dvifp  INIT(FPNULL);         /* DVI file pointer                    */
-EXTERN struct font_entry *prevfont INIT(NULL); /* font_entry pointer previous font*/
-EXTERN struct font_entry *fontptr;      /* font_entry pointer                  */
-EXTERN struct font_entry *hfontptr INIT(NULL); /* font_entry pointer              */
-EXTERN struct font_entry *pfontptr INIT(NULL); /* previous font_entry pointer     */
-EXTERN struct pixel_list pixel_files[MAXOPEN+1]; /* list of open PXL files    */
-EXTERN long   postambleptr;            /* Pointer to the postamble            */
-EXTERN long   ppagep;                  /* previous page pointer               */
+EXTERN short   G_errenc INIT(0);        /* has an error been encountered?  */
+EXTERN bool    G_quiet INIT(_FALSE);    /* for quiet operation             */
+EXTERN bool    G_verbose INIT(_FALSE);  /* inform user about pxl-files used*/
+EXTERN bool    G_nowarn INIT(_FALSE);   /* don't print out warnings        */
+EXTERN long4    hconv, vconv;           /* converts DVI units to pixels    */
+EXTERN long4    den;                    /* denominator specified in preamble*/
+EXTERN long4    num;                    /* numerator specified in preamble */
+EXTERN long4    h;                      /* current horizontal position     */
+EXTERN long4    v;                      /* current vertical position       */
+EXTERN long4    mag;                    /* magstep specified in preamble   */
+EXTERN long     usermag INIT(0);        /* user specified magstep          */
+EXTERN int      ndone INIT(0);          /* number of pages converted       */
+EXTERN int      nopen INIT(0);          /* number of open PXL files        */
+EXTERN FILEPTR outfp INIT(FPNULL);      /* output file                     */
+EXTERN FILEPTR pxlfp;                   /* PXL file pointer                */
+EXTERN FILEPTR dvifp  INIT(FPNULL);     /* DVI file pointer                */
+EXTERN struct font_entry *hfontptr INIT(NULL); /* font list pointer        */
+EXTERN struct font_entry *fontptr;      /* font_entry pointer              */
+EXTERN struct font_entry *pfontptr INIT(NULL); /* previous font_entry      */
+EXTERN struct pixel_list pixel_files[MAXOPEN+1]; /* list of open PXL files */
+
 EXTERN int    G_ncdl INIT(0);
 
 EXTERN long     allocated_storage INIT(0); /* size of mallocated storage (statistics) */
-EXTERN long4    power[32] ;
-EXTERN long4    gpower[33] ;
-
-#ifdef __riscos
-#define DIAGDIRSIZE 32
-EXTERN char diagdir[DIAGDIRSIZE] INIT("LJdiag"); /* Prefix name of directory for
-					 cached printouts */
-EXTERN bool cachediag INIT(_FALSE);       /* cache PDriver's output in document folder */
-EXTERN bool printdiag INIT(_TRUE);        /* printf diagrams */
-EXTERN FILEPTR metafile INIT(FPNULL);     /* Filepointer of file containing
-				  metafont directives*/
-
-EXTERN char MFFileName[STRSIZE];
-EXTERN int RasterMultipass INIT(0);
-#endif
 
 #ifdef DEBUG
 EXTERN int Debug INIT(0);
@@ -450,7 +418,7 @@ EXTERN long     used_fontstorage INIT(0);
 # else
 #  include <sys/time.h>
 EXTERN struct timeval Tp;
-EXTERN double  start_time;
+EXTERN double timer;
 # endif
 EXTERN double my_tic,my_toc INIT(0);
 #define TIC() { gettimeofday(&Tp, NULL); \
@@ -493,7 +461,6 @@ EXTERN  int y_pwidth INIT(0);
 /* The transparent border preview-latex desires */
 EXTERN  int borderwidth INIT(0);
 
-#define VERSION "0.0 (dvipngk)"
 
 EXTERN gdImagePtr page_imagep INIT(NULL);
 EXTERN int shrinkfactor INIT(3);
@@ -514,7 +481,6 @@ EXTERN int PassDefault INIT(PASS_BBOX);
 EXTERN bool ParseStdin INIT(_FALSE);
 
 EXTERN struct page_list* hpagelistp INIT(NULL);
-
-#define MAXPAGE (1000000000) /* assume no pages out of this range */
+EXTERN long4 abspagenumber INIT(0);
 
 #endif /* DVIPNG_H */

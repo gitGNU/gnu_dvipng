@@ -92,7 +92,7 @@ long4 SetChar P2C(long4, c, int, PassNo)
       }
 #ifdef DEBUG
       if (Debug)
-	printf("<%c> at (%d,%d)-(%d,%d) offset (%d,%d)\n",
+	printf("<%c> at (%ld,%ld)-(%d,%d) offset (%d,%d)\n",
 	       (char)c,
 	       PIXROUND(h, hconv*shrinkfactor),
 	       PIXROUND(v, vconv*shrinkfactor),
@@ -142,7 +142,7 @@ long4 SetRule P3C(long4, a, long4, b, int, PassNo)
 			     Color);
 #ifdef DEBUG
       if (Debug)
-	printf("Rule (%ld,%ld) at (%d,%d) offset (%d,%d)\n",
+	printf("Rule (%ld,%ld) at (%ld,%ld) offset (%d,%d)\n",
 	       (long)xx, (long)yy,
 	       PIXROUND(h, hconv*shrinkfactor),
 	       PIXROUND(v, vconv*shrinkfactor),
