@@ -46,7 +46,6 @@ int main P2C(int, argc, char **, argv)
 
   initcolor();
   DecodeArgs(argc, argv);
-  vfstack[0] = dvi;
 
 #ifdef KPATHSEA
   kpse_set_progname(argv[0]);
@@ -81,7 +80,7 @@ int main P2C(int, argc, char **, argv)
       DoPages();
     printf("%s> ",dvi->name);
     fgets(line,STRSIZE,stdin);
-    while(!FEOF(stdin)) {
+    while(!feof(stdin)) {
       linev[0]=line;  /* OBSERVE linev[0] is never used in DecodeArgs */
       while( *linev[0]!='\n' ) linev[0]++;
       *linev[0]='\0';
