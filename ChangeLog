@@ -1,3 +1,13 @@
+2004-05-26  Jan-Åke Larsson  <jalar@pcbjalar>
+
+	* special.c: Handle source specials
+
+	* test_dvipng.tex: Add failing special and color test 
+
+	* dvipng.c: Adjust coment about SELFAUTO... 
+
+	* dvi.c: Fix possible overflow
+
 2004-05-24  Jan-Åke Larsson  <jalar@mai.liu.se>
 
 	* misc.c: Remove -t, it is not implemented yet
