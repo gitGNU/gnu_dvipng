@@ -56,26 +56,17 @@ int main(int argc, char ** argv)
 
   if (parsestdin) {
     char    line[STRSIZE];
-#define PARSEARGS 10
-    char    *linev[PARSEARGS];
-    linev[0]=NULL;
 
     printf("%s> ",dvi!=NULL?dvi->name:"");
     fgets(line,STRSIZE,stdin);
     while(!feof(stdin)) {
-      int     i=1;
-      linev[i]=strtok(line," \t\n");
-      while(i<PARSEARGS-1 && linev[i]!=NULL) 
-	linev[++i]=strtok(NULL," \t\n");
-      if (linev[i]!=NULL) 
-	i++;
-      if (i>1) 
-	(void)DecodeArgs(i,linev);
+      DecodeString(line);
       if (dvi!=NULL) 
 	DoPages();
       printf("%s> ",dvi!=NULL?dvi->name:"");
       fgets(line,STRSIZE,stdin);
     }
+    printf("\n");
   }
 
 #ifdef TIMING
@@ -99,7 +90,7 @@ int main(int argc, char ** argv)
 #endif
 
   CloseFiles();
-  exit(G_errenc);
+  exit(EXIT_SUCCESS);
 }
 
 
