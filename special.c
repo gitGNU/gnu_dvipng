@@ -409,7 +409,7 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
   }
 
   if (strcmp(token,"!userdict")==0 
-      && strstr(buffer+10,"7{currentfile token not{stop}if 65781.76 div DVImag mul}repeat")!=NULL) {
+      && strstr(buffer+10,"7{currentfile token not{stop}if 65781.76 div")!=NULL) {
       if (page_imagep==NULL) 
 	Message(BE_NONQUIET," (preview-latex <= 0.9.1 tightpage option detected, will use its bounding box)");
       flags |= PREVIEW_LATEX_TIGHTPAGE;
