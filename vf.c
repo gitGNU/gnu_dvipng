@@ -1,4 +1,5 @@
 #include "dvipng.h"
+#include <fcntl.h> // open/close
 #include <sys/mman.h>
 #include <sys/stat.h>
 

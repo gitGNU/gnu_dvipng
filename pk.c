@@ -1,4 +1,5 @@
 #include "dvipng.h"
+#include <fcntl.h> // open/close
 #include <sys/mman.h>
 #include <sys/stat.h>
 
@@ -9,8 +10,6 @@
 unsigned char   dyn_f;
 int             repeatcount;
 int             poshalf;
-
-void    LoadAChar(int32_t, register struct pk_char *);
 
 int32_t SetPK(int32_t c, int32_t h,int32_t v)
 {

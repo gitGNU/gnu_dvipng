@@ -1,5 +1,9 @@
 #include "dvipng.h"
 
+#ifdef DEBUG
+#include <ctype.h> // isprint
+#endif
+
 struct stack_entry {  
   int32_t    h, v, w, x, y, z; /* stack entry                           */
 } stack[STACK_SIZE];           /* stack                                 */
