@@ -366,7 +366,6 @@ EXTERN  int borderwidth INIT(0);
 
 EXTERN gdImagePtr page_imagep INIT(NULL);
 EXTERN int32_t shrinkfactor INIT(3);
-EXTERN char TeXcomment[STRSIZE];  
 
 EXTERN int Red    INIT(0);
 EXTERN int Green  INIT(0);
@@ -380,10 +379,6 @@ EXTERN int bBlue  INIT(255);
 #define PASS_TIGHT_BBOX 2
 #define PASS_DRAW 4
 EXTERN int PassDefault INIT(PASS_BBOX);
-
-EXTERN bool ParseStdin INIT(_FALSE);
-
-EXTERN struct page_list* hpagelistp INIT(NULL);
 
 EXTERN struct font_entry* currentfont;
 EXTERN struct dvi_data* dvi INIT(NULL);

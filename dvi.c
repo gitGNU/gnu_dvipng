@@ -211,10 +211,10 @@ struct page_list* InitPage(void)
       tpagelistp->count[i] = UNumRead(command + 1 + i*4, 4);
       DEBUG_PRINTF(DEBUG_DVI," %d",tpagelistp->count[i]);
     }
-    if (hpagelistp==NULL)
+    if (dvi->pagelistp==NULL)
       tpagelistp->count[10] = 1;
     else
-      tpagelistp->count[10] = hpagelistp->count[10]+1;
+      tpagelistp->count[10] = dvi->pagelistp->count[10]+1;
     DEBUG_PRINTF(DEBUG_DVI," (%d)", tpagelistp->count[10]);
   } else {
     DEBUG_PUTS(DEBUG_DVI,"DVI END:\tPOST");
@@ -244,29 +244,30 @@ struct page_list* NextPage(struct page_list* page)
   /* If we have read past the last page in our current list or the
    *  list is empty, sneak a look at the next page
    */
-  if (hpagelistp==NULL || hpagelistp->offset+45L < ftell(dvi->filep)) {
-    tpagelistp=hpagelistp;
-    if ((hpagelistp=InitPage())==NULL)    
+  if (dvi->pagelistp==NULL 
+      || dvi->pagelistp->offset+45L < ftell(dvi->filep)) {
+    tpagelistp=dvi->pagelistp;
+    if ((dvi->pagelistp=InitPage())==NULL)    
       Fatal("no pages in %s",dvi->name);
-    hpagelistp->next=tpagelistp;
+    dvi->pagelistp->next=tpagelistp;
   }
 
-  if (page!=hpagelistp) {
+  if (page!=dvi->pagelistp) {
     /* also works if page==NULL, we'll get the first page then */
-    tpagelistp=hpagelistp;
+    tpagelistp=dvi->pagelistp;
     while(tpagelistp!=NULL && tpagelistp->next!=page)
       tpagelistp=tpagelistp->next;
   } else {
-    /* hpagelistp points to the last page we've read so far,
+    /* dvi->pagelistp points to the last page we've read so far,
      * the last page that we know where it is, so to speak
      * So look at the next
      */
-    SeekPage(hpagelistp);
+    SeekPage(dvi->pagelistp);
     SkipPage();
-    tpagelistp=hpagelistp;
-    hpagelistp=InitPage();
-    hpagelistp->next=tpagelistp;
-    tpagelistp=hpagelistp;
+    tpagelistp=dvi->pagelistp;
+    dvi->pagelistp=InitPage();
+    dvi->pagelistp->next=tpagelistp;
+    tpagelistp=dvi->pagelistp;
   }
   return(tpagelistp);
 }
@@ -302,11 +303,11 @@ void DelPageList(struct dvi_data* dvi)
   
   /* Delete the page list */
 
-  temp=hpagelistp;
-  while(hpagelistp!=NULL) {
-    hpagelistp=hpagelistp->next;
+  temp=dvi->pagelistp;
+  while(dvi->pagelistp!=NULL) {
+    dvi->pagelistp=dvi->pagelistp->next;
     free(temp);
-    temp=hpagelistp;
+    temp=dvi->pagelistp;
   }
 }
 
