@@ -24,13 +24,16 @@ inline char* newword(char** buffer, char* end)
 
 void InitPSFontMap(void)
 {
+#ifndef kpse_fontmap_format
+#define kpse_fontmap_format kpse_dvips_config_format
+#endif
   char *pos,*end,*psfont_name =
-    kpse_find_file("ps2pk.map",kpse_dvips_config_format,false);
+    kpse_find_file("ps2pk.map",kpse_fontmap_format,false);
   struct psfontmap *entry;
 
   if (psfont_name==NULL)
     psfont_name =
-      kpse_find_file("psfonts.map",kpse_dvips_config_format,false);
+      kpse_find_file("psfonts.map",kpse_fontmap_format,false);
 
   if (psfont_name==NULL) {
     Warning("cannot find ps2pk.map, nor psfonts.map");
@@ -96,8 +99,12 @@ struct psfontmap* FindPSFontMap(char* fontname)
     
     DEBUG_PRINT((DEBUG_FT|DEBUG_T1),("\n  PSFONTMAP: %s ",fontname));
     pos=entry->line;
+#if HAVE_LIBT1
     entry->t1_transformp=NULL;
+#endif
+#if HAVE_FT2
     entry->ft_transformp=NULL;
+#endif
     while(pos < entry->end) { 
       if (*pos=='<') {                               /* filename follows */
 	pos++;
