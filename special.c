@@ -1,5 +1,8 @@
 #include "dvipng.h"
 #include <sys/wait.h>
+#if HAVE_ALLOCA_H
+# include <alloca.h>
+#endif
 
 gdImagePtr
 ps2png(const char *psfile, int hresolution, int vresolution, 
@@ -8,11 +11,18 @@ ps2png(const char *psfile, int hresolution, int vresolution,
   int status, downpipe[2], uppipe[2];
   pid_t pid;
   char resolution[STRSIZE]; 
+  char devicesize[STRSIZE]; 
   /* For some reason, png256 gives inferior result */
   char *device="-sDEVICE=png16m";  
   gdImagePtr psimage=NULL;
+  static bool showpage;
 
   status=snprintf(resolution, STRSIZE, "-r%dx%d",hresolution,vresolution);
+  status=snprintf(devicesize, STRSIZE, "-g%dx%d",
+		  //(int)((sin(atan(1.0))+1)*
+		  (urx - llx)*hresolution/72,//), 
+		  //(int)((sin(atan(1.0))+1)*
+    (ury - lly)*vresolution/72);//);
   /* png16m being the default, this code is not needed
    * #ifdef HAVE_GDIMAGECREATETRUECOLOR
    * if (flags & RENDER_TRUECOLOR) 
@@ -26,8 +36,9 @@ ps2png(const char *psfile, int hresolution, int vresolution,
       close(downpipe[1]);
       dup2(downpipe[0], STDIN_FILENO);
       close(downpipe[0]);
-      DEBUG_PRINT(DEBUG_GS,("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s %s",
-		   GS_PATH, device, resolution,
+      DEBUG_PRINT(DEBUG_GS,
+		  ("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s %s %s",
+		   GS_PATH, device, resolution, devicesize,
 		   "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
 		   "-sOutputFile=-", 
 		   "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
@@ -35,7 +46,7 @@ ps2png(const char *psfile, int hresolution, int vresolution,
       close(uppipe[0]);
       dup2(uppipe[1], STDOUT_FILENO);
       close(uppipe[1]);
-      execl (GS_PATH, GS_PATH, device, resolution,
+      execl (GS_PATH, GS_PATH, device, resolution, devicesize,
 	     "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
 	     "-sOutputFile=-", 
 	     "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
@@ -48,10 +59,6 @@ ps2png(const char *psfile, int hresolution, int vresolution,
       close(downpipe[0]);
       psstream=fdopen(downpipe[1],"w");
       if (psstream) {
-	DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\t<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice",
-		urx - llx, ury - lly,llx,lly));
-	fprintf(psstream, "<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice\n",
-		urx - llx, ury - lly,llx,lly);
 	if ( bRed < 255 || bGreen < 255 || bBlue < 255 ) {
 	  DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\tgsave %f %f %f setrgbcolor clippath fill grestore",
 		       bRed/256.0, bGreen/256.0, bBlue/256.0));
@@ -60,6 +67,10 @@ ps2png(const char *psfile, int hresolution, int vresolution,
 	}
 	DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\t(%s) run", psfile));
 	fprintf(psstream, "(%s) run\n", psfile);
+	if (showpage) {
+	  DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\tshowpage"));
+	  fprintf(psstream, "showpage\n");
+	}
 	DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\tquit"));
 	fprintf(psstream, "quit\n");
 	fclose(psstream);
@@ -76,14 +87,18 @@ ps2png(const char *psfile, int hresolution, int vresolution,
 #endif
 	gdImageTrueColorToPalette(psimage,0,256);
 #endif
-#ifdef DEBUG
-      if (psimage != NULL) {
-	DEBUG_PRINT(DEBUG_GS,("\n  GS OUTPUT:\t%dx%d image ",
-		     gdImageSX(psimage),gdImageSY(psimage)));
-      } else {
+      if (psimage == NULL) {
 	DEBUG_PRINT(DEBUG_GS,("\n  GS OUTPUT:\tNO IMAGE "));
+	if (!showpage) {
+	  showpage=TRUE;
+	  DEBUG_PRINT(DEBUG_GS,("(will try adding \"showpage\") "));
+	  psimage=ps2png(psfile, hresolution, vresolution, urx, ury, llx, lly);
+	  showpage=FALSE;
+	}
+      } else {
+	DEBUG_PRINT(DEBUG_GS,("\n  GS OUTPUT:\t%dx%d image ",
+			      gdImageSX(psimage),gdImageSY(psimage)));
       }
-#endif
     }
   }
   return psimage;
@@ -102,7 +117,7 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 
   DEBUG_PRINT(DEBUG_DVI,(" '%.*s'",length,special));
 
-  buffer = malloc(sizeof(char)*(length+1));
+  buffer = alloca(sizeof(char)*(length+1));
   if (buffer==NULL) 
     Fatal("Cannot allocate space for special string");
 
