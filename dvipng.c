@@ -4,19 +4,15 @@
  **********************************************************************
  * This program translates TeX's DVI-Code into Portable Network Graphics.
  *
- * Copyright (C) Jan-Åke Larsson 2002
+ * Copyright (C) Jan-Åke Larsson 2002-2003
  *
  * Recipe:
- * Take a simple dvi2?? converter, dvilj is suitable here.
+ * Take a simple dvi2?? converter, dvilj was found suitable.
  * Read and relish the code of xdvi and dvips
  * Choose a png-drawing library with a simple interface and support
  *  on many platforms: gd
  * Stir, sprinkle with some insights of your own, and enjoy
  *
- **********************************************************************
- * Preprocessor switches:
- *      #define DEBUG      for massive printing of trace information
- *                         when -d cmdline option specified
  **********************************************************************
  */
 
@@ -41,7 +37,7 @@ int main(int argc, char ** argv)
 #  endif
 # endif
 #endif
-  //  setbuf(ERR_STREAM, NULL);
+  //  setbuf(stderr, NULL);
 
   initcolor();
   parsestdin = DecodeArgs(argc, argv);
@@ -83,12 +79,12 @@ int main(int argc, char ** argv)
 # endif
   
   if (ndone > 0) 
-    fprintf(ERR_STREAM,
-	    "Time of complete run: %.2f s, %d page(s), %.2f s/page.\n",
+    fprintf(stderr,
+	    "Time of complete run: %.2f s, %d page(s), %.3f s/page.\n",
 	    timer, ndone, timer / ndone);
   if (my_toc >= 0.01) 
-    fprintf(ERR_STREAM,
-	    "Thereof in TIC/TOC region %.2f s.\n",my_toc);
+    fprintf(stderr,
+	    "Thereof in TIC/TOC region %.3f s.\n",my_toc);
 #endif
 
   exit(EXIT_SUCCESS);
