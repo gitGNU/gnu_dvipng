@@ -214,10 +214,6 @@ struct page_list* FindPage(int32_t pagenum, bool abspage)
   struct page_list* tpagelistp;
   int index;
   
-  /* If no page is to be found, return no page */
-  if (pagenum==PAGE_NOPAGE)
-    return(NULL);
-
   index = abspage ? 10 : 0 ;
 #ifdef DEBUG
   if (abspage) {
