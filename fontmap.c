@@ -193,7 +193,8 @@ struct psfontmap* FindPSFontMap(char* fontname)
       Warning("unable to load font encoding '%s' for %s",
 	      entry->encname,entry->tfmname);
   }
-  if (entry->encname!=NULL && entry->encoding==NULL) 
+  if (entry != NULL && entry->encname!=NULL && entry->encoding==NULL) 
+    /* Encoding given but it cannot be found. Unusable font */
     return(NULL);
   
   return(entry);
