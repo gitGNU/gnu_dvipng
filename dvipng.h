@@ -384,6 +384,7 @@ EXTERN int   compression INIT(1);
 EXTERN bool truecolor   INIT(FALSE);
 #endif
 EXTERN bool cacheimages INIT(FALSE);
+EXTERN bool dvipagenum INIT(FALSE);
 # define  max(x,y)       if ((y)>(x)) x = y
 # define  min(x,y)       if ((y)<(x)) x = y
 

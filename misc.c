@@ -27,8 +27,18 @@ bool DecodeArgs(int argc, char ** argv)
       }
       switch (c) {
       case 'd':       /* selects Debug output */
+	if (*p>'9' && *p!='-') {
+	  if (strncmp(p,"vinum",8)==0) { 
+	    dvipagenum = (p[9] != '0');
+	    if (dvipagenum)
+	      Message(PARSE_STDIN,"DVI page number output on\n",p);
+	    else 
+	      Message(PARSE_STDIN,"DVI page number output off\n");
+	    break;
+	  }
+	  goto DEFAULT;
+	} else { 
 #ifdef DEBUG
-	{ 
 	  int debug = 0;
 	  
 	  if (*p == 0 && argv[i+1])
@@ -37,16 +47,16 @@ bool DecodeArgs(int argc, char ** argv)
 	  flags |= (debug>0) ? debug * DEBUG_DEFAULT : DEBUG_DVI;
 	  if (debug > 0 && p == argv[i+1])
 	    i++;
+	  Message(PARSE_STDIN,"Debug output enabled\n");
 #ifdef HAVE_LIBKPATHSEA
 	  kpathsea_debug = ( debug * DEBUG_DEFAULT) / LASTDEBUG;
 #endif
-	  Message(PARSE_STDIN,"Debug output enabled\n");
-	}
 #else
-	Warning("This instance of %s was compiled without the debug (-d) option",
-		programname);
+	  Warning("This instance of %s was compiled without the debug (-d) option",
+		  programname);
 #endif
-        break;
+	  break;
+	}
       case 'o':       /* Output file is specified */
 	if (*p == 0 && argv[i+1])
 	  p = argv[++i] ;
@@ -320,8 +330,9 @@ named COPYING and dvipng.c.");
     }
   }
 
-  Message(BE_NONQUIET,"This is %s Copyright 2002-2003 Jan-Åke Larsson\n",
-	  PACKAGE_STRING);
+  if (programname)
+    Message(BE_NONQUIET,"This is %s Copyright 2002-2003 Jan-Åke Larsson\n",
+	    PACKAGE_STRING);
 
   if (dviname != NULL) {
     if (dvi != NULL && dvi->filep != NULL) 

@@ -382,12 +382,14 @@ void DrawPages(void)
       }
 #endif
       CreateImage();
-      Message(BE_NONQUIET,"[%d", dvi_pos->count[0]);
+      Message(BE_NONQUIET,"[%d", dvi_pos->count[dvipagenum?0:10]);
+      if (dvi_pos->count[dvipagenum?0:10]!=dvi_pos->count[0])
+	Message(BE_NONQUIET," (%d)", dvi_pos->count[0]);
       Message(REPORT_BASELINE,"(baseline=%d)", y_offset);
       PassNo=PASS_DRAW;
       DrawPage(x_offset*dvi->conv*shrinkfactor,
 	       y_offset*dvi->conv*shrinkfactor);
-      WriteImage(dvi->outname,dvi_pos->count[0]);
+      WriteImage(dvi->outname,dvi_pos->count[dvipagenum?0:10]);
 #ifdef TIMING
       ++ndone;
 #endif
