@@ -193,6 +193,12 @@ Set the pixel width of the transparent border (default 0). Using this
 option will make the image edges transparent, but it only affects pixels
 with the background color.
 
+@item --bdpi @var{num}
+@cindex base resolution, setting
+Set the base (Metafont) resolution, both horizontal and vertical, to
+@var{num} dpi (dots per inch). This option is neccessary when manually
+selecting Metafont mode with the --mode option (see below)
+
 @item -bg @var{color spec.}
 @cindex background color (option)
 Choose background color for the images. This option will be ignored if
@@ -205,6 +211,11 @@ Set the debug flags, showing what dvipng (thinks it) is doing.  This will
 work unless dvipng has been compiled without the @samp{DEBUG} option (not
 recommended).  @xref{Debug options}, for the possible values of
 @var{num}.  Use @samp{-d -1} as the first option for maximum output.
+
+@item -D @var{num}
+@cindex output resolution, setting
+Set the output resolution, both horizontal and vertical, to @var{num}
+dpi (dots per inch). 
 
 @item --depth*
 @cindex baseline reporting
@@ -220,15 +231,6 @@ StyleSheets 1)
 @end example
 The depth is a negative offset in this case, so the minus sign is
 necessary, and the unit is pixels (px).
-
-@item -D @var{num}
-@cindex base resolution, setting
-Set the base (metafont) resolution, both horizontal and vertical, to
-@var{num} dpi (dots per inch). The @samp{-Q}, ``quality'', switch will
-shrink the image by that factor (default 3), see below. The default base
-resolution is 300 dpi. This affects the choice of PK fonts that are
-loaded, see the file @url{ftp://ftp.tug.org/tex/modes.mf} for a list of
-resolutions and mode names for most devices.
 
 @ignore
 @item -e @var{num}
@@ -320,12 +322,14 @@ no matter what the pages are actually numbered.
 @item --mode @var{mode}
 @cindex mode name, specifying
 @cindex Metafont mode, specifying
-Use @var{mode} as the Metafont device name for path searching and font
-generation, see the file @url{ftp://ftp.tug.org/tex/modes.mf} for a list
-of resolutions and mode names for most devices. With the default paths,
-explicitly specifying the mode also makes the program assume the fonts
-are in a subdirectory named @var{mode}. @xref{TeX directory structure,,
-@TeX{} directory structure, kpathsea, Kpathsea}. If Metafont does not
+Use @var{mode} as the Metafont device name for the PK fonts (both for
+path searching and font generation). This needs to be augmented with the
+base device resolution, given with the @samp{--bdpi} option. See the
+file @url{ftp://ftp.tug.org/tex/modes.mf} for a list of resolutions and
+mode names for most devices. With the default paths, explicitly
+specifying the mode also makes the program assume the fonts are in a
+subdirectory named @var{mode}. @xref{TeX directory structure,, @TeX{}
+directory structure, kpathsea, Kpathsea}. If Metafont does not
 understand the @var{mode} name, see @ref{Unable to generate fonts,,,
 kpathsea, Kpathsea}.
 
@@ -333,9 +337,9 @@ kpathsea, Kpathsea}.
 @cindex font generation, avoiding
 @pindex mktexpk@r{, avoiding}
 @comment this description repeated in kpathsea.texi
-Turns off automatic font generation (@file{mktexpk}). This will have no
-effect when using PostScript fonts, since no font generation will be
-done anyway.
+Turns off automatic PK font generation (@file{mktexpk}). This will have
+no effect when using PostScript fonts, since no PK font generation will
+be done anyway.
 @ignore
 @flindex missfont.log
 If @code{mktexpk}, the invocation is appended to a file
@@ -431,10 +435,9 @@ output; report no warnings (only errors) to standard error.
 @item -Q @var{num}
 @cindex shrinkfactor
 @cindex quality
-Set the shrinkfactor to @var{num}. For PK fonts this also sets the
-number of antialiasing levels. The default value is 3 which together
-with the default resolution of 300 dpi would give 9 levels of
-antialiasing at 100 dpi for the final antialiased PK font.
+Set the quality to @var{num}. That is, choose the number of antialiasing
+levels for PK fonts to be @var{num}*@var{num}. The default value is 3
+which gives 9 levels of antialiasing for antialiased PK fonts.
 
 @item -r*
 @cindex reverse pagination
