@@ -1,3 +1,68 @@
+2004-06-21  Jan-Åke Larsson  <jalar@mai.liu.se>
+
+	* config.h.in:
+	* configure.ac: Test for stdbool, munmap and strtol 
+
+	* test_dvipng.tex: Change color test 
+
+	* dvipng.h: 
+	* misc.c: 
+	* ppagelist.c: Fix -r switch
+
+	* dvipng.h: 
+	* font.c: 
+	* misc.c: 
+	* ppagelist.c:
+	* special.c: 
+	* t1.c: 
+	* tfm.c: Use stdbool
+
+	* color.c: 
+	* dvi.c: 
+	* dvipng.c: 
+	* dvipng.h: 
+	* enc.c: 
+	* font.c: 
+	* fontmap.c: 
+	* ppagelist.c:
+	* special.c: Fix memory leak(s)
+
+	* color.c: 
+	* draw.c: 
+	* dvi.c: 
+	* dvipng.h: 
+	* misc.c: 
+	* set.c:
+	* special.c: Fix color stack
+
+	* draw.c: 
+	* dvipng.h: 
+	* ft.c: 
+	* pk.c: 
+	* set.c:
+	* t1.c: 
+	* tfm.c: 
+	* vf.c: Simplify char structs
+
+	* color.c: 
+	* draw.c: 
+	* dvi.c: 
+	* dvipng.c: 
+	* dvipng.h: 
+	* enc.c: 
+	* font.c: 
+	* fontmap.c: 
+	* ft.c: 
+	* misc.c: 
+	* papersiz.c: 
+	* pk.c: 
+	* ppagelist.c:
+	* set.c:
+	* special.c: 
+	* t1.c: 
+	* tfm.c: 
+	* vf.c: Add copyright notice 
+
 2004-05-31  Jan-Åke Larsson  <jalar@mai.liu.se>
 
 	* dvipng.1:
