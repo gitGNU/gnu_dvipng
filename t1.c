@@ -1,60 +1,34 @@
+/* t1.c */
+
+/************************************************************************
+
+  Part of the dvipng distribution
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+  02111-1307, USA.
+
+  Copyright © 2002-2004 Jan-Åke Larsson
+
+************************************************************************/
+
 #include "dvipng.h"
 #if HAVE_ALLOCA_H
 # include <alloca.h>
 #endif
 
-#define GREYS 255
-
-dviunits SetT1(int32_t c, subpixels hh, subpixels vv) 
-{
-  register struct t1_char *ptr = currentfont->chr[c];
-                                      /* temporary t1_char pointer */
-  int red,green,blue;
-  int *Color=alloca(sizeof(int)*(GREYS+1));
-  int x,y;
-  int pos=0;
-  int bgColor,pixelcolor;
-
-  hh -= ptr->xOffset/shrinkfactor;
-  vv -= ptr->yOffset/shrinkfactor;
-
-  Color[0] = gdImageColorResolve(page_imagep,bRed,bGreen,bBlue);
-  for( x=1; x<=GREYS ; x++) 
-    Color[x] = -1;
-  for( y=0; y<ptr->h; y++) {
-    for( x=0; x<ptr->w; x++) {
-      if (ptr->data[pos]>0) {
-	bgColor = gdImageGetPixel(page_imagep, hh + x, vv + y);
-	if (bgColor == Color[0]) {
-	  /* Standard background: use cached value if present */
-	  pixelcolor=Color[(int)ptr->data[pos]];
-	  if (pixelcolor==-1) {
-	    red = bRed-(bRed-Red)*ptr->data[pos]/GREYS;
-	    green = bGreen-(bGreen-Green)*ptr->data[pos]/GREYS;
-	    blue = bBlue-(bBlue-Blue)*ptr->data[pos]/GREYS;
-	    Color[ptr->data[pos]] = 
-	      gdImageColorResolve(page_imagep,red,green,blue);
-	    pixelcolor=Color[ptr->data[pos]];
-	  }
-	} else {
-	  /* Overstrike: No cache */
-	  red=gdImageRed(page_imagep, bgColor);
-	  green=gdImageGreen(page_imagep, bgColor);
-	  blue=gdImageBlue(page_imagep, bgColor);
-	  red = red-(red-Red)*ptr->data[pos]/GREYS;
-	  green = green-(green-Green)*ptr->data[pos]/GREYS;
-	  blue = blue-(blue-Blue)*ptr->data[pos]/GREYS;
-	  pixelcolor = gdImageColorResolve(page_imagep, red, green, blue);
-	}
-	gdImageSetPixel(page_imagep, hh + x, vv + y, pixelcolor);
-      }
-      pos++;
-    }
-  }
-  return(ptr->tfmw);
-}
-
-void LoadT1(int32_t c, struct t1_char * ptr)
+void LoadT1(int32_t c, struct char_entry * ptr)
 {
   GLYPH *glyph;
   int original_width,original_height;
@@ -65,10 +39,10 @@ void LoadT1(int32_t c, struct t1_char * ptr)
 
   DEBUG_PRINT(DEBUG_T1,("\n  LOAD T1 CHAR\t%d",c));
   if ((glyph=
-       T1_SetChar( currentfont->T1id, c, (float)currentfont->dpi*currentfont->d/65536/72 ,
-		   currentfont->psfontmap==NULL ? NULL : currentfont->psfontmap->t1_transformp))
+       T1_SetChar(currentfont->T1id, c, (float)currentfont->dpi*currentfont->d/65536/72 ,
+		  currentfont->psfontmap==NULL ? NULL : currentfont->psfontmap->t1_transformp))
       ==NULL)
-      Fatal("can't load t1_char %d",c);
+      Fatal("can't load T1 char %d",c);
 
   DEBUG_PRINT(DEBUG_T1,(" (%d)",ptr->tfmw));
   
@@ -190,7 +164,7 @@ bool InitT1(struct font_entry * tfontp)
 }
 
 
-void UnLoadT1(struct t1_char *ptr)
+void UnLoadT1(struct char_entry *ptr)
 {
   if (ptr->data!=NULL)
     free(ptr->data);
@@ -207,7 +181,7 @@ void DoneT1(struct font_entry *tfontp)
     Warning("font file %s could not be closed", tfontp->name);
   while(c<NFNTCHARS-1) {
     if (tfontp->chr[c]!=NULL) {
-      UnLoadT1((struct t1_char*)tfontp->chr[c]);
+      UnLoadT1((struct char_entry*)tfontp->chr[c]);
       free(tfontp->chr[c]);
       tfontp->chr[c]=NULL;
     }
