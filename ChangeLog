@@ -1,3 +1,7 @@
+2004-10-07  Jan-Åke Larsson  <jalar@mai.liu.se>
+
+	* dvipng.texi: document change in -o switch
+
 2004-10-06  Jan-Åke Larsson  <jalar@mai.liu.se>
 
 	* set.c: Allow longer pagenumbers in output file (e.g., %06d)
