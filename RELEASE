@@ -1,12 +1,13 @@
-Release notes for version 0.3 of the dvipng package:
+Release notes for version 0.4 of the dvipng package:
 
 This program makes PNG graphics from DVI files as obtained from TeX
 and its relatives.
 
-This is mainly a bugfix release: reposition rules, and fix crash on
-empty page. In addition, the -o switch is now enabled, so that one can
-choose the output filename.
+This release is mainly to provide documentation. It does also
+introduce "drift", compensating for rounding errors along the lines
+described in 'dvitype'. Also, on systems with a fairly new gd
+(>=2.0.14), the PNG compression can be specified on the commandline,
+the default is to opt for speed.
 
 It has been tested but will probably need further testing. Report any
-bugs you find. I expect that most difficulties will be in building the
-package, see README for instructions.
+bugs you find, see README for instructions.
