@@ -58,7 +58,6 @@ bool ReadTFM(struct font_entry * tfontp, char* tfmname)
     c++;
     position += 4;
   }
-  free(width);
   return(true);
 }
   

@@ -273,7 +273,6 @@ void DoneFont(struct font_entry *tfontp)
     DoneFT(tfontp);
     break;
   }
-  free(tfontp);
 }
 
 
@@ -297,8 +296,8 @@ void ClearFonts(void)
     free(hfontptr);
     hfontptr=tmp;
   }
-  FreeFontNumP(dvi->fontnump);
-
+  if (dvi!=NULL)
+    FreeFontNumP(dvi->fontnump);
 }
 
 /*-->SetFntNum*/

@@ -113,10 +113,10 @@ char* FindPSFontMap(char* fontname, char** encoding, FT_Matrix** transform)
 	  DEBUG_PRINT((DEBUG_FT,"<[%s ",*encoding));
 	} else {                                     /* <some.file      */
 	  char* word =newword((char**)&pos,entry->end); 
-	  if (strncmp(word+strlen(word)-4,".enc",4)==0) {   /* encoding */
+	  if (strncmp(word+strlen(word)-4,".enc",4)==0) {/* <some.enc */
 	    *encoding=word;
 	    DEBUG_PRINT((DEBUG_FT,"<[%s ",*encoding));
-	  } else {
+	  } else {                                   /* <font    */  
 	    psfile=word;
 	    DEBUG_PRINT((DEBUG_FT,"<%s ",psfile));
 	  }
@@ -157,15 +157,15 @@ char* FindPSFontMap(char* fontname, char** encoding, FT_Matrix** transform)
 	}
       } else {                                      /* bare word */
 	switch (++nameno) {
-	case 1:
+	case 1:            /* first word is tfmname and perhaps psname */
 	  while(pos<entry->end && *pos!=' ' && *pos!='\t') pos++;
 	  psname=tfmname;
 	  break;
-	case 2:
+	case 2:                              /* second word is psname */
 	  psname = newword((char**)&pos,entry->end);
 	  DEBUG_PRINT((DEBUG_FT,"(%s) ",psname));
 	  break;
-	case 3:
+	case 3:                             /* third word is encoding */
 	  *encoding = newword((char**)&pos,entry->end);
 	  DEBUG_PRINT((DEBUG_FT,"<[%s ",*encoding));
 	  break;
@@ -175,8 +175,9 @@ char* FindPSFontMap(char* fontname, char** encoding, FT_Matrix** transform)
       }
       while(pos < entry->end && (*pos==' ' || *pos=='\t')) pos++;
     }
-    if (psfile==NULL) {
-      psfile=tfmname;
+    if (psfile==NULL) { 
+      /* No psfile-name given, use (free-able copy of) tfmname */
+      psfile=newword(&tfmname,tfmname+strlen(tfmname));
       DEBUG_PRINT((DEBUG_FT," <%s ",psfile));
     }
   }
