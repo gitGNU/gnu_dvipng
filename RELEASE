@@ -1,12 +1,12 @@
-Release notes for version 0.8 of the dvipng package:
+Release notes for version 0.9 of the dvipng package:
 
 This program makes PNG graphics from DVI files as obtained from TeX
 and its relatives.
 
-This release adds --depth and --height options for vertical
-positioning on webpages and whatnot. It also fixes some bugs, in
-particular one that would hang dvipng in certain PostScript font
-installs.
+This release adds an --expand-bbox switch, code for getting image size
+info straight from preview-latex's "tightpage" option, fixes some
+bugs, makes some slight speedups and finally adjusts for freetype
+2.1.6 and later.
 
 It has been tested but will probably need further testing. Report any
 bugs you find, see README for instructions.
