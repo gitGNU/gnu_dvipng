@@ -1,5 +1,8 @@
 2004-08-17  Jan-Åke Larsson  <jalar@mai.liu.se>
 
+	* dvipng.1:
+	* dvipng.texi: document new switches
+
 	* draw.c: change name of picky flag
 
 	* special.c: do not call ghostscript when switch given
