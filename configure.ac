@@ -1,7 +1,6 @@
 # Process this file with autoconf to produce a configure script.
 AC_INIT([dvipng], [0.4], [preview-latex-bugs@lists.sf.net])
 AC_CONFIG_SRCDIR([dvipng.c])
-AC_CONFIG_HEADER([config.h])
 
 AC_SET_MAKE
 
@@ -9,8 +8,9 @@ AC_SET_MAKE
 AC_PROG_CC
 AC_ARG_ENABLE(debug, 
   AC_HELP_STRING([--disable-debug],[Compile without debug (-d) option]), 
-  [ if test "$enableval" = no ; then DEBUG="" ; else DEBUG="-DDEBUG"; fi ], 
-  [ DEBUG="-DDEBUG" ])	
+  [ if test "$enableval" = no ; then DEBUG="" ; debug 
+    else DEBUG="-DDEBUG"; fi ], 
+  [ DEBUG="-DDEBUG" ; enable_debug="yes";])	
 AC_SUBST(DEBUG)
 AC_PROG_INSTALL
 AC_PATH_PROG(GS, gs, :)
@@ -61,5 +61,14 @@ AC_PATH_PROG(MAKEINFO, makeinfo, :)
 MAKEINFO_CHECK_MACROS(acronym env option)
 AC_PATH_PROG(INSTALL_INFO, install-info, :, $PATH /usr/sbin /sbin)
 
+AC_MSG_RESULT([
+** Configuration summary for $PACKAGE_STRING:
+
+   The -d (debug) switch is enabled:        $enable_debug
+   Your gd is new enough to enable
+        the -z (compression) switch:        $ac_cv_func_gdImagePngEx
+])
+
+AC_CONFIG_HEADER([config.h])
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
