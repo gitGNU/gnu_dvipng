@@ -231,12 +231,13 @@ void      CreateImage(void);
 void      DrawCommand(unsigned char*, void* /* dvi/vf */); 
 void      DrawPages(void);
 void      WriteImage(char*, int);
-void      LoadAChar(int32_t c, register struct pk_char * ptr);
+void      LoadAChar(int32_t, register struct pk_char *);
 int32_t   SetChar(int32_t);
 int32_t   SetPK(int32_t,int32_t, int32_t);
 int32_t   SetVF(int32_t);
 int32_t   SetRule(int32_t, int32_t, int32_t, int32_t, int);
-
+void      BeginVFMacro(struct font_entry*);
+void      EndVFMacro(void);
 
 /**************************************************/
 void handlepapersize(char*,int*,int*);
