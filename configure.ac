@@ -89,17 +89,17 @@ AC_ARG_ENABLE(selfauto-set,
       AC_MSG_CHECKING([for \$SELFAUTOLOC])
       SELFAUTOLOC=`kpsewhich -expand-var=\\\$SELFAUTOLOC`
       AC_DEFINE_UNQUOTED(ENV_SELFAUTOLOC,["SELFAUTOLOC=$SELFAUTOLOC"],
-	[The environment setting for \$SELFAUTOLOC])
+	[The environment setting for $SELFAUTOLOC])
       AC_MSG_RESULT([$SELFAUTOLOC])
       AC_MSG_CHECKING([for \$SELFAUTODIR])
       SELFAUTODIR=`kpsewhich -expand-var=\\\$SELFAUTODIR`
       AC_DEFINE_UNQUOTED(ENV_SELFAUTODIR,["SELFAUTODIR=$SELFAUTODIR"],
-	[The environment setting for \$SELFAUTODIR])
+	[The environment setting for $SELFAUTODIR])
       AC_MSG_RESULT([$SELFAUTODIR])
       AC_MSG_CHECKING([for \$SELFAUTOPARENT])
       SELFAUTOPARENT=`kpsewhich -expand-var=\\\$SELFAUTOPARENT`
       AC_DEFINE_UNQUOTED(ENV_SELFAUTOPARENT,["SELFAUTOPARENT=$SELFAUTOPARENT"],
-	[The environment setting for \$SELFAUTOPARENT])
+	[The environment setting for $SELFAUTOPARENT])
       AC_MSG_RESULT([$SELFAUTOPARENT])
     fi ],
   [AC_MSG_CHECKING([for texmf.cnf])
