@@ -17,69 +17,70 @@ int32_t SetPK(int32_t c, int32_t hh,int32_t vv)
 {
   register struct pk_char *ptr = currentfont->chr[c];
                                       /* temporary pk_char pointer */
-#ifndef HAVE_GDIMAGECOLORRESOLVEALPHA
   int red,green,blue;
-#endif
   int Color,i;
   /*
    * Draw character. Remember now, we have stored the different
    * greyscales in glyph.data with darkest last.  Draw the character
    * greyscale by greyscale, lightest first.
    */
+#ifdef PROPER_OVERSTRIKE 
+  int x,y;
+  int pos=0;
+  int bgColor,pixelcolor;
+  hh -= ptr->xOffset/shrinkfactor;
+  vv -= ptr->yOffset/shrinkfactor;
+
   for( i=1; i<=ptr->glyph.nchars ; i++) {
-#ifndef HAVE_GDIMAGECOLORRESOLVEALPHA
-    red = bRed-(bRed-Red)*i/shrinkfactor/shrinkfactor;
-    green = bGreen-(bGreen-Green)*i/shrinkfactor/shrinkfactor;
-    blue = bBlue-(bBlue-Blue)*i/shrinkfactor/shrinkfactor;
+    red = bRed-(bRed-Red)*i/ptr->glyph.nchars;
+    green = bGreen-(bGreen-Green)*i/ptr->glyph.nchars;
+    blue = bBlue-(bBlue-Blue)*i/ptr->glyph.nchars;
     Color = gdImageColorResolve(page_imagep,red,green,blue);
-#ifdef PROPER_OVERSTRIKE /* note: is not neeeded given
-			    gdImageColorResolveAlpha */
-    {
-      int x,y,height=ptr->glyph.h,width=ptr->glyph.w;
-      int bgColor,pixelcolor,pos = (i-1)*width*height;
-      for( x=0; x<width; x++)
-	for( y=0; y<height; y++) {
-	  if (ptr->glyph.data[x+y*width+pos]>0) {
-	    bgColor = gdImageGetPixel(page_imagep, 
-				      hh - PIXROUND(ptr->xOffset,shrinkfactor) + x,
-				      vv - PIXROUND(ptr->yOffset,shrinkfactor) + y);
-	    if (bgColor > 0) {
-	      red=gdImageRed(page_imagep,bgColor);
-	      green=gdImageGreen(page_imagep,bgColor);
-	      blue=gdImageBlue(page_imagep,bgColor);
-	      red = red-(red-Red)*i/shrinkfactor/shrinkfactor;
-	      green = green-(green-Green)*i/shrinkfactor/shrinkfactor;
-	      blue = blue-(blue-Blue)*i/shrinkfactor/shrinkfactor;
-	      pixelcolor = gdImageColorResolve(page_imagep,red,green,blue);
-	      gdImageSetPixel(page_imagep,
-			      hh - PIXROUND(ptr->xOffset,shrinkfactor) + x,
-			      vv - PIXROUND(ptr->yOffset,shrinkfactor) + y,
-			      pixelcolor);
-	    } else
-	      gdImageSetPixel(page_imagep,
-			      hh - PIXROUND(ptr->xOffset,shrinkfactor) + x,
-			      vv - PIXROUND(ptr->yOffset,shrinkfactor) + y,
-			      Color);
-	  }
+    for( y=0; y<ptr->glyph.h; y++) {
+      for( x=0; x<ptr->glyph.w; x++) {
+	if (ptr->glyph.data[pos]>0) {
+	  bgColor = gdImageGetPixel(page_imagep, hh + x, vv + y);
+	  if (bgColor > 0) {
+	    red=gdImageRed(page_imagep, bgColor);
+	    green=gdImageGreen(page_imagep, bgColor);
+	    blue=gdImageBlue(page_imagep, bgColor);
+	    red = red-(red-Red)*i/ptr->glyph.nchars;
+	    green = green-(green-Green)*i/ptr->glyph.nchars;
+	    blue = blue-(blue-Blue)*i/ptr->glyph.nchars;
+	    pixelcolor = gdImageColorResolve(page_imagep, red, green, blue);
+	    gdImageSetPixel(page_imagep, hh + x, vv + y, pixelcolor);
+	  } else
+	    gdImageSetPixel(page_imagep, hh + x, vv + y, Color);
 	}
+	pos++;
+      }
     }
+  }
 #else /* not PROPER_OVERSTRIKE */  
+  for( i=1; i<=ptr->glyph.nchars ; i++) {
+    red = bRed-(bRed-Red)*i/ptr->glyph.nchars;
+    green = bGreen-(bGreen-Green)*i/ptr->glyph.nchars;
+    blue = bBlue-(bBlue-Blue)*i/ptr->glyph.nchars;
+    Color = gdImageColorResolve(page_imagep,red,green,blue);
     gdImageChar(page_imagep, &(ptr->glyph),
 		hh - PIXROUND(ptr->xOffset,shrinkfactor),
 		vv - PIXROUND(ptr->yOffset,shrinkfactor),
 		i,Color);
+  }
 #endif /* PROPER_OVERSTRIKE */
-#else /* HAVE_GDIMAGECOLORRESOLVEALPHA */
+  return(ptr->tfmw);
+}
+
+
+#if 0 /* HAVE_GDIMAGECOLORRESOLVEALPHA */
+    /* Only works on truecolor images. */
     Color = gdImageColorResolveAlpha(page_imagep,Red,Green,Blue,
-				   128*i/shrinkfactor/shrinkfactor);
+				   128-128*i/shrinkfactor/shrinkfactor);
     gdImageChar(page_imagep, &(ptr->glyph),
 		hh - PIXROUND(ptr->xOffset,shrinkfactor),
 		vv - PIXROUND(ptr->yOffset,shrinkfactor),
 		i,Color);
 #endif /* HAVE_GDIMAGECOLORRESOLVEALPHA */
-  }
-  return(ptr->tfmw);
-}
 
 
 unsigned char getnyb(unsigned char** pos)
