@@ -174,9 +174,13 @@ void DoPages P1H(void)
       y_max = y_min = -y_offset_def;
     }
     qfprintf(ERR_STREAM,"[%d",  tpagelistp->count[0]);
+#ifdef DEBUG
+    if (Debug)
+      printf("@%d PAGE START:\tBOP \n",tpagelistp->offset);
+#endif
     DoBop();
     DrawPage(PASS_DRAW);
-    FormFeed(tpagelistp->count[0]);
+    FormFeed(dvi,tpagelistp->count[0]);
 #ifdef TIMING
     ++ndone;
 #endif

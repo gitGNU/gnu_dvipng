@@ -230,7 +230,7 @@ void    DoSpecial AA((char *, int));
 void    DelPageList AA((void));
 void    Fatal VA();
 struct page_list *FindPage AA((int32_t));
-void    FormFeed AA((int));
+void    FormFeed AA((struct font_entry*,int));
 void    FontDef AA((unsigned char*, struct font_entry*));
 void    FontFind AA((struct font_entry *));
 void    GetFontDef AA((void));
