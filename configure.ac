@@ -85,6 +85,7 @@ AC_CHECK_HEADERS([fcntl.h sys/time.h inttypes.h])
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_TYPE_PID_T
+AC_TYPE_SIZE_T
 AC_HEADER_TIME
 AC_HEADER_STDBOOL
 AC_HAS_KPSE_ENC_FORMATS
@@ -98,7 +99,7 @@ AC_HEADER_STDC
 AC_FUNC_MMAP
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([dup2 strchr strrchr memchr memset putenv munmap strtol])
+AC_CHECK_FUNCS([dup2 memset munmap pow putenv strchr strrchr strtol])
 if test "$enable_timing" = "yes"; then
   AC_CHECK_FUNCS([ftime gettimeofday])
 fi
@@ -173,9 +174,10 @@ AC_MSG_RESULT([
         the -z (compression) switch:        $ac_cv_func_gdImagePngEx
    Your gd is new enough to enable
         the --truecolor switch:             $ac_cv_func_gdImageCreateTrueColor
+   Your gd is new enough to enable
+        gif support (dvigif):               $ac_cv_func_gdImageGif
    FreeType font rendering available:       $ac_have_freetype2
    T1lib font rendering available:          $ac_cv_lib_t1_T1_InitLib
-   Gif support (dvigif):                    $ac_cv_func_gdImageGif
 ])
 
 AC_CONFIG_HEADER([config.h])
