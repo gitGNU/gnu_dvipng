@@ -96,8 +96,7 @@ clean:
 	rm -f *.o dvipng *.help *.info* *dvipng.dvi *.aux *.log
 	rm -f *dvipng.ps *.cp *.fn *.ky *~ \#*\# \
 		*.tp *.vr *.pg *.toc *.tp *.bak *.cps *.kys *.tps \
-		*.fns *.vrs *.pgs *.html *.tmp INSTALL README
-
+		*.fns *.vrs *.pgs *.html *.tmp
 
 distclean: clean INSTALL README
 	rm -f Makefile
