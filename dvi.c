@@ -107,8 +107,11 @@ struct dvi_data* DVIOpen(char* dviname,char* outname)
   
   if (outname==NULL) { 
     dvi->outname = malloc(strlen(basename(dviname))+7);
-    if (dvi->outname==NULL)
+    if (dvi->outname==NULL) {
+      free(dvi->name);
+      free(dvi);
       Fatal("cannot allocate space for output filename");
+    }
     strcpy(dvi->outname,basename(dviname));
     tmpstring = strrchr(dvi->outname, '.');
     if (tmpstring != NULL) 
@@ -116,8 +119,11 @@ struct dvi_data* DVIOpen(char* dviname,char* outname)
     strcat(dvi->outname, "%d.png");
   } else {
     dvi->outname = malloc(strlen(outname)+1);
-    if (dvi->outname==NULL)
+    if (dvi->outname==NULL) {
+      free(dvi->name);
+      free(dvi);
       Fatal("cannot allocate space for output filename");
+    }
     strcpy(dvi->outname,outname);
   }
 
@@ -137,6 +143,9 @@ struct dvi_data* DVIOpen(char* dviname,char* outname)
     }
   }
   if (dvi->filep == NULL) {
+    free(dvi->name);
+    free(dvi->outname);
+    free(dvi);
     perror(dviname);
     exit (EXIT_FAILURE);
   }
