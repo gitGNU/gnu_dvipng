@@ -1,3 +1,15 @@
+2005-03-02  jalar  <jalar@mai.liu.se>
+
+	* set.c: Remove extra debug printout
+
+	* t1.c: Sizes are given in big points in T1lib, in TeX points in
+	DVI files
+
+	* ft.c: Sizes are given in big points in FreeType, in TeX points
+	in DVI files 
+
+	* dvipng.h: Fix boolean type again 
+
 2005-02-10  jalar  <jalar@mai.liu.se>
 
 	* config.h.in: 
