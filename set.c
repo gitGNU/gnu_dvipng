@@ -53,7 +53,7 @@ void WriteImage(char *pngname, int pagenum)
       Fatal("Cannot open output file %s",pngname);
   gdImagePng(page_imagep,outfp);
   fclose(outfp);
-  DEBUG_PRINTF(DEBUG_DVI,"\n  WROTE:   \t%s\n",pngname);
+  DEBUG_PRINT((DEBUG_DVI,"\n  WROTE:   \t%s\n",pngname));
   gdImageDestroy(page_imagep);
   page_imagep=NULL;
 }
@@ -94,11 +94,11 @@ int32_t SetRule(int32_t a, int32_t b, int32_t h,int32_t v,int PassNo)
 			     PIXROUND(h, dvi->conv*shrinkfactor)+xx-2+x_offset,
 			     PIXROUND(v, dvi->conv*shrinkfactor)+y_offset,
 			     Color);
-      DEBUG_PRINTF2(DEBUG_DVI,"\n  RULE \t(%d,%d)", xx, yy);
-      DEBUG_PRINTF2(DEBUG_DVI," at (%d,%d)", 
-		    PIXROUND(h, dvi->conv*shrinkfactor),
-		    PIXROUND(v, dvi->conv*shrinkfactor));
-      DEBUG_PRINTF2(DEBUG_DVI," offset (%d,%d)", x_offset,y_offset);
+      DEBUG_PRINT((DEBUG_DVI,"\n  RULE \t%dx%d at (%d,%d) offset (%d,%d)",
+		   xx, yy,
+		   PIXROUND(h, dvi->conv*shrinkfactor),
+		   PIXROUND(v, dvi->conv*shrinkfactor),
+		   x_offset,y_offset));
     }
   }
   return(b);

@@ -24,28 +24,28 @@ int32_t SetChar(int32_t c)
 {
 #ifdef DEBUG
   if (currentfont->type==FONT_TYPE_VF)
-    DEBUG_PUTS(DEBUG_DVI,"\n  VF CHAR:\t");
+    DEBUG_PRINT((DEBUG_DVI,"\n  VF CHAR:\t"));
   else
-    DEBUG_PUTS(DEBUG_DVI,"\n  PK CHAR:\t");
+    DEBUG_PRINT((DEBUG_DVI,"\n  PK CHAR:\t"));
   if (isprint(c))
-    DEBUG_PRINTF(DEBUG_DVI,"'%c' ",c);
-  DEBUG_PRINTF(DEBUG_DVI,"%d",(int)c);
-  DEBUG_PRINTF2(DEBUG_DVI," at (%d,%d)",
-		PIXROUND(h, dvi->conv*shrinkfactor),
-		PIXROUND(v, dvi->conv*shrinkfactor));
-  DEBUG_PRINTF2(DEBUG_DVI," offset (%d,%d)",x_offset,y_offset);
+    DEBUG_PRINT((DEBUG_DVI,"'%c' ",c));
+  DEBUG_PRINT((DEBUG_DVI,"%d at (%d,%d) offset (%d,%d)",
+	       (int)c, 
+	       PIXROUND(h, dvi->conv*shrinkfactor),
+	       PIXROUND(v, dvi->conv*shrinkfactor),
+	       x_offset,y_offset));
 #endif
 
   if (currentfont->type==FONT_TYPE_VF) { 
-    DEBUG_PRINTF(DEBUG_DVI," tfmw %d", 
-		 ((struct vf_char*)currentfont->chr[c])->tfmw);
+    DEBUG_PRINT((DEBUG_DVI," tfmw %d", 
+		 ((struct vf_char*)currentfont->chr[c])->tfmw));
     return(SetVF(c));
   } else {
     struct pk_char* ptr = currentfont->chr[c];
     if (ptr) {
       if (ptr->glyph.data == NULL) 
 	LoadAChar(c, ptr);
-      DEBUG_PRINTF(DEBUG_DVI," tfmw %d", ptr->tfmw);
+      DEBUG_PRINT((DEBUG_DVI," tfmw %d", ptr->tfmw));
       if (PassNo==PASS_DRAW)
 	return(SetPK(c, h, v));
       else {
@@ -76,25 +76,25 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
     SetFntNum((int32_t)*command - FONT_00,parent);
   } else switch (*command)  {
   case PUT1: case PUT2: case PUT3: case PUT4:
-    DEBUG_PRINTF(DEBUG_DVI," %d",
-		 UNumRead(command+1, dvi_commandlength[*command]-1));
+    DEBUG_PRINT((DEBUG_DVI," %d",
+		 UNumRead(command+1, dvi_commandlength[*command]-1)));
     (void) SetChar(UNumRead(command+1, dvi_commandlength[*command]-1));
     break;
   case SET1: case SET2: case SET3: case SET4:
-    DEBUG_PRINTF(DEBUG_DVI," %d",
-		 UNumRead(command+1, dvi_commandlength[*command]-1));
+    DEBUG_PRINT((DEBUG_DVI," %d",
+		 UNumRead(command+1, dvi_commandlength[*command]-1)));
     MoveRight(SetChar(UNumRead(command+1, dvi_commandlength[*command]-1)));
     break;
   case SET_RULE:
-    DEBUG_PRINTF2(DEBUG_DVI," %d %d",
-		  UNumRead(command+1, 4), UNumRead(command+5, 4));
+    DEBUG_PRINT((DEBUG_DVI," %d %d",
+		  UNumRead(command+1, 4), UNumRead(command+5, 4)));
     MoveRight(SetRule(DO_VFCONV(UNumRead(command+1, 4)),
 		      DO_VFCONV(UNumRead(command+5, 4)),
 		      h,v, PassNo));
     break;
   case PUT_RULE:
-    DEBUG_PRINTF2(DEBUG_DVI," %d %d",
-		  UNumRead(command+1, 4), UNumRead(command+5, 4));
+    DEBUG_PRINT((DEBUG_DVI," %d %d",
+		  UNumRead(command+1, 4), UNumRead(command+5, 4)));
     (void) SetRule(DO_VFCONV(UNumRead(command+1, 4)),
 		   DO_VFCONV(UNumRead(command+5, 4)),
 		   h,v, PassNo);
@@ -127,47 +127,47 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
     z = stack[sp].z;
     break;
   case RIGHT1: case RIGHT2: case RIGHT3: case RIGHT4:
-    DEBUG_PRINTF(DEBUG_DVI," %d",
-		 SNumRead(command+1, dvi_commandlength[*command]-1));
+    DEBUG_PRINT((DEBUG_DVI," %d",
+		 SNumRead(command+1, dvi_commandlength[*command]-1)));
     MoveRight(DO_VFCONV(SNumRead(command+1, dvi_commandlength[*command]-1)));
     break;
   case W1: case W2: case W3: case W4:
     w = SNumRead(command+1, dvi_commandlength[*command]-1);
-    DEBUG_PRINTF(DEBUG_DVI," %d",w);
+    DEBUG_PRINT((DEBUG_DVI," %d",w));
   case W0:
     MoveRight(DO_VFCONV(w));
     break;
   case X1: case X2: case X3: case X4:
     x = SNumRead(command+1, dvi_commandlength[*command]-1);
-    DEBUG_PRINTF(DEBUG_DVI," %d",x);
+    DEBUG_PRINT((DEBUG_DVI," %d",x));
   case X0:
     MoveRight(DO_VFCONV(x));
     break;
   case DOWN1: case DOWN2: case DOWN3: case DOWN4:
-    DEBUG_PRINTF(DEBUG_DVI," %d",
-		 SNumRead(command+1, dvi_commandlength[*command]-1));
+    DEBUG_PRINT((DEBUG_DVI," %d",
+		 SNumRead(command+1, dvi_commandlength[*command]-1)));
     MoveDown(DO_VFCONV(SNumRead(command+1, dvi_commandlength[*command]-1)));
     break;
   case Y1: case Y2: case Y3: case Y4:
     y = SNumRead(command+1, dvi_commandlength[*command]-1);
-    DEBUG_PRINTF(DEBUG_DVI," %d",y);
+    DEBUG_PRINT((DEBUG_DVI," %d",y));
   case Y0:
     MoveDown(DO_VFCONV(y));
     break;
   case Z1: case Z2: case Z3: case Z4:
     z = SNumRead(command+1, dvi_commandlength[*command]-1);
-    DEBUG_PRINTF(DEBUG_DVI," %d",z);
+    DEBUG_PRINT((DEBUG_DVI," %d",z));
   case Z0:
     MoveDown(DO_VFCONV(z));
     break;
   case FNT1: case FNT2: case FNT3: case FNT4:
-    DEBUG_PRINTF(DEBUG_DVI," %d",
-		 UNumRead(command+1, dvi_commandlength[*command]-1));
+    DEBUG_PRINT((DEBUG_DVI," %d",
+		 UNumRead(command+1, dvi_commandlength[*command]-1)));
     SetFntNum(UNumRead(command+1, dvi_commandlength[*command]-1),parent);
     break;
   case XXX1: case XXX2: case XXX3: case XXX4:
-    DEBUG_PRINTF(DEBUG_DVI," %d",
-		 UNumRead(command+1, dvi_commandlength[*command]-1));
+    DEBUG_PRINT((DEBUG_DVI," %d",
+		 UNumRead(command+1, dvi_commandlength[*command]-1)));
     SetSpecial(command + dvi_commandlength[*command], 
 	       UNumRead(command+1, dvi_commandlength[*command]-1),h,v,PassNo);
     break;
@@ -201,11 +201,11 @@ void DrawPage(void)
   currentfont = NULL;    /* No default font                  */
 
   command=DVIGetCommand(dvi);
-  DEBUG_PRINTF(DEBUG_DVI,"DRAW CMD:\t%s", dvi_commands[*command]);
+  DEBUG_PRINT((DEBUG_DVI,"DRAW CMD:\t%s", dvi_commands[*command]));
   while (*command != EOP)  {
     DrawCommand(command,dvi);
     command=DVIGetCommand(dvi);
-    DEBUG_PRINTF(DEBUG_DVI,"DRAW CMD:\t%s", dvi_commands[*command]);
+    DEBUG_PRINT((DEBUG_DVI,"DRAW CMD:\t%s", dvi_commands[*command]));
   } 
 }
 

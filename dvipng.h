@@ -271,9 +271,6 @@ EXTERN struct internal_state {
 #ifdef DEBUG
 /*EXTERN unsigned int Debug INIT(0);*/
 #define DEBUG_PRINT(a) Message a
-#define DEBUG_PUTS(a,str) Message(a,str) /* variadic macros? BAH!*/
-#define DEBUG_PRINTF(a,str,e1) Message(a,str,e1)
-#define DEBUG_PRINTF2(a,str,e1,e2) Message(a,str,e1,e2)
 #define DEBUG_DVI   LASTFLAG * 2
 #define DEBUG_VF    LASTFLAG * 4
 #define DEBUG_PK    LASTFLAG * 8
@@ -281,9 +278,7 @@ EXTERN struct internal_state {
 #define DEBUG_GS    LASTFLAG * 32
 #define LASTDEBUG   DEBUG_GS
 #else
-#define DEBUG_PUT(a,str)
-#define DEBUG_PRINTF(a,str,e1)
-#define DEBUG_PRINTF2(a,str,e1,e2)
+#define DEBUG_PRINT(a)
 #endif
 
 /************************timing stuff*********************/

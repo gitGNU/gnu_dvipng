@@ -9,7 +9,7 @@ void OpenFont(struct font_entry* tfontp)
 {
   if (tfontp->filep != NULL)
     return;         /* we need not have been called */
-  DEBUG_PRINTF(DEBUG_DVI,"(OPEN %s) ", tfontp->name);
+  DEBUG_PRINT((DEBUG_DVI,"(OPEN %s) ", tfontp->name));
   if ((tfontp->filep = fopen(tfontp->name,"rb")) == NULL) {
     Warning("font file %s could not be opened", tfontp->name);
   } 
@@ -76,24 +76,19 @@ void FontDef(unsigned char* command, void* parent)
   a = UNumRead(current+12, 1); /* length for font name */
   l = UNumRead(current+13, 1); /* device length */
   if (((struct font_entry*)parent)->type==FONT_TYPE_VF) {
-    DEBUG_PRINTF2(DEBUG_VF," %d %d",k,c);
-    DEBUG_PRINTF(DEBUG_VF," %d",s);
+    DEBUG_PRINT((DEBUG_VF," %d %d %d",k,c,s));
     /* Rescale. s is relative to the actual scale /(1<<20) */
     s = (uint32_t)((uint64_t) s * (((struct font_entry*) parent)->s) 
 		   / (1<<20));
-    DEBUG_PRINTF2(DEBUG_VF," (%d) %d",s,d);
+    DEBUG_PRINT((DEBUG_VF," (%d) %d",s,d));
     /* Oddly, d differs in the DVI and the VF that my system produces */
     d = (uint32_t)((uint64_t) d * ((struct font_entry*)parent)->d
 		   / ((struct font_entry*)parent)->designsize);
-    DEBUG_PRINTF(DEBUG_VF," (%d)",d);
-    DEBUG_PRINTF2(DEBUG_VF," %d %d",a,l);
-    DEBUG_PRINTF2(DEBUG_VF," '%.*s'",a+l,current+14);
+    DEBUG_PRINT((DEBUG_VF," (%d)",d));
+    DEBUG_PRINT((DEBUG_VF," %d %d '%.*s'",a,l,a+l,current+14));
 #ifdef DEBUG
   } else {
-    DEBUG_PRINTF2(DEBUG_DVI," %d %d",k,c);
-    DEBUG_PRINTF2(DEBUG_DVI," %d %d",s,d);
-    DEBUG_PRINTF2(DEBUG_DVI," %d %d",a,l);
-    DEBUG_PRINTF2(DEBUG_DVI," '%.*s'",a+l,current+14);
+    DEBUG_PRINT((DEBUG_DVI," %d %d %d %d %d %d '%.*s'",k,c,s,d,a,l,a+l,current+14));
 #endif
   }
   if (a+l > STRSIZE-1)
@@ -115,7 +110,7 @@ void FontDef(unsigned char* command, void* parent)
       && tfontnump->fontp->s == s 
       && tfontnump->fontp->d == d 
       && strncmp(tfontnump->fontp->n,current+14,a+l) == 0) {
-    DEBUG_PRINTF(DEBUG_DVI|DEBUG_VF,"\n  FONT %d:\tMatch found",k);
+    DEBUG_PRINT((DEBUG_DVI|DEBUG_VF,"\n  FONT %d:\tMatch found",k));
     return;
   }
   /* If not found, create new */
@@ -144,12 +139,12 @@ void FontDef(unsigned char* command, void* parent)
   }
   /* If found, set its number and return */
   if (tfontptr!=NULL) {
-    DEBUG_PRINTF(DEBUG_DVI|DEBUG_VF,"\n  FONT %d:\tMatch found, number set",k);
+    DEBUG_PRINT(((DEBUG_DVI|DEBUG_VF),"\n  FONT %d:\tMatch found, number set",k));
     tfontnump->fontp = tfontptr; 
     return;
   }
 
-  DEBUG_PRINTF(DEBUG_DVI|DEBUG_VF,"\n  FONT %d:\tNew entry created",k);
+  DEBUG_PRINT(((DEBUG_DVI|DEBUG_VF),"\n  FONT %d:\tNew entry created",k));
   /* No fitting font found, create new entry. */
   if ((tfontptr = malloc(sizeof(struct font_entry))) == NULL)
     Fatal("can't malloc space for font_entry");
@@ -186,13 +181,14 @@ void FontFind(struct font_entry * tfontptr)
   dpi = kpse_magstep_fix ((unsigned) (tfontptr->font_mag / 5.0 + .5),
 			resolution, NULL);
   tfontptr->font_mag = dpi * 5; /* save correct dpi */
-  DEBUG_PRINTF2(DEBUG_DVI,"\n  FIND FONT:\t%s %d",tfontptr->n,dpi);
+  DEBUG_PRINT((DEBUG_DVI,"\n  FIND FONT:\t%s %d",tfontptr->n,dpi));
+
   name = kpse_find_vf (tfontptr->n);
   if (name) {
     strcpy (tfontptr->name, name);
     free (name);
     InitVF(tfontptr);
-    } else {
+  } else {
     name = kpse_find_pk (tfontptr->n, dpi, &font_ret);
     if (name) {
       strcpy (tfontptr->name, name);
