@@ -19,7 +19,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
   02111-1307, USA.
 
-  Copyright © 2002-2004 Jan-Åke Larsson
+  Copyright (C) 2002-2004 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -188,7 +188,7 @@ void FontDef(unsigned char* command, void* parent)
 }
 
 #ifdef HAVE_FT2_OR_LIBT1
-inline char* kpse_find_t1_or_tt(char* filename) 
+char* kpse_find_t1_or_tt(char* filename) 
 {
     char* filepath = kpse_find_file(filename, kpse_type1_format, false);
 #ifdef HAVE_FT2

@@ -19,7 +19,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
   02111-1307, USA.
 
-  Copyright © 2002-2004 Jan-Åke Larsson
+  Copyright (C) 2002-2004 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -29,7 +29,7 @@ static char* psfont_name=NULL;
 static struct filemmap psfont_mmap;
 static struct psfontmap *psfontmap=NULL;
 
-inline char* newword(char** buffer, char* end) 
+char* newword(char** buffer, char* end) 
 {
   char *word,*pos=*buffer;
 
