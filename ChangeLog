@@ -1,5 +1,7 @@
 2004-11-25  Jan-Ake Larsson  <jalar@mai.liu.se>
 
+	* Release 1.3	
+	
 	* Makefile.in, README, dvipng.1, readme.texi: Fix dvigif
 	installation and docs
 
