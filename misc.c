@@ -169,6 +169,18 @@ bool DecodeArgs(int argc, char ** argv)
 	  }
 	} else 
 #endif
+#ifdef HAVE_LIBT1
+	if ( strncmp(p,"1lib",4) == 0 ) { /* -t1lib activation */
+	  if (p[4] != '0') {
+	    flags |= USE_LIBT1;
+	    Message(PARSE_STDIN,"t1lib rendering on\n",p);
+	  } else { 
+	    flags &= ~USE_LIBT1;
+	    Message(PARSE_STDIN,"t1lib rendering off\n");
+	  } 
+        } else
+#endif
+
 	  { /* cropmarks not implemented yet */
 	    if (*p == 0 && argv[i+1])
 	      p = argv[++i] ;
@@ -390,9 +402,9 @@ named COPYING and dvipng.c.");
     fprintf(stdout,"  -d #         Debug (# is the debug bitmap, 1 if not given)\n");
 #endif
     fprintf(stdout,"  -D #         Output resolution\n");
-    fprintf(stdout,"  -M*          Don't make fonts\n");
     fprintf(stdout,"  -l #         Last page to be output\n");
-    fprintf(stdout,"  -mode s      MetaFont mode (default cx)\n");
+    fprintf(stdout,"  --mode s     MetaFont mode (default 'cx')\n");
+    fprintf(stdout,"  -M*          Don't make PK fonts\n");
     fprintf(stdout,"  -o f         Output file, '%%d' is pagenumber\n");
     fprintf(stdout,"  -O c         Image offset\n");
     fprintf(stdout,"  -p #         First page to be output\n");
@@ -406,16 +418,23 @@ named COPYING and dvipng.c.");
     fprintf(stdout,"  -            Interactive query of options\n");
     fprintf(stdout,"\nThese do not correspond to dvips options:\n");
     fprintf(stdout,"  -bd #        Transparent border width in dots\n");
+    fprintf(stdout,"  -bdpi #      Set the base (Metafont) resolution\n");
     fprintf(stdout,"  -bg s        Background color (TeX-style color)\n");
+    fprintf(stdout,"  --depth*     Output the image depth on stdout\n");
+    fprintf(stdout,"  --dvinum*    Use TeX page numbers in output filenames\n");
     fprintf(stdout,"  -fg s        Foreground color (TeX-style color)\n");
     fprintf(stdout,"  --follow*    Follow mode\n");
 #ifdef HAVE_FT2
     fprintf(stdout,"  --freetype*  FreeType font rendering (default on)\n");
 #endif
+    fprintf(stdout,"  --height*    Output the image height on stdout\n");
+#ifdef HAVE_LIBT1
+    fprintf(stdout,"  --t1lib*     T1lib font rendering (default on)\n");
+#endif
 #ifdef HAVE_GDIMAGECREATETRUECOLOR
     fprintf(stdout,"  --truecolor* Truecolor output\n");
 #endif
-    fprintf(stdout,"  -Q #         Quality (~xdvi's shrinkfactor)\n");
+    fprintf(stdout,"  -Q #         Quality (T1lib and PK subsampling)\n");
 #ifdef HAVE_GDIMAGEPNGEX
     fprintf(stdout,"  -z #         PNG compression level\n");
 #endif
@@ -515,7 +534,12 @@ void Fatal (char *fmt, ...)
 
   ClearFonts();
 #ifdef HAVE_FT2
-  (void) FT_Done_FreeType(libfreetype); /* at this point, ignore error */
+  if (libfreetype)
+    (void) FT_Done_FreeType(libfreetype); /* at this point, ignore error */
+#endif  
+#ifdef HAVE_LIBT1
+  if (libt1)
+    (void) T1_CloseLib(); /* at this point, ignore error */
 #endif  
   exit(EXIT_FAILURE);
 }

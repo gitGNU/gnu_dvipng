@@ -35,11 +35,15 @@
 #endif
 
 #ifdef HAVE_FT2
+#define HAVE_FT2_OR_LIBT1
 #include <ft2build.h>  
 #include FT_FREETYPE_H
-FT_Library  libfreetype;
 #endif
 
+#ifdef HAVE_LIBT1
+#define HAVE_FT2_OR_LIBT1
+#include <t1lib.h>
+#endif
 
 typedef  int     bool;
 #define  _TRUE      (bool) 1
@@ -149,9 +153,24 @@ uint32_t         CommandLength(unsigned char*);
 struct encoding {
   struct encoding* next;
   char*            name;
-  char*            charname[256];
+  char*            charname[257];
 };
 
+#ifdef HAVE_FT2_OR_LIBT1
+struct psfontmap {
+  struct psfontmap *next;
+  char *line,*psfile,*tfmname,*encname,*end;
+  struct encoding* encoding;
+#ifdef HAVE_FT2
+  FT_Matrix* ft_transformp;
+  FT_Matrix ft_transform;
+#endif
+#ifdef HAVE_LIBT1
+  T1_TMATRIX* t1_transformp;
+  T1_TMATRIX t1_transform;
+#endif
+};
+#endif
 
 #define FONT_TYPE_PK            1
 struct pk_char {                   /* PK character */
@@ -175,7 +194,16 @@ struct vf_char {                   /* VF character                     */
 #define FONT_TYPE_FT            3
 struct ft_char {                   /* FT character */
   dviunits       tfmw;             /* TFM width                         */
-  unsigned char  greys;            /* ink is black at this value        */
+  pixels         w,h;              /* width height in pixels            */
+  unsigned char *data;             /* glyph data                        */
+  pixels         xOffset, yOffset; /* x offset and y offset in pixels   */
+};
+#endif
+
+#ifdef HAVE_LIBT1
+#define FONT_TYPE_T1            4
+struct t1_char {                   /* T1 character */
+  dviunits       tfmw;             /* TFM width                         */
   pixels         w,h;              /* width height in pixels            */
   unsigned char *data;             /* glyph data                        */
   pixels         xOffset, yOffset; /* x offset and y offset in pixels   */
@@ -197,8 +225,13 @@ struct font_entry {    /* font entry */
   uint32_t     designsize;      /* design size read from font file   */
   void *       chr[NFNTCHARS];  /* character information             */ 
 #ifdef HAVE_FT2
-  FT_Face      face;            /* Type1/Truetype font               */
-  struct encoding *enc;         /* custom encoding array             */
+  FT_Face      face;            /* Freetype2 face                    */
+#endif
+#ifdef HAVE_LIBT1
+  int          T1id;            /* T1lib font id                     */
+#endif
+#ifdef HAVE_FT2_OR_LIBT1
+  struct psfontmap* psfontmap;  /* Font transformation               */
 #endif
   struct font_num *vffontnump;  /* VF local font numbering           */
   int32_t      defaultfont;     /* VF default font number            */
@@ -222,15 +255,25 @@ void    ClearFonts(void);
 void    SetFntNum(int32_t, void* /* dvi/vf */);      
 void    FreeFontNumP(struct font_num *hfontnump);
 
-#ifdef HAVE_FT2
+#ifdef HAVE_FT2_OR_LIBT1
 void    InitPSFontMap(void);
-char*   FindPSFontMap(char*, char**, FT_Matrix**);
-bool    InitFT(struct font_entry *, unsigned, char*, FT_Matrix* );
+struct psfontmap* FindPSFontMap(char*);
+struct encoding* FindEncoding(char*);
+bool    ReadTFM(struct font_entry *, char*);
+#endif
+
+#ifdef HAVE_FT2
+bool    InitFT(struct font_entry *);
 void    DoneFT(struct font_entry *tfontp);
 int32_t SetFT(int32_t, int32_t, int32_t);
 void    LoadFT(int32_t, struct ft_char *);
-struct encoding* FindEncoding(char*);
-bool    ReadTFM(struct font_entry *, char*);
+#endif
+
+#ifdef HAVE_LIBT1
+bool    InitT1(struct font_entry *);
+void    DoneT1(struct font_entry *tfontp);
+int32_t SetT1(int32_t, int32_t, int32_t);
+void    LoadT1(int32_t, struct t1_char *, unsigned);
 #endif
 
 /********************************************************/
@@ -320,13 +363,14 @@ EXTERN struct internal_state {
 #define CACHE_IMAGES                 (1<<5)
 #define RENDER_TRUECOLOR             (1<<6)
 #define USE_FREETYPE                 (1<<7)
-#define REPORT_HEIGHT                (1<<8)
-#define REPORT_DEPTH                 (1<<9)
-#define DVI_PAGENUM                  (1<<10)
-#define NO_IMAGE_ON_WARN             (1<<11)
-#define PAGE_GAVE_WARN               (1<<12)
-#define PREVIEW_LATEX_TIGHTPAGE      (1<<13)
-EXTERN unsigned int flags INIT(BE_NONQUIET | USE_FREETYPE);
+#define USE_LIBT1                    (1<<8)
+#define REPORT_HEIGHT                (1<<9)
+#define REPORT_DEPTH                 (1<<10)
+#define DVI_PAGENUM                  (1<<11)
+#define NO_IMAGE_ON_WARN             (1<<12)
+#define PAGE_GAVE_WARN               (1<<13)
+#define PREVIEW_LATEX_TIGHTPAGE      (1<<14)
+EXTERN unsigned int flags INIT(BE_NONQUIET | USE_FREETYPE | USE_LIBT1);
 
 #ifdef DEBUG
 EXTERN unsigned int debug INIT(0);
@@ -339,7 +383,8 @@ EXTERN unsigned int debug INIT(0);
 #define DEBUG_FT                     (1<<5)
 #define DEBUG_ENC                    (1<<6)
 #define DEBUG_COLOR                  (1<<7)
-#define DEBUG_GS                     (1<<8)
+#define DEBUG_T1                     (1<<8)
+#define DEBUG_GS                     (1<<9)
 #define LASTDEBUG                    DEBUG_GS
 #define DEBUG_DEFAULT                DEBUG_DVI
 #else
@@ -421,7 +466,7 @@ EXTERN  int borderwidth INIT(0);
 
 
 EXTERN gdImagePtr page_imagep INIT(NULL);
-EXTERN int32_t shrinkfactor INIT(3);
+EXTERN int32_t shrinkfactor INIT(4);
 
 EXTERN int Red    INIT(0);
 EXTERN int Green  INIT(0);
@@ -436,5 +481,13 @@ EXTERN int bBlue  INIT(255);
 
 EXTERN struct font_entry* currentfont;
 EXTERN struct dvi_data* dvi INIT(NULL);
+
+#ifdef HAVE_FT2
+EXTERN FT_Library libfreetype INIT(NULL);
+#endif
+
+#ifdef HAVE_LIBT1
+EXTERN void* libt1 INIT(NULL);
+#endif
 
 #endif /* DVIPNG_H */

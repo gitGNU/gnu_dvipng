@@ -65,7 +65,7 @@ int main(int argc, char ** argv)
     if (user_bdpi)
       kpse_init_prog("DVIPNG", user_bdpi, user_mfmode, "cmr10");
     else {
-      Warning("--mfmode given without --bdpi. Note that the -D option has changed\nfrom base resolution to _output_ resolution. Read the file RELEASE.");
+      Warning("--mfmode given without --bdpi. Note that the -D option has changed\nfrom (0.x) base resolution to (1.x) _output_ resolution. Read the file RELEASE.");
       /* this will give a lot of warnings but... */
       kpse_init_prog("DVIPNG", 300, user_mfmode, "cmr10");
     }
@@ -73,20 +73,7 @@ int main(int argc, char ** argv)
     kpse_init_prog("DVIPNG", 300, "cx", "cmr10");
 #endif
 
-#ifdef HAVE_FT2
-  if (FT_Init_FreeType( &libfreetype )) {
-    Warning("an error occured during freetype initialisation, disabling it"); 
-    flags &= ~USE_FREETYPE;
-  }
-# ifdef DEBUG
-  {
-    FT_Int      amajor, aminor, apatch;
-    
-    FT_Library_Version( libfreetype, &amajor, &aminor, &apatch );
-    DEBUG_PRINT(DEBUG_FT,("\n  FREETYPE VERSION: FreeType %d.%d.%d", 
-		 amajor, aminor, apatch));
-  }
-# endif
+#ifdef HAVE_FT2_OR_LIBT1
   InitPSFontMap();
 #endif
 
@@ -132,8 +119,14 @@ int main(int argc, char ** argv)
 
   ClearFonts();
 #ifdef HAVE_FT2
-  if (FT_Done_FreeType(libfreetype)) 
+  if (libfreetype!=NULL && FT_Done_FreeType(libfreetype)) 
     Fatal("an error occured during freetype destruction"); 
+  libfreetype = NULL;
+#endif  
+#ifdef HAVE_LIBT1
+  if (libt1!=NULL && T1_CloseLib())
+    Fatal("an error occured during t1lib destruction"); 
+  libt1 = NULL;
 #endif  
 
   exit(EXIT_SUCCESS);

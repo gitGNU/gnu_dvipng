@@ -6,10 +6,7 @@
 static unsigned char* psfont_mmap = (unsigned char *)-1;
 static int psfont_filedes = -1;
 static struct stat psfont_stat;
-static struct psfontmap {
-  struct psfontmap *next;
-  char *line,*tfmname,*end;
-} *psfontmap=NULL;
+static struct psfontmap *psfontmap=NULL;
 
 inline char* newword(char** buffer, char* end) 
 {
@@ -62,6 +59,7 @@ void InitPSFontMap(void)
 	if ((entry=malloc(sizeof(struct psfontmap)))==NULL)
 	  Fatal("cannot malloc psfontmap space");
 	entry->line = pos;
+	/* skip <something and quoted entries */
 	while(pos < end && (*pos=='<' || *pos=='"')) {
 	  if (*pos=='<') 
 	    while(pos < end && *pos!=' ' && *pos!='\t') pos++;
@@ -69,7 +67,10 @@ void InitPSFontMap(void)
 	    while(pos < end && *pos!='"') pos++;
 	  while(pos < end && (*pos==' ' || *pos=='\t')) pos++;
 	}
- 	entry->tfmname = pos;
+	/* first word is font name */
+ 	entry->tfmname = newword(&pos,end);
+	entry->psfile = NULL;
+	entry->encname = NULL;
 	while(pos < end && *pos!='\n') pos++;
 	entry->end = pos;
 	entry->next=psfontmap;
@@ -81,93 +82,100 @@ void InitPSFontMap(void)
 }
 
 
-char* FindPSFontMap(char* fontname, char** encoding, FT_Matrix** transform)
+struct psfontmap* FindPSFontMap(char* fontname)
 {
-  char *pos,*tfmname,*psname,*psfile=NULL;
+  char *pos,*tfmname,*psname;
   struct psfontmap *entry;
-
-  *encoding=NULL;
-  *transform=NULL;
-
+  double cxx=0.0,cxy=0.0;
+	
   entry=psfontmap;
-  while(entry!=NULL && (strncmp(entry->tfmname,fontname,strlen(fontname))!=0
-			|| (entry->tfmname[strlen(fontname)] != ' ' 
-			    && entry->tfmname[strlen(fontname)] != '\t')))
+  while(entry!=NULL && strcmp(entry->tfmname,fontname)!=0)
     entry=entry->next;
-  if (entry!=NULL) {
+  if (entry!=NULL && entry->psfile==NULL) {
     int nameno = 0;
     
-    tfmname=fontname;
-    DEBUG_PRINT(DEBUG_FT,("\n  PSFONTMAP: %s ",fontname));
+    DEBUG_PRINT((DEBUG_FT|DEBUG_T1),("\n  PSFONTMAP: %s ",fontname));
     pos=entry->line;
+    entry->t1_transformp=NULL;
+    entry->ft_transformp=NULL;
     while(pos < entry->end) { 
       if (*pos=='<') {                               /* filename follows */
 	pos++;
 	if (pos<entry->end && *pos=='<') {           /* <<download.font */
 	  pos++;
-	  psfile = newword((char**)&pos,entry->end);
-	  DEBUG_PRINT(DEBUG_FT,("<%s ",psfile));
+	  entry->psfile = newword((char**)&pos,entry->end);
+	  DEBUG_PRINT((DEBUG_FT|DEBUG_T1),("<%s ",entry->psfile));
 	} else if (pos<entry->end && *pos=='[') {    /* <[encoding.file */
 	  pos++;
-	  *encoding = newword((char**)&pos,entry->end);
-	  DEBUG_PRINT(DEBUG_FT,("<[%s ",*encoding));
+	  entry->encname = newword((char**)&pos,entry->end);
+	  DEBUG_PRINT((DEBUG_FT|DEBUG_T1),("<[%s ",entry->encname));
 	} else {                                     /* <some.file      */
 	  char* word =newword((char**)&pos,entry->end); 
 	  if (strncmp(word+strlen(word)-4,".enc",4)==0) {/* <some.enc */
-	    *encoding=word;
-	    DEBUG_PRINT(DEBUG_FT,("<[%s ",*encoding));
+	    entry->encname=word;
+	    DEBUG_PRINT((DEBUG_FT|DEBUG_T1),("<[%s ",entry->encname));
 	  } else {                                   /* <font    */  
-	    psfile=word;
-	    DEBUG_PRINT(DEBUG_FT,("<%s ",psfile));
+	    entry->psfile=word;
+	    DEBUG_PRINT((DEBUG_FT|DEBUG_T1),("<%s ",entry->psfile));
 	  }
 	}
       } else if (*pos=='"') { /* PS code: reencoding/tranformation exists */
-	FT_Fixed xx=0,xy=0,val=0;
-	
+	double val=0.0;
 	pos++;
-	DEBUG_PRINT(DEBUG_FT,("\""));
+	DEBUG_PRINT((DEBUG_FT|DEBUG_T1),("\""));
 	while(pos < entry->end && *pos!='"') {
-	  val=strtod(pos,(char**)&pos)*0x10000; 
+	  val=strtod(pos,(char**)&pos); 
 	  /* Small buffer overrun risk, but we're inside double quotes */
 	  while(pos < entry->end && (*pos==' ' || *pos=='\t')) pos++;
 	  if (pos<entry->end-10 && strncmp(pos,"ExtendFont",10)==0) {
-	    xx=val;
-	    DEBUG_PRINT(DEBUG_FT,("%f ExtendFont ",(float)xx/0x10000));
+	    cxx=val;
+	    DEBUG_PRINT((DEBUG_FT|DEBUG_T1),
+			("%f ExtendFont ",cxx));
 	  }
 	  if (pos<entry->end-9 && strncmp(pos,"SlantFont",9)==0) {
-	    xy=val;
-	    DEBUG_PRINT(DEBUG_FT,("%f SlantFont ",(float)xy/0x10000));
+	    cxy=val;
+	    DEBUG_PRINT((DEBUG_FT|DEBUG_T1),
+			("%f SlantFont ",cxy));
 	  }
-	  while(pos<entry->end && *pos!=' ' && *pos!='\t' && *pos!='"') pos++;
+	  while(pos<entry->end && *pos!=' ' && *pos!='\t' && *pos!='"') 
+	    pos++;
 	}
-	DEBUG_PRINT(DEBUG_FT,("\" "));
+#if HAVE_FT2
+	entry->ft_transformp=&(entry->ft_transform);
+	if (cxx!=0.0)
+	  entry->ft_transform.xx=(FT_Fixed)(cxx*0x10000);
+	else
+	  entry->ft_transform.xx=0x10000;
+	entry->ft_transform.xy=(FT_Fixed)(cxy*0x10000);
+	entry->ft_transform.yx=0;
+	entry->ft_transform.yy=0x10000;
+#endif
+#if HAVE_LIBT1
+	entry->t1_transformp=&(entry->t1_transform);
+	if (cxx!=0)
+	  entry->t1_transform.cxx=cxx;
+	else
+	  entry->t1_transform.cxx=1.0;
+	entry->t1_transform.cxy=cxy;
+	entry->t1_transform.cyx=0.0;
+	entry->t1_transform.cyy=1.0;
+#endif
+	DEBUG_PRINT((DEBUG_FT|DEBUG_T1),("\" "));
 	pos++;
-	if (xx!=0 || xy!=0) {
-	  *transform=malloc(sizeof(FT_Matrix));
-	  (**transform).yx=0;
-	  (**transform).yy=0x10000;
-	  if (xx!=0)
-	    (**transform).xx=xx;
-	  else
-	    (**transform).xx=0x10000;
-	  if (xy!=0)
-	    (**transform).xy=xy;
-	  else
-	    (**transform).xy=0;
-	}
       } else {                                      /* bare word */
 	switch (++nameno) {
 	case 1:            /* first word is tfmname and perhaps psname */
 	  while(pos<entry->end && *pos!=' ' && *pos!='\t') pos++;
-	  psname=tfmname;
+	  psname=entry->tfmname;
 	  break;
 	case 2:                              /* second word is psname */
 	  psname = newword((char**)&pos,entry->end);
-	  DEBUG_PRINT(DEBUG_FT,("(%s) ",psname));
+	  DEBUG_PRINT((DEBUG_FT|DEBUG_T1),("(%s) ",psname));
+	  free(psname);
 	  break;
 	case 3:                             /* third word is encoding */
-	  *encoding = newword((char**)&pos,entry->end);
-	  DEBUG_PRINT(DEBUG_FT,("<[%s ",*encoding));
+	  entry->encname = newword((char**)&pos,entry->end);
+	  DEBUG_PRINT((DEBUG_FT|DEBUG_T1),("<[%s ",entry->encname));
 	  break;
 	default:
 	  Warning("more than three bare words in font map entry");
@@ -175,11 +183,18 @@ char* FindPSFontMap(char* fontname, char** encoding, FT_Matrix** transform)
       }
       while(pos < entry->end && (*pos==' ' || *pos=='\t')) pos++;
     }
-    if (psfile==NULL) { 
+    if (entry->psfile==NULL) { 
       /* No psfile-name given, use (free-able copy of) tfmname */
-      psfile=newword(&tfmname,tfmname+strlen(tfmname));
-      DEBUG_PRINT(DEBUG_FT,(" <%s ",psfile));
+      entry->psfile=newword(&tfmname,tfmname+strlen(tfmname));
+      DEBUG_PRINT((DEBUG_FT|DEBUG_T1),(" <%s ",entry->psfile));
     }
+    if (entry->encname!=NULL 
+	&& (entry->encoding=FindEncoding(entry->encname))==NULL) 
+      Warning("unable to load font encoding '%s' for %s",
+	      entry->encname,entry->tfmname);
   }
-  return(psfile);
+  if (entry->encname!=NULL && entry->encoding==NULL) 
+    return(NULL);
+  
+  return(entry);
 }

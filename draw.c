@@ -108,7 +108,7 @@ dviunits SetChar(int32_t c)
   case FONT_TYPE_FT: {
     struct ft_char* ptr = currentfont->chr[c];
     if (ptr->data == NULL) 
-    LoadFT(c, ptr);
+      LoadFT(c, ptr);
     DEBUG_PRINT(DEBUG_DVI,("\n  FT CHAR:\t"));
     if (isprint(c))
       DEBUG_PRINT(DEBUG_DVI,("'%c' ",c));
@@ -121,6 +121,29 @@ dviunits SetChar(int32_t c)
       min(y_min,vv - ptr->yOffset);
       max(x_max,hh - ptr->xOffset + ptr->w);
       max(y_max,vv - ptr->yOffset + ptr->h);
+    }
+    return(ptr->tfmw);
+  }
+    break;
+#endif
+#ifdef HAVE_LIBT1
+  case FONT_TYPE_T1: {
+    struct t1_char* ptr = currentfont->chr[c];
+    if (ptr->data == NULL) 
+      LoadT1(c, ptr, currentfont->dpi);
+    DEBUG_PRINT(DEBUG_DVI,("\n  T1 CHAR:\t"));
+    if (isprint(c))
+      DEBUG_PRINT(DEBUG_DVI,("'%c' ",c));
+    DEBUG_PRINT(DEBUG_DVI,("%d at (%d,%d) tfmw %d", c,hh,vv,ptr->tfmw));
+    if (page_imagep != NULL) 
+      return(SetT1(c, hh, vv));
+    else {
+      /* Expand bounding box if necessary */
+      //printf("BBOX: %d %d %d %d\n",ptr->xOffset,ptr->yOffset,ptr->w,ptr->h);
+      min(x_min,hh - ptr->xOffset/shrinkfactor);
+      min(y_min,vv - ptr->yOffset/shrinkfactor);
+      max(x_max,hh - ptr->xOffset/shrinkfactor + ptr->w);
+      max(y_max,vv - ptr->yOffset/shrinkfactor + ptr->h);
     }
     return(ptr->tfmw);
   }

@@ -61,11 +61,11 @@ void LoadFT(int32_t c, struct ft_char * ptr)
   char* bit;
 
   DEBUG_PRINT(DEBUG_FT,("\n  LOAD FT CHAR\t%d (%d)",c,ptr->tfmw));
-  if (currentfont->enc == NULL)
+  if (currentfont->psfontmap->encoding == NULL)
     glyph_i = FT_Get_Char_Index( currentfont->face, c );
   else 
-    glyph_i = FT_Get_Name_Index( currentfont->face,
-				 currentfont->enc->charname[c]);
+    glyph_i = FT_Get_Name_Index(currentfont->face,
+				currentfont->psfontmap->encoding->charname[c]);
   if (FT_Load_Glyph( currentfont->face,    /* handle to face object */
 		     glyph_i,              /* glyph index           */
 		     FT_LOAD_RENDER | FT_LOAD_NO_HINTING ))
@@ -97,12 +97,28 @@ void LoadFT(int32_t c, struct ft_char * ptr)
   }
 }
 
-bool InitFT(struct font_entry * tfontp, unsigned dpi,
-	    char* encoding, FT_Matrix* transform)
+bool InitFT(struct font_entry * tfontp)
 {
   int error;
 
-  DEBUG_PRINT((DEBUG_DVI|DEBUG_FT),("\n  OPEN FONT:\t'%s'", tfontp->name));
+  if (libfreetype==NULL) {
+    if (FT_Init_FreeType( &libfreetype )) {
+      Warning("an error occured during freetype initialisation, disabling it"); 
+      flags &= ~USE_FREETYPE;
+      return(false);
+    } 
+# ifdef DEBUG
+    else {
+      FT_Int      amajor, aminor, apatch;
+      
+      FT_Library_Version( libfreetype, &amajor, &aminor, &apatch );
+      DEBUG_PRINT(DEBUG_FT,("\n  FREETYPE VERSION: FreeType %d.%d.%d", 
+			    amajor, aminor, apatch));
+    }
+# endif
+  }
+
+  DEBUG_PRINT((DEBUG_DVI|DEBUG_FT),("\n  OPEN FT FONT:\t'%s'", tfontp->name));
   error = FT_New_Face( libfreetype, tfontp->name, 0, &tfontp->face );
   if (error == FT_Err_Unknown_File_Format) {
     Warning("font file %s has unknown format", tfontp->name);
@@ -112,8 +128,7 @@ bool InitFT(struct font_entry * tfontp, unsigned dpi,
     return(false);
   } 
   Message(BE_VERBOSE,"<%s>", tfontp->name);
-  if (encoding == NULL) {
-    tfontp->enc=NULL;
+  if (tfontp->psfontmap->encoding == NULL) {
 #ifndef FT_ENCODING_ADOBE_CUSTOM
 # define FT_ENCODING_ADOBE_CUSTOM ft_encoding_adobe_custom
 # define FT_ENCODING_ADOBE_STANDARD ft_encoding_adobe_standard
@@ -126,21 +141,17 @@ bool InitFT(struct font_entry * tfontp, unsigned dpi,
 	return(false);
       }
     }
-  } else if ((tfontp->enc=FindEncoding(encoding))==NULL) {
-    Warning("unable to load font encoding '%s' for %s", 
-	    encoding,tfontp->name);
-    return(false);
-  }
+  } 
   if (FT_Set_Char_Size( tfontp->face, /* handle to face object           */
 			0,            /* char_width in 1/64th of points  */
 			tfontp->d/65536*64,
 			/* char_height in 1/64th of points */
-			dpi/shrinkfactor,   /* horizontal resolution */
-			dpi/shrinkfactor )) /* vertical resolution   */ {
+			tfontp->dpi/shrinkfactor,   /* horizontal resolution */
+			tfontp->dpi/shrinkfactor )) /* vertical resolution   */ {
     Warning("unable to set font size for %s", tfontp->name);
     return(false);
   }
-  FT_Set_Transform(tfontp->face, transform, NULL);
+  FT_Set_Transform(tfontp->face, tfontp->psfontmap->ft_transformp, NULL);
   tfontp->type = FONT_TYPE_FT;
   return(true);
 }

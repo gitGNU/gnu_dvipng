@@ -27,7 +27,7 @@ struct encoding* InitEncoding(char* encoding)
     Warning("cannot mmap encoding <%s> !\n",enc_file);
     return(NULL);
   }
-  if ((encp = calloc(sizeof(struct encoding)+strlen(encoding)
+  if ((encp = calloc(sizeof(struct encoding)+strlen(encoding)+1
 		     +stat.st_size,1))==NULL) {
     Warning("cannot alloc space for encoding",enc_file);
     return(NULL);
@@ -38,6 +38,18 @@ struct encoding* InitEncoding(char* encoding)
   max=encmmap+stat.st_size;
   buf=encp->name+strlen(encoding)+1;
 #define SKIPCOMMENT(x) if (*x=='%') while (x<max && *x!='\n') x++;
+  while(pos<max && *pos!='/') {
+    SKIPCOMMENT(pos);
+    pos++;
+  }
+  pos++;
+  encp->charname[256]=buf;
+  while(pos<max && *pos!='[' 
+	&& *pos!=' ' && *pos!='\t' && *pos!='\n' && *pos!='%') 
+    *buf++=*pos++;
+  *buf++='\0';
+  DEBUG_PRINT(DEBUG_ENC,("\n  PS ENCODING '%s'",
+			 encp->charname[256])); 
   while (pos < max && *pos!='[') {
     SKIPCOMMENT(pos);
     pos++;
@@ -72,6 +84,7 @@ struct encoding* FindEncoding(char* encoding)
 {
   struct encoding *temp=encodingp;
 
+  //  printf("{%s} \n",encoding);
   while(temp!=NULL && strcmp(encoding,temp->name)!=0) 
     temp=temp->next;
   if (temp==NULL) {

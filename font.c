@@ -155,12 +155,14 @@ void FontDef(unsigned char* command, void* parent)
 	     * ActualFactor(dvi->mag) * dpi*shrinkfactor) + 0.5);
 }
 
-#ifdef HAVE_FT2
-inline char* kpse_find_ft(char* filename) 
+#ifdef HAVE_FT2_OR_LIBT1
+inline char* kpse_find_t1_or_tt(char* filename) 
 {
     char* filepath = kpse_find_file(filename, kpse_type1_format, false);
-    if (filepath==NULL) 
+#ifdef HAVE_FT2
+    if ((flags & USE_FREETYPE) && filepath==NULL) 
       filepath = kpse_find_file(filename, kpse_truetype_format, false);
+#endif
     return(filepath);
 }
 #endif
@@ -170,10 +172,6 @@ void FontFind(struct font_entry * tfontptr)
 #ifdef HAVE_LIBKPATHSEA
   kpse_glyph_file_type font_ret;
   char *name;
-#ifdef HAVE_FT2
-  FT_Matrix *transform=NULL;
-  char *encoding=NULL,*psfile;
-#endif
 
   //tfontptr->dpi = kpse_magstep_fix (tfontptr->dpi, resolution, NULL);
   DEBUG_PRINT(DEBUG_DVI,("\n  FIND FONT:\t%s %d",tfontptr->n,tfontptr->dpi));
@@ -184,37 +182,46 @@ void FontFind(struct font_entry * tfontptr)
     free (name);
     InitVF(tfontptr);
   }
-#ifdef HAVE_FT2
-  if ((flags & USE_FREETYPE) && name==NULL) {
-    psfile = FindPSFontMap(tfontptr->n, &encoding, &transform);
-    if (psfile!=NULL) {
-      name = kpse_find_ft(psfile);
-      free(psfile);
+#ifdef HAVE_FT2_OR_LIBT1
+  if ((flags & (USE_FREETYPE | USE_LIBT1)) && name==NULL) {
+    tfontptr->psfontmap = FindPSFontMap(tfontptr->n);
+    if (tfontptr->psfontmap->psfile!=NULL) {
+      name = kpse_find_t1_or_tt(tfontptr->psfontmap->psfile);
     } else
-      name = kpse_find_ft(tfontptr->n);
+      name = kpse_find_t1_or_tt(tfontptr->n);
     if (name!=NULL) {
       strcpy (tfontptr->name, name);
       free (name);
       name = kpse_find_file(tfontptr->n, kpse_tfm_format, false);
       if (name!=NULL) {
-	if (InitFT(tfontptr,tfontptr->dpi,encoding,transform)) {
-	  if (!ReadTFM(tfontptr,name)) {
-	    /* if Freetype or TFM loading fails for some reason, fall
-	       back to PK font */
-	    free(name);
-	    name=NULL; 
+	if (!ReadTFM(tfontptr,name)) {
+	  Warning("unable to read tfm file %s", name);
+	  free(name);
+	  name=NULL;
+	} else 
+#ifdef HAVE_FT2
+	  if ((flags & USE_FREETYPE)==0 || !InitFT(tfontptr)) {
+#endif
+#ifdef HAVE_LIBT1
+	    if ((flags & USE_LIBT1)==0 || !InitT1(tfontptr)) {
+#endif
+	      /* if Freetype or T1 loading fails for some reason, fall
+		 back to PK font */
+	      printf("Hej!\n");
+	      free(name);
+	      name=NULL; 
+	    } else
+	      free(name);
+#ifdef HAVE_FT2
+#ifdef HAVE_LIBT1
 	  } else
 	    free(name);
-	} else {
-	  free(name);
-	  name=NULL; 
-	}
+#endif
+#endif
       }
     }
-    if (transform!=NULL)
-      free(transform);
   }
-#endif
+#endif /* HAVE_FT2_OR_LIBT1 */
   if (name==NULL) {
     name = kpse_find_pk (tfontptr->n, tfontptr->dpi, &font_ret);
     if (name!=NULL) {
@@ -273,6 +280,11 @@ void DoneFont(struct font_entry *tfontp)
 #ifdef HAVE_FT2
   case FONT_TYPE_FT:
     DoneFT(tfontp);
+    break;
+#endif
+#ifdef HAVE_LIBT1
+  case FONT_TYPE_T1:
+    DoneT1(tfontp);
     break;
 #endif
   }

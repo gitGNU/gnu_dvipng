@@ -39,18 +39,26 @@ AC_CHECK_LIB([png], [png_read_image],,
              [AC_MSG_ERROR([cannot find/use libpng])])
 AC_CHECK_LIB([kpathsea], [kpse_set_progname],, 
              AC_MSG_ERROR([cannot find/use libkpathsea]))
+AC_CHECK_LIB([t1], [T1_InitLib])
+PSFONTS_O=""
+if test "$ac_cv_lib_t1_T1_InitLib" = yes; then
+  PSFONTS_O="t1.o"
+fi
+AC_SUBST(PSFONTS_O)
 
 # Checks for header files. 
 AC_CHECK_HEADERS([gd.h png.h kpathsea/kpathsea.h],,
 		 [AC_MSG_ERROR([cannot find/use $ac_header])])
+AC_CHECK_HEADERS([t1lib.h])
 AC_CHECK_FT2(,[CFLAGS="$FT2_CFLAGS $CFLAGS"
 	LIBS="$FT2_LIBS $LIBS"
-	FT_O="ft.o enc.o fontmap.o tfm.o"	
+	PSFONTS_O="$PSFONTS_O ft.o"	
 	AC_DEFINE(HAVE_FT2, 1, [Define to 1 if you have freetype2])
 	ac_have_freetype2="yes"],
-	[FT_O=""
-	ac_have_freetype2="no"])
-AC_SUBST(FT_O)
+	[ac_have_freetype2="no"])
+if test -n "$PSFONTS_O"; then
+  PSFONTS_O="$PSFONTS_O enc.o fontmap.o tfm.o"
+fi
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS([fcntl.h sys/time.h])
 
@@ -137,6 +145,7 @@ AC_MSG_RESULT([
    Your gd is new enough to enable
         the -truecolor switch:              $ac_cv_func_gdImageCreateTrueColor
    FreeType font rendering available:       $ac_have_freetype2
+   T1lib font rendering available:          $ac_cv_lib_t1_T1_InitLib
 ])
 
 AC_CONFIG_HEADER([config.h])
