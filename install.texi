@@ -77,12 +77,12 @@ help it out. For a list of the options type
 @end example
 
 On some machines, the libraries will be installed in nonstandard
-directories, that are not in the linker's search path. This will
-generate an error when running @file{./configure}, indicating that it
-cannot find libgd or libkpathsea (most likely). You then need to specify
-the path to the respective library's object files. They are typically
-called e.g., @file{libgd.a} or @file{libgd.so}. If they are located in
-e.g., @file{/sw/local/lib}, do
+directories that are not in the linker's search path. This will generate
+an error when running @file{./configure}, indicating that it cannot find
+libgd or libkpathsea (most likely). You then need to specify the path to
+the respective library's object files. They are typically called e.g.,
+@file{libgd.a} or @file{libgd.so}. If they are located in e.g.,
+@file{/sw/local/lib}, do
 
 @example
 ./configure LDFLAGS=-L/sw/local/lib
@@ -97,12 +97,12 @@ use
 @end example
 
 When this is necessary, it is likely that the C header files are also
-installed in nonstandard directories, that are not in the C
+installed in nonstandard directories that are not in the C
 preprocessor's search path. This will also generate an error when
 running @file{./configure}, indicating that it cannot find e.g.,
 @file{gd.h} or @file{kpathsea.h} (most likely). You then need to specify
-the path to the respective library's C header files. they are located in
-e.g., @file{/sw/local/include}, do
+the path to the respective library's C header files. If they are located
+in e.g., @file{/sw/local/include}, do
 
 @example
 ./configure CPPFLAGS=-I/sw/local/include
@@ -153,4 +153,5 @@ prefix argument is supported by most @file{configure} scripts.
 
 You'll have to add something like @file{/home/myself/bin} to your
 @code{PATH} shell variable, if it isn't there already, and similarly set
-the @samp{INFOPATH} variable.
+the @code{MANPATH} and @code{INFOPATH} variables to be able to access
+the documentation.

@@ -5,21 +5,16 @@
 @set version 0.2
 @set month-year April 2003
 
-@c Define a new index for filenames and options.
-@defcodeindex fl
-@defcodeindex op
-
 @c Put everything in one index (arbitrarily chosen to be the concept index).
-@syncodeindex fl cp
 @syncodeindex fn cp
 @syncodeindex ky cp
-@syncodeindex op cp
 @syncodeindex pg cp
 @syncodeindex vr cp
 
-@ifclear INSTALLONLY
-
 @include macros.texi
+@iftex
+@tolerance 10000 @emergencystretch 3em
+@end iftex
 
 @dircategory TeX
 @direntry
@@ -27,23 +22,60 @@
 * dvipng: (dvipng)Invoking dvipng.   DVI-to-PNG translator.
 @end direntry
 
+@finalout
 @titlepage
-@title dvipng: A DVI-to-PNG Translator
-@subtitle for version @value{version}
-@subtitle @value{month-year}
-@author Jan-Åke Larsson
+@title dvipng
+@subtitle A DVI-to-PNG Translator
+@subtitle Version @value{version}
 
+
+@author by Jan-@AA{}ke Larsson.
 @page
 @vskip 0pt plus 1filll
-@end titlepage
+Copyright @copyright{} 2003 Jan-@AA{}ke Larsson
+ 
+Permission is granted to make and distribute verbatim copies of
+this manual provided the copyright notice and this permission notice
+are preserved on all copies.
 
-@ifinfo
+@ignore
+Permission is granted to process this file through TeX and print the
+results, provided the printed document carries copying permission
+notice identical to this one except for the removal of this paragraph
+(this paragraph not being relevant to the printed manual).
+@end ignore
+
+Permission is granted to copy and distribute modified versions of this
+manual under the conditions for verbatim copying, provided also that the
+section entitled ``Copying'' is included exactly as in the original, and
+provided that the entire resulting derived work is distributed under the
+terms of a permission notice identical to this one.
+
+Permission is granted to copy and distribute translations of this manual
+into another language, under the above conditions for modified versions,
+except that this permission notice may be stated in a translation
+approved by the Free Software Foundation.
+@end titlepage
+@page
+
+@c @summarycontents
+@contents
+
 @node Top, Why dvipng, (dir), (dir)
+@ifnottex
 @top dvipng
 
-This manual documents dvipng, a program to translate a DVI file into PNG
-(Portable Network Graphics). It corresponds to version @value{version}
-of the dvipng distribution.
+This manual documents dvipng, a program to translate a DVI (DeVice
+Independent) file into PNG (Portable Network Graphics).
+
+This file documents dvipng version @value{version}
+
+This documentation should cover most important points.  However,
+corrections or perhaps rewrites of sections are @emph{very welcome}.
+
+Jan-@AA{}ke Larsson
+
+@end ifnottex
 
 @menu
 * Why dvipng::                  Why use dvipng?
@@ -54,7 +86,7 @@ of the dvipng distribution.
 * Color::                       Using color with dvipng.
 * Index::                       General index.
 @end menu
-@end ifinfo
+
 
 
 @node Why dvipng, Installation, Top, Top
@@ -62,9 +94,9 @@ of the dvipng distribution.
 
 The dvipng driver generates nice PNG images of the pages contained in a
 DVI file. It is intended to produce anti-aliased screen-resolution
-images as fast as is possible. Its intended audience is people who need
-to generate and regenerate many images again and again. The target is
-the @previewlatex{} (X)Emacs package, but other applications may also
+images as fast as is possible. The target  audience is people who need to
+generate and regenerate many images again and again. The target is the
+@previewlatex{} (X)Emacs package, but other applications may also
 benefit, like web applications as latex2html and WYSIWYG editors like
 LyX.
 
@@ -74,9 +106,19 @@ driver. This is because the driver is intended for speed rather than
 extreme accuracy. Note that the end result is as good or better as that
 produced by xdvi, which is the standard display driver for DVI files.
 
-One of the most important features is the support of virtual fonts,
-which add a great level of flexibility to @TeX{}. Among other things,
-virtual fonts are used to give dvipng its PostScript font support.
+One of the most important features of dvipng is that it does not read
+the postamble, so it can be started before @TeX{} finishes. Some DVI
+drivers explicitly use the postamble, and can even crash if they try to
+read the DVI before @TeX{} has finished. This will not be a problem when
+using dvipng. Default operation is to give an error message if the DVI
+ends prematurely, butl the @samp{-follow} switch makes dvipng wait at
+EOF for further output, unless it finds the POST marker that indicates
+the end of the DVI. This is similar to @samp{tail -f} but for DVI-to-PNG
+conversion.
+
+Another important feature is the support of virtual fonts, which add a
+great level of flexibility to @TeX{}. Among other things, virtual fonts
+are used to give dvipng its PostScript font support.
 
 Missing fonts are converted on demand from GF or from PostScript Type1
 to PK format. If a font cannot be generated, a scaled version
@@ -84,13 +126,12 @@ of the same font at a different size can be used instead, although
 dvipng will complain loudly about the poor aesthetics of the resulting
 output.
 
+There is support for simple Encapsulated PostScript inclusion and also
+for color specials, but other specials are not supported at the moment.
+
 Source is provided and freely distributable, so adding a site-specific
 feature is possible. Adding such features is made easier by the highly
 modular structure of the program.
-
-@end ifclear
-@c INSTALLONLY
-
 
 @node Installation, Basic usage, Why dvipng, Top
 @chapter Installation
@@ -114,15 +155,16 @@ dvipng foo
 
 @noindent
 where @file{foo.dvi} is the output of @TeX{} that you want to print.  If
-dvipng has been installed correctly, the pages of the DVI will be output
-as fooN.png, where N is the @TeX{} page number.
+there are four pages in @file{foo.dvi}, those pages will be output as
+@file{foo1.png}, @file{foo2.png}, @file{foo3.png}, and @file{foo4.png},
+respectively.
 
 If you use fonts that have not been used on your system before, they may
 be automatically generated; this process can take a few minutes, so
 progress reports appear by default.  The next time that document is
 printed, these fonts will have been saved in the proper directories, so
 printing will go much faster.  (If dvipng tries to endlessly generate the
-same fonts over and over again, it hasn't been installed properly.
+same fonts over and over again, something is wrong.
 @xref{Unable to generate fonts,,, kpathsea, Kpathsea}.)
 
 Many options are available (see the next section).  For a brief summary
@@ -153,7 +195,6 @@ section will give a good idea of the capabilities of the driver.
 @cindex options, summary
 Here is a handy summary of the options; it is printed out when you run
 dvipng with no arguments or with the standard @samp{--help} option.
-@opindex --help
 
 @example
 @include dvipng.help
@@ -417,7 +458,7 @@ rotates a document by 90 degrees. To rotate a document whose paper type
 is not the default, you can use the @samp{-t} option twice, once for the
 paper type, and once for @samp{landscape}.
 
-@item -T @var{hsize,vsize}
+@item -T @var{hsize},@var{vsize}
 Set the paper size to (@var{hsize},@var{vsize}), a comma-separated pair
 of dimensions such as @samp{.1in,-.3cm}. 
 @c (@pxref{papersize special}).  
@@ -1292,9 +1333,6 @@ some applications read the PostScript file from the input stream,
 looking for a particular comment.
 @end ignore
 
-@ifclear INSTALLONLY
-
-
 @node Color, Index, Diagnosing problems, Top
 @chapter Color
 
@@ -1354,10 +1392,5 @@ that color.
 
 @printindex cp
 
-
-@summarycontents
-@contents
-
-@end ifclear
-@c INSTALLONLY
 @bye
+
