@@ -1,10 +1,12 @@
-Release notes for version 0.6 of the dvipng package:
+Release notes for version 0.7 of the dvipng package:
 
 This program makes PNG graphics from DVI files as obtained from TeX
 and its relatives.
 
-This release is a bugfix release. It fixes the documentation
-installation and speeds up PostScript inclusion considerably.
+This release focuses on PostScript and TrueType font support. If the
+FreeType font library is present, dvipng will be able to render fonts
+internally, rather than relying on gsftopk. This will reduce disk
+clutter, especially when rendering at unusual resolutions.
 
 It has been tested but will probably need further testing. Report any
 bugs you find, see README for instructions.
