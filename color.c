@@ -19,11 +19,14 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
   02111-1307, USA.
 
-  Copyright © 2002-2004 Jan-Åke Larsson
+  Copyright (C) 2002-2004 Jan-Åke Larsson
 
 ************************************************************************/
 
 #include "dvipng.h"
+#if HAVE_ALLOCA_H
+# include <alloca.h>
+#endif
 
 /*
  * Color. We delete and recreate the gdImage for each new page. This
@@ -174,17 +177,10 @@ void stringrgb(char* p,int *r,int *g,int *b)
 }
 
 void background(char* p)
-     /* void Background(char* p, struct page_list *tpagep)*/
 {
   stringrgb(p, &cstack[0].red, &cstack[0].green, &cstack[0].blue);
   DEBUG_PRINT(DEBUG_COLOR,("\n  BACKGROUND:\t(%d %d %d) ",
 			   cstack[0].red, cstack[0].green, cstack[0].blue));
-  /* Background color changes affect the _whole_ page */
-  /*if (tpagep!=NULL) {
-    tpagep->cstack[0].red = cstack[0].red;
-    tpagep->cstack[0].green = cstack[0].green;
-    tpagep->cstack[0].blue = cstack[0].blue;
-    } */
 }
 
 void pushcolor(char * p)
