@@ -8,8 +8,10 @@ AC_PROG_CC
 AC_PROG_INSTALL
 
 # Checks for libraries.
-AC_CHECK_LIB([gd], [gdImageCreate])
-AC_CHECK_LIB([kpathsea], [kpse_set_progname])
+AC_CHECK_LIB([gd], [gdImageCreate],, 
+		   AC_MSG_ERROR([cannot find/use libgd]))
+AC_CHECK_LIB([kpathsea], [kpse_set_progname],, 
+			 AC_MSG_ERROR([cannot find/use libkpathsea]))
 
 # Checks for header files.
 AC_CHECK_HEADERS([fcntl.h stdint.h sys/time.h])
