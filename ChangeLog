@@ -1,11 +1,11 @@
-2004-05-31  Jan-흆e Larsson  <jalar@pcbjalar>
+2004-05-31  Jan-흆e Larsson  <jalar@mai.liu.se>
 
 	* dvipng.1:
 	* configure.ac:
 	* RELEASE:
 	* INSTALL: Release 1.1 
 
-2004-05-26  Jan-흆e Larsson  <jalar@pcbjalar>
+2004-05-26  Jan-흆e Larsson  <jalar@mai.liu.se>
 
 	* special.c: Handle source specials
 
