@@ -1,0 +1,57 @@
+2004-05-08  David Kastrup  <dakas@users.sourceforge.net>
+
+	* Create new ChangeLog for dvipng
+
+2004-05-05  Jan-흆e Larsson  <jalar@mai.liu.se>
+
+	* fontmap.c: Use both kpse_fontmap_format and
+	_dvips_header_
+
+	* enc.c: Use configure test 
+
+	* configure.ac: Add test for kpse_enc_format, reorder gd
+	and png tests
+
+	* aclocal.m4: Add test for kpse_enc_format
+
+	* special.c: More informative warnings
+
+2004-05-04  Jan-흆e Larsson  <jalar@mai.liu.se>
+
+	* enc.c:
+	Use the new kpathsea search format kpse_enc_format if available,
+	otherwise use kpse_tex_ps_header_format
+
+	* fontmap.c:
+	Fix new kpathsea search type kpse_fontmap_format, use
+	kpse_dvips_config_format if not available
+
+	* ft.c: Fix sizing
+
+	* draw.c: Simplify LoadT1 call
+
+	* t1.c: Shorten call, fix sizing
+
+	* dvipng.h: Simplify char-storing structure
+
+2004-05-03  Jan-흆e Larsson  <jalar@mai.liu.se>
+
+	* fontmap.c, font.c, t1.c, ft.c:
+	Fix for ps fonts not in psfontmap
+
+2004-05-02  Jan-흆e Larsson  <jalar@mai.liu.se>
+
+	* Makefile.in:
+	* config.h.in: 
+	* configure.ac:
+	* draw.c:
+	* dvipng.c:
+	* dvipng.h:
+	* enc.c:
+	* font.c:
+	* fontmap.c:
+	* ft.c:
+	* t1.c:
+	* misc.c: Add t1lib support
+
+For older changes, see ../ChangeLog.1
