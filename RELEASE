@@ -1,0 +1,9 @@
+Release notes for version 0.1 of the dvipng package:
+
+This program makes PNG graphics from DVI files as obtained from TeX
+and its relatives.
+
+Initial release. It has been tested but will probably need further
+testing. Report any bugs you find. I expect that most difficulties
+will be in building the package, see README for instructions.
+
