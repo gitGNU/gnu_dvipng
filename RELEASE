@@ -1,11 +1,12 @@
-Release notes for version 1.3 of the dvipng package:
+Release notes for version 1.4 of the dvipng package:
 
 This program makes PNG graphics from DVI files as obtained from TeX
 and its relatives.
 
 
-The 1.3 release adds the possibility to give a fallback color for the
-transparent border, and makes few other small changes.
+The 1.4 release restores interactive mode, which unfortunately was
+unusable in 1.2-1.3, and resolves a few portability problems. dvipng
+now builds on ULTRIX and a few other oldish systems.
 
 
 It has been tested to a fair degree. Note the disclaimer in the
