@@ -76,7 +76,7 @@ struct dvi_data* DVIOpen(char* dviname,char* outname)
     Fatal("cannot allocate space for DVI filename");
   strcpy(dvi->name, dviname);
   tmpstring = strrchr(dvi->name, '.');
-  if (tmpstring == NULL) 
+  if (tmpstring == NULL || strcmp(tmpstring,".dvi") != 0) 
     strcat(dvi->name, ".dvi");
   
   if (outname==NULL) { 
