@@ -77,6 +77,7 @@ AC_C_CONST
 AC_C_INLINE
 AC_TYPE_PID_T
 AC_HEADER_TIME
+AC_HEADER_STDBOOL
 AC_HAS_KPSE_ENC_FORMATS
 
 # Checks for library functions.
@@ -87,7 +88,7 @@ AC_HEADER_STDC
 AC_FUNC_MMAP
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([dup2 strchr strrchr memchr memset putenv])
+AC_CHECK_FUNCS([dup2 strchr strrchr memchr memset putenv munmap strtol])
 if test "$enable_timing" = "yes"; then
   AC_CHECK_FUNCS([ftime gettimeofday])
 fi
