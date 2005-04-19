@@ -43,11 +43,15 @@
 #ifdef HAVE_INTTYPES_H
 #  include <inttypes.h>
 #else /* HAVE_INTTYPES_H */
+# ifndef __sgi
+/* IRIX has the following types typedef'd in sys/types.h already,
+ * i.e., _old_ IRIX systems; newer ones have a working inttypes.h */
 typedef signed char               int8_t;
-typedef unsigned char            uint8_t;
 typedef short                    int16_t;
-typedef unsigned short          uint16_t;
 typedef int                      int32_t;
+#endif /* ! __sgi */
+typedef unsigned char            uint8_t;
+typedef unsigned short          uint16_t;
 typedef unsigned int            uint32_t;
 typedef long long                int64_t;
 typedef unsigned long long      uint64_t;
