@@ -1,3 +1,7 @@
+2005-04-19  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* special.c: Adjust tightpage test
+
 2005-04-04  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* configure.ac: 
