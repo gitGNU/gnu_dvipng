@@ -395,26 +395,21 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
   }
 
   /* preview-latex' tightpage option */
-  if (strcmp(token,"!(preview")==0) { 
-    char* preview_version,*token2;
-    preview_version=strtok(NULL,")");
-    token2=strtok(NULL,"(");
-    token2=strtok(NULL,")");
-    if (strcmp(token2,"tightpage")==0) {
+  if (strcmp(token,"!/preview@tightpage")==0) { 
+    token=strtok(NULL," ");
+    if (strcmp(token,"true")==0) {
       if (page_imagep==NULL) 
-	Message(BE_NONQUIET," (preview-latex %s tightpage option detected, will use its bounding box)",preview_version);
+	Message(BE_NONQUIET," (preview-latex tightpage option detected, will use its bounding box)");
       flags |= PREVIEW_LATEX_TIGHTPAGE;
       return;
     }
   }
-
   if (strcmp(token,"!userdict")==0 
       && strstr(buffer+10,"7{currentfile token not{stop}if 65781.76 div")!=NULL) {
-      if (page_imagep==NULL) 
-	Message(BE_NONQUIET," (preview-latex <= 0.9.1 tightpage option detected, will use its bounding box)");
-      flags |= PREVIEW_LATEX_TIGHTPAGE;
-      return;
-    }
+    if (page_imagep==NULL && ~flags & PREVIEW_LATEX_TIGHTPAGE) 
+      Message(BE_NONQUIET," (preview-latex <= 0.9.1 tightpage option detected, will use its bounding box)");
+    flags |= PREVIEW_LATEX_TIGHTPAGE;
+    return;
   }
 
   if (strncmp(token,"ps::",4)==0) {
