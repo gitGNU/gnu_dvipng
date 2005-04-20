@@ -68,9 +68,9 @@ approved by the Free Software Foundation.
 @c @summarycontents
 @contents
 
+@ifnottex
 @node Top
 @top dvipng
-@ifnottex
 
 This manual documents dvipng, a program to translate a DVI (DeVice
 Independent) file into PNG (Portable Network Graphics).
@@ -91,6 +91,7 @@ Jan-@AA{}ke Larsson
 * Diagnosing problems::         Problems?
 * Color::                       Using color with dvipng
 * Copying::                     GNU General Public License
+* Credits::                     People who have contributed
 * Index::                       General index
 @end menu
 
@@ -1549,12 +1550,37 @@ that color.
 dvipng correctly handles these color specials across pages, even when
 the pages are rendered repeatedly or in reverse order.
 
+@node Credits
+@chapter Credits
+
+A number of persons have contributed, if I forget to mention someone, I
+apologize. First and foremost we have David Kastrup whose
+@previewlatex{} project provided the incentive to write this program.
+There is also a number of people who have contributed by reporting bugs
+and suggesting improvements as the thing has evolved. These include but
+is perhaps not limited to (in semi-random order): Thomas Esser
+(te@TeX{}), Christian Schenk (MIK@TeX{}), Brian R Furry (debian
+package), Angus Leeming (LyX), Thomas Boutell (libgd), John Jones (first
+user report), Alan Shutko, Reiner Stieb, Nick Alcock, Adam Buchbinder,
+Svend Tollak Munkejord, James Longstreet, Bernhard Simon, Bob McElrath,
+Georg Schwarz, Jason Farmer, Brian V. Smith, Samuel Hathaway, Thomas R.
+Shemanske, Stephen Gibson, Christian Ridderstr@"om, Ezra Peisach,
+William H Wheeler, Thomas Klausner, Harald Koenig, Adrian Bunk, Kevin
+Smith, and Jason Riedy.
+
 @ifset man
 @c man begin NOTES
 The full manual is accessible in the info format, on most systems by typing
 @example
 info dvipng
 @end example
+@c man end
+@c man begin COPYRIGHT
+This program is released under the GNU General Public License, see the
+COPYING file in the dvipng distribution or
+@url{http://www.gnu.org/licenses/gpl.html}.
+
+Copyright @copyright{} 2002-2005 Jan-@AA{}ke Larsson
 @c man end
 @end ifset
 
@@ -1579,16 +1605,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 @sp 2
 @noindent
 Copyright @copyright{} 2002-2005 Jan-@AA{}ke Larsson
-
-@c man begin COPYRIGHT
-@ifset man
-This program is released under the GNU General Public License, see the
-COPYING file in the dvipng distribution or
-@url{http://www.gnu.org/licenses/gpl.html}.
-
-Copyright @copyright{} 2002-2005 Jan-@AA{}ke Larsson
-@end ifset
-@c man end
 
 @node Index
 @unnumbered Index
