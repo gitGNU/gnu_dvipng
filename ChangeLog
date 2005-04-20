@@ -1,3 +1,7 @@
+2005-04-20  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* dvipng.texi: Add Credits
+
 2005-04-19  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* dvipng.h: Fix for sys/types.h conflict in old IRIX systems
