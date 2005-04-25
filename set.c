@@ -51,11 +51,18 @@ void CreateImage(pixels x_width,pixels y_width)
        color index */
       && ~flags & GIF_OUTPUT
 #endif /* HAVE_GDIMAGEGIF */
-      )
+      ) {
     Background = gdImageColorAllocateAlpha(page_imagep,
 					   cstack[0].red,
 					   cstack[0].green,
 					   cstack[0].blue,127);
+#ifdef HAVE_GDIMAGEALPHABLENDING
+    /* Draw without blending to allow the background of the _viewer_
+       to shine through. Color blending is calculated where needed. */
+    gdImageAlphaBlending(page_imagep, 0);
+    gdImageSaveAlpha(page_imagep, 1);
+#endif
+  }
   else 
 #endif /* HAVE_GDIMAGECOLORRESOLVEALPHA */
     {

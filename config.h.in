@@ -48,6 +48,9 @@
 /* Define to 1 if you have the `ftime' function. */
 #undef HAVE_FTIME
 
+/* Define to 1 if you have the `gdImageAlphaBlending' function. */
+#undef HAVE_GDIMAGEALPHABLENDING
+
 /* Define to 1 if you have the `gdImageColorResolveAlpha' function. */
 #undef HAVE_GDIMAGECOLORRESOLVEALPHA
 

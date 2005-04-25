@@ -121,7 +121,7 @@ AC_CHECK_FUNCS([dup2 memset munmap pow putenv strchr strrchr strtol strstr])
 if test "$enable_timing" = "yes"; then
   AC_CHECK_FUNCS([ftime gettimeofday])
 fi
-AC_CHECK_FUNCS([gdImageColorResolveAlpha gdImagePngEx gdImageCreateTrueColor gdImageTrueColorToPalette gdImageGif])
+AC_CHECK_FUNCS([gdImageColorResolveAlpha gdImagePngEx gdImageCreateTrueColor gdImageTrueColorToPalette gdImageGif gdImageAlphaBlending])
 if test "$ac_cv_func_gdImageGif" = "yes"; then
    INSTALL_BIN_TARGET="install-dvigif"
 else
