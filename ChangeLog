@@ -1,3 +1,10 @@
+2005-04-25  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* config.h.in: 
+	* configure.ac: 
+	* set.c: Don't do alpha blending in truecolor mode, write alpha
+	channel to file
+
 2005-04-20  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* dvipng.texi: Add Credits
