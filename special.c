@@ -447,6 +447,9 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
     return;
   }
 
+  if (strncmp(token,"papersize=",10)==0) { /* papersize spec, ignored */
+    return;
+  }
   if (strncmp(token,"header=",7)==0 || token[0]=='!') { /* header, ignored */
     if ( page_imagep != NULL )
       Warning("at (%ld,%ld) ignored header \\special{%.*s}",
