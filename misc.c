@@ -60,7 +60,7 @@ bool DecodeArgs(int argc, char ** argv)
     Message(BE_NONQUIET,"This is %s",programname);
     if (strcmp(basename(programname),PACKAGE_NAME)!=0)
       Message(BE_NONQUIET," (%s)", PACKAGE_NAME);
-    Message(BE_NONQUIET," %s Copyright 2002-2005 Jan-Åke Larsson\n",
+    Message(BE_NONQUIET," %s Copyright 2002-2005 Jan-Ake Larsson\n",
 	    PACKAGE_VERSION);
   }
 
@@ -465,7 +465,7 @@ bool DecodeArgs(int argc, char ** argv)
 #ifdef HAVE_LIBKPATHSEA
 	  puts (KPSEVERSION);
 #endif
-	  puts ("Copyright (C) 2002-2005 Jan-Åke Larsson.\n\
+	  puts ("Copyright (C) 2002-2005 Jan-Ake Larsson.\n\
 There is NO warranty.  You may redistribute this software\n\
 under the terms of the GNU General Public License.\n\
 For more information about these matters, see the files\n\
