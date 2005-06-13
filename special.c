@@ -29,6 +29,8 @@
 # include <alloca.h>
 #endif
 
+#define SKIPSPACES(s) while(s && *s==' ' && *s!='\0') s++
+
 gdImagePtr
 ps2png(const char *psfile, int hresolution, int vresolution, 
        int urx, int ury, int llx, int lly)
@@ -235,7 +237,7 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 /* interpret a \special command, made up of keyword=value pairs */
 /* Color specials only for now. Warn otherwise. */
 {
-  char *buffer, *token;
+  char *buffer;
 
   DEBUG_PRINT(DEBUG_DVI,(" '%.*s'",length,special));
 
@@ -246,31 +248,29 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
   strncpy(buffer,special,length);
   buffer[length]='\0';
 
-  token = strtok(buffer," ");
+  SKIPSPACES(buffer);
   /********************** Color specials ***********************/
-  if (strcmp(token,"background")==0) {
-    token = strtok(NULL,"\0");
-    background(token);
+  if (strncmp(buffer,"background ",11)==0) {
+    background(buffer+11);
     return;
   }
-  if (strcmp(token,"color")==0) {
-    token = strtok(NULL,"\0");
-    if (strncmp(token,"push",4)==0) {
-      token = strtok(token," ");
-      token = strtok(NULL,"\0");
-      pushcolor(token);
+  if (strncmp(buffer,"color ",6)==0) {
+    buffer+=6;
+    SKIPSPACES(buffer);
+    if (strncmp(buffer,"push ",5)==0) {
+      pushcolor(buffer+5);
     } else {
-      if (strncmp(token,"pop",3)==0)
+      if (strcmp(buffer,"pop")==0)
 	popcolor();
       else 
-	resetcolorstack(token);
+	resetcolorstack(buffer);
     }
     return;
   }
 
   /******************* Postscript inclusion ********************/
-  if (strncmp(token,"PSfile=",7)==0) { /* PSfile */
-    char* psname = token+7;
+  if (strncmp(buffer,"PSfile=",7)==0) { /* PSfile */
+    char* psname = buffer+7,*psfile;
     int llx=0,lly=0,urx=0,ury=0,rwi=0,rhi=0;
     int hresolution,vresolution;
 
@@ -279,16 +279,25 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
       char* tmp;
       psname++;
       tmp=strrchr(psname,'"');
-      if (tmp!=NULL) *tmp='\0';
+      if (tmp!=NULL) {
+	*tmp='\0';
+	buffer=tmp+1;
+      } else
+	buffer=NULL;
     }
-
-    while((token = strtok(NULL," ")) != NULL) {
-      if (strncmp(token,"llx=",4)==0) llx = atoi(token+4);
-      if (strncmp(token,"lly=",4)==0) lly = atoi(token+4);
-      if (strncmp(token,"urx=",4)==0) urx = atoi(token+4);
-      if (strncmp(token,"ury=",4)==0) ury = atoi(token+4);
-      if (strncmp(token,"rwi=",4)==0) rwi = atoi(token+4);
-      if (strncmp(token,"rhi=",4)==0) rhi = atoi(token+4);
+    TEMPSTR(psfile,kpse_find_file(psname,kpse_pict_format,0));
+    
+    /* Retrieve parameters */
+    SKIPSPACES(buffer);
+    while(buffer && *buffer) {
+      if (strncmp(buffer,"llx=",4)==0) llx = strtol(buffer+4,&buffer,10);
+      else if (strncmp(buffer,"lly=",4)==0) lly = strtol(buffer+4,&buffer,10);
+      else if (strncmp(buffer,"urx=",4)==0) urx = strtol(buffer+4,&buffer,10);
+      else if (strncmp(buffer,"ury=",4)==0) ury = strtol(buffer+4,&buffer,10);
+      else if (strncmp(buffer,"rwi=",4)==0) rwi = strtol(buffer+4,&buffer,10);
+      else if (strncmp(buffer,"rhi=",4)==0) rhi = strtol(buffer+4,&buffer,10);
+      else while (*buffer && *buffer!=' ') buffer++;
+      SKIPSPACES(buffer);
     }
     
     /* Calculate resolution, and use our base resolution as a fallback. */
@@ -395,16 +404,17 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
   }
 
   /* preview-latex' tightpage option */
-  if (strcmp(token,"!/preview@tightpage")==0) { 
-    token=strtok(NULL," ");
-    if (strcmp(token,"true")==0) {
+  if (strncmp(buffer,"!/preview@tightpage",19)==0) { 
+    buffer+=19;
+    SKIPSPACES(buffer);
+    if (strncmp(buffer,"true",4)==0) {
       if (page_imagep==NULL) 
 	Message(BE_NONQUIET," (preview-latex tightpage option detected, will use its bounding box)");
       flags |= PREVIEW_LATEX_TIGHTPAGE;
       return;
     }
   }
-  if (strcmp(token,"!userdict")==0 
+  if (strncmp(buffer,"!userdict",9)==0 
       && strstr(buffer+10,"7{currentfile token not{stop}if 65781.76 div")!=NULL) {
     if (page_imagep==NULL && ~flags & PREVIEW_LATEX_TIGHTPAGE) 
       Message(BE_NONQUIET," (preview-latex <= 0.9.1 tightpage option detected, will use its bounding box)");
@@ -412,22 +422,16 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
     return;
   }
 
-  if (strncmp(token,"ps::",4)==0) {
+  if (strncmp(buffer,"ps::",4)==0) {
     /* Hokay, decode bounding box */
     dviunits adj_llx,adj_lly,adj_urx,adj_ury,ht,dp,wd;
-    adj_llx = atoi(token+4);
-    token = strtok(NULL," ");
-    adj_lly = atoi(token);
-    token = strtok(NULL," ");
-    adj_urx = atoi(token);
-    token = strtok(NULL," ");
-    adj_ury = atoi(token);
-    token = strtok(NULL," ");
-    ht = atoi(token);
-    token = strtok(NULL," ");
-    dp = atoi(token);
-    token = strtok(NULL," ");
-    wd = atoi(token);
+    adj_llx = strtol(buffer+4,&buffer,10);
+    adj_lly = strtol(buffer,&buffer,10);
+    adj_urx = strtol(buffer,&buffer,10);
+    adj_ury = strtol(buffer,&buffer,10);
+    ht = strtol(buffer,&buffer,10);
+    dp = strtol(buffer,&buffer,10);
+    wd = strtol(buffer,&buffer,10);
     if (wd>0) {
       x_offset_tightpage = 
 	(-adj_llx+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor;
@@ -447,16 +451,16 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
     return;
   }
 
-  if (strncmp(token,"papersize=",10)==0) { /* papersize spec, ignored */
+  if (strncmp(buffer,"papersize=",10)==0) { /* papersize spec, ignored */
     return;
   }
-  if (strncmp(token,"header=",7)==0 || token[0]=='!') { /* header, ignored */
+  if (strncmp(buffer,"header=",7)==0 || buffer[0]=='!') { /* header, ignored */
     if ( page_imagep != NULL )
       Warning("at (%ld,%ld) ignored header \\special{%.*s}",
 	      hh, vv, length,special);
     return;
   }
-  if (strncmp(token,"src:",4)==0) { /* source special */
+  if (strncmp(buffer,"src:",4)==0) { /* source special */
     if ( page_imagep != NULL )
       Message(BE_NONQUIET," at (%ld,%ld) source \\special{%.*s}",
 	      hh, vv, length,special);
