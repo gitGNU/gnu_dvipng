@@ -111,66 +111,118 @@ void ClearDvipsNam(void)
   colornames=NULL;
 }
 
-float toktof(char* token)
-{
-  if (token!=NULL)
-    return(atof(token));
-  flags |= PAGE_GAVE_WARN;
-  Warning("missing color-specification value, treated as zero");
-  return(0.0);
-}
+#define FTO255(a) ((int) (255*a+0.5))
+#define WARN_IF_FAILED(a,b) if (a==b) { flags |= PAGE_GAVE_WARN; \
+  Warning("missing color-specification value, treated as zero"); }
 
-void stringrgb(char* p,int *r,int *g,int *b)
-{
-  char* token;
+#define SKIPSPACES(s) while(s && *s==' ' && *s!='\0') s++
+#define NEXTFLOAT255(c) FTO255(strtod(c,&end)); WARN_IF_FAILED(c,end); c=end
+#define NEXTFLOAT(c) strtod(c,&end); WARN_IF_FAILED(c,end); c=end
+#define NEXTINT(c) strtol(c,&end,10); WARN_IF_FAILED(c,end); c=end
+#define NEXTHEX(c) strtol(c,&end,16); WARN_IF_FAILED(c,end); c=end
 
-  DEBUG_PRINT(DEBUG_COLOR,("\n  COLOR SPEC:\t'%s' ",p));
-  token=strtok(p," ");
-  if (strcmp(token,"Black")==0) {
-    p+=5;
+void stringrgb(char* color,int *r,int *g,int *b)
+{
+  char* end;
+
+  DEBUG_PRINT(DEBUG_COLOR,("\n  COLOR SPEC:\t'%s' ",color));
+  SKIPSPACES(color);
+  if (strcmp(color,"Black")==0) {
     *r = *g = *b = 0;
-  } else if (strcmp(token,"White")==0) {
-    p+=5;
+  } else if (strcmp(color,"White")==0) {
     *r = *g = *b = 255;
-  } else if (strcmp(token,"gray")==0) {
-    p+=4;
-    *r = *g = *b = (int) (255 * toktof(strtok(NULL," ")));
-  } else if (strcmp(token,"rgb")==0) {
-    p+=3;
-    *r = (int) (255 * toktof(strtok(NULL," ")));
-    *g = (int) (255 * toktof(strtok(NULL," ")));
-    *b = (int) (255 * toktof(strtok(NULL," ")));
-  } else if (strncmp(p,"cmyk",4)==0) {
-    double c,m,y,k;
-
-    p+=4;
-    c = toktof(strtok(NULL," "));
-    m = toktof(strtok(NULL," "));
-    y = toktof(strtok(NULL," "));
-    k = toktof(strtok(NULL," "));
-    *r = (int) (255 * ((1-c)*(1-k)));
-    *g = (int) (255 * ((1-m)*(1-k)));
-    *b = (int) (255 * ((1-y)*(1-k)));
+  } else if (strncmp(color,"gray ",5)==0) {
+    color+=5;
+    *r = *g = *b = NEXTFLOAT255(color);
+  } else if (strncmp(color,"rgb ",4)==0) {
+    color+=4;
+    *r = NEXTFLOAT255(color);
+    *g = NEXTFLOAT255(color);
+    *b = NEXTFLOAT255(color);
+   } else if (strncmp(color,"Gray ",5)==0) {
+    color+=5;
+    *r = *g = *b = NEXTINT(color);
+  } else if (strncmp(color,"RGB ",4)==0) {
+    color+=4;
+    *r = NEXTINT(color);
+    *g = NEXTINT(color);
+    *b = NEXTINT(color);
+  } else if (strncmp(color,"HTML ",5)==0) {
+    color+=5;
+    *b = NEXTHEX(color);
+    *r = *b/65536;
+    *g = *b/256;
+    *b -= *g*256;
+    *g -= *r*256;
+  } else if (strncmp(color,"cmy ",4)==0
+	     || strncmp(color,"cmyk ",5)==0) {
+    int c,m,y,k;
+    color+=3;
+    k=(*color=='k');
+    if (k)
+      color++;
+    c = NEXTFLOAT255(color);
+    m = NEXTFLOAT255(color);
+    y = NEXTFLOAT255(color);
+    if (k)
+      k = NEXTFLOAT255(color);
+    *r = c+k<255 ? 255-(c+k) : 0;
+    *g = m+k<255 ? 255-(m+k) : 0;
+    *b = y+k<255 ? 255-(y+k) : 0;
+  } else if (strncmp(color,"hsb ",4)==0 
+	     || strncmp(color,"HSB ",4)==0) {
+    /* The hsb and HSB models really need more presicion. 
+       Use double and convert back*/
+    double hu,sa,br,f,R,G,B;
+    int i;
+    if (*color=='h') {
+      color+=4;
+      hu = NEXTFLOAT(color);
+      sa = NEXTFLOAT(color);
+      br = NEXTFLOAT(color);
+    } else {
+      color+=4;
+      hu = (float)NEXTINT(color); hu /= 255;
+      sa = (float)NEXTINT(color); sa /= 255;
+      br = (float)NEXTINT(color); br /= 255;
+    }
+    i=6*hu;
+    f=6*hu-i;
+    switch(i) {
+    case 0: 
+      R = br*(1-sa*0);     G = br*(1-sa*(1-f)); B = br*(1-sa*1); break;
+    case 1: 
+      R = br*(1-sa*f);     G = br*(1-sa*0);     B = br*(1-sa*1); break;
+    case 2: 
+      R = br*(1-sa*1);     G = br*(1-sa*0);     B = br*(1-sa*(1-f)); break;
+    case 3: 
+      R = br*(1-sa*1);     G = br*(1-sa*f);     B = br*(1-sa*0); break;
+    case 4: 
+      R = br*(1-sa*(1-f)); G = br*(1-sa*1);     B = br*(1-sa*0); break;
+    case 5: 
+      R = br*(1-sa*0);     G = br*(1-sa*1);     B = br*(1-sa*f); break;
+    default: 
+      R = br*(1-sa*0);     G = br*(1-sa*1);     B = br*(1-sa*1);
+    }
+    *r=FTO255(R);
+    *g=FTO255(G);
+    *b=FTO255(B);
   } else {
+    /* Model not found, probably a color name */
     struct colorname *tmp;
 
     if (colornames==NULL) 
       LoadDvipsNam();
     tmp=colornames;
-    while(tmp!=NULL && tmp->name!=NULL && strcmp(tmp->name,token)) 
+    while(tmp!=NULL && tmp->name!=NULL && strcmp(color,tmp->name)) 
       tmp++;
     if (tmp!=NULL && tmp->name!=NULL) {
-      /* One-level recursion */
-      char* colorspec=alloca(sizeof(char)*strlen(tmp->color+1));
-      strcpy(colorspec,tmp->color);
-      stringrgb(colorspec,r,g,b);
+      /* Found: one-level recursion */
+      stringrgb(tmp->color,r,g,b);
     } else {
-      char* t2=strtok(NULL,"");  
-      if (t2!=NULL) 
-	Warning("unimplemented color specification '%s %s'",p,t2);
-      else 
-	Warning("unimplemented color specification '%s'",p);
+      /* Not found, warn */
       flags |= PAGE_GAVE_WARN;
+      Warning("unimplemented color specification '%s'",color);
     }
   }
   DEBUG_PRINT(DEBUG_COLOR,("(%d %d %d) ",*r,*g,*b))
