@@ -1,3 +1,9 @@
+2005-06-13  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* color.c: Don't use strtok, adjust for xcolor
+
+	* special.c: Don't use strtok 
+
 2005-04-25  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* config.h.in: 
@@ -16,6 +22,12 @@
 	* special.c: Adjust tightpage test
 
 2005-04-04  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* special.c: Make tightpage option backwards compatible
+
+	* RELEASE: Prepare for 1.6
+
+	* dvipng.1: Regenerate man page
 
 	* configure.ac: 
 	* dvipng.texi: 
