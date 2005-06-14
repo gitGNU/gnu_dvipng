@@ -1,3 +1,7 @@
+2005-06-14  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* misc.c: Adjust MIKTeX stuff
+
 2005-06-13  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* color.c: Don't use strtok, adjust for xcolor
