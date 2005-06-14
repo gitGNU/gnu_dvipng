@@ -30,7 +30,9 @@
 #define basename xbasename
 #endif
 #include <fcntl.h> /* open/close */
+#ifndef MIKTEX
 #include <sys/mman.h>
+#endif
 #include <sys/stat.h>
 
 static char *programname;
@@ -735,20 +737,20 @@ bool MmapFile (char *filename,struct filemmap *fmmap)
   close(fmmap->fd);
 # endif /* HAVE_MMAP */
 #else /* MIKTEX */
-  fmmap->hFile = CreateFile(filename, GENERIC_READ, 0, 0, OPEN_EXISTING,
-			    FILE_FLAG_RANDOM_ACCESS, 0);
+  fmmap->hFile = CreateFile(filename, GENERIC_READ, FILE_SHARE_READ, 0, 
+			    OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, 0);
   if (fmmap->hFile == INVALID_HANDLE_VALUE) {
     Warning("cannot open file <%s>", filename);
     return(true);
   }
-  fmmap->size = GetFileSize(hFile, 0);
-  fmmap->hMap = CreateFileMapping(hFile, 0, PAGE_READONLY, 0, 0, 0);
+  fmmap->size = GetFileSize(fmmap->hFile, 0);
+  fmmap->hMap = CreateFileMapping(fmmap->hFile, 0, PAGE_READONLY, 0, 0, 0);
   if (fmmap->hMap == 0) {
     CloseHandle (fmmap->hFile);
     Warning("cannot CreateFileMapping() file <%s>", filename);
     return(true);
   }
-  fmmap->mmap = MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0);
+  fmmap->mmap = MapViewOfFile(fmmap->hMap, FILE_MAP_READ, 0, 0, 0);
   if (fmmap->mmap == NULL) {
     Warning("cannot MapViewOfFile() file <%s>", filename);
     CloseHandle (fmmap->hMap);
