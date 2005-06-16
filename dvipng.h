@@ -388,7 +388,7 @@ void resetcolorstack(char *);
 void StoreColorStack(struct page_list *tpagep);
 void ReadColorStack(struct page_list *tpagep);
 void StoreBackgroundColor(struct page_list *tpagep);
-void ClearDvipsNam(void);
+void ClearColorNames(void);
 
 
 /**********************************************************************/

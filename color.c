@@ -35,9 +35,11 @@
 */
 
 struct colorname {
-  char*             name;
+  struct colorname *next;
   char*             color;
-} *colornames=NULL;
+  char              name[1];
+} *dvipsnam=NULL,*svgnam=NULL,*xcolor=NULL;
+
 
 void initcolor() 
 {
@@ -50,65 +52,127 @@ void initcolor()
    cstack[1].blue=0; 
 }
 
-void LoadDvipsNam (void)
+struct colorname * NewColor(char* name, int nname,
+	      char* model, int nmodel,
+	      char* values, int nvalues)
 {
-  char *pos,*max,*buf,*dvipsnam_file;
-  struct colorname *tmp=NULL;
+  struct colorname *tmp = 
+    malloc(sizeof(struct colorname)+3+nname+nmodel+nvalues);
+  if (tmp==NULL) 
+    Fatal("Cannot allocate space for color name");
+  tmp->color=tmp->name+nname+1;
+  strncpy(tmp->name,name,nname);
+  tmp->name[nname]='\0';
+  strncpy(tmp->color,model,nmodel);
+  tmp->color[nmodel]=' ';
+  strncpy(tmp->color+nmodel+1,values,nvalues);
+  tmp->color[nmodel+nvalues+1]='\0';
+  model=tmp->color;
+  while(*model!='\0') { 
+    if (*model==',') 
+      *model=' '; 
+    model++;
+  }
+  DEBUG_PRINT(DEBUG_COLOR,("\n  COLOR NAME:\t'%s' '%s'",
+			   tmp->name,tmp->color)); 
+  return(tmp);
+}
+
+#define FINDWORD(s) while(s<max && \
+                  (*s=='{'||*s==' '||*s=='%'||*s=='\n'||*s==';')) s++
+#define FINDARG(s) while(s<max && *s!='{') s++; FINDWORD(s)
+#define FINDMODELEND(s,n) n=0; while(s<max && *s!='}') { s++; n++; }
+#define FINDNAMEEND(s,n) n=0; while(s<max && *s!='}' && *s!=',') { s++; n++; }
+#define FINDVALEND(s,n) n=0; while(s<max && *s!='}' && *s!=';') { s++; n++; }
+#define BLANKCOMMAS(s) 
+
+struct colorname* LoadColornameFile(char* filename, bool should_exist)
+{
+  struct colorname *list=NULL,*tmp=NULL; 
+  char *filepath,*pos,*max;
+  char *name,*values,*model;
+  int nname,nvalues,nmodel;
   struct filemmap fmmap;
 
-  TEMPSTR(dvipsnam_file,kpse_find_file("dvipsnam.def",kpse_tex_format,false));
-  if (dvipsnam_file == NULL) {
-    Warning("color name file dvipsnam.def could not be found");
-    return;
+  TEMPSTR(filepath,kpse_find_file(filename,kpse_tex_format,false));
+  if (filepath == NULL) {
+    if (should_exist)
+      Warning("color name file '%s' could not be found",filename);
+    return NULL;
   }
-  DEBUG_PRINT(DEBUG_COLOR,("\n  OPEN COLOR NAMES:\t'%s'", dvipsnam_file));
-  if (MmapFile(dvipsnam_file,&fmmap)) return;
-  if ((colornames = malloc(fmmap.size*2))==NULL) 
-    Fatal("cannot alloc space for color names");
+  DEBUG_PRINT(DEBUG_COLOR,("\n  OPEN COLOR NAMES:\t'%s'", filepath));
+  if (MmapFile(filepath,&fmmap)) return NULL;
   pos=fmmap.mmap;
   max=fmmap.mmap+fmmap.size;
-  tmp=colornames;
-  buf=(char*)colornames+fmmap.size;
   while (pos<max && *pos!='\\') pos++;
   while(pos+9<max && strncmp(pos,"\\endinput",9)!=0) {
-    while (pos+17<max && strncmp(pos,"\\DefineNamedColor",17)!=0) {
+    if (pos+17<max && strncmp(pos,"\\DefineNamedColor",17)==0) {
+      model=NULL;
+      nname=nmodel=nvalues=0;
+      FINDARG(pos);             /* skip first argument */
+      FINDARG(pos);             /* find second argument: color name */
+      name=pos;
+      FINDNAMEEND(pos,nname);
+      FINDARG(pos);             /* find third argument: color model */
+      model=pos;
+      FINDMODELEND(pos,nmodel);
+      FINDARG(pos);             /* find fourth argument: color values */
+      values=pos;
+      FINDVALEND(pos,nvalues);
+      tmp=NewColor(name,nname,model,nmodel,values,nvalues);
+      tmp->next=list;
+      list=tmp;
+    } else if (pos+15<max && strncmp(pos,"\\definecolorset",15)==0) {
+      char *model;
+      FINDARG(pos);             /* find first argument: color model */
+      model=pos;
+      FINDMODELEND(pos,nmodel);
+      FINDARG(pos);             /* skip second argument */
+      FINDARG(pos);             /* skip third argument */
+      FINDARG(pos);             /* find fourth argument: names, values */
+      while(pos<max && *pos!='}'){
+	name=pos;
+	FINDNAMEEND(pos,nname);
+	pos++;
+	values=pos;
+	FINDVALEND(pos,nvalues);
+	NewColor(name,nname,model,nmodel,values,nvalues);
+	tmp->next=list;
+	list=tmp;
+	FINDWORD(pos);
+      }
+    } else {
       pos++;
       while (pos<max && *pos!='\\') pos++;
     }
-    while(pos<max && *pos!='}') pos++; /* skip first argument */
-    while(pos<max && *pos!='{') pos++; /* find second argument */
-    pos++;
-    tmp->name=buf;
-    while(pos<max && *pos!='}')        /* copy color name */
-      *buf++=*pos++;
-    *buf++='\0';
-    while(pos<max && *pos!='{') pos++; /* find third argument */
-    pos++;
-    tmp->color=buf;
-    while(pos<max && *pos!='}')        /* copy color model */
-      *buf++=*pos++;
-    *buf++=' ';
-    while(pos<max && *pos!='{') pos++; /* find fourth argument */
-    pos++;
-    while(pos<max && *pos!='}') {      /* copy color values */
-      *buf++=*pos++;
-      if (*(buf-1)==',') *(buf-1)=' '; /* commas should become blanks */
-    }
-    *buf++='\0';
-    while (pos<max && *pos!='\\') pos++;
-    DEBUG_PRINT(DEBUG_COLOR,("\n  COLOR NAME:\t'%s' '%s'",
-			     tmp->name,tmp->color)); 
-    tmp++;
   }
-  tmp->name=NULL;
   UnMmapFile(&fmmap);
+  return(list);
 }
 
-void ClearDvipsNam(void)
+void ClearColorNames(void)
 {
-  if (colornames!=NULL)
-    free(colornames);
-  colornames=NULL;
+  struct colorname *tmp=dvipsnam,*next=NULL;
+  while (tmp!=NULL) {
+    next=tmp->next;
+    free(tmp);
+    tmp=next;
+  }
+  dvipsnam=NULL;
+  tmp=svgnam;
+  while (tmp!=NULL) {
+    next=tmp->next;
+    free(tmp);
+    tmp=next;
+  }
+  svgnam=NULL;
+  tmp=xcolor;
+  while (tmp!=NULL) {
+    next=tmp->next;
+    free(tmp);
+    tmp=next;
+  }
+  xcolor=NULL;
 }
 
 #define FTO255(a) ((int) (255*a+0.5))
@@ -125,7 +189,7 @@ void stringrgb(char* color,int *r,int *g,int *b)
 {
   char* end;
 
-  DEBUG_PRINT(DEBUG_COLOR,("\n  COLOR SPEC:\t'%s' ",color));
+  DEBUG_PRINT(DEBUG_COLOR,("\n  COLOR SPEC:\t'%s' (",color));
   SKIPSPACES(color);
   if (strcmp(color,"Black")==0) {
     *r = *g = *b = 0;
@@ -211,13 +275,28 @@ void stringrgb(char* color,int *r,int *g,int *b)
     /* Model not found, probably a color name */
     struct colorname *tmp;
 
-    if (colornames==NULL) 
-      LoadDvipsNam();
-    tmp=colornames;
+    if (dvipsnam==NULL) 
+      dvipsnam=LoadColornameFile("dvipsnam.def",true);
+    tmp=dvipsnam;
     while(tmp!=NULL && tmp->name!=NULL && strcmp(color,tmp->name)) 
-      tmp++;
-    if (tmp!=NULL && tmp->name!=NULL) {
+      tmp=tmp->next;
+    if (tmp==NULL) {
+      if (svgnam==NULL) 
+	svgnam=LoadColornameFile("svgnam.def",false);
+      tmp=svgnam;
+      while(tmp!=NULL && tmp->name!=NULL && strcmp(color,tmp->name)) 
+	tmp=tmp->next;
+      if (tmp==NULL) {
+	if (xcolor==NULL) 
+	  xcolor=LoadColornameFile("xcolor.sty",false);
+	tmp=xcolor;
+	while(tmp!=NULL && tmp->name!=NULL && strcmp(color,tmp->name)) 
+	  tmp=tmp->next;
+      }
+    }
+    if (tmp!=NULL) {
       /* Found: one-level recursion */
+      DEBUG_PRINT(DEBUG_COLOR,("\n    ---RECURSION--- "))
       stringrgb(tmp->color,r,g,b);
     } else {
       /* Not found, warn */
@@ -225,7 +304,7 @@ void stringrgb(char* color,int *r,int *g,int *b)
       Warning("unimplemented color specification '%s'",color);
     }
   }
-  DEBUG_PRINT(DEBUG_COLOR,("(%d %d %d) ",*r,*g,*b))
+  DEBUG_PRINT(DEBUG_COLOR,("%d %d %d) ",*r,*g,*b))
 }
 
 void background(char* p)

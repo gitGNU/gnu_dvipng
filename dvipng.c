@@ -147,7 +147,7 @@ int main(int argc, char ** argv)
 
   ClearFonts();
   DVIClose(dvi);
-  ClearDvipsNam();
+  ClearColorNames();
 #ifdef HAVE_FT2_OR_LIBT1
   ClearPSFontMap();
   ClearEncoding();
