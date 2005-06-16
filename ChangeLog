@@ -1,3 +1,9 @@
+2005-06-16  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* dvipng.h:
+	* dvipng.c:
+	* color.c: Revamp colorname interpreter for xcolor
+
 2005-06-14  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* misc.c: Adjust MIKTeX stuff
