@@ -541,7 +541,7 @@ named COPYING and dvipng.c.");
     fprintf(stdout,"  -bd #        Transparent border width in dots\n");
     fprintf(stdout,"  -bd s        Transparent border fallback color (TeX-style color)\n");
     fprintf(stdout,"  --bdpi #     Set the base (Metafont) resolution\n");
-    fprintf(stdout,"  -bg s        Background color (TeX-style color)\n");
+    fprintf(stdout,"  -bg s        Background color (TeX-style color or 'Transparent')\n");
     fprintf(stdout,"  --depth*     Output the image depth on stdout\n");
     fprintf(stdout,"  --dvinum*    Use TeX page numbers in output filenames\n");
     fprintf(stdout,"  -fg s        Foreground color (TeX-style color)\n");
