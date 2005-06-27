@@ -4,8 +4,9 @@ This program makes PNG graphics from DVI files as obtained from TeX
 and its relatives.
 
 
-The 1.6 release adds proper alpha channel support and reestablishes 
-identification of preview-latex' tightpage mode option.
+The 1.6 release adds proper alpha channel support and xcolor support.
+It also reestablishes identification of preview-latex' tightpage mode
+option.
 
 
 It has been tested to a fair degree. Note the disclaimer in the
