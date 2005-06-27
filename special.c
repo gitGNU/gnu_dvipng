@@ -422,6 +422,14 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
     return;
   }
 
+  /* preview-latex' dvips bop-hook redefinition */
+  if (strncmp(buffer,"!userdict",9)==0 
+      && strstr(buffer+10,"preview-bop-")!=NULL) {
+    if (page_imagep==NULL) 
+      Message(BE_NONQUIET," (preview-latex beginning-of-page-hook detected)");
+    return;
+  }
+
   if (strncmp(buffer,"ps::",4)==0) {
     /* Hokay, decode bounding box */
     dviunits adj_llx,adj_lly,adj_urx,adj_ury,ht,dp,wd;
