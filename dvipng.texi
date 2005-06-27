@@ -10,7 +10,7 @@ dvipng [options] [filename] -
 @end ifset
 
 @set version 1.6
-@set month-year April 2005
+@set month-year June 2005
 
 @c Put everything in one index (arbitrarily chosen to be the concept index).
 @syncodeindex fn cp
@@ -1515,11 +1515,23 @@ specials start with the keyword @samp{color} or the keyword
 
 @cindex color specifications
 
-The color specification supported by dvipng is the name of a color model
-(initially, one of @samp{rgb}, @samp{hsv}, @samp{cmyk}, or @samp{gray})
-followed by the appropriate number of parameters. Thus, the color
-specification @samp{rgb 0.3 0.4 0.5} would correspond to the color that
-is @samp{0.3 0.4 0.5} in its red, blue and green values. 
+The color specification supported by dvipng is by-value or by-name. The
+by-value spec starts with the name of a color model (one of @samp{rgb},
+@samp{hsb}, @samp{cmy}, @samp{cmyk}, or @samp{gray}) followed by the
+appropriate number of parameters. Thus, the color specification
+@samp{rgb 0.3 0.4 0.5} would correspond to the color that is @samp{0.3
+0.4 0.5} in its red, blue and green values. The color used internally in
+dvipng is @samp{RGB} (discretized to 256 levels), for details on the
+formulas used in conversion, see the @samp{xcolor} documentation.
+
+By-name color specifications are single (case-dependent) words and are
+compared with color names defined in @samp{dvipsnam.def} (from the
+@samp{graphics} bundle), @samp{svgnam.def} and @samp{xcolor.sty} (from
+the @samp{xcolor} bundle).
+
+On the command-line, the name @samp{Transparent} can also be used in as
+an argument to @samp{--bg} to choose transparent background.
+@xref{Option details}.
 
 @node Color specials
 @section Color specials
@@ -1561,12 +1573,12 @@ and suggesting improvements as the thing has evolved. These include but
 is perhaps not limited to (in semi-random order): Thomas Esser
 (te@TeX{}), Christian Schenk (MIK@TeX{}), Brian R Furry (debian
 package), Angus Leeming (LyX), Thomas Boutell (libgd), John Jones (first
-user report), Alan Shutko, Reiner Stieb, Nick Alcock, Adam Buchbinder,
-Svend Tollak Munkejord, James Longstreet, Bernhard Simon, Bob McElrath,
-Georg Schwarz, Jason Farmer, Brian V. Smith, Samuel Hathaway, Thomas R.
-Shemanske, Stephen Gibson, Christian Ridderstr@"om, Ezra Peisach,
-William H Wheeler, Thomas Klausner, Harald Koenig, Adrian Bunk, Kevin
-Smith, and Jason Riedy.
+user report), Uwe Kern (xcolor), Alan Shutko, Reiner Stieb, Nick Alcock,
+Adam Buchbinder, Svend Tollak Munkejord, James Longstreet, Bernhard
+Simon, Bob McElrath, Georg Schwarz, Jason Farmer, Brian V. Smith, Samuel
+Hathaway, Thomas R. Shemanske, Stephen Gibson, Christian Ridderstr@"om,
+Ezra Peisach, William H Wheeler, Thomas Klausner, Harald Koenig, Adrian
+Bunk, Kevin Smith, and Jason Riedy.
 
 @ifset man
 @c man begin NOTES
