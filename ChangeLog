@@ -1,3 +1,7 @@
+2005-06-27  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* special.c: Cosmetics, do a _small_ message for bop-hook redef
+
 2005-06-16  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* dvipng.h:
