@@ -1,5 +1,7 @@
 2005-06-27  Jan-Ake Larsson  <jalar@mai.liu.se>
 
+	* RELEASE: Report what fixes have been done
+
 	* dvipng.texi: Document xcolor adaptations
 
 	* misc.c: Add 'Transparent' in the quick-help
