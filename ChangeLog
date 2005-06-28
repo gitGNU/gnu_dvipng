@@ -1,4 +1,10 @@
+2005-06-28  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* special.c: Read preview-latex version
+
 2005-06-27  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* Release 1.6
 
 	* RELEASE: Report what fixes have been done
 
