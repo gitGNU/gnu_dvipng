@@ -235,7 +235,6 @@ ps2png(const char *psfile, int hresolution, int vresolution,
 
 void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 /* interpret a \special command, made up of keyword=value pairs */
-/* Color specials only for now. Warn otherwise. */
 {
   char *buffer;
 
@@ -403,6 +402,16 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
     return;
   }
 
+  if (strncmp(buffer,"!/preview@version(",18)==0) { 
+    buffer+=18;
+    length-=18;
+    while (length>0 && buffer[length]!=')') 
+      length--;
+    if (page_imagep==NULL) 
+      Message(BE_NONQUIET," (preview-latex version %.*s)",length,buffer);
+    return;
+  }
+
   /* preview-latex' tightpage option */
   if (strncmp(buffer,"!/preview@tightpage",19)==0) { 
     buffer+=19;
@@ -426,7 +435,7 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
   if (strncmp(buffer,"!userdict",9)==0 
       && strstr(buffer+10,"preview-bop-")!=NULL) {
     if (page_imagep==NULL) 
-      Message(BE_NONQUIET," (preview-latex beginning-of-page-hook detected)");
+      Message(BE_VERBOSE," (preview-latex beginning-of-page-hook detected)");
     return;
   }
 
