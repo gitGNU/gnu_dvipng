@@ -1,3 +1,7 @@
+2005-07-04  jalar  <jalar@mai.liu.se>
+
+	* font.c: Add length check for font name
+
 2005-06-28  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* special.c: Read preview-latex version
