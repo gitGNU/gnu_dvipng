@@ -1,3 +1,7 @@
+2005-07-05  jalar  <jalar@mai.liu.se>
+
+	* Makefile.in: Enable srcdir != builddir
+
 2005-07-04  jalar  <jalar@mai.liu.se>
 
 	* font.c: Add length check for font name
