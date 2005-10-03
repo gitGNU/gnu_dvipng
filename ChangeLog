@@ -1,3 +1,8 @@
+2005-09-30  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* config.h.in, configure.ac, ft.c:
+	Only use FT_Library_Version if available
+
 2005-07-05  jalar  <jalar@mai.liu.se>
 
 	* Makefile.in: Enable srcdir != builddir
