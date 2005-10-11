@@ -1,3 +1,22 @@
+2005-10-11  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* Release 1.7
+	
+	* INSTALL: Typographic changes
+
+	* README: 
+	* RELEASE: 
+	* configure.ac: 
+	* dvipng.1: 
+	* dvipng.texi: Adjust for 1.7
+
+	* install.texi: Insert space
+
+	* miktex.h: Adjust for 1.7, I am uncertain which of the new calls
+	are available in the MIKTeX environment
+
+	* readme.texi: Remove reference to my old laptop
+
 2005-09-30  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* config.h.in, configure.ac, ft.c:
