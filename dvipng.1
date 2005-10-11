@@ -147,9 +147,11 @@ If \s-1GIF\s0 support is enabled, \s-1GIF\s0 output is chosen by using the
 .PP
 The benefits of \fBdvipng\fR/\fBdvigif\fR include
 .IP "\(bu" 4
-Speed. It is a very fast bitmap-rendering code for \s-1DVI\s0 files, which
-makes it suitable for generating large amounts of images on\-the\-fly,
-as needed in preview\-latex, WeBWorK and others.
+Speed. It is a very fast bitmap-rendering code for \s-1DVI\s0 files. On a
+fairly low-end laptop, it takes less than a second to generate 150
+one-formula images. This makes dvipng suitable for generating large
+amounts of images on\-the\-fly, as needed in preview\-latex, WeBWorK and
+others.
 .IP "\(bu" 4
 It does not read the postamble, so it can be started before TeX
 finishes. There is a \-\-follow switch that makes dvipng wait at \s-1EOF\s0 for
