@@ -141,6 +141,7 @@ Once @file{configure} has been run, simply enter
 @example
 make
 @end example
+
 @noindent 
 at the prompt to compile the C code, and build the documentation files.
 To install the files into the locations chosen earlier, type
