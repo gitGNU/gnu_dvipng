@@ -38,18 +38,14 @@ and WYSIWYG editors like LyX.
 @section Benefits of dvipng
 @end ifset
 @end ifclear
-@ifclear rawfile
-@end ifclear
 
 The benefits of @samp{dvipng}/@samp{dvigif} include
 
 @itemize @bullet
 @item 
-Speed. It is a very fast bitmap-rendering code for DVI files. On a
-fairly low-end laptop, it takes less than a second to generate 150
-one-formula images. This makes dvipng suitable for generating large
-amounts of images on-the-fly, as needed in @previewlatex{}, WeBWorK and
-others.
+Speed. It is a very fast bitmap-rendering code for DVI files, which
+makes it suitable for generating large amounts of images on-the-fly,
+as needed in @previewlatex{}, WeBWorK and others.
 
 @item 
 It does not read the postamble, so it can be started before @TeX{}
