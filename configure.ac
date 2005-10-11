@@ -24,7 +24,7 @@
 #************************************************************************
 
 # Process this file with autoconf to produce a configure script.
-AC_INIT([dvipng], [1.6], [dvipng@nongnu.org])
+AC_INIT([dvipng], [1.7], [dvipng@nongnu.org])
 AC_CONFIG_SRCDIR([dvipng.c])
 
 AC_ARG_ENABLE(debug, 
