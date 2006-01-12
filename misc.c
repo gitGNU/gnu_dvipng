@@ -19,7 +19,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
   02111-1307, USA.
 
-  Copyright (C) 2002-2005 Jan-Åke Larsson
+  Copyright (C) 2002-2006 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -44,7 +44,8 @@ static char *programname;
 bool DecodeArgs(int argc, char ** argv)
 {
   int     i;                 /* argument index for options     */
-  bool ppused=false;        /* Flag when -pp is used          */
+  bool ppused=false;         /* Flag when -pp is used          */
+  int32_t number;            /* Temporary storage for numeric parameter */
   char *dviname=NULL;        /* Name of dvi file               */
   char *outname=NULL;        /* Name of output file            */
 
@@ -62,7 +63,7 @@ bool DecodeArgs(int argc, char ** argv)
     Message(BE_NONQUIET,"This is %s",programname);
     if (strcmp(basename(programname),PACKAGE_NAME)!=0)
       Message(BE_NONQUIET," (%s)", PACKAGE_NAME);
-    Message(BE_NONQUIET," %s Copyright 2002-2005 Jan-Ake Larsson\n",
+    Message(BE_NONQUIET," %s Copyright 2002-2006 Jan-Ake Larsson\n",
 	    PACKAGE_VERSION);
   }
 
@@ -136,6 +137,7 @@ bool DecodeArgs(int argc, char ** argv)
 	else
 	  Message(PARSE_STDIN,"MakeTeXPK disabled\n");
         break;
+#endif /* MAKETEXPK */
       case 'm':
 	if (strcmp(p,"ode") == 0 ) {
 	  if (argv[i+1])
@@ -158,7 +160,6 @@ bool DecodeArgs(int argc, char ** argv)
 	  break;
 	}
 	goto DEFAULT;
-#endif /* MAKETEXPK */
       case 'O' : /* Offset */
 	if (*p == 0 && argv[i+1])
 	  p = argv[++i] ;
@@ -268,11 +269,14 @@ bool DecodeArgs(int argc, char ** argv)
 	} else if (strcmp(p, "dpi")==0) {
 	  p+=3;
 	  if (*p == 0 && argv[i+1])
-	    p = argv[++i] ;
-	  user_bdpi = atoi(p);
-	  if (user_bdpi < 10 || user_bdpi > 10000)
-	    Fatal("bad --bdpi parameter") ;
-	  Message(PARSE_STDIN,"Bdpi: %d\n",user_bdpi);
+	    p = argv[++i];
+	  number = atoi(p);
+	  if (number < 10 || number > 10000)
+	    Warning("Bad --bdpi parameter, ignored");
+	  else {
+	    user_bdpi=number;
+	    Message(PARSE_STDIN,"Bdpi: %d\n",user_bdpi);
+	  }
 	  break;
 	} else if ( *p == 'd' ) { /* -bd border width */
 	  int tmpi;
@@ -329,11 +333,14 @@ bool DecodeArgs(int argc, char ** argv)
       case 'x' : case 'y' :
 	if (*p == 0 && argv[i+1])
 	  p = argv[++i] ;
-	usermag = atoi(p);
-	if (usermag < 1 || usermag > 1000000)
-	  Fatal("bad magnification parameter (-x or -y)") ;
-	Message(PARSE_STDIN,"Magstep: %d\n",usermag);
+	number = atoi(p);
+	if (number < 1 || number > 1000000) 
+	  Warning("Bad magnification parameter (-x or -y), ignored");
+	else {
+	  usermag=number;
+	  Message(PARSE_STDIN,"Magstep: %d\n",usermag);
 	/*overridemag = (c == 'x' ? 1 : -1) ;*/
+	}
 	break ;
       case 'g' :
 	if (strncmp(p,"amma",4)==0) { /* --gamma correction */ 
@@ -389,9 +396,12 @@ bool DecodeArgs(int argc, char ** argv)
 	    abspage=true;
 	    p++ ;
 	  }
-	  firstpage = atoi(p);
-	  FirstPage(firstpage,abspage);
-	  Message(PARSE_STDIN,"First page: %d\n",firstpage);
+	  if (isdigit(*p) || (*p=='-' && isdigit(p[1]))) {
+	    firstpage = atoi(p);
+	    FirstPage(firstpage,abspage);
+	    Message(PARSE_STDIN,"First page: %d\n",firstpage);
+	  } else
+	    Warning("Bad firstpage (-p) parameter, ignored");
 	}
 	break ;
       case 's' :
@@ -437,9 +447,12 @@ bool DecodeArgs(int argc, char ** argv)
 	    abspage=true;
 	    p++ ;
 	  } 
-	  lastpage = atoi(p);
-	  LastPage(lastpage,abspage);
-	  Message(PARSE_STDIN,"Last page: %d\n",lastpage);
+	  if (isdigit(*p) || (*p=='-' && isdigit(p[1]))) {
+	    lastpage = atoi(p);
+	    LastPage(lastpage,abspage);
+	    Message(PARSE_STDIN,"Last page: %d\n",lastpage);
+	  } else
+	    Warning("Bad lastpage (-l) parameter, ignored");
 	}
 	break ;
       case 'q':       /* quiet operation */
@@ -482,22 +495,35 @@ named COPYING and dvipng.c.");
       case 'D' :
 	if (*p == 0 && argv[i+1])
 	  p = argv[++i] ;
-	dpi = atoi(p);
-	if (dpi < 10 || dpi > 10000)
-	  Fatal("bad -D parameter") ;
-	Message(PARSE_STDIN,"Dpi: %d\n",dpi);
+	number = atoi(p);
+	if (number < 10 || number > 10000)
+	  Warning("Bad resolution (-D) parameter, ignored") ;
+	else {
+	  dpi=number;
+	  Message(PARSE_STDIN,"Dpi: %d\n",dpi);
+	}
 	break;
       case 'Q':       /* quality (= shrinkfactor) */
 	if (*p == 0 && argv[i+1])
-	  p = argv[++i] ;
-        shrinkfactor = atoi(p);
-	Message(PARSE_STDIN,"Quality: %d\n",shrinkfactor);
+	  p = argv[++i];
+	if isdigit(p) {
+	  shrinkfactor = atoi(p);
+	  Message(PARSE_STDIN,"Quality: %d\n",shrinkfactor);
+	} else {
+	  Warning("Non-numeric quality (-Q) value, ignored");
+	}
 	break;
 #ifdef HAVE_GDIMAGEPNGEX
       case 'z':
 	if (*p == 0 && argv[i+1])
 	  p = argv[++i];
-	compression = atoi(p);
+	number = atoi(p);
+	if (number<1 || number>9)
+	  Warning("Bad compression (-z) value, ignored");
+	else {
+	  compression=number;
+	  Message(PARSE_STDIN,"Compression: %d\n",shrinkfactor);
+	}
 	break;
 #endif
       case '\0':
