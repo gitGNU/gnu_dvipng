@@ -340,7 +340,7 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 	psimage = cacheimage;
       }
       /*---------- End Cache ----------*/
-      Message(BE_NONQUIET,"<%s",psname);
+      Message(BE_NONQUIET," <%s",psname);
       if (psimage==NULL) {
 	/* No cached image, convert postscript */
 	if (psfile == NULL) {
