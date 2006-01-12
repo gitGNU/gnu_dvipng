@@ -124,7 +124,7 @@ struct dvi_data* DVIOpen(char* dviname,char* outname)
     }
     strcpy(dvi->outname,basename(dviname));
     tmpstring = strrchr(dvi->outname, '.');
-    if (tmpstring != NULL) 
+    if (tmpstring != NULL && strcmp(tmpstring,".dvi") == 0) 
       *tmpstring = '\0';
     strcat(dvi->outname, "%d.png");
   } else {
