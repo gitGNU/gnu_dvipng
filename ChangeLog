@@ -1,3 +1,11 @@
+2006-01-12  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* special.c: Add a space in message
+
+	* misc.c: Do more tests for numeric-parameter options
+
+	* dvi.c: Outfilename: only remove .dvi extension, not others
+
 2005-10-11  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* Release 1.7
