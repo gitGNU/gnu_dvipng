@@ -19,7 +19,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
   02111-1307, USA.
 
-  Copyright (C) 2002-2005 Jan-Åke Larsson
+  Copyright (C) 2002-2006 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -444,9 +444,9 @@ EXTERN unsigned int debug INIT(0);
 #define DEBUG_FT                     (1<<5)
 #define DEBUG_ENC                    (1<<6)
 #define DEBUG_COLOR                  (1<<7)
-#define DEBUG_T1                     (1<<8)
-#define DEBUG_GS                     (1<<9)
-#define LASTDEBUG                    DEBUG_GS
+#define DEBUG_GS                     (1<<8)
+#define DEBUG_T1                     (1<<9)
+#define LASTDEBUG                    DEBUG_T1
 #define DEBUG_DEFAULT                DEBUG_DVI
 #else
 #define DEBUG_PRINT(a,b)
