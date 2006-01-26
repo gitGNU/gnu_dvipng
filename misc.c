@@ -396,7 +396,7 @@ bool DecodeArgs(int argc, char ** argv)
 	    abspage=true;
 	    p++ ;
 	  }
-	  if (isdigit(*p) || (*p=='-' && isdigit(p[1]))) {
+	  if ((*p>='0'&&*p<='9') || (*p=='-' && *(p+1)>='0' && *(p+1)<='9')) {
 	    firstpage = atoi(p);
 	    FirstPage(firstpage,abspage);
 	    Message(PARSE_STDIN,"First page: %d\n",firstpage);
@@ -447,7 +447,7 @@ bool DecodeArgs(int argc, char ** argv)
 	    abspage=true;
 	    p++ ;
 	  } 
-	  if (isdigit(*p) || (*p=='-' && isdigit(p[1]))) {
+	  if ((*p>='0'&&*p<='9') || (*p=='-' && *(p+1)>='0' && *(p+1)<='9')) {
 	    lastpage = atoi(p);
 	    LastPage(lastpage,abspage);
 	    Message(PARSE_STDIN,"Last page: %d\n",lastpage);
@@ -506,7 +506,7 @@ named COPYING and dvipng.c.");
       case 'Q':       /* quality (= shrinkfactor) */
 	if (*p == 0 && argv[i+1])
 	  p = argv[++i];
-	if isdigit(p) {
+	if (*p>='0'&&*p<='9') {
 	  shrinkfactor = atoi(p);
 	  Message(PARSE_STDIN,"Quality: %d\n",shrinkfactor);
 	} else {
