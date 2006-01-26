@@ -66,9 +66,6 @@
 /* Define to 1 if you have the `gdImagePngEx' function. */
 #undef HAVE_GDIMAGEPNGEX
 
-/* Define to 1 if you have the `gdImageTrueColorToPalette' function. */
-#undef HAVE_GDIMAGETRUECOLORTOPALETTE
-
 /* Define to 1 if you have the <gd.h> header file. */
 #undef HAVE_GD_H
 
