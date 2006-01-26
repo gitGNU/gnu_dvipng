@@ -19,7 +19,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
   02111-1307, USA.
 
-  Copyright (C) 2002-2005 Jan-Åke Larsson
+  Copyright (C) 2002-2006 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -205,12 +205,6 @@ ps2png(const char *psfile, int hresolution, int vresolution,
 #ifdef MIKTEX
   CloseHandle(pi.hProcess);
 #endif
-#ifdef HAVE_GDIMAGETRUECOLORTOPALETTE
-#ifdef HAVE_GDIMAGECREATETRUECOLOR
-  if (!flags & RENDER_TRUECOLOR)
-#endif
-    gdImageTrueColorToPalette(psimage,0,256);
-#endif
   if (psimage == NULL) {
     DEBUG_PRINT(DEBUG_GS,("\n  GS OUTPUT:\tNO IMAGE "));
     if (!showpage) {
@@ -227,6 +221,60 @@ ps2png(const char *psfile, int hresolution, int vresolution,
   }
   return psimage;
 }
+
+
+gdImagePtr readcache(char* psname)
+{
+  char *cachename = NULL, *cachefile, *separator;
+  gdImagePtr cacheimage=NULL;
+
+  cachename = alloca(sizeof(char)*(strlen(psname+5)));
+  if (cachename==NULL) 
+    Fatal("cannot allocate space for cached image filename");
+  strcpy(cachename,psname);
+  separator = strrchr(cachename,'.');
+  if (separator!=NULL)
+    *separator='\0';
+  strcat(cachename,".png");
+  
+  cachefile = kpse_find_file(cachename,kpse_pict_format,0);
+  if (cachefile!=NULL) {
+    FILE* cachefilep = fopen(cachefile,"rb");
+      
+    if (cachefilep!=NULL) {
+      DEBUG_PRINT(DEBUG_DVI,("\n  READING CACHED IMAGE \t%s", cachefile));
+      cacheimage = gdImageCreateFromPng(cachefilep);
+      fclose(cachefilep);
+    }
+    free(cachefile);
+  }
+  return(cacheimage);
+}
+
+void storecache(char* psname, gdImagePtr psimage)
+{
+  char *cachename = NULL, *separator;
+
+  cachename = alloca(sizeof(char)*(strlen(psname+5)));
+  if (cachename==NULL) 
+    Fatal("cannot allocate space for cached image filename");
+  strcpy(cachename,psname);
+  separator = strrchr(cachename,'.');
+  if (separator!=NULL)
+    *separator='\0';
+  strcat(cachename,".png");
+  
+  if (psimage != NULL) {
+    FILE* cachefilep = fopen(cachename,"wb");
+    if (cachefilep!=NULL) {
+      gdImagePng(psimage,cachefilep);
+      fclose(cachefilep);
+    } else
+      Warning("Unable to cache %s as PNG", psname );
+  }
+}
+
+
 
 /*-->SetSpecial*/
 /*********************************************************************/
@@ -267,11 +315,12 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
     return;
   }
 
-  /******************* Postscript inclusion ********************/
+  /******************* Image inclusion ********************/
   if (strncmp(buffer,"PSfile=",7)==0) { /* PSfile */
     char* psname = buffer+7,*psfile;
     int llx=0,lly=0,urx=0,ury=0,rwi=0,rhi=0;
     int hresolution,vresolution;
+    int pngheight,pngwidth;
 
     /* Remove quotation marks around filename */
     if (*psname=='"') {
@@ -301,102 +350,126 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
     
     /* Calculate resolution, and use our base resolution as a fallback. */
     /* The factor 10 is magic, the dvips graphicx driver needs this.    */
-    hresolution = dpi*rwi/(urx - llx)/10;
-    vresolution = dpi*rhi/(ury - lly)/10;
+    hresolution = ((dpi*rwi+urx-llx-1)/(urx - llx)+9)/10;
+    vresolution = ((dpi*rhi+ury-lly-1)/(ury - lly)+9)/10;
     if (vresolution==0) vresolution = hresolution;
     if (hresolution==0) hresolution = vresolution;
     if (hresolution==0) hresolution = vresolution = dpi;
-    
+      
+    /* Convert from postscript 72 dpi resolution to our given resolution */
+    pngwidth  = (dpi*rwi+719)/720; /* +719: round up */
+    pngheight = (dpi*rhi+719)/720;
+    if (pngwidth==0)  
+      pngwidth  = ((dpi*rhi*(urx-llx)+ury-lly-1)/(ury-lly)+719)/720;
+    if (pngheight==0) 
+      pngheight = ((dpi*rwi*(ury-lly)+urx-llx-1)/(urx-llx)+719)/720;
+    if (pngheight==0) {
+      pngwidth  = (dpi*(urx-llx)+71)/72;
+      pngheight = (dpi*(ury-lly)+71)/72;
+    }    
     if (page_imagep != NULL) { /* Draw into image */
-      char* psfile;
+      char *psfile, *separator;
       gdImagePtr psimage=NULL;
 
-      /*---------- Cache ----------*/
-      char* cachename = NULL;
-      gdImagePtr cacheimage=NULL;
-
       TEMPSTR(psfile,kpse_find_file(psname,kpse_pict_format,0));
-      if (flags & CACHE_IMAGES) { /* Find cached image, if it exists */
-	char *cachefile,*separator;
-
-	cachename = alloca(sizeof(char)*(strlen(psname+5)));
-	if (cachename==NULL) 
-	  Fatal("cannot allocate space for cached image filename");
-	strcpy(cachename,psname);
-	separator = strrchr(cachename,'.');
-	if (separator!=NULL)
-	  *separator='\0';
-	strcat(cachename,".png");
-	cachefile = kpse_find_file(cachename,kpse_pict_format,0);
-	if (cachefile!=NULL) {
-	  FILE* cachefilep = fopen(cachefile,"rb");
-
-	  if (cachefilep!=NULL) {
-	    cacheimage = gdImageCreateFromPng(cachefilep);
-	    fclose(cachefilep);
-	  }
-	  free(cachefile);
-	}
-	psimage = cacheimage;
-      }
-      /*---------- End Cache ----------*/
-      Message(BE_NONQUIET," <%s",psname);
-      if (psimage==NULL) {
-	/* No cached image, convert postscript */
-	if (psfile == NULL) {
-	  Warning("PS file %s not found, image will be left blank", psname );
-	  flags |= PAGE_GAVE_WARN;
-	} else if (flags & NO_GHOSTSCRIPT) {
-	    Warning("GhostScript calls disallowed by --noghostscript", 
-		    psfile );
-	    flags |= PAGE_GAVE_WARN;
-	} else {
-	  psimage = ps2png(psfile, hresolution, vresolution, 
-			   urx, ury, llx, lly);
-	  if ( psimage == NULL ) {
-	    Warning("Unable to convert %s to PNG, image will be left blank", 
-		    psfile );
-	    flags |= PAGE_GAVE_WARN;
-	  }
-	}
-      }
-      /*---------- Store Cache ----------*/
-      if (flags & CACHE_IMAGES && cachename !=NULL && 
-	  cacheimage==NULL && psimage != NULL) {
-	/* Cache image not found, save converted postscript */
-	FILE* cachefilep = fopen(cachename,"wb");
-	if (cachefilep!=NULL) {
-	  gdImagePng(psimage,cachefilep);
-	  fclose(cachefilep);
-	} else
-	  Warning("Unable to cache %s as PNG", psfile );
+      if (psfile == NULL) {
+	Warning("Image file %s not found, image will be left blank", psname );
+	flags |= PAGE_GAVE_WARN;
+	return;
       } 
-      /*---------- End Store Cache ----------*/
+      Message(BE_NONQUIET," <%s",psname);
+      separator = strrchr(psfile,'.');	
+      /* Bitmapped images */
+      if (separator!=NULL 
+	  && (strcmp(++separator,"png")==0 
+	      || strcmp(separator,"jpg")==0
+	      || strcmp(separator,"gif")==0)) {
+	FILE* psf=fopen(psfile,"rb");
+	DEBUG_PRINT(DEBUG_DVI,("\n  INCLUDE BITMAP \t%s", psfile));
+	if (psf!=NULL) {
+	  if (*separator=='p') 
+	    psimage=gdImageCreateFromPng(psf);
+#ifdef HAVE_GDIMAGECREATETRUECOLOR
+	  if (*separator=='j') 
+	    psimage=gdImageCreateFromJpeg(psf);
+#endif
+#ifdef HAVE_GDIMAGEGIF
+	  if (*separator=='g') 
+	    psimage=gdImageCreateFromGif(psf);
+#endif
+	}
+	fclose(psf);
+      }
+      if (psimage==NULL) {
+	/* Default: PostScript image */
+	if (flags & NO_GHOSTSCRIPT) { 
+	  Warning("GhostScript calls disallowed by --noghostscript", psfile );
+	  flags |= PAGE_GAVE_WARN;
+	} else {
+	  gdImagePtr cacheimage=NULL;
+	  if (flags & CACHE_IMAGES) 
+	    cacheimage=psimage=readcache(psname);
+	  if (psimage==NULL) {
+	    DEBUG_PRINT(DEBUG_DVI,("\n  RENDER POSTSCRIPT \t%s", psfile));
+	    psimage = ps2png(psfile, hresolution, vresolution, 
+			     urx, ury, llx, lly);
+	  }
+	  if (flags & CACHE_IMAGES && cacheimage==NULL) 
+	    storecache(psname,psimage); 
+	}
+      }
       if (psimage!=NULL) {
+	/* Rescale, but ignore (one-pixel) rounding errors */
+	if (gdImageSX(psimage)!=pngwidth 
+	    && gdImageSX(psimage)!=pngwidth+1
+	    && gdImageSY(psimage)!=pngheight
+	    && gdImageSY(psimage)!=pngheight+1) {
+	  gdImagePtr scaledimage;
+#ifdef HAVE_GDIMAGECREATETRUECOLOR
+	  scaledimage=gdImageCreateTrueColor(pngwidth,pngheight);
+	  gdImageCopyResampled(scaledimage,psimage,0,0,0,0,
+			       pngwidth,pngheight,
+			       gdImageSX(psimage),gdImageSY(psimage));
+#else
+	  scaledimage=gdImageCreate(pngwidth,pngheight);
+	  gdImageCopyResized(scaledimage,psimage,0,0,0,0,
+			     pngwidth,pngheight,
+			     gdImageSX(psimage),gdImageSY(psimage));
+#endif
+	  DEBUG_PRINT(DEBUG_DVI,
+		      ("\n  RESCALE INCLUDED BITMAP \t%s (%d,%d) -> (%d,%d)",
+		       psfile,
+		       gdImageSX(psimage),gdImageSY(psimage),
+		       pngwidth,pngheight));
+	  gdImageDestroy(psimage);
+	  psimage=scaledimage;
+	}
 	DEBUG_PRINT(DEBUG_DVI,
-		    ("\n  PS-PNG INCLUDE \t%s (%d,%d) res %dx%d at (%d,%d)",
-		     psfile,
-		     gdImageSX(psimage),gdImageSY(psimage),
-		     hresolution,vresolution,
-		     hh, vv));
+		    ("\n  GRAPHIC(X|S) INCLUDE \t%s (%d,%d) res %dx%d at (%d,%d)",
+		     psfile,gdImageSX(psimage),gdImageSY(psimage),
+		     hresolution,vresolution,hh,vv));
+#ifdef HAVE_GDIMAGECREATETRUECOLOR
+	if (psimage->trueColor && !flags & RENDER_TRUECOLOR)
+	  gdImageTrueColorToPalette(psimage,0,256);
+#endif
 	gdImageCopy(page_imagep, psimage, 
-		    hh, vv-gdImageSY(psimage),
+		    hh, vv-gdImageSY(psimage)+1,
 		    0,0,
 		    gdImageSX(psimage),gdImageSY(psimage));
 	gdImageDestroy(psimage);
-      }
+      } else {
+	Warning("Unable to load %s, image will be left blank", psfile );
+	flags |= PAGE_GAVE_WARN;
+      } 
       Message(BE_NONQUIET,">");
     } else { /* Don't draw */
-      int pngheight,pngwidth;
-      
-      /* Convert from postscript 72 dpi resolution to our given resolution */
-      pngheight = (vresolution*(ury - lly)+71)/72; /* +71: do 'ceil' */
-      pngwidth  = (hresolution*(urx - llx)+71)/72;
-      DEBUG_PRINT(DEBUG_DVI,("\n  PS-PNG INCLUDE \t(%d,%d)", 
-		   pngwidth,pngheight));
+      DEBUG_PRINT(DEBUG_DVI,
+		  ("\n  GRAPHIC(X|S) INCLUDE \t%s (%d,%d) res %dx%d at (%d,%d)",
+		   psfile,pngheight,pngwidth,
+		   hresolution,vresolution,hh,vv));
       min(x_min,hh);
-      min(y_min,vv-pngheight);
-      max(x_max,hh+pngwidth);
+      min(y_min,vv-pngheight+1);
+      max(x_max,hh+pngwidth-1);
       max(y_max,vv);
     }
     return;
