@@ -1,3 +1,17 @@
+2006-01-26  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* color.c: Fix typo that gave a segfault
+
+	* config.h.in: Remove unneeded function check
+
+	* configure.ac: Update for 1.8, remove unneeded function check
+
+	* dvipng.h: Switch debug numbers to coincide with the manual
+
+	* misc.c: Remove isdigit
+
+	* special.c: Add code to include PNG, JPEG and GIF images
+
 2006-01-12  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* special.c: Add a space in message
