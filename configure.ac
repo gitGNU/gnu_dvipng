@@ -19,12 +19,12 @@
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 #  02111-1307, USA.
 #
-#  Copyright (C) 2002-2005 Jan-Åke Larsson
+#  Copyright (C) 2002-2006 Jan-Åke Larsson
 #
 #************************************************************************
 
 # Process this file with autoconf to produce a configure script.
-AC_INIT([dvipng], [1.7], [dvipng@nongnu.org])
+AC_INIT([dvipng], [1.8], [dvipng@nongnu.org])
 AC_CONFIG_SRCDIR([dvipng.c])
 
 AC_ARG_ENABLE(debug, 
@@ -121,7 +121,7 @@ AC_CHECK_FUNCS([dup2 memset munmap pow putenv strchr strrchr strtol strstr])
 if test "$enable_timing" = "yes"; then
   AC_CHECK_FUNCS([ftime gettimeofday])
 fi
-AC_CHECK_FUNCS([gdImageColorResolveAlpha gdImagePngEx gdImageCreateTrueColor gdImageTrueColorToPalette gdImageGif gdImageAlphaBlending FT_Library_Version])
+AC_CHECK_FUNCS([gdImageColorResolveAlpha gdImagePngEx gdImageCreateTrueColor gdImageGif gdImageAlphaBlending FT_Library_Version])
 if test "$ac_cv_func_gdImageGif" = "yes"; then
    INSTALL_BIN_TARGET="install-dvigif"
 else
