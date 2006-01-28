@@ -45,15 +45,20 @@ ps2png(const char *psfile, int hresolution, int vresolution,
   PROCESS_INFORMATION pi;
   _TCHAR szCommandLine[2048];
   _TCHAR szGsPath[_MAX_PATH];
+#define GS_PATH szGsPath
   int fd;
 #endif
   FILE *psstream=NULL, *pngstream=NULL;
   char resolution[STRSIZE]; 
   /*   char devicesize[STRSIZE];  */
+#ifdef HAVE_GDIMAGECREATETRUECOLOR
   /* For some reason, png256 gives inferior result */
   char *device="-sDEVICE=png16m";  
+#else
+  char *device="-sDEVICE=png256";  
+#endif
   gdImagePtr psimage=NULL;
-  static bool showpage;
+  static char* showpage="";
 
   sprintf(resolution, "-r%dx%d",hresolution,vresolution);
   /* Future extension for \rotatebox
@@ -63,13 +68,13 @@ ps2png(const char *psfile, int hresolution, int vresolution,
 		 //(int)((sin(atan(1.0))+1)*
 		 (ury - lly)*vresolution/72);//);
   */
-  /* png16m being the default, this code is not needed
-   * #ifdef HAVE_GDIMAGECREATETRUECOLOR
-   * if (flags & RENDER_TRUECOLOR) 
-   * device="-sDEVICE=png16m";
-   * #endif  
-   */
-
+  DEBUG_PRINT(DEBUG_GS,
+	      ("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s %s",/* %s", */
+	       GS_PATH, device, resolution, /*devicesize,*/
+	       "-dBATCH", "-dNOPAUSE", "-q", "-sOutputFile=-", 
+	       "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
+	       (flags & NO_GSSAFER) ? "-": "-dSAFER", 
+	       (flags & NO_GSSAFER) ? "": "- "));
 #ifndef MIKTEX
   if (pipe(downpipe) || pipe(uppipe)) return(NULL);
   /* Ready to fork */
@@ -78,40 +83,15 @@ ps2png(const char *psfile, int hresolution, int vresolution,
     close(downpipe[1]);
     dup2(downpipe[0], STDIN_FILENO);
     close(downpipe[0]);
-#ifdef DEBUG
-    if (flags & NO_GSSAFER) {
-      DEBUG_PRINT(DEBUG_GS,
-		  ("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s ",/* %s", */
-		   GS_PATH, device, resolution, /* devicesize, */
-		   "-dBATCH", "-dNOPAUSE", "-q", 
-		   "-sOutputFile=-", 
-		   "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
-		   "-"));
-    } else {
-      DEBUG_PRINT(DEBUG_GS,
-		  ("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s %s ",/* %s", */
-		   GS_PATH, device, resolution, /*devicesize,*/
-		   "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
-		   "-sOutputFile=-", 
-		   "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
-		   "-"));
-    }
-#endif
     close(uppipe[0]);
     dup2(uppipe[1], STDOUT_FILENO);
     close(uppipe[1]);
-    if (flags & NO_GSSAFER) 
-      execl (GS_PATH, GS_PATH, device, resolution, /*devicesize,*/
-	     "-dBATCH", "-dNOPAUSE", "-q", 
-	     "-sOutputFile=-", 
-	     "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
-	     "-",NULL);
-    else
-      execl (GS_PATH, GS_PATH, device, resolution, /*devicesize,*/
-	     "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
-	     "-sOutputFile=-", 
-	     "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
-	     "-",NULL);
+    execl (GS_PATH, GS_PATH, device, resolution, /*devicesize,*/
+	   "-dBATCH", "-dNOPAUSE", "-q", "-sOutputFile=-", 
+	   "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
+	   (flags & NO_GSSAFER) ? "-": "-dSAFER", 
+	   (flags & NO_GSSAFER) ? NULL: "-",
+	   NULL);
     _exit (EXIT_FAILURE);
   }
   /* Parent process. */
@@ -129,35 +109,12 @@ ps2png(const char *psfile, int hresolution, int vresolution,
       Warning("Ghostscript could not be found");
       return(NULL);
   }
-  if (flags & NO_GSSAFER) {
-    DEBUG_PRINT(DEBUG_GS,
-		("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s ",/* %s",*/
-		 szGsPath, device, resolution, /*devicesize,*/
-		 "-dBATCH", "-dNOPAUSE", "-q", 
-		 "-sOutputFile=-", 
-		 "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
-		 "-"));
-    sprintf(szCommandLine,"\"%s\" %s %s %s %s %s %s %s %s %s",/* %s",*/
-	    szGsPath, device, resolution, /*devicesize,*/
-	    "-dBATCH", "-dNOPAUSE", "-q", 
-	    "-sOutputFile=-", 
-	    "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
-	    "-");
-  } else {
-    DEBUG_PRINT(DEBUG_GS,
-		("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s %s ",/* %s",*/
-		 szGsPath, device, resolution, /*devicesize,*/
-		 "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
-		 "-sOutputFile=-", 
-		 "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
-		 "-"));
-    sprintf(szCommandLine,"\"%s\" %s %s %s %s %s %s %s %s %s %s",/* %s",*/
-	    szGsPath, device, resolution, /*devicesize,*/
-	    "-dBATCH", "-dNOPAUSE", "-dSAFER", "-q", 
-	    "-sOutputFile=-", 
-	    "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
-	    "-");
-  }
+  sprintf(szCommandLine,"\"%s\" %s %s %s %s %s %s %s %s %s %s",/* %s",*/
+	  szGsPath, device, resolution, /*devicesize,*/
+	  "-dBATCH", "-dNOPAUSE", "-q", "-sOutputFile=-", 
+	  "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
+	  (flags & NO_GSSAFER) ? "-": "-dSAFER", 
+	  (flags & NO_GSSAFER) ? "": "-");
   if (! miktex_start_process_3(szCommandLine, &pi, INVALID_HANDLE_VALUE,
 			       &hPsStream, &hPngStream, &hStdErr, 0)) {
       Warning("Ghostscript could not be started");
@@ -188,14 +145,8 @@ ps2png(const char *psfile, int hresolution, int vresolution,
       fprintf(psstream, "gsave %f %f %f setrgbcolor clippath fill grestore",
 	      cstack[0].red/255.0, cstack[0].green/255.0, cstack[0].blue/255.0);
     }
-    DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\t(%s) run", psfile));
-    fprintf(psstream, "(%s) run\n", psfile);
-    if (showpage) {
-      DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\tshowpage"));
-      fprintf(psstream, "showpage\n");
-    }
-    DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\tquit"));
-    fprintf(psstream, "quit\n");
+    DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\t(%s) run %s quit ", psfile, showpage));
+    fprintf(psstream, "(%s) run %s quit ", psfile, showpage);
     fclose(psstream);
   }
   if (pngstream) {
@@ -208,10 +159,10 @@ ps2png(const char *psfile, int hresolution, int vresolution,
   if (psimage == NULL) {
     DEBUG_PRINT(DEBUG_GS,("\n  GS OUTPUT:\tNO IMAGE "));
     if (!showpage) {
-      showpage=true;
-      DEBUG_PRINT(DEBUG_GS,("(will try adding \"showpage\") "));
+      showpage="showpage";
+      DEBUG_PRINT(DEBUG_GS,("(will try adding \"%s\") ",showpage));
       psimage=ps2png(psfile, hresolution, vresolution, urx, ury, llx, lly);
-      showpage=false;
+      showpage="";
     }
 #ifdef DEBUG
   } else {
