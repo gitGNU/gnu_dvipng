@@ -321,10 +321,19 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
     if (page_imagep != NULL) { /* Draw into image */
       char *psfile, *separator;
       gdImagePtr psimage=NULL;
+      FILE* psstream;
 
       TEMPSTR(psfile,kpse_find_file(psname,kpse_pict_format,0));
       if (psfile == NULL) {
 	Warning("Image file %s not found, image will be left blank", psname );
+	flags |= PAGE_GAVE_WARN;
+	return;
+      } 
+      /* Test access permission even for EPS files */
+      psstream=fopen(psfile,"rb");
+      if (psfile == NULL) {
+	Warning("Cannot access image file %s, image will be left blank", 
+		psname );
 	flags |= PAGE_GAVE_WARN;
 	return;
       } 
@@ -335,22 +344,19 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 	  && (strcmp(++separator,"png")==0 
 	      || strcmp(separator,"jpg")==0
 	      || strcmp(separator,"gif")==0)) {
-	FILE* psf=fopen(psfile,"rb");
 	DEBUG_PRINT(DEBUG_DVI,("\n  INCLUDE BITMAP \t%s", psfile));
-	if (psf!=NULL) {
-	  if (*separator=='p') 
-	    psimage=gdImageCreateFromPng(psf);
+	if (*separator=='p') 
+	  psimage=gdImageCreateFromPng(psstream);
 #ifdef HAVE_GDIMAGECREATETRUECOLOR
-	  if (*separator=='j') 
-	    psimage=gdImageCreateFromJpeg(psf);
+	if (*separator=='j') 
+	  psimage=gdImageCreateFromJpeg(psstream);
 #endif
 #ifdef HAVE_GDIMAGEGIF
-	  if (*separator=='g') 
-	    psimage=gdImageCreateFromGif(psf);
+	if (*separator=='g') 
+	  psimage=gdImageCreateFromGif(psstream);
 #endif
-	}
-	fclose(psf);
       }
+      fclose(psstream);
       if (psimage==NULL) {
 	/* Default: PostScript image */
 	if (flags & NO_GHOSTSCRIPT) { 
