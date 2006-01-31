@@ -344,17 +344,23 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 	  && (strcmp(++separator,"png")==0 
 	      || strcmp(separator,"jpg")==0
 	      || strcmp(separator,"gif")==0)) {
-	DEBUG_PRINT(DEBUG_DVI,("\n  INCLUDE BITMAP \t%s", psfile));
-	if (*separator=='p') 
-	  psimage=gdImageCreateFromPng(psstream);
-#ifdef HAVE_GDIMAGECREATETRUECOLOR
-	if (*separator=='j') 
-	  psimage=gdImageCreateFromJpeg(psstream);
-#endif
+	DEBUG_PRINT(DEBUG_DVI,("\n  INCLUDE BITMAP (PNG?"));
+	psimage=gdImageCreateFromPng(psstream);
 #ifdef HAVE_GDIMAGEGIF
-	if (*separator=='g') 
+	if (psimage==NULL) {
+	  DEBUG_PRINT(DEBUG_DVI,(" No. GIF?"));
+	  fseek(psstream,0,SEEK_SET);
 	  psimage=gdImageCreateFromGif(psstream);
+	}
 #endif
+#ifdef HAVE_GDIMAGECREATETRUECOLOR
+	if (psimage==NULL) {
+	  DEBUG_PRINT(DEBUG_DVI,(" No. JPG?"));
+	  fseek(psstream,0,SEEK_SET);
+	  psimage=gdImageCreateFromJpeg(psstream);
+	}
+#endif
+	DEBUG_PRINT(DEBUG_DVI,((psimage==NULL)?" No!)":" Yes!)"));
       }
       fclose(psstream);
       if (psimage==NULL) {
