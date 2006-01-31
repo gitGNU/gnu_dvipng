@@ -331,7 +331,7 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
       } 
       /* Test access permission even for EPS files */
       psstream=fopen(psfile,"rb");
-      if (psfile == NULL) {
+      if (psstream == NULL) {
 	Warning("Cannot access image file %s, image will be left blank", 
 		psname );
 	flags |= PAGE_GAVE_WARN;
@@ -403,7 +403,7 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 	}
 	DEBUG_PRINT(DEBUG_DVI,
 		    ("\n  GRAPHIC(X|S) INCLUDE \t%s (%d,%d) res %dx%d at (%d,%d)",
-		     psfile,gdImageSX(psimage),gdImageSY(psimage),
+		     psname,gdImageSX(psimage),gdImageSY(psimage),
 		     hresolution,vresolution,hh,vv));
 #ifdef HAVE_GDIMAGECREATETRUECOLOR
 	if (psimage->trueColor && !flags & RENDER_TRUECOLOR)
@@ -422,7 +422,7 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
     } else { /* Don't draw */
       DEBUG_PRINT(DEBUG_DVI,
 		  ("\n  GRAPHIC(X|S) INCLUDE \t%s (%d,%d) res %dx%d at (%d,%d)",
-		   psfile,pngheight,pngwidth,
+		   psname,pngheight,pngwidth,
 		   hresolution,vresolution,hh,vv));
       min(x_min,hh);
       min(y_min,vv-pngheight+1);
