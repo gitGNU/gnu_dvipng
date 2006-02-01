@@ -319,7 +319,7 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
       pngheight = (dpi*(ury-lly)+71)/72;
     }    
     if (page_imagep != NULL) { /* Draw into image */
-      char *psfile;
+      char *psfile, *filetype="";
       gdImagePtr psimage=NULL;
       FILE* psstream;
 
@@ -341,26 +341,29 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
       switch (getc(psstream)) {
       case 0x89: /* PNG magic: "\211PNG\r\n\032\n" */
 	DEBUG_PRINT(DEBUG_DVI,("\n  INCLUDE PNG \t%s",psfile));
+	filetype="PNG image ";
 	fseek(psstream,0,SEEK_SET);
 	psimage=gdImageCreateFromPng(psstream);
 	fclose(psstream);
 	break;
-#ifdef HAVE_GDIMAGEGIF
       case 'G': /* GIF magic: "GIF87" or "GIF89" */
 	DEBUG_PRINT(DEBUG_DVI,("\n  INCLUDE GIF \t%s",psfile));
+	filetype="GIF image ";
+#ifdef HAVE_GDIMAGEGIF
 	fseek(psstream,0,SEEK_SET);
 	psimage=gdImageCreateFromGif(psstream);
+#endif
 	fclose(psstream);
 	break;
-#endif
-#ifdef HAVE_GDIMAGECREATETRUECOLOR
       case 0xff: /* JPEG magic: 0xffd8 */
 	DEBUG_PRINT(DEBUG_DVI,("\n  INCLUDE JPEG \t%s",psfile));
+	filetype="JPEG image ";
+#ifdef HAVE_GDIMAGECREATETRUECOLOR
 	fseek(psstream,0,SEEK_SET);
 	psimage=gdImageCreateFromJpeg(psstream);
+#endif
 	fclose(psstream);
 	break;
-#endif
       default:  /* Default, PostScript magic: "%!PS-Adobe" */
 	fclose(psstream);
 	if (flags & NO_GHOSTSCRIPT) { 
@@ -386,6 +389,12 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 	    && gdImageSY(psimage)!=pngheight
 	    && gdImageSY(psimage)!=pngheight+1) {
 	  gdImagePtr scaledimage;
+
+	  DEBUG_PRINT(DEBUG_DVI,
+		      ("\n  RESCALE INCLUDED BITMAP \t%s (%d,%d) -> (%d,%d)",
+		       psfile,
+		       gdImageSX(psimage),gdImageSY(psimage),
+		       pngwidth,pngheight));
 #ifdef HAVE_GDIMAGECREATETRUECOLOR
 	  scaledimage=gdImageCreateTrueColor(pngwidth,pngheight);
 	  gdImageCopyResampled(scaledimage,psimage,0,0,0,0,
@@ -397,11 +406,6 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 			     pngwidth,pngheight,
 			     gdImageSX(psimage),gdImageSY(psimage));
 #endif
-	  DEBUG_PRINT(DEBUG_DVI,
-		      ("\n  RESCALE INCLUDED BITMAP \t%s (%d,%d) -> (%d,%d)",
-		       psfile,
-		       gdImageSX(psimage),gdImageSY(psimage),
-		       pngwidth,pngheight));
 	  gdImageDestroy(psimage);
 	  psimage=scaledimage;
 	}
@@ -419,7 +423,8 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 		    gdImageSX(psimage),gdImageSY(psimage));
 	gdImageDestroy(psimage);
       } else {
-	Warning("Unable to load %s, image will be left blank", psfile );
+	Warning("Unable to load %s%s, image will be left blank", 
+		filetype,psfile );
 	flags |= PAGE_GAVE_WARN;
       } 
       Message(BE_NONQUIET,">");
