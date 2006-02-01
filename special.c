@@ -319,7 +319,7 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
       pngheight = (dpi*(ury-lly)+71)/72;
     }    
     if (page_imagep != NULL) { /* Draw into image */
-      char *psfile, *separator;
+      char *psfile;
       gdImagePtr psimage=NULL;
       FILE* psstream;
 
@@ -338,33 +338,31 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 	return;
       } 
       Message(BE_NONQUIET," <%s",psname);
-      separator = strrchr(psfile,'.');	
-      /* Bitmapped images */
-      if (separator!=NULL 
-	  && (strcmp(++separator,"png")==0 
-	      || strcmp(separator,"jpg")==0
-	      || strcmp(separator,"gif")==0)) {
-	DEBUG_PRINT(DEBUG_DVI,("\n  INCLUDE BITMAP (PNG?"));
+      switch (getc(psstream)) {
+      case 0x89: /* PNG magic: "\211PNG\r\n\032\n" */
+	DEBUG_PRINT(DEBUG_DVI,("\n  INCLUDE PNG \t%s",psfile));
+	fseek(psstream,0,SEEK_SET);
 	psimage=gdImageCreateFromPng(psstream);
+	fclose(psstream);
+	break;
 #ifdef HAVE_GDIMAGEGIF
-	if (psimage==NULL) {
-	  DEBUG_PRINT(DEBUG_DVI,(" No. GIF?"));
-	  fseek(psstream,0,SEEK_SET);
-	  psimage=gdImageCreateFromGif(psstream);
-	}
+      case 'G': /* GIF magic: "GIF87" or "GIF89" */
+	DEBUG_PRINT(DEBUG_DVI,("\n  INCLUDE GIF \t%s",psfile));
+	fseek(psstream,0,SEEK_SET);
+	psimage=gdImageCreateFromGif(psstream);
+	fclose(psstream);
+	break;
 #endif
 #ifdef HAVE_GDIMAGECREATETRUECOLOR
-	if (psimage==NULL) {
-	  DEBUG_PRINT(DEBUG_DVI,(" No. JPG?"));
-	  fseek(psstream,0,SEEK_SET);
-	  psimage=gdImageCreateFromJpeg(psstream);
-	}
+      case 0xff: /* JPEG magic: 0xffd8 */
+	DEBUG_PRINT(DEBUG_DVI,("\n  INCLUDE JPEG \t%s",psfile));
+	fseek(psstream,0,SEEK_SET);
+	psimage=gdImageCreateFromJpeg(psstream);
+	fclose(psstream);
+	break;
 #endif
-	DEBUG_PRINT(DEBUG_DVI,((psimage==NULL)?" No!)":" Yes!)"));
-      }
-      fclose(psstream);
-      if (psimage==NULL) {
-	/* Default: PostScript image */
+      default:  /* Default, PostScript magic: "%!PS-Adobe" */
+	fclose(psstream);
 	if (flags & NO_GHOSTSCRIPT) { 
 	  Warning("GhostScript calls disallowed by --noghostscript", psfile );
 	  flags |= PAGE_GAVE_WARN;
