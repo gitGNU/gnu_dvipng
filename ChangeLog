@@ -1,4 +1,6 @@
 2006-02-03  Jan-Ake Larsson  <jalar@mai.liu.se>
+	* special.c:
+	Revert message about file type, debug information is enough
 
 	* special.c: Warn for nonexistent image decoder
 
