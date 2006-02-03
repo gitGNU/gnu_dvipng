@@ -352,6 +352,8 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 #ifdef HAVE_GDIMAGEGIF
 	fseek(psstream,0,SEEK_SET);
 	psimage=gdImageCreateFromGif(psstream);
+#else
+	DEBUG_PRINT(DEBUG_DVI,(" (NO GIF DECODER)"));
 #endif
 	fclose(psstream);
 	break;
@@ -361,6 +363,8 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 #ifdef HAVE_GDIMAGECREATETRUECOLOR
 	fseek(psstream,0,SEEK_SET);
 	psimage=gdImageCreateFromJpeg(psstream);
+#else
+	DEBUG_PRINT(DEBUG_DVI,(" (NO JPEG DECODER)"));
 #endif
 	fclose(psstream);
 	break;
