@@ -1,3 +1,32 @@
+2006-02-03  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* special.c: Warn for nonexistent image decoder
+
+2006-02-01  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* special.c: Warn with file type when unable to load included image
+
+	* special.c:
+	Read the first byte of file to be included and compare with magic
+	number
+
+2006-01-31  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* special.c:
+	Temporary version, just try the different image decoders and see
+
+	* special.c: Use correct variables
+
+2006-01-29  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* special.c: Add code to check image access permission
+
+2006-01-28  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* special.c: Simplify some code
+
+	* papersiz.c: Fix rounding error for length calculation
+
 2006-01-26  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* color.c: Fix typo that gave a segfault
