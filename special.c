@@ -319,7 +319,7 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
       pngheight = (dpi*(ury-lly)+71)/72;
     }    
     if (page_imagep != NULL) { /* Draw into image */
-      char *psfile, *filetype="";
+      char *psfile;
       gdImagePtr psimage=NULL;
       FILE* psstream;
 
@@ -341,14 +341,12 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
       switch (getc(psstream)) {
       case 0x89: /* PNG magic: "\211PNG\r\n\032\n" */
 	DEBUG_PRINT(DEBUG_DVI,("\n  INCLUDE PNG \t%s",psfile));
-	filetype="PNG image ";
 	fseek(psstream,0,SEEK_SET);
 	psimage=gdImageCreateFromPng(psstream);
 	fclose(psstream);
 	break;
       case 'G': /* GIF magic: "GIF87" or "GIF89" */
 	DEBUG_PRINT(DEBUG_DVI,("\n  INCLUDE GIF \t%s",psfile));
-	filetype="GIF image ";
 #ifdef HAVE_GDIMAGEGIF
 	fseek(psstream,0,SEEK_SET);
 	psimage=gdImageCreateFromGif(psstream);
@@ -359,7 +357,6 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 	break;
       case 0xff: /* JPEG magic: 0xffd8 */
 	DEBUG_PRINT(DEBUG_DVI,("\n  INCLUDE JPEG \t%s",psfile));
-	filetype="JPEG image ";
 #ifdef HAVE_GDIMAGECREATETRUECOLOR
 	fseek(psstream,0,SEEK_SET);
 	psimage=gdImageCreateFromJpeg(psstream);
@@ -427,8 +424,7 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 		    gdImageSX(psimage),gdImageSY(psimage));
 	gdImageDestroy(psimage);
       } else {
-	Warning("Unable to load %s%s, image will be left blank", 
-		filetype,psfile );
+	Warning("Unable to load %s, image will be left blank",psfile );
 	flags |= PAGE_GAVE_WARN;
       } 
       Message(BE_NONQUIET,">");
