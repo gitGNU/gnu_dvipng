@@ -86,7 +86,7 @@ ps2png(const char *psfile, int hresolution, int vresolution,
     close(uppipe[0]);
     dup2(uppipe[1], STDOUT_FILENO);
     close(uppipe[1]);
-    execl (GS_PATH, GS_PATH, device, resolution, /*devicesize,*/
+    execlp(GS_PATH, GS_PATH, device, resolution, /*devicesize,*/
 	   "-dBATCH", "-dNOPAUSE", "-q", "-sOutputFile=-", 
 	   "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
 	   (flags & NO_GSSAFER) ? "-": "-dSAFER", 
