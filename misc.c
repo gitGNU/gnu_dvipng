@@ -200,10 +200,10 @@ bool DecodeArgs(int argc, char ** argv)
 	/* Truecolor */
 	if (strncmp(p,"ruecolor",8)==0) { 
 	  if (p[8] != '0') {
-	    flags |= RENDER_TRUECOLOR; 
+	    flags |= FORCE_TRUECOLOR; 
 	    Message(PARSE_STDIN,"Truecolor mode on\n",p);
 	  } else { 
-	    flags &= ~RENDER_TRUECOLOR; 
+	    flags &= ~FORCE_TRUECOLOR; 
 	    Message(PARSE_STDIN,"Truecolor mode off\n");
 	  }
 	} else 
