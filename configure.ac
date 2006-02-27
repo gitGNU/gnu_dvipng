@@ -45,8 +45,31 @@ AC_SET_MAKE
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_LN_S
-AC_PATH_PROG(GS, gs, :)
+AC_ARG_WITH(gs,
+  AC_HELP_STRING([--with-gs=/PATH/TO/gs],[Specify where GhostScript is located]), 
+  [if test "x$withval" = xno ; then
+    GS=no
+  else
+    AC_PATH_PROG(GS,["$withval"])
+  fi],
+  [AC_CHECK_PROG(GS,gs,gs)
+  if test -z "$GS"; then
+    GS="gs"
+    AC_MSG_WARN([Cannot find GhostScript in your PATH])
+  fi
+])
 AC_DEFINE_UNQUOTED(GS_PATH, "$GS", [Define as the path to GhostScript.])
+GS_WARN=""
+AC_GS_HAS_DEVICE(pngalpha,
+   [GS_WARN="Your EPS inclusions will be cropped to the 
+             boundingbox, and rendered on an opaque background. 
+             Upgrade GhostScript to avoid this."
+   AC_GS_HAS_DEVICE(png16m,
+      [GS_WARN="Your EPS inclusions may not work.
+             Upgrade/install GhostScript to avoid this."])])
+if test -n "$GS_WARN"; then
+  AC_MSG_WARN([$GS_WARN])
+fi
 
 # Checks for libraries.
 AC_CHECK_LIB(m, pow)
@@ -121,7 +144,7 @@ AC_CHECK_FUNCS([dup2 memset munmap pow putenv strchr strrchr strtol strstr])
 if test "$enable_timing" = "yes"; then
   AC_CHECK_FUNCS([ftime gettimeofday])
 fi
-AC_CHECK_FUNCS([gdImageColorResolveAlpha gdImagePngEx gdImageCreateTrueColor gdImageGif gdImageAlphaBlending FT_Library_Version])
+AC_CHECK_FUNCS([gdImageCreateTrueColor gdImagePngEx gdImageGif FT_Library_Version])
 if test "$ac_cv_func_gdImageGif" = "yes"; then
    INSTALL_BIN_TARGET="install-dvigif"
 else
@@ -188,14 +211,17 @@ AC_MSG_RESULT([
 ** Configuration summary for $PACKAGE_STRING:
 
    The -d (debug) switch is enabled:        $enable_debug
-   Your gd is new enough to enable
-        the -z (compression) switch:        $ac_cv_func_gdImagePngEx
-   Your gd is new enough to enable
-        the --truecolor switch:             $ac_cv_func_gdImageCreateTrueColor
-   Your gd is new enough to enable
-        full alpha transparency:            $ac_cv_func_gdImageColorResolveAlpha
-   Your gd is new enough to enable
-        gif support (dvigif):               $ac_cv_func_gdImageGif
+   Your gd is new enough (>=2.0) to enable
+     the --truecolor switch, full alpha 
+     transparency, proper rescaling of 
+     included bitmaps, and jpeg inclusion:  $ac_cv_func_gdImageCreateTrueColor
+   Your gd is new enough (>=2.0.12) to 
+     enable transparent backgrounds for EPS
+     inclusion and the -z (compression)
+     switch:                                $ac_cv_func_gdImagePngEx
+   Your gd is new enough (>=2.0.28) to
+     enable gif inclusion and output 
+     (dvigif):                              $ac_cv_func_gdImageGif
    FreeType font rendering available:       $ac_have_freetype2
    T1lib font rendering available:          $ac_cv_lib_t1_T1_InitLib
 ])
