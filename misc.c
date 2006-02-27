@@ -386,6 +386,14 @@ bool DecodeArgs(int argc, char ** argv)
 	    flags &= ~MODE_PICKY;
 	    Message(PARSE_STDIN,"Images output even for pages with warnings\n");
 	  }
+	} else if (strncmp(p,"alette",6)==0) { 
+	  if (p[6] != '0') {
+	    flags |= FORCE_PALETTE;
+	    Message(PARSE_STDIN,"Forcing 256-color PNG output\n",p);
+	  } else {
+	    flags &= ~FORCE_PALETTE;
+	    Message(PARSE_STDIN,"Allows truecolor PNG output\n");
+	  }
 	} else {   /* a -p specifier for first page */
 	  int32_t firstpage;
 	  bool abspage=false;
@@ -550,23 +558,17 @@ named COPYING and dvipng.c.");
 #endif
     fprintf(stdout,"  -D #         Output resolution\n");
     fprintf(stdout,"  -l #         Last page to be output\n");
-    fprintf(stdout,"  --mode s     MetaFont mode (default 'cx')\n");
-    fprintf(stdout,"  -M*          Don't make PK fonts\n");
     fprintf(stdout,"  -o f         Output file, '%%d' is pagenumber\n");
     fprintf(stdout,"  -O c         Image offset\n");
     fprintf(stdout,"  -p #         First page to be output\n");
     fprintf(stdout,"  -pp #,#..    Page list to be output\n");
     fprintf(stdout,"  -q*          Quiet operation\n");
-    fprintf(stdout,"  -r*          Reverse order of pages\n");
-    /*    fprintf(stdout,"  -t c         Paper format (also accepts e.g., '-t a4')\n");*/
     fprintf(stdout,"  -T c         Image size (also accepts '-T bbox' and '-T tight')\n");
     fprintf(stdout,"  -v*          Verbose operation\n");
-    fprintf(stdout,"  -x #         Override dvi magnification\n");
     fprintf(stdout,"  -            Interactive query of options\n");
     fprintf(stdout,"\nThese do not correspond to dvips options:\n");
     fprintf(stdout,"  -bd #        Transparent border width in dots\n");
     fprintf(stdout,"  -bd s        Transparent border fallback color (TeX-style color)\n");
-    fprintf(stdout,"  --bdpi #     Set the base (Metafont) resolution\n");
     fprintf(stdout,"  -bg s        Background color (TeX-style color or 'Transparent')\n");
     fprintf(stdout,"  --depth*     Output the image depth on stdout\n");
     fprintf(stdout,"  --dvinum*    Use TeX page numbers in output filenames\n");
@@ -582,6 +584,9 @@ named COPYING and dvipng.c.");
     fprintf(stdout,"  --height*    Output the image height on stdout\n");
     fprintf(stdout,"  --noghostscript*  Don't use ghostscript for PostScript specials\n");
     fprintf(stdout,"  --nogssafer* Don't use -dSAFER in ghostscript calls\n");
+#ifdef HAVE_GDIMAGECREATETRUECOLOR
+    fprintf(stdout,"  --palette*   Force palette output\n");
+#endif
     fprintf(stdout,"  --picky      When a warning occurs, don't output image\n");
 #ifdef HAVE_GDIMAGEGIF
     fprintf(stdout,"  --png        Output PNG images (dvipng default)\n");
