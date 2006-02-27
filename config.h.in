@@ -51,12 +51,6 @@
 /* Define to 1 if you have the `FT_Library_Version' function. */
 #undef HAVE_FT_LIBRARY_VERSION
 
-/* Define to 1 if you have the `gdImageAlphaBlending' function. */
-#undef HAVE_GDIMAGEALPHABLENDING
-
-/* Define to 1 if you have the `gdImageColorResolveAlpha' function. */
-#undef HAVE_GDIMAGECOLORRESOLVEALPHA
-
 /* Define to 1 if you have the `gdImageCreateTrueColor' function. */
 #undef HAVE_GDIMAGECREATETRUECOLOR
 
