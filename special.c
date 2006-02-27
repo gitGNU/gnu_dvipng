@@ -32,8 +32,8 @@
 #define SKIPSPACES(s) while(s && *s==' ' && *s!='\0') s++
 
 gdImagePtr
-ps2png(const char *psfile, int hresolution, int vresolution, 
-       int urx, int ury, int llx, int lly)
+ps2png(const char *psfile, char *device, int hresolution, int vresolution, 
+       int llx, int lly, int urx, int ury)
 {
 #ifndef MIKTEX
   int downpipe[2], uppipe[2];
@@ -51,12 +51,6 @@ ps2png(const char *psfile, int hresolution, int vresolution,
   FILE *psstream=NULL, *pngstream=NULL;
   char resolution[STRSIZE]; 
   /*   char devicesize[STRSIZE];  */
-#ifdef HAVE_GDIMAGECREATETRUECOLOR
-  /* For some reason, png256 gives inferior result */
-  char *device="-sDEVICE=png16m";  
-#else
-  char *device="-sDEVICE=png256";  
-#endif
   gdImagePtr psimage=NULL;
   static char* showpage="";
 
@@ -158,10 +152,10 @@ ps2png(const char *psfile, int hresolution, int vresolution,
 #endif
   if (psimage == NULL) {
     DEBUG_PRINT(DEBUG_GS,("\n  GS OUTPUT:\tNO IMAGE "));
-    if (!showpage) {
+    if (!(*showpage)) {
       showpage="showpage";
       DEBUG_PRINT(DEBUG_GS,("(will try adding \"%s\") ",showpage));
-      psimage=ps2png(psfile, hresolution, vresolution, urx, ury, llx, lly);
+      psimage=ps2png(psfile, device, hresolution, vresolution, llx, lly, urx, ury);
       showpage="";
     }
 #ifdef DEBUG
@@ -270,6 +264,7 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
   if (strncmp(buffer,"PSfile=",7)==0) { /* PSfile */
     char* psname = buffer+7,*psfile;
     int llx=0,lly=0,urx=0,ury=0,rwi=0,rhi=0;
+    bool clip=false;
     int hresolution,vresolution;
     int pngheight,pngwidth;
 
@@ -295,7 +290,8 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
       else if (strncmp(buffer,"ury=",4)==0) ury = strtol(buffer+4,&buffer,10);
       else if (strncmp(buffer,"rwi=",4)==0) rwi = strtol(buffer+4,&buffer,10);
       else if (strncmp(buffer,"rhi=",4)==0) rhi = strtol(buffer+4,&buffer,10);
-      else while (*buffer && *buffer!=' ') buffer++;
+      else if (strncmp(buffer,"clip",4)==0) {clip = true; buffer=buffer+4;}
+      while (*buffer && *buffer!=' ') buffer++;
       SKIPSPACES(buffer);
     }
     
@@ -374,10 +370,55 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 	  gdImagePtr cacheimage=NULL;
 	  if (flags & CACHE_IMAGES) 
 	    cacheimage=psimage=readcache(psname);
+	  /* Use alpha blending, and render transparent postscript
+	     images. The alpha blending works correctly only from
+	     libgd 2.0.12 upwards */
+#ifdef HAVE_GDIMAGECREATETRUECOLOR
+	  if (!page_imagep->trueColor)
+	    Warning("Palette output, opaque image inclusion");
+#ifdef HAVE_GDIMAGEPNGEX
+	  else if (psimage==NULL) {
+	    DEBUG_PRINT(DEBUG_DVI,("\n  RENDER PNGALPHA POSTSCRIPT \t%s",
+				   psfile));
+	    if (clip) {
+	      DEBUG_PRINT(DEBUG_DVI,(", CLIPPED TO BBOX"));
+	      psimage = ps2png(psfile, "-sDEVICE=pngalpha", 
+			       hresolution, vresolution, 
+			       llx, lly, urx, ury);
+	    } else {
+	      /* Render across the whole image */ 
+	      DEBUG_PRINT(DEBUG_DVI,
+			  ("\n  EXPAND BBOX \t%d %d %d %d -> %d %d %d %d",
+			   llx,lly,urx,ury,
+			   llx-(hh+1)*72/hresolution,
+			   lly-(gdImageSY(page_imagep)-vv-1)*72/vresolution,
+			   llx+(gdImageSX(page_imagep)-hh)*72/hresolution,
+			   lly+(vv+1)*72/vresolution));
+	      psimage = ps2png(psfile, "-sDEVICE=pngalpha", 
+			       hresolution, vresolution,
+			       llx-(hh+1)*72/hresolution,
+			       lly-(gdImageSY(page_imagep)-vv-1)*72/vresolution,
+			       llx+(gdImageSX(page_imagep)-hh)*72/hresolution,
+			       lly+(vv+1)*72/vresolution);
+	      if (psimage!=NULL) {
+		hh=0;
+		vv=gdImageSY(page_imagep)-1;
+		pngwidth=gdImageSX(psimage);
+		pngheight=gdImageSY(psimage);
+	      }
+	    }
+	    if (psimage==NULL)
+	      Warning("No GhostScript pngalpha output, opaque image inclusion");
+	  }
+#endif
+#endif
 	  if (psimage==NULL) {
+	    /* png256 gives inferior result */
 	    DEBUG_PRINT(DEBUG_DVI,("\n  RENDER POSTSCRIPT \t%s", psfile));
-	    psimage = ps2png(psfile, hresolution, vresolution, 
-			     urx, ury, llx, lly);
+	    psimage = ps2png(psfile, "-sDEVICE=png16m",
+			     hresolution, vresolution, 
+			     llx, lly, urx, ury);
+	    flags |= PAGE_GAVE_WARN;
 	  }
 	  if (flags & CACHE_IMAGES && cacheimage==NULL) 
 	    storecache(psname,psimage); 
@@ -415,13 +456,22 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 		     psname,gdImageSX(psimage),gdImageSY(psimage),
 		     hresolution,vresolution,hh,vv));
 #ifdef HAVE_GDIMAGECREATETRUECOLOR
-	if (psimage->trueColor && !flags & RENDER_TRUECOLOR)
+	if (psimage->trueColor && !page_imagep->trueColor)
 	  gdImageTrueColorToPalette(psimage,0,256);
+#endif
+#ifdef HAVE_GDIMAGEPNGEX
+	gdImageAlphaBlending(page_imagep,1);
+#else
+	Warning("Using libgd < 2.0.12, opaque image inclusion");
+	flags |= PAGE_GAVE_WARN;
 #endif
 	gdImageCopy(page_imagep, psimage, 
 		    hh, vv-gdImageSY(psimage)+1,
 		    0,0,
 		    gdImageSX(psimage),gdImageSY(psimage));
+#ifdef HAVE_GDIMAGEPNGEX
+	gdImageAlphaBlending(page_imagep,0);
+#endif
 	gdImageDestroy(psimage);
       } else {
 	Warning("Unable to load %s, image will be left blank",psfile );
@@ -429,14 +479,15 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
       } 
       Message(BE_NONQUIET,">");
     } else { /* Don't draw */
+      flags |= PAGE_TRUECOLOR;
       DEBUG_PRINT(DEBUG_DVI,
 		  ("\n  GRAPHIC(X|S) INCLUDE \t%s (%d,%d) res %dx%d at (%d,%d)",
 		   psname,pngheight,pngwidth,
 		   hresolution,vresolution,hh,vv));
       min(x_min,hh);
       min(y_min,vv-pngheight+1);
-      max(x_max,hh+pngwidth-1);
-      max(y_max,vv);
+      max(x_max,hh+pngwidth);
+      max(y_max,vv+1);
     }
     return;
   }
