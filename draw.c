@@ -425,7 +425,7 @@ void DrawPages(void)
       }
       Message(BE_NONQUIET,"] ");
       fflush(stdout);
-      flags &= ~PAGE_GAVE_WARN;
+      flags &= ~(PAGE_GAVE_WARN | PAGE_TRUECOLOR);
       dvi_pos=NextPPage(dvi,dvi_pos);
     }
     Message(BE_NONQUIET,"\n");
