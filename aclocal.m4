@@ -203,3 +203,18 @@ AC_DEFUN(AC_HAS_KPSE_ENC_FORMATS,
   AC_DEFINE(HAVE_KPSE_ENC_FORMATS, 1, 
 	[Define to 1 if your kpathsea has kpse_enc_format])],
  [AC_MSG_RESULT(no)])])
+
+
+dnl 
+dnl Check devices for GS
+dnl AC_GS_HAS_DEVICE(DEVICE,ACTION-IF-FAILED)
+dnl
+AC_DEFUN(AC_GS_HAS_DEVICE,
+ [AC_MSG_CHECKING([whether $GS has the $1 device])
+  if $GS -h | grep $1 >/dev/null; then
+    AC_MSG_RESULT(yes)
+  else
+    AC_MSG_RESULT(no)
+    $2
+  fi
+])
