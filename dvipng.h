@@ -416,7 +416,7 @@ EXTERN struct internal_state {
 #define EXPAND_BBOX                  (1<<3)
 #define TIGHT_BBOX                   (1<<4)
 #define CACHE_IMAGES                 (1<<5)
-#define RENDER_TRUECOLOR             (1<<6)
+#define FORCE_TRUECOLOR              (1<<6)
 #define USE_FREETYPE                 (1<<7)
 #define USE_LIBT1                    (1<<8)
 #define REPORT_HEIGHT                (1<<9)
@@ -431,6 +431,8 @@ EXTERN struct internal_state {
 #define NO_GSSAFER                   (1<<18)
 #define BG_TRANSPARENT               (1<<19)
 #define BG_TRANSPARENT_ALPHA         (1<<20)
+#define PAGE_TRUECOLOR               (1<<21)
+#define FORCE_PALETTE                (1<<22)
 EXTERN uint32_t flags INIT(BE_NONQUIET | USE_FREETYPE | USE_LIBT1);
 
 #ifdef DEBUG
@@ -470,16 +472,16 @@ EXTERN int      ndone INIT(0);          /* number of pages converted       */
 # ifdef HAVE_GETTIMEOFDAY
 EXTERN struct timeval Tp;
 #  define TIC { gettimeofday(&Tp, NULL); \
-    my_tic= (float)Tp.tv_sec + ((float)(Tp.tv_usec))/ 1000000.0;}
+    my_tic= Tp.tv_sec + Tp.tv_usec/1000000.0;}
 #  define TOC { gettimeofday(&Tp, NULL); \
-    my_toc += ((float)Tp.tv_sec + ((float)(Tp.tv_usec))/ 1000000.0) - my_tic;}
+    my_toc += Tp.tv_sec + Tp.tv_usec/1000000.0 - my_tic;}
 # else
 #  ifdef HAVE_FTIME
 EXTERN struct timeb timebuffer;
 #   define TIC() { ftime(&timebuffer); \
- my_tic= timebuffer.time + (float)(timebuffer.millitm) / 1000.0;
-#   define TOC() { gettimeofday(&Tp, NULL); \
- my_toc += (timebuffer.time + (float)(timebuffer.millitm) / 1000.0) - my_tic;}
+ my_tic= timebuffer.time + timebuffer.millitm/1000.0;
+#   define TOC() { ftime(&timebuffer); \
+ my_toc += timebuffer.time + timebuffer.millitm/1000.0 - my_tic;}
 #  else
 #   define TIC()
 #   define TOC()
