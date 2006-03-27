@@ -1,5 +1,7 @@
 2006-03-27  Jan-Ake Larsson  <jalar@mai.liu.se>
 
+	* draw.c: Fix segfault in debug mode
+
 	* aclocal.m4: Make sure the kpse_enc_format test fails for the
 	right reason only
 
