@@ -44,7 +44,7 @@ void LoadFT(int32_t c, struct char_entry * ptr)
     glyph_i = FT_Get_Char_Index( currentfont->face, c );
   if (FT_Load_Glyph( currentfont->face,    /* handle to face object */
 		     glyph_i,              /* glyph index           */
-		     FT_LOAD_RENDER | FT_LOAD_NO_HINTING ))
+		     FT_LOAD_RENDER | FT_LOAD_TARGET_LIGHT ))
                                            /* load flags            */
     Fatal("cannot load FT char %d",c);
   ptr->xOffset = -currentfont->face->glyph->bitmap_left*shrinkfactor;
