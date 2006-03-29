@@ -32,9 +32,9 @@ Benefits of dvipng
      on-the-fly, as needed in preview-latex, WeBWorK and others.
 
    * It does not read the postamble, so it can be started before TeX
-     finishes. There is a -follow switch that makes dvipng wait at EOF
-     for further output, unless it finds the POST marker that indicates
-     the end of the DVI.
+     finishes. There is a -follow switch that makes dvipng wait at
+     end-of-file for further output, unless it finds the POST marker
+     that indicates the end of the DVI.
 
    * Interactive query of options. dvipng can read options interactively
      through stdin, and all options are usable. It is even possible to

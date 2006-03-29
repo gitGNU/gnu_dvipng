@@ -49,9 +49,9 @@ as needed in @previewlatex{}, WeBWorK and others.
 
 @item 
 It does not read the postamble, so it can be started before @TeX{}
-finishes. There is a --follow switch that makes dvipng wait at EOF for
-further output, unless it finds the POST marker that indicates the end
-of the DVI.
+finishes. There is a --follow switch that makes dvipng wait at
+end-of-file for further output, unless it finds the POST marker that
+indicates the end of the DVI.
 
 @item 
 Interactive query of options. dvipng can read options interactively
@@ -128,7 +128,7 @@ Copyright @copyright{} 2002-2005 Jan-@AA{}ke Larsson
 
 @itemize @bullet
 @item 
-Test the FreeType interface so that TrueType fonts work properly.
+Support for CJK-@LaTeX{} (Chinese, Japanese, Korean), that is: subfonts.
 
 @item 
 Further speed improvements.

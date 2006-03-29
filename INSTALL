@@ -140,7 +140,8 @@ supported by most `configure' scripts.
 
    You'll have to add something like `/home/myself/bin' to your `PATH'
 shell variable, if it isn't there already, and similarly set the
-`INFOPATH' variable to be able to access the documentation.
+`INFOPATH' and `MANPATH' variables to be able to access the
+documentation.
 
 Copying
 =======
