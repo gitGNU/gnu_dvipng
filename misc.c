@@ -573,7 +573,7 @@ named COPYING and dvipng.c.");
     fprintf(stdout,"  --depth*     Output the image depth on stdout\n");
     fprintf(stdout,"  --dvinum*    Use TeX page numbers in output filenames\n");
     fprintf(stdout,"  -fg s        Foreground color (TeX-style color)\n");
-    fprintf(stdout,"  --follow*    Follow mode\n");
+    fprintf(stdout,"  --follow*    Wait for data at end-of-file\n");
 #ifdef HAVE_FT2
     fprintf(stdout,"  --freetype*  FreeType font rendering (default on)\n");
 #endif
