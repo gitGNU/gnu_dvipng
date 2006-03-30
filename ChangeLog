@@ -1,3 +1,30 @@
+2006-03-30  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* Release 1.8
+
+	* RELEASE: Update for 1.8
+
+	* set.c: 
+	* readme.texi: 
+	* install.texi: 
+	* ft.c: 
+	* dvi.c: 
+	* draw.c: 
+	* README: 
+	* INSTALL: Update copyright
+
+2006-03-29  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* dvipng.1: 
+	* dvipng.texi: Document new switch, new PostScript inclusion,
+	rearrange and adjust
+
+	* misc.c: 
+	* INSTALL: 
+	* README: 
+	* install.texi: 
+	* readme.texi: Minimal documentation adjustments
+
 2006-03-27  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* ft.c: Change to FT_LOAD_TARGET_LIGHT
@@ -46,8 +73,8 @@
 
 2006-01-31  Jan-Ake Larsson  <jalar@mai.liu.se>
 
-	* special.c:
-	Temporary version, just try the different image decoders and see
+	* special.c: Temporary version, just try the different image
+	decoders and see
 
 	* special.c: Use correct variables
 
