@@ -1631,13 +1631,14 @@ bugs and suggesting improvements as the thing has evolved. These
 include but is perhaps not limited to (in semi-random order): Thomas
 Esser (te@TeX{}), Christian Schenk (MIK@TeX{}), Brian R Furry (debian
 package), Angus Leeming (LyX), Thomas Boutell (libgd), John Jones
-(first user report), Uwe Kern (xcolor), Karl Berry (@TeX{} Live), Neal
-Harmon, Alan Shutko, Reiner Stieb, Nick Alcock, Adam Buchbinder, Svend
-Tollak Munkejord, James Longstreet, Bernhard Simon, Bob McElrath,
-Georg Schwarz, Jason Farmer, Brian V. Smith, Samuel Hathaway, Thomas
-R. Shemanske, Stephen Gibson, Christian Ridderstr@"om, Ezra Peisach,
-William H Wheeler, Thomas Klausner, Harald Koenig, Adrian Bunk, Kevin
-Smith, Jason Riedy, Wolfram Krause, and Reinhard Kotucha.
+(first user report), Uwe Kern (xcolor), Karl Berry (@TeX{} Live),
+David Harvey (hinting in Freetype), Neal Harmon, Alan Shutko, Reiner
+Stieb, Nick Alcock, Adam Buchbinder, Svend Tollak Munkejord, James
+Longstreet, Bernhard Simon, Bob McElrath, Georg Schwarz, Jason Farmer,
+Brian V. Smith, Samuel Hathaway, Thomas R. Shemanske, Stephen Gibson,
+Christian Ridderstr@"om, Ezra Peisach, William H Wheeler, Thomas
+Klausner, Harald Koenig, Adrian Bunk, Kevin Smith, Jason Riedy,
+Wolfram Krause, and Reinhard Kotucha.
 
 @ifset man
 @c man begin NOTES
