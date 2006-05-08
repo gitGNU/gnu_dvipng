@@ -1,6 +1,6 @@
 2006-05-08  Jan-Ake Larsson  <jalar@mai.liu.se>
 
-	* fontmap.c: Add credit
+	* dvipng.texi: Add credit
 
 	* Makefile.in: add www target
 
