@@ -95,8 +95,14 @@ dvipng.help: dvipng
 		|| cp dvipng.tmp dvipng.help
 	rm -f dvipng.tmp
 
-dvipng.html: $(TEXIFILES) dvipng.help
-	texi2html -I $(srcdir) $(srcdir)/dvipng.texi
+www: $(TEXIFILES) dvipng.help
+	texi2html -split chapter -nosec-nav -subdir html \
+	   -I $(srcdir) $(srcdir)/dvipng.texi
+	(cd html; for i in *; do \
+	   sed -e "s/Jan-A/Jan-\&Aring\;/g" $$i > ../www/$$i; \
+	done) 
+	cp www/dvipng.html www/index.html
+	rm -rf html
 
 dvipng_mono.html: $(TEXIFILES) dvipng.help
 	texi2html --monolithic -nomenu -nosec_nav -o dvipng_mono.html \
