@@ -42,10 +42,12 @@ void LoadFT(int32_t c, struct char_entry * ptr)
 				currentfont->psfontmap->encoding->charname[c]);
   else 
     glyph_i = FT_Get_Char_Index( currentfont->face, c );
-  if (FT_Load_Glyph( currentfont->face,    /* handle to face object */
-		     glyph_i,              /* glyph index           */
-		     FT_LOAD_RENDER | FT_LOAD_TARGET_LIGHT ))
-                                           /* load flags            */
+  if (FT_Load_Glyph( currentfont->face, glyph_i,
+		     FT_LOAD_RENDER | FT_LOAD_TARGET_LIGHT )
+      /* On some configurations (FreeType <= 2.1.7?) the above fails,
+	 while the below works, dunno why */
+      && FT_Load_Glyph( currentfont->face, glyph_i,
+			FT_LOAD_RENDER | FT_LOAD_NO_HINTING ))
     Fatal("cannot load FT char %d",c);
   ptr->xOffset = -currentfont->face->glyph->bitmap_left*shrinkfactor;
   ptr->yOffset = (currentfont->face->glyph->bitmap_top-1)*shrinkfactor;
