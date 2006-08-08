@@ -1,3 +1,13 @@
+2006-08-08  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* special.c:
+	Fix bug with -dSAFER and non-. paths, and bug with pngalpha and
+	background color
+
+2006-05-17  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* fontmap.c: Rearrange, simplify, speed up
+
 2006-05-16  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* ft.c: FT_LOAD_TARGET_LIGHT does not work in some cases, fall
