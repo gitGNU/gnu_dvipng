@@ -52,7 +52,7 @@ ps2png(FILE *psfilestream, char *device, int hresolution, int vresolution,
   char resolution[STRSIZE]; 
   /*   char devicesize[STRSIZE];  */
   gdImagePtr psimage=NULL;
-  bool showpage=false;
+  static bool showpage=false;
 
   fseek(psfilestream,0,SEEK_SET);
   sprintf(resolution, "-r%dx%d",hresolution,vresolution);
