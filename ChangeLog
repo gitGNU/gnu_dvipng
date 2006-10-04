@@ -1,5 +1,7 @@
 2006-10-04  Jan-Ake Larsson  <jalar@mai.liu.se>
 
+	* configure.ac: Prepare for 1.9
+
 	* sfd.c: Only look for subfont file on recent kpathsea
 
 	* dvipng.c, ft.c, fontmap.c, dvipng.h: Prepare for subfonts (CJK)
