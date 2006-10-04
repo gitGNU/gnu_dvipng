@@ -385,17 +385,17 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 	    Warning("Palette output, opaque image inclusion");
 #ifdef HAVE_GDIMAGEPNGEX
 	  else if (psimage==NULL) {
-	    DEBUG_PRINT(DEBUG_DVI,("\n  RENDER PNGALPHA POSTSCRIPT \t%s",
-				   psfile));
+	    DEBUG_PRINT((DEBUG_DVI | DEBUG_GS),
+			("\n  GS RENDER \t%s -> pngalpha ",psfile));
 	    if (clip) {
-	      DEBUG_PRINT(DEBUG_DVI,(", CLIPPED TO BBOX"));
+	      DEBUG_PRINT((DEBUG_DVI | DEBUG_GS),(", CLIPPED TO BBOX"));
 	      psimage = ps2png(psstream, "-sDEVICE=pngalpha", 
 			       hresolution, vresolution, 
 			       llx, lly, urx, ury,
 			       255,255,255);
 	    } else {
 	      /* Render across the whole image */ 
-	      DEBUG_PRINT(DEBUG_DVI,
+	      DEBUG_PRINT((DEBUG_DVI | DEBUG_GS),
 			  ("\n  EXPAND BBOX \t%d %d %d %d -> %d %d %d %d",
 			   llx,lly,urx,ury,
 			   llx-(hh+1)*72/hresolution,
@@ -423,7 +423,8 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 #endif
 	  if (psimage==NULL) {
 	    /* png256 gives inferior result */
-	    DEBUG_PRINT(DEBUG_DVI,("\n  RENDER POSTSCRIPT \t%s", psfile));
+	    DEBUG_PRINT((DEBUG_DVI | DEBUG_GS),
+			("\n  GS RENDER \t%s -> png16m", psfile));
 	    psimage = ps2png(psstream, "-sDEVICE=png16m",
 			     hresolution, vresolution, 
 			     llx, lly, urx, ury,
