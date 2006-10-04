@@ -33,9 +33,9 @@ struct subfont* ReadSubfont(char* sfdname, char *infix)
   struct filemmap fmmap;
   
   /* OK, find subfont and look for correct infix */
-  //#ifdef HAVE_KPSE_ENC_FORMATS
+#ifdef HAVE_KPSE_ENC_FORMATS
   TEMPSTR(sfdfile,kpse_find_file(sfdname,kpse_sfd_format,false));
-  //#endif
+#endif
   if (sfdfile == NULL) {
     Warning("subfont file %s could not be found",sfdname);
     return(NULL);
