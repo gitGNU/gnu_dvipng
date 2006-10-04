@@ -19,7 +19,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
   02111-1307, USA.
 
-  Copyright (C) 2002-2005 Jan-Åke Larsson
+  Copyright (C) 2002-2006 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -72,14 +72,13 @@ void InitPSFontMap(void)
 
 struct psfontmap *SearchPSFontMap(char* fontname)
 {
-  char *pos,*end;
+  static char *pos=NULL,*end;
   struct psfontmap *entry=NULL;
 
-  if (psfontmap==NULL)
+  if (pos==NULL) {
     pos = psfont_mmap.mmap;
-  else
-    pos = psfontmap->end;
-  end = psfont_mmap.mmap+psfont_mmap.size;
+    end = psfont_mmap.mmap+psfont_mmap.size;
+  }
   while(pos<end && (entry==NULL || strcmp(entry->tfmname,fontname)!=0)) {
     while(pos < end 
 	  && (*pos=='\n' || *pos==' ' || *pos=='\t' 
@@ -104,6 +103,12 @@ struct psfontmap *SearchPSFontMap(char* fontname)
       entry->psfile = NULL;
       entry->encname = NULL;
       entry->encoding = NULL;
+#if HAVE_LIBT1
+      entry->t1_transformp=NULL;
+#endif
+#if HAVE_FT2
+      entry->ft_transformp=NULL;
+#endif
       while(pos < end && *pos!='\n') pos++;
       entry->end = pos;
       entry->next=psfontmap;
@@ -111,7 +116,7 @@ struct psfontmap *SearchPSFontMap(char* fontname)
     }
     pos++;
   }
-  if (strcmp(entry->tfmname,fontname)==0)
+  if (entry!=NULL && strcmp(entry->tfmname,fontname)==0)
     return(entry);
   else
     return(NULL);
@@ -145,12 +150,6 @@ void ReadPSFontMap(struct psfontmap *entry)
   DEBUG_PRINT((DEBUG_FT|DEBUG_T1),("\n  PSFONTMAP: %s ",entry->tfmname));
   pos=entry->line;
   end=entry->end;
-#if HAVE_LIBT1
-  entry->t1_transformp=NULL;
-#endif
-#if HAVE_FT2
-  entry->ft_transformp=NULL;
-#endif
   while(pos < end) { 
     if (*pos=='<') {                               /* filename follows */
       pos++;
