@@ -237,6 +237,14 @@ struct encoding {
   char*            charname[257];
 };
 
+struct subfont {
+  struct subfont* next;
+  char*           name;
+  char*           infix;
+  int             encoding;
+  int32_t         charindex[256];
+};
+
 #ifdef HAVE_FT2_OR_LIBT1
 struct psfontmap {
   struct psfontmap *next;
@@ -245,6 +253,7 @@ struct psfontmap {
 #ifdef HAVE_FT2
   FT_Matrix* ft_transformp;
   FT_Matrix ft_transform;
+  struct subfont* subfont;
 #endif
 #ifdef HAVE_LIBT1
   T1_TMATRIX* t1_transformp;
@@ -314,6 +323,8 @@ void    SetFntNum(int32_t, void* /* dvi/vf */);
 void    FreeFontNumP(struct font_num *hfontnump);
 
 #ifdef HAVE_FT2_OR_LIBT1
+char*   copyword(char* orig);
+struct psfontmap *NewPSFont(struct psfontmap* copyfrom);
 void    InitPSFontMap(void);
 void    ClearPSFontMap(void);
 struct psfontmap* FindPSFontMap(char*);
@@ -326,6 +337,8 @@ bool    ReadTFM(struct font_entry *, char*);
 bool    InitFT(struct font_entry *);
 void    DoneFT(struct font_entry *tfontp);
 void    LoadFT(int32_t, struct char_entry *);
+struct psfontmap* FindSubFont(struct psfontmap* entry, char* fontname);
+void    ClearSubfont(void);
 #endif
 
 #ifdef HAVE_LIBT1
