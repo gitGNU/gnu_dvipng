@@ -159,10 +159,11 @@ clean:
 		*.tp *.vr *.pg *.toc *.tp *.bak *.cps *.kys *.tps \
 		*.fns *.vrs *.pgs *.html *.tmp
 
-distclean: clean INSTALL README dvipng.1
+distclean: clean
 	rm -f Makefile
 	rm -f config.status config.log config.cache c-auto.h
 
+dist: INSTALL README dvipng.1 distclean
 
 # SunOS make suffix rule wierdness
 .cps.h:
