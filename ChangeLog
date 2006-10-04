@@ -1,4 +1,26 @@
+2006-10-04  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* dvipng.c, ft.c, fontmap.c, dvipng.h: Prepare for subfonts (CJK)
+
+	* sfd.c: Added. Used for subfonts (CJK)
+
+	* configure.ac: Change wording of gs helptext
+
+	* ft.c: Adjust debug message, and encoding selection
+
+	* special.c: Adjust debug messages
+
+	* dvipng.texi: Document the --strict option
+
+	* dvipng.c: Fix timer
+
+	* Makefile.in: Add dist target, simplify distclean
+
+	* fontmap.c: Remove segfault occuring for non-existent font
+
 2006-08-08  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* special.c: Make showpage flag static
 
 	* special.c:
 	Fix bug with -dSAFER and non-. paths, and bug with pngalpha and
