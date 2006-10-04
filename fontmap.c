@@ -19,7 +19,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
   02111-1307, USA.
 
-  Copyright (C) 2002-2006 Jan-Åke Larsson
+  Copyright (C) 2002-2005 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -39,6 +39,18 @@ char* newword(char** buffer, char* end)
   strncpy(word,*buffer,pos-*buffer);
   word[pos-*buffer]='\0';
   *buffer=pos;
+  return(word);
+}
+
+char* copyword(char* orig) 
+{
+  char *word;
+
+  if (orig==NULL)
+    return(NULL);
+  if ((word=malloc(strlen(orig)+1))==NULL)
+    Fatal("cannot malloc space for string");
+  strcpy(word,orig);
   return(word);
 }
 
@@ -70,14 +82,53 @@ void InitPSFontMap(void)
   }
 }
 
+struct psfontmap *NewPSFont(struct psfontmap* copyfrom)
+{
+  struct psfontmap *newentry=NULL;
+  if ((newentry=malloc(sizeof(struct psfontmap)))==NULL)
+    Fatal("cannot malloc psfontmap space");
+  if (copyfrom!=NULL) {
+    newentry->line = copyfrom->line;
+    newentry->tfmname = copyword(copyfrom->tfmname);
+    newentry->psfile = copyword(copyfrom->psfile);
+    newentry->encname = copyword(copyfrom->encname);
+    newentry->encoding = copyfrom->encoding;
+#if HAVE_LIBT1
+    newentry->t1_transformp = copyfrom->t1_transformp;
+#endif
+#if HAVE_FT2
+    newentry->ft_transformp = copyfrom->ft_transformp;
+    newentry->subfont = copyfrom->subfont;
+#endif
+    newentry->end = copyfrom->end;
+  } else {
+    newentry->line = NULL;
+    newentry->tfmname = NULL;
+    newentry->psfile = NULL;
+    newentry->encname = NULL;
+    newentry->encoding = NULL;
+#if HAVE_LIBT1
+    newentry->t1_transformp = NULL;
+#endif
+#if HAVE_FT2
+    newentry->ft_transformp = NULL;
+    newentry->subfont = NULL;
+#endif
+    newentry->end = NULL;
+  }
+  newentry->next=psfontmap;
+  psfontmap=newentry;
+  return(newentry);
+}
+
 struct psfontmap *SearchPSFontMap(char* fontname)
 {
   static char *pos=NULL,*end;
   struct psfontmap *entry=NULL;
 
   if (pos==NULL) {
-    pos = psfont_mmap.mmap;
-    end = psfont_mmap.mmap+psfont_mmap.size;
+    pos=psfont_mmap.mmap;
+    end=psfont_mmap.mmap+psfont_mmap.size;
   }
   while(pos<end && (entry==NULL || strcmp(entry->tfmname,fontname)!=0)) {
     while(pos < end 
@@ -87,8 +138,7 @@ struct psfontmap *SearchPSFontMap(char* fontname)
       pos++;
     }
     if (pos < end) {
-      if ((entry=malloc(sizeof(struct psfontmap)))==NULL)
-	Fatal("cannot malloc psfontmap space");
+      entry=NewPSFont(NULL);
       entry->line = pos;
       /* skip <something and quoted entries */
       while(pos < end && (*pos=='<' || *pos=='"')) {
@@ -100,19 +150,8 @@ struct psfontmap *SearchPSFontMap(char* fontname)
       }
       /* first word is font name */
       entry->tfmname = newword(&pos,end);
-      entry->psfile = NULL;
-      entry->encname = NULL;
-      entry->encoding = NULL;
-#if HAVE_LIBT1
-      entry->t1_transformp=NULL;
-#endif
-#if HAVE_FT2
-      entry->ft_transformp=NULL;
-#endif
       while(pos < end && *pos!='\n') pos++;
       entry->end = pos;
-      entry->next=psfontmap;
-      psfontmap=entry;
     }
     pos++;
   }
@@ -130,7 +169,7 @@ void ClearPSFontMap(void)
     entry=psfontmap;
     psfontmap=psfontmap->next;
     free(entry->tfmname);
-    if (entry->psfile!=NULL && entry->psfile!=entry->tfmname)
+    if (entry->psfile!=NULL)
       free(entry->psfile);
     if (entry->encname!=NULL)
       free(entry->encname);
@@ -235,7 +274,7 @@ void ReadPSFontMap(struct psfontmap *entry)
   }
   if (entry->psfile==NULL) { 
     /* No psfile-name given, use tfmname */
-    entry->psfile=entry->tfmname;
+    entry->psfile=copyword(entry->tfmname);
     DEBUG_PRINT((DEBUG_FT|DEBUG_T1),(" <%s ",entry->psfile));
   }
   if (entry->encname!=NULL 
@@ -254,6 +293,21 @@ struct psfontmap* FindPSFontMap(char* fontname)
     entry=entry->next;
   if(entry==NULL)
     entry=SearchPSFontMap(fontname);
+  if(entry==NULL) {
+    struct psfontmap* entry_subfont=NULL;
+    entry=psfontmap;
+    while(entry!=NULL && strcmp(entry->tfmname,fontname)!=0) {
+      while(entry!=NULL && strchr(entry->tfmname,'@')==NULL)
+	entry=entry->next;
+      if (entry!=NULL) {
+	entry_subfont=FindSubFont(entry,fontname);
+	if (entry_subfont!=NULL)
+	  entry=entry_subfont;
+	else
+	  entry=entry->next;
+      }
+    }
+  }
   if (entry!=NULL && entry->psfile==NULL) 
     ReadPSFontMap(entry);
   if (entry!=NULL && entry->encname!=NULL && entry->encoding==NULL) 

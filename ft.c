@@ -41,6 +41,11 @@ void LoadFT(int32_t c, struct char_entry * ptr)
     DEBUG_PRINT(DEBUG_FT,(" %s",currentfont->psfontmap->encoding->charname[c]));
     glyph_i = FT_Get_Name_Index(currentfont->face,
 				currentfont->psfontmap->encoding->charname[c]);
+  } else if (currentfont->psfontmap!=NULL
+	     && currentfont->psfontmap->subfont != NULL) {
+    glyph_i = FT_Get_Char_Index( currentfont->face, 
+				 currentfont->psfontmap->subfont->charindex[c] );
+    DEBUG_PRINT(DEBUG_FT,(" %X",currentfont->psfontmap->subfont->charindex[c]));
   } else
     glyph_i = FT_Get_Char_Index( currentfont->face, c );
   if (FT_Load_Glyph( currentfont->face, glyph_i,
@@ -109,7 +114,9 @@ bool InitFT(struct font_entry * tfontp)
     return(false);
   } 
   Message(BE_VERBOSE,"<%s>", tfontp->name);
-  if (tfontp->psfontmap == NULL || tfontp->psfontmap->encoding == NULL)
+  if (tfontp->psfontmap != NULL && tfontp->psfontmap->subfont != NULL)
+    error=FT_Select_Charmap(tfontp->face, tfontp->psfontmap->subfont->encoding);
+  else if (tfontp->psfontmap == NULL || tfontp->psfontmap->encoding == NULL)
 #ifndef FT_ENCODING_ADOBE_CUSTOM
 # define FT_ENCODING_ADOBE_CUSTOM ft_encoding_adobe_custom
 # define FT_ENCODING_ADOBE_STANDARD ft_encoding_adobe_standard
