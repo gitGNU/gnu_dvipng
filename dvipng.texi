@@ -563,6 +563,14 @@ is not the default, you can use the @samp{-t} option twice, once for the
 paper type, and once for @samp{landscape}.
 @end ignore
 
+@item --strict*
+@cindex exit on erroneous images
+The program exits when a warning occurs. Normally, dvipng will output
+an image in spite of a warning, but there may be something missing in
+this image. One reason to use this option would be if you have a more
+complete but slower fallback converter. See the @samp{--picky} option
+above for a list of when warnings occur.
+
 @item -T @var{image_size}
 Set the image size to @var{image_size} which can be either of
 @samp{bbox}, @samp{tight}, or a comma-separated pair of dimensions
