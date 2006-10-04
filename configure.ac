@@ -46,7 +46,7 @@ AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_ARG_WITH(gs,
-  AC_HELP_STRING([--with-gs=/PATH/TO/gs],[Specify where GhostScript is located]), 
+  AC_HELP_STRING([--with-gs=/PATH/TO/gs],[Hard-wire the location of GhostScript]), 
   [if test "x$withval" = xno ; then
     GS=no
   else
