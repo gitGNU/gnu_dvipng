@@ -54,11 +54,11 @@ int main(int argc, char ** argv)
 #ifdef TIMING
 # ifdef HAVE_GETTIMEOFDAY
   gettimeofday(&Tp, NULL);
-  timer = Tp.tv_sec + ((float)(Tp.tv_usec))/ 1000000.0;
+  timer = Tp.tv_sec + Tp.tv_usec / 1000000.0;
 # else
 #  ifdef HAVE_FTIME
   ftime(&timebuffer);
-  timer = timebuffer.time + (float)(timebuffer.millitm) / 1000.0;
+  timer = timebuffer.time + timebuffer.millitm / 1000.0;
 #  endif
 # endif
 #endif
@@ -128,11 +128,11 @@ int main(int argc, char ** argv)
 #ifdef TIMING
 # ifdef HAVE_GETTIMEOFDAY
   gettimeofday(&Tp, NULL);
-  timer = (Tp.tv_sec + (float)(Tp.tv_usec)/1000000.0) - timer;
+  timer = Tp.tv_sec + Tp.tv_usec/1000000.0 - timer;
 # else
 #  ifdef HAVE_FTIME
   ftime(&timebuffer);
-  timer = (timebuffer.time + (float)(timebuffer.millitm)/1000.0) - timer;
+  timer = timebuffer.time + timebuffer.millitm/1000.0 - timer;
 #  endif
 # endif
   
