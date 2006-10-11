@@ -96,7 +96,7 @@ AC_CHECK_HEADERS([gd.h png.h kpathsea/kpathsea.h],,
 AC_CHECK_HEADERS([t1lib.h])
 AC_CHECK_FT2(,[CFLAGS="$FT2_CFLAGS $CFLAGS"
 	LIBS="$FT2_LIBS $LIBS"
-	PSFONTS_O="$PSFONTS_O ft.o"	
+	PSFONTS_O="$PSFONTS_O sfd.o ft.o"	
 	AC_DEFINE(HAVE_FT2, 1, [Define to 1 if you have freetype2])
 	ac_have_freetype2="yes"],
 	[ac_have_freetype2="no"])
