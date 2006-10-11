@@ -45,7 +45,7 @@ void LoadFT(int32_t c, struct char_entry * ptr)
 	     && currentfont->psfontmap->subfont != NULL) {
     glyph_i = FT_Get_Char_Index( currentfont->face, 
 				 currentfont->psfontmap->subfont->charindex[c] );
-    DEBUG_PRINT(DEBUG_FT,(" %X",currentfont->psfontmap->subfont->charindex[c]));
+    DEBUG_PRINT(DEBUG_FT,(" 0x%X",currentfont->psfontmap->subfont->charindex[c]));
   } else
     glyph_i = FT_Get_Char_Index( currentfont->face, c );
   if (FT_Load_Glyph( currentfont->face, glyph_i,
