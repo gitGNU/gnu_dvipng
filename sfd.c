@@ -138,9 +138,10 @@ struct psfontmap* FindSubFont(struct psfontmap* entry, char* fontname)
   infix=alloca(strlen(sfdwant)-strlen(postfix)+1);
   strncpy(infix,sfdwant,strlen(sfdwant)-strlen(postfix));
   infix[strlen(sfdwant)-strlen(postfix)]='\0';
+  DEBUG_PRINT(DEBUG_ENC,("\n  SUBFONT %s %s %s",fontname,sfdname,infix)); 
   /* Find subfont */
-  while(temp!=NULL && strcmp(sfdname,temp->name)!=0
-	&& strcmp(infix,temp->infix)!=0) 
+  while(temp!=NULL 
+	&& (strcmp(sfdname,temp->name)!=0 || strcmp(infix,temp->infix)!=0))
     temp=temp->next;
   if (temp==NULL) {
     temp=ReadSubfont(sfdname,infix);
