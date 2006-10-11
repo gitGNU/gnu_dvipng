@@ -1,3 +1,11 @@
+2006-10-11  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* sfd.c: Change && to || so that multiple subfonts work
+
+	* ft.c: Adjust debug output
+
+	* configure.ac: Add sfd.o 
+
 2006-10-04  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* configure.ac: Prepare for 1.9
