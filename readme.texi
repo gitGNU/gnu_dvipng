@@ -127,9 +127,6 @@ Copyright @copyright{} 2002-2006 Jan-@AA{}ke Larsson
 @section Todo
 
 @itemize @bullet
-@item 
-Support for CJK-@LaTeX{} (Chinese, Japanese, Korean), that is: subfonts.
-
 @item
 Fix T1lib and PK rendering so it is on par with Freetype.
 
@@ -139,9 +136,8 @@ Further speed improvements.
 @item 
 Other output specials and source specials.
 
-@item
-Remove kpathsea dependence, use dvips' environment variables (this is
-maybe less of an issue now with working MiKTeX support).
+@item 
+Clean internal structures. Overhaul file handling.
 @end itemize
 
 
