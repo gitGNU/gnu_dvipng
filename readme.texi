@@ -59,8 +59,9 @@ through stdin, and all options are usable. It is even possible to change
 the input file through this interface.
 
 @item 
-Supports PK, VF, PostScript Type1, and TrueType fonts, color specials,
-and inclusion of PostScript, PNG, JPEG or GIF images.
+Supports PK, VF, PostScript Type1, and TrueType fonts, subfonts (i.e.,
+as used in CJK-@LaTeX{}), color specials, and inclusion of PostScript,
+PNG, JPEG or GIF images.
 
 @item 
 and more...
