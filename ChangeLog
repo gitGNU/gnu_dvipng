@@ -1,3 +1,9 @@
+2006-10-13  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* readme.texi: Add note about subfont (CJK) support
+
+	* install.texi: Add that FreeType2 is needed for subfont (CJK) support
+
 2006-10-12  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* readme.texi: Fix todo
