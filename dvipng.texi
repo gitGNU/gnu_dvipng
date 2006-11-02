@@ -1461,10 +1461,10 @@ inclusion would read
 @end example
 
 The default size is the image size in bp (``big points'' in TeX
-nomenclature or PostScript points as other people have it, 72 per
-inch). That is, default resolution will be 72 dpi for included
-bitmaps, which is the default size in the other drivers (dvipdfm and
-PDFLaTeX).
+nomenclature or PostScript points as other people have it, 72 per inch).
+That is, default resolution will be 72 dpi for included bitmaps, which
+is the default size in the few other bitmap-capable drivers that are
+known to me (dvipdfm and PDFLaTeX).
 
 If you want 100 dpi you need to specify the width accordingly. You
 just divide your image width by 100: a 135 pixel wide image at 100 dpi
