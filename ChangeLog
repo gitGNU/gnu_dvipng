@@ -1,5 +1,7 @@
 2006-11-07  Jan-Ake Larsson  <jalar@mai.liu.se>
 
+	* fontmap.c: Don't warn if ttfonts.map is missing, fix pointer
+
 	* Makefile.in: Adjust manpage target so manual intervention isn't
 	needed anymore
 
