@@ -1,6 +1,21 @@
 2006-11-07  Jan-Ake Larsson  <jalar@mai.liu.se>
 
+	* Makefile.in: Adjust manpage target so manual intervention isn't
+	needed anymore
+
+	* dvipng.1: Update manpage
+
+	* dvipng.texi: Update for 1.9
+
+	* COPYING, Makefile.in, color.c, commands.h, configure.ac, draw.c,
+	dvi.c, dvipng.c, dvipng.h, dvipng.texi, enc.c, font.c, fontmap.c,
+	ft.c, macros.texi, miktex.h, miktex.mak, misc.c, papersiz.c, pk.c,
+	ppagelist.c, set.c, sfd.c, special.c, t1.c, test_dvipng.tex,
+	tfm.c, vf.c: Update FSF address
+
 	* fontmap.c: Add ttfonts.map to the searched font maps
+
+	* RELEASE: Prepare for 1.9
 
 2006-11-02  Jan-Ake Larsson  <jalar@mai.liu.se>
 
