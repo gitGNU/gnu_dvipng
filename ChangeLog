@@ -1,6 +1,10 @@
+2006-11-07  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* fontmap.c: Add ttfonts.map to the searched font maps
+
 2006-11-02  Jan-Ake Larsson  <jalar@mai.liu.se>
 
-	* dvipng.texi: Nutpicking on bitmapped graphics
+	* dvipng.texi: Nitpicking on bitmapped graphics
 
 2006-10-13  Jan-Ake Larsson  <jalar@mai.liu.se>
 
