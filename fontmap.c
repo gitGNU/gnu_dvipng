@@ -25,8 +25,10 @@
 
 #include "dvipng.h"
 
-static char* psfont_name=NULL;
 static struct filemmap psfont_mmap;
+#if HAVE_FT2
+static struct filemmap ttfont_mmap;
+#endif
 static struct psfontmap *psfontmap=NULL;
 
 char* newword(char** buffer, char* end) 
@@ -67,19 +69,33 @@ char* find_format(char* name)
 
 void InitPSFontMap(void)
 {
+  char* psfont_name=NULL;
+  /* Prefer ps2pk.map, fonts are present more often */
   psfont_name=find_format("ps2pk.map");
   if (psfont_name==NULL)
     psfont_name=find_format("psfonts.map");
-
   if (psfont_name==NULL) {
     Warning("cannot find ps2pk.map, nor psfonts.map");
-    return;
+  } else {
+    DEBUG_PRINT((DEBUG_FT|DEBUG_T1),
+		("\n  OPEN PSFONT MAP:\t'%s'", psfont_name));  
+    if (MmapFile(psfont_name,&psfont_mmap)) {
+      Warning("psfonts map %s could not be opened", psfont_name);
+    }
+    free(psfont_name);
   }
-  DEBUG_PRINT(DEBUG_FT,("\n  OPEN PSFONT MAP:\t'%s'", psfont_name));  
-  if (MmapFile(psfont_name,&psfont_mmap)) {
-    Warning("psfonts map %s could not be opened", psfont_name);
-    return;
+#ifdef HAVE_FT2
+  psfont_name=find_format("ttfonts.map");
+  if (psfont_name==NULL) {
+    Warning("cannot find ttfonts.map");
+  } else {
+    DEBUG_PRINT(DEBUG_FT,("\n  OPEN TTFONT MAP:\t'%s'", psfont_name));  
+    if (MmapFile(psfont_name,&ttfont_mmap)) {
+      Warning("ttfonts map %s could not be opened", psfont_name);
+    }
+    free(psfont_name);
   }
+#endif
 }
 
 struct psfontmap *NewPSFont(struct psfontmap* copyfrom)
@@ -121,14 +137,17 @@ struct psfontmap *NewPSFont(struct psfontmap* copyfrom)
   return(newentry);
 }
 
-struct psfontmap *SearchPSFontMap(char* fontname)
+struct psfontmap *SearchPSFontMap(char* fontname,
+				  struct filemmap* search_mmap)
 {
-  static char *pos=NULL,*end;
+  static char *pos=NULL,*end=NULL;
+  static struct filemmap* searching_mmap=NULL;
   struct psfontmap *entry=NULL;
 
-  if (pos==NULL) {
-    pos=psfont_mmap.mmap;
-    end=psfont_mmap.mmap+psfont_mmap.size;
+  if (pos==end && search_mmap!=searching_mmap) {
+    searching_mmap=search_mmap;
+    pos=searching_mmap.mmap;
+    end=searching_mmap.mmap+searching_mmap.size;
   }
   while(pos<end && (entry==NULL || strcmp(entry->tfmname,fontname)!=0)) {
     while(pos < end 
@@ -155,10 +174,9 @@ struct psfontmap *SearchPSFontMap(char* fontname)
     }
     pos++;
   }
-  if (entry!=NULL && strcmp(entry->tfmname,fontname)==0)
-    return(entry);
-  else
-    return(NULL);
+  if (entry!=NULL && strcmp(entry->tfmname,fontname)!=0)
+    entry=NULL;
+  return(entry);
 }
 
 void ClearPSFontMap(void)
@@ -176,9 +194,9 @@ void ClearPSFontMap(void)
     free(entry);
   }
   UnMmapFile(&psfont_mmap);
-  if (psfont_name != NULL)
-    free(psfont_name);
-  psfont_name=NULL;
+#ifdef HAVE_FT2
+  UnMmapFile(&ttfont_mmap);
+#endif
 }
 
 void ReadPSFontMap(struct psfontmap *entry)
@@ -287,12 +305,20 @@ void ReadPSFontMap(struct psfontmap *entry)
 struct psfontmap* FindPSFontMap(char* fontname)
 {
   struct psfontmap *entry;
+  static struct filemmap* search_mmap_p=&psfont_mmap;
 	
   entry=psfontmap;
   while(entry!=NULL && strcmp(entry->tfmname,fontname)!=0)
     entry=entry->next;
-  if(entry==NULL)
-    entry=SearchPSFontMap(fontname);
+  if(entry==NULL) {
+    entry=SearchPSFontMap(fontname,search_mmap_p);
+#ifdef HAVE_FT2
+    if(entry==NULL && search_mmap_p!=&ttfont_mmap) {
+      search_mmap_p=&ttfont_mmap;
+      entry=SearchPSFontMap(fontname,search_mmap_p);
+    }
+#endif
+  }
   if(entry==NULL) {
     struct psfontmap* entry_subfont=NULL;
     entry=psfontmap;
