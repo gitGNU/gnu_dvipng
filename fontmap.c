@@ -86,9 +86,7 @@ void InitPSFontMap(void)
   }
 #ifdef HAVE_FT2
   psfont_name=find_format("ttfonts.map");
-  if (psfont_name==NULL) {
-    Warning("cannot find ttfonts.map");
-  } else {
+  if (psfont_name!=NULL) {
     DEBUG_PRINT(DEBUG_FT,("\n  OPEN TTFONT MAP:\t'%s'", psfont_name));  
     if (MmapFile(psfont_name,&ttfont_mmap)) {
       Warning("ttfonts map %s could not be opened", psfont_name);
@@ -146,8 +144,8 @@ struct psfontmap *SearchPSFontMap(char* fontname,
 
   if (pos==end && search_mmap!=searching_mmap) {
     searching_mmap=search_mmap;
-    pos=searching_mmap.mmap;
-    end=searching_mmap.mmap+searching_mmap.size;
+    pos=searching_mmap->mmap;
+    end=searching_mmap->mmap+searching_mmap->size;
   }
   while(pos<end && (entry==NULL || strcmp(entry->tfmname,fontname)!=0)) {
     while(pos < end 
