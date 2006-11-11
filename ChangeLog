@@ -1,5 +1,10 @@
 2006-11-11  Jan-Ake Larsson  <jalar@mai.liu.se>
 
+	* Release 1.9
+
+	* INSTALL: 
+	* README: Update for 1.9 
+
 	* Makefile.in: Make the test fail if fonts not found
 
 	* configure.ac: Don't use "which". Add info about the selfauto
