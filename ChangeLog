@@ -1,3 +1,12 @@
+2006-11-11  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* Makefile.in: Make the test fail if fonts not found
+
+	* configure.ac: Don't use "which". Add info about the selfauto
+	stuff. Report if CJK support present
+
+	* test_dvipng.tex: Remove the (intentional) failing special
+
 2006-11-07  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* fontmap.c: Don't warn if ttfonts.map is missing, fix pointer
