@@ -142,11 +142,7 @@ install-dvigif-docs: install-docs
 ####################################### The test
 
 test: test_dvipng.dvi dvipng
-	./dvipng -v test_dvipng
-	echo View the result e.g. with xv test_dvipng\*.png
-
-tighttest: test_dvipng.dvi dvipng
-	./dvipng -T tight test_dvipng
+	./dvipng -T tight -strict test_dvipng
 	echo View the result e.g. with xv test_dvipng\*.png
 
 test_dvipng.dvi: test_dvipng.tex
