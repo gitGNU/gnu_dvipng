@@ -163,9 +163,10 @@ AC_ARG_ENABLE(selfauto-set,
   [This option will make the final binary explicitly set the
    $SELFAUTO... variables to make it look as dvipng is installed in the
    main texmf tree, even if it isn't. This is necessary when texmf.cnf
-   uses $SELFAUTO... variables and dvipng is not installed in the texmf
-   tree. Otherwise, dvipng may not be able to find virtual fonts, or 
-   psfonts.map.]),
+   only uses $SELFAUTO... variables and dvipng is not installed in the
+   texmf tree. Otherwise, dvipng may not be able to find virtual
+   fonts, or psfonts.map. To find out, first build the binary and do
+   'make test'. If the test fails, you need this switch.]),
   [ if test "$enableval" = yes ; then
       AC_MSG_CHECKING([for \$SELFAUTOLOC])
       SELFAUTOLOC=`kpsewhich -expand-var=\\\$SELFAUTOLOC`
@@ -186,8 +187,9 @@ AC_ARG_ENABLE(selfauto-set,
   [AC_MSG_CHECKING([for texmf.cnf])
   TEXMF_CNF=`kpsewhich texmf.cnf`
   AC_MSG_RESULT([$TEXMF_CNF])
+  AC_PATH_PROG(KPSEWHICH, kpsewhich)
   AC_MSG_CHECKING([for psfonts.map])
-  cp `which kpsewhich` .
+  cp $KPSEWHICH .
   PSFONTS_MAP=`./kpsewhich psfonts.map`
   rm -f ./kpsewhich
   if test -n "$PSFONTS_MAP"; then
@@ -199,8 +201,9 @@ AC_ARG_ENABLE(selfauto-set,
       AC_MSG_RESULT([yes
 ***************************************************************
 texmf.cnf is using \$SELFAUTO... variables. If you are going to
-install dvipng outside the texmf tree, you may need to use 
---enable-selfauto-set, type ./configure --help for help.
+install dvipng outside the texmf tree, you may need to use
+--enable-selfauto-set. To find out, do 'make ; make test'. If the test
+is unsuccessful, add the mentioned switch and rebuild.
 ***************************************************************])
     else
       AC_MSG_RESULT([no])
@@ -223,6 +226,7 @@ AC_MSG_RESULT([
      enable gif inclusion and output 
      (dvigif):                              $ac_cv_func_gdImageGif
    FreeType font rendering available:       $ac_have_freetype2
+   Support for subfonts (CJK-LaTeX):        $ac_have_freetype2
    T1lib font rendering available:          $ac_cv_lib_t1_T1_InitLib
 ])
 
