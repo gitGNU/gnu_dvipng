@@ -1,3 +1,11 @@
+2006-12-11    <jalar@pcbjalar>
+
+	* readme.texi: Fix TODO, mention MediaWiki
+
+	* dvipng.h: Fix for alloca under AIX
+
+	* Makefile.in: mkinstalldirs is in $(srcdir)
+
 2006-11-11  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* Release 1.9
