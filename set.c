@@ -205,11 +205,20 @@ void Gamma(double gamma)
 dviunits SetGlyph(int32_t c, int32_t hh,int32_t vv)
 /* gdImageChar can only do monochrome glyphs */
 {
-  register struct char_entry *ptr = currentfont->chr[c];
+  register struct char_entry *ptr;
   int dst_alpha,dst_weight,tot_weight,alpha;
   int x,y,pos=0;
   int bgColor,pixelgrey,pixelcolor;
 
+  if (c<0 || c>LASTFNTCHAR) {
+    Warning("glyph index too large (%d), skipping",c);
+    return(0);
+  }
+  ptr=currentfont->chr[c];
+  if (ptr==NULL) {
+    Warning("unable to draw glyph %d, skipping",c);
+    return(0);
+  }
   hh -= ptr->xOffset/shrinkfactor;
   vv -= ptr->yOffset/shrinkfactor;
   /* Initialize persistent color cache. Perhaps this should be in
