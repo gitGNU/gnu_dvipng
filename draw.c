@@ -95,11 +95,13 @@ subpixels   vv;                  /* current rounded vertical position       */
 
 dviunits SetChar(int32_t c)
 {
-  struct char_entry* ptr;
+  struct char_entry* ptr=NULL;
 
   if (currentfont==NULL) 
     Fatal("faulty DVI, trying to set character from null font");
-  ptr = currentfont->chr[c];
+
+  if (c>=0 && c<=LASTFNTCHAR) 
+    ptr = currentfont->chr[c];
 #ifdef DEBUG
   switch (currentfont->type) {
   case FONT_TYPE_VF: DEBUG_PRINT(DEBUG_DVI,("\n  VF CHAR:\t")); break;
@@ -114,8 +116,8 @@ dviunits SetChar(int32_t c)
 #endif
   if (currentfont->type==FONT_TYPE_VF) {
     return(SetVF(c));
-  } else if (ptr) {
-    if (ptr->data == NULL) 
+  } else {
+    if (ptr!=NULL && ptr->data == NULL) 
       switch(currentfont->type) {
       case FONT_TYPE_PK:	LoadPK(c, ptr); break;
 #ifdef HAVE_LIBT1
@@ -129,7 +131,7 @@ dviunits SetChar(int32_t c)
       }
     if (page_imagep != NULL)
       return(SetGlyph(c, hh, vv));
-    else {
+    else if (ptr!=NULL) {
       /* Expand bounding box if necessary */
       min(x_min,hh - ptr->xOffset/shrinkfactor);
       min(y_min,vv - ptr->yOffset/shrinkfactor);
