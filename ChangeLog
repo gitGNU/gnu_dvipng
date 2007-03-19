@@ -1,3 +1,9 @@
+2007-03-19  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* draw.c: Better handling of glyph index bounds
+
+	* set.c: Check bounds for glyph index
+
 2006-12-11  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* readme.texi: Fix TODO, mention MediaWiki
