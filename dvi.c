@@ -218,6 +218,43 @@ unsigned char* DVIGetCommand(struct dvi_data* dvi)
     return(command);
 }
 
+bool DVIIsNextPSSpecial(struct dvi_data* dvi)
+     /* This function checks if the next dvi command is a raw PS
+	special */
+     /* Mmap is not appropriate here, we may want to read from
+	half-written files. */
+{ 
+  long fpos;
+  uint32_t strlength=0;
+  bool israwps=false;
+
+  DEBUG_PRINT(DEBUG_DVI,("\n  CHECKING NEXT DVI COMMAND "));
+  fpos=ftell(dvi->filep);
+  switch (fgetc_follow(dvi->filep)) {
+  case XXX4:
+    strlength =                   fgetc_follow(dvi->filep);
+  case XXX3:
+    strlength = strlength * 256 + fgetc_follow(dvi->filep);
+  case XXX2: 
+    strlength = strlength * 256 + fgetc_follow(dvi->filep);
+  case XXX1:
+    strlength = strlength * 256 + fgetc_follow(dvi->filep);
+  }
+  if (strlength > 0) { 
+    switch(fgetc_follow(dvi->filep)) {
+    case 'p':
+      if (strlength > 2 
+	  && fgetc_follow(dvi->filep)=='s'
+	  && fgetc_follow(dvi->filep)==':')
+	israwps=true;
+      break;
+    case '"':
+      israwps=true;
+    }
+  }
+  fseek(dvi->filep,fpos,SEEK_SET);
+  return(israwps);
+}
 
 uint32_t CommandLength(unsigned char* command)
 { 
@@ -410,6 +447,7 @@ void DVIClose(struct dvi_data* dvi)
   if (dvi!=NULL) {
     fclose(dvi->filep);
     DelPageList(dvi);
+    ClearPSHeaders();
     free(dvi->outname);
     free(dvi->name);
     free(dvi);
@@ -424,6 +462,7 @@ bool DVIReOpen(struct dvi_data* dvi)
     fclose(dvi->filep);
     dvi->filep=NULL;
     DelPageList(dvi);
+    ClearPSHeaders();
     while(((dvi->filep = fopen(dvi->name,"rb")) == NULL) && followmode) {
       SLEEP;
     }

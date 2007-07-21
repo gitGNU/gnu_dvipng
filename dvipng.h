@@ -197,7 +197,9 @@ struct page_list*PrevPage(struct dvi_data*, struct page_list*);
 int              SeekPage(struct dvi_data*, struct page_list*);
 bool             DVIFollowToggle(void);
 unsigned char*   DVIGetCommand(struct dvi_data*);
+bool             DVIIsNextPSSpecial(struct dvi_data*);
 uint32_t         CommandLength(unsigned char*); 
+void             ClearPSHeaders(void);
 
 /********************************************************/
 /**********************  misc.h  ************************/
