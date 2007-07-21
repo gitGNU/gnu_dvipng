@@ -1,4 +1,10 @@
-2007-07-21    <jalar@pcbjalar>
+2007-07-21  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* special.c: Rewrite to allow for raw PostScript specials, also
+	use PostScript headers
+
+	* dvipng.h: 
+	* dvi.c: Add read-ahead for PostScript specials
 
 	* config.h.in:
 	* configure.ac: Add test for gd pointer->image conversion
