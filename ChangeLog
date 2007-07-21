@@ -1,3 +1,8 @@
+2007-07-21    <jalar@pcbjalar>
+
+	* config.h.in:
+	* configure.ac: Add test for gd pointer->image conversion
+
 2007-03-19  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* draw.c: Better handling of glyph index bounds

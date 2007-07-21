@@ -144,7 +144,7 @@ AC_CHECK_FUNCS([dup2 memset munmap pow putenv strchr strrchr strtol strstr])
 if test "$enable_timing" = "yes"; then
   AC_CHECK_FUNCS([ftime gettimeofday])
 fi
-AC_CHECK_FUNCS([gdImageCreateTrueColor gdImagePngEx gdImageGif FT_Library_Version])
+AC_CHECK_FUNCS([gdImageCreateTrueColor gdImagePngEx gdImageCreateFromPngPtr gdImageGif FT_Library_Version])
 if test "$ac_cv_func_gdImageGif" = "yes"; then
    INSTALL_BIN_TARGET="install-dvigif"
 else
@@ -222,6 +222,8 @@ AC_MSG_RESULT([
      enable transparent backgrounds for EPS
      inclusion and the -z (compression)
      switch:                                $ac_cv_func_gdImagePngEx
+   Your gd is new enough (>=2.0.21) to
+     allow image creation from memory       $ac_cv_func_gdImageCreateFromPngPtr
    Your gd is new enough (>=2.0.28) to
      enable gif inclusion and output 
      (dvigif):                              $ac_cv_func_gdImageGif
