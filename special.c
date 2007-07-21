@@ -31,8 +31,77 @@
 
 #define SKIPSPACES(s) while(s && *s==' ' && *s!='\0') s++
 
+/* PostScript can come as a string (headers and raw specials) or 
+   a memory-mapped file (headers and included EPS figures). */
+
+struct pscode {
+  struct pscode*  next;
+  char*           code;     /* PS string, null if a file */
+  char*           header;   /* header filename, null if not a header */
+  char*           filename; /* full path, null if a string */
+  struct filemmap fmmap;    /* file mmap */
+};
+
+struct pscode* psheaderp=NULL; /* static, DVI-specific header list */
+
+void PSCodeInit(struct pscode *entry, char *code, char* header)
+{
+  entry->next=NULL;
+  entry->code=code;
+  entry->header=header;
+  entry->filename=NULL;
+  entry->fmmap.mmap=NULL;
+}
+
+void ClearPSHeaders(void)
+{
+  struct pscode *temp=psheaderp;
+
+  while(temp!=NULL) {
+    psheaderp=psheaderp->next;
+    if (temp->fmmap.mmap!=NULL)
+      UnMmapFile(&(temp->fmmap));
+    free(temp);
+    temp=psheaderp;
+  }
+}
+
+void writepscode(struct pscode* pscodep, FILE* psstream)
+{
+  while (pscodep!=NULL) {
+    if (pscodep->code!=NULL)
+      fputs(pscodep->code,psstream);
+    if (pscodep->header!=NULL) {
+      if (pscodep->filename==NULL) {
+	pscodep->filename=
+	  kpse_find_file(pscodep->header,kpse_tex_ps_header_format,false);
+	if (pscodep->filename==NULL) {
+	  Warning("Cannot find PostScript file %s, ignored", pscodep->filename);
+	  flags |= PAGE_GAVE_WARN;
+	}
+      }	
+      if (pscodep->filename!=NULL && pscodep->fmmap.mmap==NULL 
+	  && MmapFile(pscodep->filename,&(pscodep->fmmap))) {
+	Warning("PostScript file %s unusable, ignored", pscodep->filename);
+	flags |= PAGE_GAVE_WARN;
+      }
+    }
+    if (pscodep->fmmap.mmap!=NULL) {
+      unsigned char* position;
+      position=(unsigned char*)pscodep->fmmap.mmap;
+      while(position 
+	    < (unsigned char*)pscodep->fmmap.mmap + pscodep->fmmap.size) {
+	putc(*position,psstream);
+	position++;
+      }
+    }
+    pscodep=pscodep->next;
+  }
+}
+
+
 gdImagePtr
-ps2png(FILE *psfilestream, char *device, int hresolution, int vresolution, 
+ps2png(struct pscode* pscodep, char *device, int hresolution, int vresolution, 
        int llx, int lly, int urx, int ury, int bgred, int bggreen, int bgblue)
 {
 #ifndef MIKTEX
@@ -54,7 +123,6 @@ ps2png(FILE *psfilestream, char *device, int hresolution, int vresolution,
   gdImagePtr psimage=NULL;
   static bool showpage=false;
 
-  fseek(psfilestream,0,SEEK_SET);
   sprintf(resolution, "-r%dx%d",hresolution,vresolution);
   /* Future extension for \rotatebox
   status=sprintf(devicesize, "-g%dx%d",
@@ -130,7 +198,6 @@ ps2png(FILE *psfilestream, char *device, int hresolution, int vresolution,
   }
 #endif 
   if (psstream) {
-    int pschar;
     DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\t<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice",
 			  urx - llx, ury - lly,llx,lly));
     fprintf(psstream, "<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice\n",
@@ -142,11 +209,8 @@ ps2png(FILE *psfilestream, char *device, int hresolution, int vresolution,
 	      bgred/255.0, bggreen/255.0, bgblue/255.0);
     }
     DEBUG_PRINT(DEBUG_GS,("\n  PS DATA:\t..."));
-    pschar=getc(psfilestream);
-    while(pschar!=EOF) {
-      putc(pschar,psstream);
-      pschar=getc(psfilestream);
-    }
+    writepscode(psheaderp,psstream);
+    writepscode(pscodep,psstream);
     if (showpage) {
       DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\tshowpage"));
       fprintf(psstream, " showpage ");
@@ -165,7 +229,8 @@ ps2png(FILE *psfilestream, char *device, int hresolution, int vresolution,
     if (!showpage) {
       showpage=true;
       DEBUG_PRINT(DEBUG_GS,("(will try adding \"showpage\") "));
-      psimage=ps2png(psfilestream, device, hresolution, vresolution, llx, lly, urx, ury,
+      psimage=ps2png(pscodep,
+		     device, hresolution, vresolution, llx, lly, urx, ury,
 		     bgred,bggreen,bgblue);
       showpage=false;
     }
@@ -178,58 +243,33 @@ ps2png(FILE *psfilestream, char *device, int hresolution, int vresolution,
   return psimage;
 }
 
-
-gdImagePtr readcache(char* psname)
+gdImagePtr
+rescale(gdImagePtr psimage, int pngwidth, int pngheight)
 {
-  char *cachename = NULL, *cachefile, *separator;
-  gdImagePtr cacheimage=NULL;
-
-  cachename = alloca(sizeof(char)*(strlen(psname+5)));
-  if (cachename==NULL) 
-    Fatal("cannot allocate space for cached image filename");
-  strcpy(cachename,psname);
-  separator = strrchr(cachename,'.');
-  if (separator!=NULL)
-    *separator='\0';
-  strcat(cachename,".png");
-  
-  cachefile = kpse_find_file(cachename,kpse_pict_format,0);
-  if (cachefile!=NULL) {
-    FILE* cachefilep = fopen(cachefile,"rb");
-      
-    if (cachefilep!=NULL) {
-      DEBUG_PRINT(DEBUG_DVI,("\n  READING CACHED IMAGE \t%s", cachefile));
-      cacheimage = gdImageCreateFromPng(cachefilep);
-      fclose(cachefilep);
-    }
-    free(cachefile);
+  gdImagePtr scaledimage=psimage;
+  /* Rescale unless correct size */
+  if (psimage!=NULL
+      && gdImageSX(psimage)!=pngwidth 
+      && gdImageSY(psimage)!=pngheight) {
+    DEBUG_PRINT(DEBUG_DVI,
+		("\n  RESCALE INCLUDED BITMAP \t(%d,%d) -> (%d,%d)",
+		 gdImageSX(psimage),gdImageSY(psimage),
+		 pngwidth,pngheight));
+#ifdef HAVE_GDIMAGECREATETRUECOLOR
+    scaledimage=gdImageCreateTrueColor(pngwidth,pngheight);
+    gdImageCopyResampled(scaledimage,psimage,0,0,0,0,
+			 pngwidth,pngheight,
+			 gdImageSX(psimage),gdImageSY(psimage));
+#else
+    scaledimage=gdImageCreate(pngwidth,pngheight);
+    gdImageCopyResized(scaledimage,psimage,0,0,0,0,
+		       pngwidth,pngheight,
+		       gdImageSX(psimage),gdImageSY(psimage));
+#endif
+    gdImageDestroy(psimage);
   }
-  return(cacheimage);
+  return(scaledimage);
 }
-
-void storecache(char* psname, gdImagePtr psimage)
-{
-  char *cachename = NULL, *separator;
-
-  cachename = alloca(sizeof(char)*(strlen(psname+5)));
-  if (cachename==NULL) 
-    Fatal("cannot allocate space for cached image filename");
-  strcpy(cachename,psname);
-  separator = strrchr(cachename,'.');
-  if (separator!=NULL)
-    *separator='\0';
-  strcat(cachename,".png");
-  
-  if (psimage != NULL) {
-    FILE* cachefilep = fopen(cachename,"wb");
-    if (cachefilep!=NULL) {
-      gdImagePng(psimage,cachefilep);
-      fclose(cachefilep);
-    } else
-      Warning("Unable to cache %s as PNG", psname );
-  }
-}
-
 
 
 /*-->SetSpecial*/
@@ -272,8 +312,12 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
   }
 
   /******************* Image inclusion ********************/
+
+  /* Needed tests for regression: PNG, GIF, JPEG and EPS inclusion,
+   * for different gd versions */
+
   if (strncmp(buffer,"PSfile=",7)==0) { /* PSfile */
-    char* psname = buffer+7,*psfile;
+    char* psname = buffer+7;
     int llx=0,lly=0,urx=0,ury=0,rwi=0,rhi=0;
     bool clip=false;
     int hresolution,vresolution;
@@ -290,7 +334,6 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
       } else
 	buffer=NULL;
     }
-    TEMPSTR(psfile,kpse_find_file(psname,kpse_pict_format,0));
     
     /* Retrieve parameters */
     SKIPSPACES(buffer);
@@ -326,143 +369,115 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
       pngheight = (dpi*(ury-lly)+71)/72;
     }    
     if (page_imagep != NULL) { /* Draw into image */
-      char *psfile;
+      struct pscode image;
       gdImagePtr psimage=NULL;
+#ifndef HAVE_GDIMAGECREATEFROMPNGPTR
       FILE* psstream;
+#endif
 
-      TEMPSTR(psfile,kpse_find_file(psname,kpse_pict_format,0));
-      if (psfile == NULL) {
-	Warning("Image file %s not found, image will be left blank", psname );
-	flags |= PAGE_GAVE_WARN;
-	return;
-      } 
-      /* Test access permission even for EPS files */
-      psstream=fopen(psfile,"rb");
-      if (psstream == NULL) {
-	Warning("Cannot access image file %s, image will be left blank", 
-		psname );
+      PSCodeInit(&image,NULL,NULL);
+      TEMPSTR(image.filename,kpse_find_file(psname,kpse_pict_format,0));
+      if (MmapFile(image.filename,&(image.fmmap)) || image.fmmap.size==0) {
+	Warning("Image file %s unusable, image will be left blank",
+		image.filename);
 	flags |= PAGE_GAVE_WARN;
 	return;
       } 
       Message(BE_NONQUIET," <%s",psname);
-      switch (getc(psstream)) {
+      switch ((unsigned char)*image.fmmap.mmap) {
       case 0x89: /* PNG magic: "\211PNG\r\n\032\n" */
-	DEBUG_PRINT(DEBUG_DVI,("\n  INCLUDE PNG \t%s",psfile));
-	fseek(psstream,0,SEEK_SET);
+	DEBUG_PRINT(DEBUG_DVI,("\n  INCLUDE PNG \t%s",image.filename));
+#ifdef HAVE_GDIMAGECREATEFROMPNGPTR
+	psimage=gdImageCreateFromPngPtr(image.fmmap.size,image.fmmap.mmap);
+#else
+	psstream=fopen(image.filename,"rb");
 	psimage=gdImageCreateFromPng(psstream);
+	fclose(psstream);
+#endif
+	psimage=rescale(psimage,pngwidth,pngheight);
 	break;
       case 'G': /* GIF magic: "GIF87" or "GIF89" */
-	DEBUG_PRINT(DEBUG_DVI,("\n  INCLUDE GIF \t%s",psfile));
+	DEBUG_PRINT(DEBUG_DVI,("\n  INCLUDE GIF \t%s",image.filename));
 #ifdef HAVE_GDIMAGEGIF
-	fseek(psstream,0,SEEK_SET);
-	psimage=gdImageCreateFromGif(psstream);
+	psimage=rescale(gdImageCreateFromGifPtr(image.fmmap.size,
+						image.fmmap.mmap),
+			pngwidth,pngheight);
 #else
 	DEBUG_PRINT(DEBUG_DVI,(" (NO GIF DECODER)"));
 #endif
 	break;
       case 0xff: /* JPEG magic: 0xffd8 */
-	DEBUG_PRINT(DEBUG_DVI,("\n  INCLUDE JPEG \t%s",psfile));
+	DEBUG_PRINT(DEBUG_DVI,("\n  INCLUDE JPEG \t%s",image.filename));
 #ifdef HAVE_GDIMAGECREATETRUECOLOR
-	fseek(psstream,0,SEEK_SET);
+#ifdef HAVE_GDIMAGECREATEFROMPNGPTR
+	psimage=gdImageCreateFromJpegPtr(image.fmmap.size,image.fmmap.mmap);
+#else
+	psstream=fopen(image.filename,"rb");
 	psimage=gdImageCreateFromJpeg(psstream);
+	fclose(psstream);
+#endif
+	psimage=rescale(psimage,pngwidth,pngheight);
 #else
 	DEBUG_PRINT(DEBUG_DVI,(" (NO JPEG DECODER)"));
 #endif
 	break;
       default:  /* Default, PostScript magic: "%!PS-Adobe" */
-	if (flags & NO_GHOSTSCRIPT) { 
-	  Warning("GhostScript calls disallowed by --noghostscript", psfile );
+	if (flags & NO_GHOSTSCRIPT) {
+	  Warning("GhostScript calls disallowed by --noghostscript" );
 	  flags |= PAGE_GAVE_WARN;
 	} else {
-	  gdImagePtr cacheimage=NULL;
-	  if (flags & CACHE_IMAGES) 
-	    cacheimage=psimage=readcache(psname);
 	  /* Use alpha blending, and render transparent postscript
 	     images. The alpha blending works correctly only from
 	     libgd 2.0.12 upwards */
-#ifdef HAVE_GDIMAGECREATETRUECOLOR
-	  if (!page_imagep->trueColor)
-	    Warning("Palette output, opaque image inclusion");
 #ifdef HAVE_GDIMAGEPNGEX
-	  else if (psimage==NULL) {
+	  if (page_imagep->trueColor) {
+	    int tllx=llx,tlly=lly,turx=urx,tury=ury;
+
 	    DEBUG_PRINT((DEBUG_DVI | DEBUG_GS),
-			("\n  GS RENDER \t%s -> pngalpha ",psfile));
-	    if (clip) {
-	      DEBUG_PRINT((DEBUG_DVI | DEBUG_GS),(", CLIPPED TO BBOX"));
-	      psimage = ps2png(psstream, "-sDEVICE=pngalpha", 
-			       hresolution, vresolution, 
-			       llx, lly, urx, ury,
-			       255,255,255);
-	    } else {
+			("\n  GS RENDER \t%s -> pngalpha ",image.filename));
+	    if (!clip) {
 	      /* Render across the whole image */ 
+	      tllx=llx-(hh+1)*72/hresolution;
+	      tlly=lly-(gdImageSY(page_imagep)-vv-1)*72/vresolution;
+	      turx=llx+(gdImageSX(page_imagep)-hh)*72/hresolution;
+	      tury=lly+(vv+1)*72/vresolution;
 	      DEBUG_PRINT((DEBUG_DVI | DEBUG_GS),
 			  ("\n  EXPAND BBOX \t%d %d %d %d -> %d %d %d %d",
-			   llx,lly,urx,ury,
-			   llx-(hh+1)*72/hresolution,
-			   lly-(gdImageSY(page_imagep)-vv-1)*72/vresolution,
-			   llx+(gdImageSX(page_imagep)-hh)*72/hresolution,
-			   lly+(vv+1)*72/vresolution));
-	      psimage = ps2png(psstream, "-sDEVICE=pngalpha", 
-			       hresolution, vresolution,
-			       llx-(hh+1)*72/hresolution,
-			       lly-(gdImageSY(page_imagep)-vv-1)*72/vresolution,
-			       llx+(gdImageSX(page_imagep)-hh)*72/hresolution,
-			       lly+(vv+1)*72/vresolution,
-			       255,255,255);
-	      if (psimage!=NULL) {
-		hh=0;
-		vv=gdImageSY(page_imagep)-1;
-		pngwidth=gdImageSX(psimage);
-		pngheight=gdImageSY(psimage);
-	      }
+			   llx,lly,urx,ury,tllx,tlly,turx,tury));
+#ifdef DEBUG
+	    } else {
+	      DEBUG_PRINT((DEBUG_DVI | DEBUG_GS),(", CLIPPED TO BBOX"));
+#endif
 	    }
+	    psimage = ps2png(&image, "-sDEVICE=pngalpha", 
+			     hresolution, vresolution, 
+			     tllx, tlly, turx, tury,
+			     255,255,255);
 	    if (psimage==NULL)
 	      Warning("No GhostScript pngalpha output, opaque image inclusion");
-	  }
-#endif
+	  } else
+	    Warning("Palette output, opaque image inclusion");
 #endif
 	  if (psimage==NULL) {
 	    /* png256 gives inferior result */
 	    DEBUG_PRINT((DEBUG_DVI | DEBUG_GS),
-			("\n  GS RENDER \t%s -> png16m", psfile));
-	    psimage = ps2png(psstream, "-sDEVICE=png16m",
+			("\n  GS RENDER \t%s -> png16m", image.filename));
+	    psimage = ps2png(&image, "-sDEVICE=png16m",
 			     hresolution, vresolution, 
 			     llx, lly, urx, ury,
 			     cstack[0].red,cstack[0].green,cstack[0].blue);
+	    clip=true;
 	    flags |= PAGE_GAVE_WARN;
 	  }
-	  if (flags & CACHE_IMAGES && cacheimage==NULL) 
-	    storecache(psname,psimage); 
+	  if (!clip) {
+	    /* Rendering across the whole image */
+	    hh=0;
+	    vv=gdImageSY(psimage)-1;
+	  }
 	}
       }
-      fclose(psstream);
+      UnMmapFile(&(image.fmmap));
       if (psimage!=NULL) {
-	/* Rescale, but ignore (one-pixel) rounding errors */
-	if (gdImageSX(psimage)!=pngwidth 
-	    && gdImageSX(psimage)!=pngwidth+1
-	    && gdImageSY(psimage)!=pngheight
-	    && gdImageSY(psimage)!=pngheight+1) {
-	  gdImagePtr scaledimage;
-
-	  DEBUG_PRINT(DEBUG_DVI,
-		      ("\n  RESCALE INCLUDED BITMAP \t%s (%d,%d) -> (%d,%d)",
-		       psfile,
-		       gdImageSX(psimage),gdImageSY(psimage),
-		       pngwidth,pngheight));
-#ifdef HAVE_GDIMAGECREATETRUECOLOR
-	  scaledimage=gdImageCreateTrueColor(pngwidth,pngheight);
-	  gdImageCopyResampled(scaledimage,psimage,0,0,0,0,
-			       pngwidth,pngheight,
-			       gdImageSX(psimage),gdImageSY(psimage));
-#else
-	  scaledimage=gdImageCreate(pngwidth,pngheight);
-	  gdImageCopyResized(scaledimage,psimage,0,0,0,0,
-			     pngwidth,pngheight,
-			     gdImageSX(psimage),gdImageSY(psimage));
-#endif
-	  gdImageDestroy(psimage);
-	  psimage=scaledimage;
-	}
 	DEBUG_PRINT(DEBUG_DVI,
 		    ("\n  GRAPHIC(X|S) INCLUDE \t%s (%d,%d) res %dx%d at (%d,%d)",
 		     psname,gdImageSX(psimage),gdImageSY(psimage),
@@ -486,8 +501,8 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 #endif
 	gdImageDestroy(psimage);
       } else {
-	Warning("Unable to load %s, image will be left blank",psfile );
-	flags |= PAGE_GAVE_WARN;
+        Warning("Unable to load %s, image will be left blank",image.filename);
+        flags |= PAGE_GAVE_WARN;
       } 
       Message(BE_NONQUIET,">");
     } else { /* Don't draw */
@@ -503,6 +518,8 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
     }
     return;
   }
+
+  /******************* Raw PostScript ********************/
 
   if (strncmp(buffer,"!/preview@version(",18)==0) { 
     buffer+=18;
@@ -570,15 +587,131 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
     return;
   }
 
+  if (buffer[0]=='"' || strcmp(buffer,"ps:")) { /* Raw PostScript */
+    if (page_imagep != NULL) { /* Draw into image */
+      struct pscode *pscodep,*tmp;
+      gdImagePtr psimage=NULL;
+      unsigned char*  command;
+      
+      Message(BE_NONQUIET," <raw PostScript");
+      /* Init pscode with the raw PostScript snippet */
+      if ((pscodep=alloca(sizeof(struct pscode)))==NULL)
+	Fatal("cannot allocate space for raw PostScript struct");
+      if (buffer[0]=='"')
+	PSCodeInit(pscodep,buffer+1,NULL);
+      else
+	PSCodeInit(pscodep,buffer+3,NULL);
+      /* Some packages split their raw PostScript code into several
+	 specials. Check for those, and concatenate them so that
+	 they're given to one and the same invocation of gs */
+      tmp=pscodep;
+      while(DVIIsNextPSSpecial(dvi)) {
+	command=DVIGetCommand(dvi);
+	DEBUG_PRINT(DEBUG_DVI,("DRAW CMD:\t%s", dvi_commands[*command]));
+	length=UNumRead(command+1, dvi_commandlength[*command]-1);
+	DEBUG_PRINT(DEBUG_DVI,
+		    (" %d", UNumRead(command+1, dvi_commandlength[*command]-1)));
+	if ((tmp->next=alloca(sizeof(struct pscode)+length+1))==NULL)
+	  Fatal("cannot allocate space for raw PostScript struct");
+	tmp=tmp->next;
+	PSCodeInit(tmp,(char*)tmp+sizeof(struct pscode),NULL);
+	strncpy(tmp->code,(char*)command + dvi_commandlength[*command],length);
+	tmp->code[length]='\0';
+	DEBUG_PRINT(DEBUG_DVI,(" '%s'",tmp->code));
+	if (tmp->code[0]=='"')
+	  tmp->code++;
+	else
+	  tmp->code+=3;
+      }
+      /* Now, render image */
+      if (flags & NO_GHOSTSCRIPT)
+	Warning("GhostScript calls disallowed by --noghostscript" );
+      else {
+	/* Use alpha blending, and render transparent postscript
+	   images. The alpha blending works correctly only from libgd
+	   2.0.12 upwards */
+#ifdef HAVE_GDIMAGEPNGEX
+	if (page_imagep->trueColor) {
+	  //	  DEBUG_PRINT((DEBUG_DVI | DEBUG_GS),
+	  //      ("\n  GS RENDER \t%s -> pngalpha ",image.filename));
+	  /* Render across the whole image */ 
+	  psimage = ps2png(pscodep, "-sDEVICE=pngalpha", 
+			   dpi,dpi, 
+			   -(hh+1)*72/dpi,
+			   -(gdImageSY(page_imagep)-vv-1)*72/dpi,
+			   (gdImageSX(page_imagep)-hh)*72/dpi,
+			   (vv+1)*72/dpi,
+			   255,255,255);
+	  if (psimage!=NULL) {
+	    gdImageAlphaBlending(page_imagep,1);
+	    gdImageCopy(page_imagep, psimage, 
+			0,0,0,0,
+			gdImageSX(psimage),gdImageSY(psimage));
+	    gdImageAlphaBlending(page_imagep,0);
+	    gdImageDestroy(psimage);
+	  }
+	  else
+	    Warning("No GhostScript pngalpha output, cannot render raw PostScript");
+	} else
+	  Warning("Palette output, cannot include raw PostScript");
+#else
+	Warning("Using libgd < 2.0.12, unable to include raw PostScript");
+	flags |= PAGE_GAVE_WARN;
+#endif
+      }
+      Message(BE_NONQUIET,">");
+    } else { /* Don't draw */
+      flags |= PAGE_TRUECOLOR;
+    }
+    return;
+  }
+
   if (strncmp(buffer,"papersize=",10)==0) { /* papersize spec, ignored */
     return;
   }
-  if (strncmp(buffer,"header=",7)==0 || buffer[0]=='!') { /* header, ignored */
-    if ( page_imagep != NULL )
-      Warning("at (%ld,%ld) ignored header \\special{%.*s}",
-	      hh, vv, length,special);
+
+  if (strncmp(buffer,"header=",7)==0) { /* PS header file */
+    struct pscode* tmp=psheaderp;
+
+    while (tmp!=NULL && (tmp->header==NULL || strcmp(tmp->header,buffer+7))!=0)
+      tmp=tmp->next;
+    if ( tmp == NULL ) {
+      DEBUG_PRINT(DEBUG_GS,("\n  PS HEADER:\t'%s'", tmp->header));
+      while (tmp->next!=NULL)
+	tmp=tmp->next;
+      if ((tmp->next=malloc(sizeof(struct pscode)+strlen(buffer+7)))==NULL) {
+	Warning("cannot malloc space for psheader name, ignored");
+	flags |= PAGE_GAVE_WARN;
+	return;
+      }
+      tmp=tmp->next;
+      PSCodeInit(tmp,NULL,(char*)tmp+sizeof(struct pscode));
+      strcpy(tmp->header,buffer+7);
+    }
     return;
   }
+
+  if (buffer[0]=='!') { /* raw PS header */
+    struct pscode* tmp=psheaderp;
+
+    while (tmp!=NULL && (tmp->code==NULL || strcmp(tmp->code,buffer+1))!=0)
+      tmp=tmp->next;
+    if ( tmp == NULL ) {
+      DEBUG_PRINT(DEBUG_GS,("\n  PS RAW HEADER:\t'%s'", buffer+1));
+      while (tmp->next!=NULL)
+	tmp=tmp->next;
+      if ((tmp->next=malloc(sizeof(struct pscode)+strlen(buffer+1)))==NULL) {
+	Warning("cannot malloc space for raw psheader, ignored");
+	flags |= PAGE_GAVE_WARN;
+	return;
+      }
+      tmp=tmp->next;
+      PSCodeInit(tmp,(char*)tmp+sizeof(struct pscode),NULL);
+      strcpy(tmp->code,buffer+1);
+    }
+    return;
+  }
+
   if (strncmp(buffer,"src:",4)==0) { /* source special */
     if ( page_imagep != NULL )
       Message(BE_NONQUIET," at (%ld,%ld) source \\special{%.*s}",
@@ -591,3 +724,4 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
     flags |= PAGE_GAVE_WARN;
   }
 }
+
