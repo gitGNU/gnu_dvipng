@@ -488,6 +488,24 @@ bool DecodeArgs(int argc, char ** argv)
 #ifdef HAVE_LIBKPATHSEA
 	  puts (KPSEVERSION);
 #endif
+#ifdef HAVE_FT2
+	  printf("Compiled with Freetype %d.%d.%d\n",
+		 FREETYPE_MAJOR, FREETYPE_MINOR, FREETYPE_PATCH);
+#  ifdef HAVE_FT_LIBRARY_VERSION
+	  if (FT_Init_FreeType( &libfreetype ))
+	    Warning("the Freetype library seems unusable");
+	  else {
+	    FT_Int      amajor, aminor, apatch;
+	    
+	    FT_Library_Version( libfreetype, &amajor, &aminor, &apatch );
+	    printf("Using libft %d.%d.%d\n",amajor, aminor, apatch);
+	    FT_Done_FreeType(libfreetype);	    
+	  }
+#  endif
+#endif
+#ifdef HAVE_LIBT1
+	  printf("Using t1lib %s\n", T1_GetLibIdent());
+#endif
 	  puts ("Copyright (C) 2002-2005 Jan-Ake Larsson.\n\
 There is NO warranty.  You may redistribute this software\n\
 under the terms of the GNU General Public License.\n\
