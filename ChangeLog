@@ -1,3 +1,9 @@
+2007-07-22  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* misc.c: Change version info slightly
+
+	* ft.c: Change debug info slightly
+
 2007-07-21  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* special.c: Rewrite to allow for raw PostScript specials, also
