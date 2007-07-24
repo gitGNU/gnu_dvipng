@@ -69,8 +69,11 @@ void ClearPSHeaders(void)
 void writepscode(struct pscode* pscodep, FILE* psstream)
 {
   while (pscodep!=NULL) {
-    if (pscodep->code!=NULL)
+    if (pscodep->code!=NULL) {
       fputs(pscodep->code,psstream);
+      putc('\n',psstream);
+      DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\t%s",pscodep->code));
+    }
     if (pscodep->header!=NULL) {
       if (pscodep->filename==NULL) {
 	pscodep->filename=
@@ -88,6 +91,8 @@ void writepscode(struct pscode* pscodep, FILE* psstream)
     }
     if (pscodep->fmmap.mmap!=NULL) {
       unsigned char* position;
+
+      DEBUG_PRINT(DEBUG_GS,("\n  PS FILE:\t%s",pscodep->filename));
       position=(unsigned char*)pscodep->fmmap.mmap;
       while(position 
 	    < (unsigned char*)pscodep->fmmap.mmap + pscodep->fmmap.size) {
@@ -208,7 +213,6 @@ ps2png(struct pscode* pscodep, char *device, int hresolution, int vresolution,
       fprintf(psstream, "gsave %f %f %f setrgbcolor clippath fill grestore",
 	      bgred/255.0, bggreen/255.0, bgblue/255.0);
     }
-    DEBUG_PRINT(DEBUG_GS,("\n  PS DATA:\t..."));
     writepscode(psheaderp,psstream);
     writepscode(pscodep,psstream);
     if (showpage) {
@@ -587,7 +591,8 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
     return;
   }
 
-  if (buffer[0]=='"' || strcmp(buffer,"ps:")) { /* Raw PostScript */
+  if (buffer[0]=='"' 
+      || (strlen(buffer)>3 && strncmp(buffer,"ps:",3)==0)) { /* Raw PostScript */
     if (page_imagep != NULL) { /* Draw into image */
       struct pscode *pscodep,*tmp;
       gdImagePtr psimage=NULL;
@@ -673,20 +678,24 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
   if (strncmp(buffer,"header=",7)==0) { /* PS header file */
     struct pscode* tmp=psheaderp;
 
-    while (tmp!=NULL && (tmp->header==NULL || strcmp(tmp->header,buffer+7))!=0)
+    while (tmp!=NULL && (tmp->header==NULL || strcmp(tmp->header,buffer+7)!=0))
       tmp=tmp->next;
     if ( tmp == NULL ) {
       DEBUG_PRINT(DEBUG_GS,("\n  PS HEADER:\t'%s'", tmp->header));
-      while (tmp->next!=NULL)
-	tmp=tmp->next;
-      if ((tmp->next=malloc(sizeof(struct pscode)+strlen(buffer+7)))==NULL) {
+      if ((tmp=malloc(sizeof(struct pscode)+strlen(buffer+7)))==NULL) {
 	Warning("cannot malloc space for psheader name, ignored");
 	flags |= PAGE_GAVE_WARN;
 	return;
       }
-      tmp=tmp->next;
       PSCodeInit(tmp,NULL,(char*)tmp+sizeof(struct pscode));
       strcpy(tmp->header,buffer+7);
+      if (psheaderp!=NULL) {
+	struct pscode* tmp2=psheaderp;
+	while(tmp2->next!=NULL)
+	  tmp2=tmp2->next;
+	tmp2->next=tmp;
+      } else
+	psheaderp=tmp;
     }
     return;
   }
@@ -694,20 +703,24 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
   if (buffer[0]=='!') { /* raw PS header */
     struct pscode* tmp=psheaderp;
 
-    while (tmp!=NULL && (tmp->code==NULL || strcmp(tmp->code,buffer+1))!=0)
+    while (tmp!=NULL && (tmp->code==NULL || strcmp(tmp->code,buffer+1)!=0))
       tmp=tmp->next;
     if ( tmp == NULL ) {
-      DEBUG_PRINT(DEBUG_GS,("\n  PS RAW HEADER:\t'%s'", buffer+1));
-      while (tmp->next!=NULL)
-	tmp=tmp->next;
-      if ((tmp->next=malloc(sizeof(struct pscode)+strlen(buffer+1)))==NULL) {
+      DEBUG_PRINT(DEBUG_GS,("\n  RAW PS HEADER:\t'%s'", buffer+1));
+      if ((tmp=malloc(sizeof(struct pscode)+strlen(buffer+1)))==NULL) {
 	Warning("cannot malloc space for raw psheader, ignored");
 	flags |= PAGE_GAVE_WARN;
 	return;
       }
-      tmp=tmp->next;
       PSCodeInit(tmp,(char*)tmp+sizeof(struct pscode),NULL);
       strcpy(tmp->code,buffer+1);
+      if (psheaderp!=NULL) {
+	struct pscode* tmp2=psheaderp;
+	while(tmp2->next!=NULL)
+	  tmp2=tmp2->next;
+	tmp2->next=tmp;
+      } else
+	psheaderp=tmp;
     }
     return;
   }
