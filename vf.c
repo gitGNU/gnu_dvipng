@@ -117,7 +117,7 @@ void InitVF(struct font_entry * tfontp)
     tcharptr->tfmw = (int32_t) 
       ((int64_t) tcharptr->tfmw * tfontp->s / (1 << 20));
     DEBUG_PRINT(DEBUG_VF,(" (%d)",tcharptr->tfmw));
-    if (c > NFNTCHARS) /* Only positive for now */
+    if (c >= NFNTCHARS) /* Only positive for now */
       Fatal("VF font %s exceeds char numbering limit",tfontp->name);
     tfontp->chr[c] = tcharptr;
     tcharptr->data=position;

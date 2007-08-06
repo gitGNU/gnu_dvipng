@@ -731,8 +731,8 @@ void Warning(char *fmt, ...)
     fprintf(stderr, "%s warning: ", programname);
     vfprintf(stderr, fmt, args);
     fprintf(stderr, " ");
-    va_end(args);
   }
+  va_end(args);
 }
 
 /*-->Message*/
@@ -776,6 +776,11 @@ bool MmapFile (char *filename,struct filemmap *fmmap)
   }
 # else /* HAVE_MMAP */
   fmmap->mmap = malloc(fmmap->size);
+  if (fmmap->mmap == NULL) {
+    Warning("cannot malloc space for <%s>",filename);
+    close(fmmap->fd);
+    return(true);
+  }
   if (read(fmmap->fd,fmmap->mmap,fmmap->size)<fmmap->size) {
     Warning("too little data in <%s>",filename);
     free(fmmap->mmap);

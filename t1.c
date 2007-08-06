@@ -180,7 +180,7 @@ void DoneT1(struct font_entry *tfontp)
   int error = T1_DeleteFont( tfontp->T1id );
   if (error)
     Warning("font file %s could not be closed", tfontp->name);
-  while(c<NFNTCHARS-1) {
+  while(c<NFNTCHARS) {
     if (tfontp->chr[c]!=NULL) {
       UnLoadT1((struct char_entry*)tfontp->chr[c]);
       free(tfontp->chr[c]);

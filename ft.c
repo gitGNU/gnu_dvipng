@@ -161,7 +161,7 @@ void DoneFT(struct font_entry *tfontp)
   int error = FT_Done_Face( tfontp->face );
   if (error)
     Warning("font file %s could not be closed", tfontp->name);
-  while(c<NFNTCHARS-1) {
+  while(c<NFNTCHARS) {
     if (tfontp->chr[c]!=NULL) {
       UnLoadFT((struct char_entry*)tfontp->chr[c]);
       free(tfontp->chr[c]);
