@@ -176,7 +176,7 @@ void ClearColorNames(void)
 }
 
 #define FTO255(a) ((int) (255*a+0.5))
-#define WARN_IF_FAILED(a,b) if (a==b) { flags |= PAGE_GAVE_WARN; \
+#define WARN_IF_FAILED(a,b) if (a==b) { page_flags |= PAGE_GAVE_WARN; \
   Warning("missing color-specification value, treated as zero"); }
 
 #define SKIPSPACES(s) while(s && *s==' ' && *s!='\0') s++
@@ -300,7 +300,7 @@ void stringrgb(char* color,int *r,int *g,int *b)
       stringrgb(tmp->color,r,g,b);
     } else {
       /* Not found, warn */
-      flags |= PAGE_GAVE_WARN;
+      page_flags |= PAGE_GAVE_WARN;
       Warning("unimplemented color specification '%s'",color);
     }
   }
