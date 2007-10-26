@@ -132,7 +132,7 @@ bool InitT1(struct font_entry * tfontp)
     if ((libt1=T1_InitLib( NO_LOGFILE | IGNORE_CONFIGFILE
 			   | IGNORE_FONTDATABASE | T1_NO_AFM)) == NULL) {
       Warning("an error occured during t1lib initialisation, disabling it"); 
-      flags &= ~USE_LIBT1;
+      option_flags &= ~USE_LIBT1;
       return(false);
     }
 # ifdef DEBUG
