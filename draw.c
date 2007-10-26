@@ -271,8 +271,7 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
   case XXX1: case XXX2: case XXX3: case XXX4:
     DEBUG_PRINT(DEBUG_DVI,(" %d",
 		 UNumRead(command+1, dvi_commandlength[*command]-1)));
-    SetSpecial((char*)command + dvi_commandlength[*command], 
-	       UNumRead(command+1, dvi_commandlength[*command]-1),
+    SetSpecial((char*)command + dvi_commandlength[*command],
 	       hh,vv);
     break;
   case FNT_DEF1: case FNT_DEF2: case FNT_DEF3: case FNT_DEF4:
@@ -362,13 +361,14 @@ void DrawPages(void)
 {
   struct page_list *dvi_pos;
   pixels x_width,y_width,x_offset,y_offset;
+  int pagecounter=(option_flags & DVI_PAGENUM)?0:10;
 
   dvi_pos=NextPPage(dvi,NULL);
   if (dvi_pos!=NULL) {
     while(dvi_pos!=NULL) {
       SeekPage(dvi,dvi_pos);
-      Message(BE_NONQUIET,"[%d", dvi_pos->count[(flags & DVI_PAGENUM)?0:10]);
-      if (dvi_pos->count[(flags & DVI_PAGENUM)?0:10]!=dvi_pos->count[0])
+      Message(BE_NONQUIET,"[%d", dvi_pos->count[pagecounter]);
+      if (dvi_pos->count[pagecounter]!=dvi_pos->count[0])
 	Message(BE_NONQUIET," (%d)", dvi_pos->count[0]);
       x_max = y_max = INT32_MIN;
       x_min = y_min = INT32_MAX;
@@ -377,7 +377,7 @@ void DrawPages(void)
 	 by the color at EOP rather than the color at BOP. */
       StoreBackgroundColor(dvi_pos);
       /* Store pagesize */
-      if (flags & PREVIEW_LATEX_TIGHTPAGE) {
+      if (dvi->flags & DVI_PREVIEW_LATEX_TIGHTPAGE) {
 	x_width_def=x_width_tightpage;
 	y_width_def=y_width_tightpage;
 	x_offset_def=x_offset_tightpage;
@@ -389,7 +389,7 @@ void DrawPages(void)
 	min(y_min,-y_offset_def);
 	max(y_max,y_min + y_width_def);
       }
-      if (x_width_def <= 0 || flags & EXPAND_BBOX) {
+      if (x_width_def <= 0 || option_flags & EXPAND_BBOX) {
 	x_width = x_max-x_min;
 	y_width = y_max-y_min;
 	x_offset = -x_min; /* offset by moving topleft corner */ 
@@ -414,10 +414,11 @@ void DrawPages(void)
 #endif
       Message(REPORT_DEPTH," depth=%d", y_width-y_offset-1);
       Message(REPORT_HEIGHT," height=%d", y_offset+1);
+      page_flags &= ~PAGE_PREVIEW_BOP;
       DrawPage(x_offset*dvi->conv*shrinkfactor,
 	       y_offset*dvi->conv*shrinkfactor);
-      if ( ! (flags & MODE_PICKY && flags & PAGE_GAVE_WARN )) {
-	WriteImage(dvi->outname,dvi_pos->count[(flags & DVI_PAGENUM)?0:10]);
+      if ( ! (option_flags & MODE_PICKY && page_flags & PAGE_GAVE_WARN )) {
+	WriteImage(dvi->outname,dvi_pos->count[pagecounter]);
 #ifdef TIMING
 	++ndone;
 #endif
@@ -428,7 +429,7 @@ void DrawPages(void)
       }
       Message(BE_NONQUIET,"] ");
       fflush(stdout);
-      flags &= ~(PAGE_GAVE_WARN | PAGE_TRUECOLOR);
+      page_flags = 0;
       dvi_pos=NextPPage(dvi,dvi_pos);
     }
     Message(BE_NONQUIET,"\n");
