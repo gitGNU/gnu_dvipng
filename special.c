@@ -36,22 +36,52 @@
 
 struct pscode {
   struct pscode*  next;
+  char*           special;  /* complete special */
   char*           code;     /* PS string, null if a file */
-  char*           header;   /* header filename, null if not a header */
-  char*           filename; /* full path, null if a string */
+  char*           filename; /* file name, null if a string */
+  char*           postcode; /* post PS string */
   struct filemmap fmmap;    /* file mmap */
 };
 
 struct pscode* psheaderp=NULL; /* static, DVI-specific header list */
 
-void PSCodeInit(struct pscode *entry, char *code, char* header)
+void PSCodeInit(struct pscode *entry, char *special)
 {
   entry->next=NULL;
-  entry->code=code;
-  entry->header=header;
+  entry->special=special;
+  entry->code=NULL;
   entry->filename=NULL;
+  entry->postcode=NULL;
   entry->fmmap.mmap=NULL;
+  if (special==NULL)
+    return;
+  if (strncmp(special,"header=",11)==0)
+    entry->filename=special+7;
+  else if (strncmp(special,"ps:: plotfile ",14)==0)
+    entry->filename=special+14;
+  else if (special[0]=='"' || special[0]=='!')
+    entry->code=special+1;
+  else if (strncmp(special,"ps::[begin]",11)==0)
+    entry->code=special+11;
+  else if (strncmp(special,"ps::[end]",9)==0)
+    entry->code=special+9;
+  else if (strncmp(special,"ps::",4)==0)
+    entry->code=special+4;
+  else if (strncmp(special,"ps:",3)==0)
+    entry->code=special+3;
+  else
+    entry->code=special;
+#ifdef DEBUG
+  if (entry->code!=NULL)
+    DEBUG_PRINT(DEBUG_DVI,(" '%s'",entry->code));
+  if (entry->filename!=NULL)
+    DEBUG_PRINT(DEBUG_DVI,(" {%s}",entry->filename));
+  if (entry->postcode!=NULL)
+    DEBUG_PRINT(DEBUG_DVI,(" '%s'",entry->postcode));
+#endif
 }
+
+
 
 void ClearPSHeaders(void)
 {
@@ -74,19 +104,15 @@ void writepscode(struct pscode* pscodep, FILE* psstream)
       putc('\n',psstream);
       DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\t%s",pscodep->code));
     }
-    if (pscodep->header!=NULL) {
-      if (pscodep->filename==NULL) {
-	pscodep->filename=
-	  kpse_find_file(pscodep->header,kpse_tex_ps_header_format,false);
-	if (pscodep->filename==NULL) {
-	  Warning("Cannot find PostScript file %s, ignored", pscodep->filename);
-	  flags |= PAGE_GAVE_WARN;
-	}
-      }	
-      if (pscodep->filename!=NULL && pscodep->fmmap.mmap==NULL 
-	  && MmapFile(pscodep->filename,&(pscodep->fmmap))) {
+    if (pscodep->filename!=NULL && pscodep->fmmap.mmap==NULL) {
+      char* filepath=
+	kpse_find_file(pscodep->filename,kpse_tex_ps_header_format,false);
+      if (filepath==NULL) {
+	Warning("Cannot find PostScript file %s, ignored", pscodep->filename);
+	page_flags |= PAGE_GAVE_WARN;
+      } else if (MmapFile(filepath,&(pscodep->fmmap))) {
 	Warning("PostScript file %s unusable, ignored", pscodep->filename);
-	flags |= PAGE_GAVE_WARN;
+	page_flags |= PAGE_GAVE_WARN;
       }
     }
     if (pscodep->fmmap.mmap!=NULL) {
@@ -99,6 +125,11 @@ void writepscode(struct pscode* pscodep, FILE* psstream)
 	putc(*position,psstream);
 	position++;
       }
+    }
+    if (pscodep->postcode!=NULL) {
+      fputs(pscodep->postcode,psstream);
+      putc('\n',psstream);
+      DEBUG_PRINT(DEBUG_GS,("\n  PS POST CODE:\t%s",pscodep->postcode));
     }
     pscodep=pscodep->next;
   }
@@ -141,8 +172,8 @@ ps2png(struct pscode* pscodep, char *device, int hresolution, int vresolution,
 	       GS_PATH, device, resolution, /*devicesize,*/
 	       "-dBATCH", "-dNOPAUSE", "-q", "-sOutputFile=-", 
 	       "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
-	       (flags & NO_GSSAFER) ? "-": "-dSAFER", 
-	       (flags & NO_GSSAFER) ? "": "- "));
+	       (option_flags & NO_GSSAFER) ? "-": "-dSAFER", 
+	       (option_flags & NO_GSSAFER) ? "": "- "));
 #ifndef MIKTEX
   if (pipe(downpipe) || pipe(uppipe)) return(NULL);
   /* Ready to fork */
@@ -157,8 +188,8 @@ ps2png(struct pscode* pscodep, char *device, int hresolution, int vresolution,
     execlp(GS_PATH, GS_PATH, device, resolution, /*devicesize,*/
 	   "-dBATCH", "-dNOPAUSE", "-q", "-sOutputFile=-", 
 	   "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
-	   (flags & NO_GSSAFER) ? "-": "-dSAFER", 
-	   (flags & NO_GSSAFER) ? NULL: "-",
+	   (option_flags & NO_GSSAFER) ? "-": "-dSAFER", 
+	   (option_flags & NO_GSSAFER) ? NULL: "-",
 	   NULL);
     _exit (EXIT_FAILURE);
   }
@@ -181,8 +212,8 @@ ps2png(struct pscode* pscodep, char *device, int hresolution, int vresolution,
 	  szGsPath, device, resolution, /*devicesize,*/
 	  "-dBATCH", "-dNOPAUSE", "-q", "-sOutputFile=-", 
 	  "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
-	  (flags & NO_GSSAFER) ? "-": "-dSAFER", 
-	  (flags & NO_GSSAFER) ? "": "-");
+	  (option_flags & NO_GSSAFER) ? "-": "-dSAFER", 
+	  (option_flags & NO_GSSAFER) ? "": "-");
   if (! miktex_start_process_3(szCommandLine, &pi, INVALID_HANDLE_VALUE,
 			       &hPsStream, &hPngStream, &hStdErr, 0)) {
       Warning("Ghostscript could not be started");
@@ -281,36 +312,28 @@ rescale(gdImagePtr psimage, int pngwidth, int pngheight)
 /****************************  SetSpecial  ***************************/
 /*********************************************************************/
 
-void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
-/* interpret a \special command, made up of keyword=value pairs */
+void SetSpecial(char * special, int32_t hh, int32_t vv)
+/* interpret a \special command, made up of keyword=value pairs,
+ * or !header or ps:literal_PostScript
+ */
 {
-  char *buffer;
-
-  DEBUG_PRINT(DEBUG_DVI,(" '%.*s'",length,special));
-
-  buffer = alloca(sizeof(char)*(length+1));
-  if (buffer==NULL) 
-    Fatal("cannot allocate space for special string");
-
-  strncpy(buffer,special,length);
-  buffer[length]='\0';
-
-  SKIPSPACES(buffer);
+  DEBUG_PRINT(DEBUG_DVI,(" '%s'",special));
+  SKIPSPACES(special);
   /********************** Color specials ***********************/
-  if (strncmp(buffer,"background ",11)==0) {
-    background(buffer+11);
+  if (strncmp(special,"background ",11)==0) {
+    background(special+11);
     return;
   }
-  if (strncmp(buffer,"color ",6)==0) {
-    buffer+=6;
-    SKIPSPACES(buffer);
-    if (strncmp(buffer,"push ",5)==0) {
-      pushcolor(buffer+5);
+  if (strncmp(special,"color ",6)==0) {
+    special+=6;
+    SKIPSPACES(special);
+    if (strncmp(special,"push ",5)==0) {
+      pushcolor(special+5);
     } else {
-      if (strcmp(buffer,"pop")==0)
+      if (strcmp(special,"pop")==0)
 	popcolor();
       else 
-	resetcolorstack(buffer);
+	resetcolorstack(special);
     }
     return;
   }
@@ -320,8 +343,8 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
   /* Needed tests for regression: PNG, GIF, JPEG and EPS inclusion,
    * for different gd versions */
 
-  if (strncmp(buffer,"PSfile=",7)==0) { /* PSfile */
-    char* psname = buffer+7;
+  if (strncmp(special,"PSfile=",7)==0) { /* PSfile */
+    char* psname = special+7;
     int llx=0,lly=0,urx=0,ury=0,rwi=0,rhi=0;
     bool clip=false;
     int hresolution,vresolution;
@@ -334,23 +357,23 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
       tmp=strrchr(psname,'"');
       if (tmp!=NULL) {
 	*tmp='\0';
-	buffer=tmp+1;
+	special=tmp+1;
       } else
-	buffer=NULL;
+	special=NULL;
     }
     
     /* Retrieve parameters */
-    SKIPSPACES(buffer);
-    while(buffer && *buffer) {
-      if (strncmp(buffer,"llx=",4)==0) llx = strtol(buffer+4,&buffer,10);
-      else if (strncmp(buffer,"lly=",4)==0) lly = strtol(buffer+4,&buffer,10);
-      else if (strncmp(buffer,"urx=",4)==0) urx = strtol(buffer+4,&buffer,10);
-      else if (strncmp(buffer,"ury=",4)==0) ury = strtol(buffer+4,&buffer,10);
-      else if (strncmp(buffer,"rwi=",4)==0) rwi = strtol(buffer+4,&buffer,10);
-      else if (strncmp(buffer,"rhi=",4)==0) rhi = strtol(buffer+4,&buffer,10);
-      else if (strncmp(buffer,"clip",4)==0) {clip = true; buffer=buffer+4;}
-      while (*buffer && *buffer!=' ') buffer++;
-      SKIPSPACES(buffer);
+    SKIPSPACES(special);
+    while(special && *special) {
+      if (strncmp(special,"llx=",4)==0) llx = strtol(special+4,&special,10);
+      else if (strncmp(special,"lly=",4)==0) lly = strtol(special+4,&special,10);
+      else if (strncmp(special,"urx=",4)==0) urx = strtol(special+4,&special,10);
+      else if (strncmp(special,"ury=",4)==0) ury = strtol(special+4,&special,10);
+      else if (strncmp(special,"rwi=",4)==0) rwi = strtol(special+4,&special,10);
+      else if (strncmp(special,"rhi=",4)==0) rhi = strtol(special+4,&special,10);
+      else if (strncmp(special,"clip",4)==0) {clip = true; special=special+4;}
+      while (*special && *special!=' ') special++;
+      SKIPSPACES(special);
     }
     
     /* Calculate resolution, and use our base resolution as a fallback. */
@@ -379,12 +402,11 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
       FILE* psstream;
 #endif
 
-      PSCodeInit(&image,NULL,NULL);
       TEMPSTR(image.filename,kpse_find_file(psname,kpse_pict_format,0));
       if (MmapFile(image.filename,&(image.fmmap)) || image.fmmap.size==0) {
 	Warning("Image file %s unusable, image will be left blank",
 		image.filename);
-	flags |= PAGE_GAVE_WARN;
+	page_flags |= PAGE_GAVE_WARN;
 	return;
       } 
       Message(BE_NONQUIET," <%s",psname);
@@ -426,9 +448,9 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 #endif
 	break;
       default:  /* Default, PostScript magic: "%!PS-Adobe" */
-	if (flags & NO_GHOSTSCRIPT) {
+	if (option_flags & NO_GHOSTSCRIPT) {
 	  Warning("GhostScript calls disallowed by --noghostscript" );
-	  flags |= PAGE_GAVE_WARN;
+	  page_flags |= PAGE_GAVE_WARN;
 	} else {
 	  /* Use alpha blending, and render transparent postscript
 	     images. The alpha blending works correctly only from
@@ -471,7 +493,7 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 			     llx, lly, urx, ury,
 			     cstack[0].red,cstack[0].green,cstack[0].blue);
 	    clip=true;
-	    flags |= PAGE_GAVE_WARN;
+	    page_flags |= PAGE_GAVE_WARN;
 	  }
 	  if (!clip) {
 	    /* Rendering across the whole image */
@@ -494,7 +516,7 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 	gdImageAlphaBlending(page_imagep,1);
 #else
 	Warning("Using libgd < 2.0.12, opaque image inclusion");
-	flags |= PAGE_GAVE_WARN;
+	page_flags |= PAGE_GAVE_WARN;
 #endif
 	gdImageCopy(page_imagep, psimage, 
 		    hh, vv-gdImageSY(psimage)+1,
@@ -506,11 +528,11 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 	gdImageDestroy(psimage);
       } else {
         Warning("Unable to load %s, image will be left blank",image.filename);
-        flags |= PAGE_GAVE_WARN;
+        page_flags |= PAGE_GAVE_WARN;
       } 
       Message(BE_NONQUIET,">");
     } else { /* Don't draw */
-      flags |= PAGE_TRUECOLOR;
+      page_flags |= PAGE_TRUECOLOR;
       DEBUG_PRINT(DEBUG_DVI,
 		  ("\n  GRAPHIC(X|S) INCLUDE \t%s (%d,%d) res %dx%d at (%d,%d)",
 		   psname,pngheight,pngwidth,
@@ -525,53 +547,56 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 
   /******************* Raw PostScript ********************/
 
-  if (strncmp(buffer,"!/preview@version(",18)==0) { 
-    buffer+=18;
-    length-=18;
-    while (length>0 && buffer[length]!=')') 
-      length--;
+  if (strncmp(special,"!/preview@version(",18)==0) { 
+    int length=0;
+    special+=18;
+    while (special[length]!='\0' && special[length]!=')') 
+      length++;
     if (page_imagep==NULL) 
-      Message(BE_NONQUIET," (preview-latex version %.*s)",length,buffer);
+      Message(BE_NONQUIET," (preview-latex version %.*s)",length,special);
     return;
   }
 
   /* preview-latex' tightpage option */
-  if (strncmp(buffer,"!/preview@tightpage",19)==0) { 
-    buffer+=19;
-    SKIPSPACES(buffer);
-    if (strncmp(buffer,"true",4)==0) {
+  if (strncmp(special,"!/preview@tightpage",19)==0) { 
+    special+=19;
+    SKIPSPACES(special);
+    if (strncmp(special,"true",4)==0) {
       if (page_imagep==NULL) 
 	Message(BE_NONQUIET," (preview-latex tightpage option detected, will use its bounding box)");
-      flags |= PREVIEW_LATEX_TIGHTPAGE;
-      return;
+      dvi->flags |= DVI_PREVIEW_LATEX_TIGHTPAGE;
     }
+    return;
   }
-  if (strncmp(buffer,"!userdict",9)==0 
-      && strstr(buffer+10,"7{currentfile token not{stop}if 65781.76 div")!=NULL) {
-    if (page_imagep==NULL && ~flags & PREVIEW_LATEX_TIGHTPAGE) 
+  if (strncmp(special,"!userdict",9)==0 
+      && strstr(special+10,"7{currentfile token not{stop}if 65781.76 div")!=NULL) {
+    if (page_imagep==NULL && ~dvi->flags & DVI_PREVIEW_LATEX_TIGHTPAGE) 
       Message(BE_NONQUIET," (preview-latex <= 0.9.1 tightpage option detected, will use its bounding box)");
-    flags |= PREVIEW_LATEX_TIGHTPAGE;
+    dvi->flags |= DVI_PREVIEW_LATEX_TIGHTPAGE;
     return;
   }
 
   /* preview-latex' dvips bop-hook redefinition */
-  if (strncmp(buffer,"!userdict",9)==0 
-      && strstr(buffer+10,"preview-bop-")!=NULL) {
+  if (strncmp(special,"!userdict",9)==0 
+      && strstr(special+10,"preview-bop-")!=NULL) {
+    dvi->flags |= DVI_PREVIEW_BOP_HOOK;
     if (page_imagep==NULL) 
       Message(BE_VERBOSE," (preview-latex beginning-of-page-hook detected)");
     return;
   }
 
-  if (strncmp(buffer,"ps::",4)==0) {
+  if (dvi->flags & DVI_PREVIEW_BOP_HOOK && ~page_flags & PAGE_PREVIEW_BOP 
+      && strncmp(special,"ps::",4)==0) {
+    page_flags |= PAGE_PREVIEW_BOP;
     /* Hokay, decode bounding box */
     dviunits adj_llx,adj_lly,adj_urx,adj_ury,ht,dp,wd;
-    adj_llx = strtol(buffer+4,&buffer,10);
-    adj_lly = strtol(buffer,&buffer,10);
-    adj_urx = strtol(buffer,&buffer,10);
-    adj_ury = strtol(buffer,&buffer,10);
-    ht = strtol(buffer,&buffer,10);
-    dp = strtol(buffer,&buffer,10);
-    wd = strtol(buffer,&buffer,10);
+    adj_llx = strtol(special+4,&special,10);
+    adj_lly = strtol(special,&special,10);
+    adj_urx = strtol(special,&special,10);
+    adj_ury = strtol(special,&special,10);
+    ht = strtol(special,&special,10);
+    dp = strtol(special,&special,10);
+    wd = strtol(special,&special,10);
     if (wd>0) {
       x_offset_tightpage = 
 	(-adj_llx+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor;
@@ -591,50 +616,45 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
     return;
   }
 
-  if (buffer[0]=='"' 
-      || (strlen(buffer)>3 && strncmp(buffer,"ps:",3)==0)) { /* Raw PostScript */
+  if (special[0]=='"' || strncmp(special,"ps:",3)==0) { /* Literal PostScript */
     if (page_imagep != NULL) { /* Draw into image */
-      struct pscode *pscodep,*tmp;
+      static struct pscode *pscodep=NULL;
+      struct pscode *tmp;
       gdImagePtr psimage=NULL;
-      unsigned char*  command;
+      char *txt;
       
-      Message(BE_NONQUIET," <raw PostScript");
-      /* Init pscode with the raw PostScript snippet */
-      if ((pscodep=alloca(sizeof(struct pscode)))==NULL)
-	Fatal("cannot allocate space for raw PostScript struct");
-      if (buffer[0]=='"')
-	PSCodeInit(pscodep,buffer+1,NULL);
-      else
-	PSCodeInit(pscodep,buffer+3,NULL);
-      /* Some packages split their raw PostScript code into several
-	 specials. Check for those, and concatenate them so that
-	 they're given to one and the same invocation of gs */
-      tmp=pscodep;
-      while(DVIIsNextPSSpecial(dvi)) {
-	command=DVIGetCommand(dvi);
-	DEBUG_PRINT(DEBUG_DVI,("DRAW CMD:\t%s", dvi_commands[*command]));
-	length=UNumRead(command+1, dvi_commandlength[*command]-1);
-	DEBUG_PRINT(DEBUG_DVI,
-		    (" %d", UNumRead(command+1, dvi_commandlength[*command]-1)));
-	if ((tmp->next=alloca(sizeof(struct pscode)+length+1))==NULL)
+      /* Some packages split their literal PostScript code into
+	 several specials. Check for those, and concatenate them so
+	 that they're given to one and the same invocation of gs */
+      if (pscodep==NULL) {
+	Message(BE_NONQUIET," <literal PS");
+	if ((tmp=pscodep=malloc(sizeof(struct pscode)))==NULL)
+	  Fatal("cannot allocate space for raw PostScript struct");
+      } else {
+	tmp=pscodep;
+	while(tmp->next != NULL)
+	  tmp=tmp->next;
+	if ((tmp->next=malloc(sizeof(struct pscode)))==NULL)
 	  Fatal("cannot allocate space for raw PostScript struct");
 	tmp=tmp->next;
-	PSCodeInit(tmp,(char*)tmp+sizeof(struct pscode),NULL);
-	strncpy(tmp->code,(char*)command + dvi_commandlength[*command],length);
-	tmp->code[length]='\0';
-	DEBUG_PRINT(DEBUG_DVI,(" '%s'",tmp->code));
-	if (tmp->code[0]=='"')
-	  tmp->code++;
-	else
-	  tmp->code+=3;
       }
+      if (DVIIsNextPSSpecial(dvi)) {
+	/* Don't use alloca, we do not want to run out of stack space */
+	DEBUG_PRINT(DEBUG_DVI,("- PS SPECIAL, STORING "));
+	txt=malloc(strlen(special)+1);
+	strcpy(txt,special);
+	PSCodeInit(tmp,txt);
+	return;
+      }
+      DEBUG_PRINT(DEBUG_DVI,("- LAST PS SPECIAL "));
+      PSCodeInit(tmp,special);
       /* Now, render image */
-      if (flags & NO_GHOSTSCRIPT)
+      if (option_flags & NO_GHOSTSCRIPT)
 	Warning("GhostScript calls disallowed by --noghostscript" );
       else {
 	/* Use alpha blending, and render transparent postscript
-	   images. The alpha blending works correctly only from libgd
-	   2.0.12 upwards */
+	   images. The alpha blending works correctly only from
+	   libgd 2.0.12 upwards */
 #ifdef HAVE_GDIMAGEPNGEX
 	if (page_imagep->trueColor) {
 	  //	  DEBUG_PRINT((DEBUG_DVI | DEBUG_GS),
@@ -654,87 +674,63 @@ void SetSpecial(char * special, int32_t length, int32_t hh, int32_t vv)
 			gdImageSX(psimage),gdImageSY(psimage));
 	    gdImageAlphaBlending(page_imagep,0);
 	    gdImageDestroy(psimage);
-	  }
-	  else
+	  } else
 	    Warning("No GhostScript pngalpha output, cannot render raw PostScript");
 	} else
 	  Warning("Palette output, cannot include raw PostScript");
 #else
 	Warning("Using libgd < 2.0.12, unable to include raw PostScript");
-	flags |= PAGE_GAVE_WARN;
 #endif
       }
+      while(pscodep->next != NULL) {
+	tmp=pscodep->next;
+	free(pscodep->special);
+	free(pscodep);
+	pscodep=tmp;
+      }
+      free(pscodep);
+      pscodep=NULL;
+      if (psimage==NULL) 
+	page_flags |= PAGE_GAVE_WARN;
       Message(BE_NONQUIET,">");
     } else { /* Don't draw */
-      flags |= PAGE_TRUECOLOR;
+      page_flags |= PAGE_TRUECOLOR;
     }
     return;
   }
 
-  if (strncmp(buffer,"papersize=",10)==0) { /* papersize spec, ignored */
+  if (strncmp(special,"papersize=",10)==0) { /* papersize spec, ignored */
     return;
   }
 
-  if (strncmp(buffer,"header=",7)==0) { /* PS header file */
-    struct pscode* tmp=psheaderp;
+  if (special[0]=='!' || strncmp(special,"header=",7)==0) { /* PS header */
+    struct pscode* newheader;
 
-    while (tmp!=NULL && (tmp->header==NULL || strcmp(tmp->header,buffer+7)!=0))
-      tmp=tmp->next;
-    if ( tmp == NULL ) {
-      DEBUG_PRINT(DEBUG_GS,("\n  PS HEADER:\t'%s'", tmp->header));
-      if ((tmp=malloc(sizeof(struct pscode)+strlen(buffer+7)))==NULL) {
-	Warning("cannot malloc space for psheader name, ignored");
-	flags |= PAGE_GAVE_WARN;
-	return;
-      }
-      PSCodeInit(tmp,NULL,(char*)tmp+sizeof(struct pscode));
-      strcpy(tmp->header,buffer+7);
-      if (psheaderp!=NULL) {
-	struct pscode* tmp2=psheaderp;
-	while(tmp2->next!=NULL)
-	  tmp2=tmp2->next;
-	tmp2->next=tmp;
-      } else
-	psheaderp=tmp;
-    }
+    DEBUG_PRINT(DEBUG_GS,("\n  PS HEADER: "));
+    if ((newheader=malloc(sizeof(struct pscode)+strlen(special)+1))==NULL)
+      Fatal("cannot malloc space for PostScript header");
+    strcpy((char*)newheader+sizeof(struct pscode),special);
+    PSCodeInit(newheader,(char*)newheader+sizeof(struct pscode));
+    if (psheaderp!=NULL) {
+      struct pscode* tmp=psheaderp;
+      while(tmp->next!=NULL)
+	tmp=tmp->next;
+      tmp->next=newheader;
+    } else
+      psheaderp=newheader;
     return;
   }
 
-  if (buffer[0]=='!') { /* raw PS header */
-    struct pscode* tmp=psheaderp;
-
-    while (tmp!=NULL && (tmp->code==NULL || strcmp(tmp->code,buffer+1)!=0))
-      tmp=tmp->next;
-    if ( tmp == NULL ) {
-      DEBUG_PRINT(DEBUG_GS,("\n  RAW PS HEADER:\t'%s'", buffer+1));
-      if ((tmp=malloc(sizeof(struct pscode)+strlen(buffer+1)))==NULL) {
-	Warning("cannot malloc space for raw psheader, ignored");
-	flags |= PAGE_GAVE_WARN;
-	return;
-      }
-      PSCodeInit(tmp,(char*)tmp+sizeof(struct pscode),NULL);
-      strcpy(tmp->code,buffer+1);
-      if (psheaderp!=NULL) {
-	struct pscode* tmp2=psheaderp;
-	while(tmp2->next!=NULL)
-	  tmp2=tmp2->next;
-	tmp2->next=tmp;
-      } else
-	psheaderp=tmp;
-    }
-    return;
-  }
-
-  if (strncmp(buffer,"src:",4)==0) { /* source special */
+  if (strncmp(special,"src:",4)==0) { /* source special */
     if ( page_imagep != NULL )
-      Message(BE_NONQUIET," at (%ld,%ld) source \\special{%.*s}",
-	      hh, vv, length,special);
+      Message(BE_NONQUIET," at (%ld,%ld) source \\special{%s}",
+	      hh, vv, special);
     return;
   }
   if ( page_imagep != NULL ) {
-    Warning("at (%ld,%ld) unimplemented \\special{%.*s}",
-	    hh, vv, length,special);
-    flags |= PAGE_GAVE_WARN;
+    Warning("at (%ld,%ld) unimplemented \\special{%s}",
+	    hh, vv, special);
+    page_flags |= PAGE_GAVE_WARN;
   }
 }
 
