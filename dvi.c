@@ -94,6 +94,7 @@ void DVIInit(struct dvi_data* dvi)
   fstat(fileno(dvi->filep), &stat);
   dvi->mtime = stat.st_mtime;
   dvi->pagelistp=NULL;
+  dvi->flags = 0;
 }
 
 struct dvi_data* DVIOpen(char* dviname,char* outname)
@@ -169,12 +170,17 @@ unsigned char* DVIGetCommand(struct dvi_data* dvi)
      /* Mmap is not appropriate here, we may want to read from
 	half-written files. */
 { 
-  static unsigned char command[STRSIZE];
-  static unsigned char* lcommand = command;
+  static unsigned char* command=NULL;
+  static uint32_t commlen=0;
   unsigned char *current = command;
   int length;
   uint32_t strlength=0;
 
+  if (commlen==0) {
+    commlen=STRSIZE;
+    if ((current=command=malloc(commlen))==NULL)
+      Fatal("cannot allocate memory for DVI command");
+  }
   DEBUG_PRINT(DEBUG_DVI,("\n@%ld ", ftell(dvi->filep)));
   *(current++) = fgetc_follow(dvi->filep);
   length = dvi_commandlength[*command];
@@ -182,7 +188,7 @@ unsigned char* DVIGetCommand(struct dvi_data* dvi)
     Fatal("undefined DVI op-code %d",*command);
   while(current < command+length) 
     *(current++) = fgetc_follow(dvi->filep);
-  switch (*command)  {
+  switch (*command) {
   case XXX4:
     strlength =                   *(current - 4);
   case XXX3:
@@ -200,22 +206,18 @@ unsigned char* DVIGetCommand(struct dvi_data* dvi)
     break;
   }
   if (strlength > 0) { /* Read string */
-    if (lcommand!=command) {
-      free(lcommand);
-      lcommand=command;
-    }
-    if (strlength + (uint32_t)length >  (uint32_t)STRSIZE) {
+    if (strlength+1 + (uint32_t)length > commlen) {
       /* string + command length exceeds that of buffer */
-      if ((lcommand=malloc(length+strlength+1))==NULL) 
+      commlen=strlength+1 + (uint32_t)length;
+      if ((command=realloc(command,commlen))==NULL)
 	Fatal("cannot allocate memory for DVI command");
-      memcpy(lcommand,command,length);
-      current = lcommand + length;
+      current = command + length;
     }
-    while(current < lcommand+length+strlength) 
+    while(current < command+length+strlength) 
       *(current++) = fgetc_follow(dvi->filep);
-    return(lcommand);
-  } else
-    return(command);
+    *current='\0';
+  }
+  return(command);
 }
 
 bool DVIIsNextPSSpecial(struct dvi_data* dvi)
@@ -291,9 +293,7 @@ void SkipPage(struct dvi_data* dvi)
     case XXX1: case XXX2: case XXX3: case XXX4:
       DEBUG_PRINT(DEBUG_DVI,("NOSKIP CMD:\t%s %d", dvi_commands[*command],
 			     UNumRead(command+1, dvi_commandlength[*command]-1)));
-      SetSpecial((char*)command + dvi_commandlength[*command], 
-		 UNumRead(command+1, dvi_commandlength[*command]-1),
-		 0,0);
+      SetSpecial((char*)command + dvi_commandlength[*command],0,0);
       break;
     case BOP: case PRE: case POST: case POST_POST:
       Fatal("%s occurs within page", dvi_commands[*command]);
