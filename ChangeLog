@@ -1,3 +1,34 @@
+2007-10-26  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* draw.c:
+	* dvi.c:
+	* special.c: Change DVIGetCommand so that the command is
+	zero-terminated. This simplifies string operations on specials and
+	makes the length argument to SetSpecial unnecessary.  Handle
+	preview-bop-hook correctly
+
+	* special.c: Simplify PostScript header and multi-special
+	handling
+
+	* color.c: 
+	* draw.c:
+	* dvi.c:
+	* dvipng.h: 
+	* font.c: 
+	* ft.c: 
+	* misc.c: 
+	* set.c: 
+	* special.c:
+	* t1.c: Split the flags variable into page_flags, option_flags and 
+	dvi->flags
+
+	* dvi.c:
+	* dvipng.c: dvi->flags resets now when the dvi is reopened 
+
+2007-07-24  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* special.c: Fix PostScript header usage
+
 2007-07-22  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* misc.c: Change version info slightly
