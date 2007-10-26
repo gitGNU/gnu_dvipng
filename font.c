@@ -194,7 +194,7 @@ char* kpse_find_t1_or_tt(char* filename)
 {
     char* filepath = kpse_find_file(filename, kpse_type1_format, false);
 #ifdef HAVE_FT2
-    if ((flags & USE_FREETYPE) && filepath==NULL) 
+    if ((option_flags & USE_FREETYPE) && filepath==NULL) 
       filepath = kpse_find_file(filename, kpse_truetype_format, false);
 #endif
     return(filepath);
@@ -216,7 +216,7 @@ void FontFind(struct font_entry * tfontptr)
     InitVF(tfontptr);
   }
 #ifdef HAVE_FT2_OR_LIBT1
-  if ((flags & (USE_FREETYPE | USE_LIBT1)) && name==NULL) {
+  if ((option_flags & (USE_FREETYPE | USE_LIBT1)) && name==NULL) {
     tfontptr->psfontmap = FindPSFontMap(tfontptr->n);
     if (tfontptr->psfontmap!=NULL) {
       TEMPSTR(name,kpse_find_t1_or_tt(tfontptr->psfontmap->psfile));
@@ -231,10 +231,10 @@ void FontFind(struct font_entry * tfontptr)
 	  name=NULL;
 	} else 
 #ifdef HAVE_FT2
-	  if ((flags & USE_FREETYPE)==0 || !InitFT(tfontptr)) {
+	  if ((option_flags & USE_FREETYPE)==0 || !InitFT(tfontptr)) {
 #endif
 #ifdef HAVE_LIBT1
-	    if ((flags & USE_LIBT1)==0 || !InitT1(tfontptr)) {
+	    if ((option_flags & USE_LIBT1)==0 || !InitT1(tfontptr)) {
 #endif
 	      /* if Freetype or T1 loading fails for some reason, fall
 		 back to PK font */
@@ -254,18 +254,18 @@ void FontFind(struct font_entry * tfontptr)
     if (name!=NULL) {
       strcpy (tfontptr->name, name);
       if (!FILESTRCASEEQ (tfontptr->n, font_ret.name)) {
-	flags |= PAGE_GAVE_WARN;
+	page_flags |= PAGE_GAVE_WARN;
 	Warning("font %s not found, using %s at %d dpi instead",
 		tfontptr->n, font_ret.name, font_ret.dpi);
 	tfontptr->c = 0; /* no checksum warning */
       } else if (!kpse_bitmap_tolerance ((double)font_ret.dpi, (double) tfontptr->dpi)) {
-	flags |= PAGE_GAVE_WARN;
+	page_flags |= PAGE_GAVE_WARN;
 	Warning("font %s at %d dpi not found, using %d dpi instead",
 		tfontptr->name, tfontptr->dpi, font_ret.dpi);
       }
       InitPK(tfontptr);
     } else {
-      flags |= PAGE_GAVE_WARN;
+      page_flags |= PAGE_GAVE_WARN;
       Warning("font %s at %d dpi not found, characters will be left blank",
 	      tfontptr->n, tfontptr->dpi);
       strcpy (tfontptr->name, "None");

@@ -87,7 +87,7 @@ bool InitFT(struct font_entry * tfontp)
   if (libfreetype==NULL) {
     if (FT_Init_FreeType( &libfreetype )) {
       Warning("an error occured during freetype initialisation, disabling it"); 
-      flags &= ~USE_FREETYPE;
+      option_flags &= ~USE_FREETYPE;
       return(false);
     } 
 # ifdef DEBUG

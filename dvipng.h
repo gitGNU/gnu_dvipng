@@ -165,6 +165,9 @@ struct dvi_data {    /* dvi entry */
   time_t       mtime;           /* modification time                 */
   struct font_num  *fontnump;   /* DVI font numbering                */
   struct page_list *pagelistp;  /* DVI page list                     */
+#define DVI_PREVIEW_LATEX_TIGHTPAGE  1
+#define DVI_PREVIEW_BOP_HOOK         (1<<1)
+  uint32_t     flags;           /* Preview-latex flags               */
 };
 
 #define PAGE_POST      INT32_MAX
@@ -389,7 +392,7 @@ dviunits  SetGlyph(int32_t c, int32_t hh,int32_t vv);
 void      Gamma(double gamma);
 int32_t   SetVF(int32_t);
 int32_t   SetRule(int32_t, int32_t, int32_t, int32_t);
-void      SetSpecial(char *, int32_t, int32_t, int32_t);
+void      SetSpecial(char *, int32_t, int32_t);
 void      BeginVFMacro(struct font_entry*);
 void      EndVFMacro(void);
 
@@ -432,7 +435,7 @@ EXTERN struct internal_state {
 #define PARSE_STDIN                  (1<<2)
 #define EXPAND_BBOX                  (1<<3)
 #define TIGHT_BBOX                   (1<<4)
-#define CACHE_IMAGES                 (1<<5)
+//#define CACHE_IMAGES                 (1<<5)
 #define FORCE_TRUECOLOR              (1<<6)
 #define USE_FREETYPE                 (1<<7)
 #define USE_LIBT1                    (1<<8)
@@ -440,17 +443,20 @@ EXTERN struct internal_state {
 #define REPORT_DEPTH                 (1<<10)
 #define DVI_PAGENUM                  (1<<11)
 #define MODE_PICKY                   (1<<12)
-#define PAGE_GAVE_WARN               (1<<13)
-#define PREVIEW_LATEX_TIGHTPAGE      (1<<14)
 #define GIF_OUTPUT                   (1<<15)
 #define MODE_STRICT                  (1<<16)
 #define NO_GHOSTSCRIPT               (1<<17)
 #define NO_GSSAFER                   (1<<18)
 #define BG_TRANSPARENT               (1<<19)
 #define BG_TRANSPARENT_ALPHA         (1<<20)
-#define PAGE_TRUECOLOR               (1<<21)
 #define FORCE_PALETTE                (1<<22)
-EXTERN uint32_t flags INIT(BE_NONQUIET | USE_FREETYPE | USE_LIBT1);
+EXTERN uint32_t option_flags INIT(BE_NONQUIET | USE_FREETYPE | USE_LIBT1);
+
+#define PAGE_GAVE_WARN               1
+#define PAGE_PREVIEW_BOP             (1<<1)
+#define PAGE_TRUECOLOR               (1<<2)
+EXTERN uint32_t page_flags INIT(0);
+
 
 #ifdef DEBUG
 EXTERN unsigned int debug INIT(0);
