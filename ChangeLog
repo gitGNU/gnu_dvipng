@@ -1,3 +1,9 @@
+2007-12-12  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* special.c: Correct header test, add proper ps::[start] and
+	ps::[end] detection, add code to make tikz/pgf dvips (~PostScript)
+	specials work
+
 2007-10-26  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* draw.c:
