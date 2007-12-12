@@ -55,7 +55,7 @@ void PSCodeInit(struct pscode *entry, char *special)
   entry->fmmap.mmap=NULL;
   if (special==NULL)
     return;
-  if (strncmp(special,"header=",11)==0)
+  if (strncmp(special,"header=",7)==0)
     entry->filename=special+7;
   else if (strncmp(special,"ps:: plotfile ",14)==0)
     entry->filename=special+14;
@@ -73,11 +73,11 @@ void PSCodeInit(struct pscode *entry, char *special)
     entry->code=special;
 #ifdef DEBUG
   if (entry->code!=NULL)
-    DEBUG_PRINT(DEBUG_DVI,(" '%s'",entry->code));
+    DEBUG_PRINT(DEBUG_GS,(" '%s'",entry->code));
   if (entry->filename!=NULL)
-    DEBUG_PRINT(DEBUG_DVI,(" {%s}",entry->filename));
+    DEBUG_PRINT(DEBUG_GS,(" {%s}",entry->filename));
   if (entry->postcode!=NULL)
-    DEBUG_PRINT(DEBUG_DVI,(" '%s'",entry->postcode));
+    DEBUG_PRINT(DEBUG_GS,(" '%s'",entry->postcode));
 #endif
 }
 
@@ -234,6 +234,7 @@ ps2png(struct pscode* pscodep, char *device, int hresolution, int vresolution,
   }
 #endif 
   if (psstream) {
+    writepscode(psheaderp,psstream);
     DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\t<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice",
 			  urx - llx, ury - lly,llx,lly));
     fprintf(psstream, "<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice\n",
@@ -244,7 +245,6 @@ ps2png(struct pscode* pscodep, char *device, int hresolution, int vresolution,
       fprintf(psstream, "gsave %f %f %f setrgbcolor clippath fill grestore",
 	      bgred/255.0, bggreen/255.0, bgblue/255.0);
     }
-    writepscode(psheaderp,psstream);
     writepscode(pscodep,psstream);
     if (showpage) {
       DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\tshowpage"));
@@ -619,6 +619,7 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
   if (special[0]=='"' || strncmp(special,"ps:",3)==0) { /* Literal PostScript */
     if (page_imagep != NULL) { /* Draw into image */
       static struct pscode *pscodep=NULL;
+      static bool psenvironment=false;
       struct pscode *tmp;
       gdImagePtr psimage=NULL;
       char *txt;
@@ -638,15 +639,23 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
 	  Fatal("cannot allocate space for raw PostScript struct");
 	tmp=tmp->next;
       }
-      if (DVIIsNextPSSpecial(dvi)) {
+      if (strncmp(special,"ps::[begin]",11)==0)
+	psenvironment=true;
+      else if (strncmp(special,"ps::[end]",9)==0)
+	psenvironment=false;
+      else if (strcmp(special,"ps:: pgfo")==0)
+	special="ps:: 39139632 55387786 1000 600 600 (tikzdefault.dvi) @start 1 0 bop pgfo 0 0 matrix defaultmatrix transform itransform translate";
+      else if (strcmp(special,"ps:: pgfc")==0)
+	special="ps:: pgfc eop end";
+      if (psenvironment || DVIIsNextPSSpecial(dvi)) {
 	/* Don't use alloca, we do not want to run out of stack space */
-	DEBUG_PRINT(DEBUG_DVI,("- PS SPECIAL, STORING "));
+	DEBUG_PRINT(DEBUG_GS,("\n  PS SPECIAL "));
 	txt=malloc(strlen(special)+1);
 	strcpy(txt,special);
 	PSCodeInit(tmp,txt);
 	return;
       }
-      DEBUG_PRINT(DEBUG_DVI,("- LAST PS SPECIAL "));
+      DEBUG_PRINT(DEBUG_DVI,("\n  LAST PS SPECIAL "));
       PSCodeInit(tmp,special);
       /* Now, render image */
       if (option_flags & NO_GHOSTSCRIPT)
@@ -704,20 +713,35 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
   }
 
   if (special[0]=='!' || strncmp(special,"header=",7)==0) { /* PS header */
-    struct pscode* newheader;
+    struct pscode* tmp;
+    char* txt;
 
-    DEBUG_PRINT(DEBUG_GS,("\n  PS HEADER: "));
-    if ((newheader=malloc(sizeof(struct pscode)+strlen(special)+1))==NULL)
-      Fatal("cannot malloc space for PostScript header");
-    strcpy((char*)newheader+sizeof(struct pscode),special);
-    PSCodeInit(newheader,(char*)newheader+sizeof(struct pscode));
-    if (psheaderp!=NULL) {
-      struct pscode* tmp=psheaderp;
-      while(tmp->next!=NULL)
+    if (strncmp(special,"! /pgfH",7)==0) {
+      SetSpecial("header=tex.pro",0,0);
+      SetSpecial("header=special.pro",0,0);
+      SetSpecial("! TeXDict begin",0,0);
+    }
+    if (psheaderp==NULL) {
+      if ((tmp=psheaderp=malloc(sizeof(struct pscode)))==NULL)
+	Fatal("cannot allocate space for PostScript header struct");
+    } else {
+      tmp=psheaderp;
+      /* No duplicates. This still misses pre=..., because we still
+	 change that. To be fixed */
+      while(tmp->next!=NULL) {
 	tmp=tmp->next;
-      tmp->next=newheader;
-    } else
-      psheaderp=newheader;
+	if (strcmp(tmp->special,special)==0)
+	  return;
+      }
+      if ((tmp->next=malloc(sizeof(struct pscode)))==NULL)
+	Fatal("cannot allocate space for PostScript header struct");
+      tmp=tmp->next;
+    }
+    DEBUG_PRINT(DEBUG_GS,("\n  PS HEADER "));
+    if ((txt=malloc(strlen(special)+1))==NULL)
+      Fatal("cannot malloc space for PostScript header");
+    strcpy(txt,special);
+    PSCodeInit(tmp,txt);
     return;
   }
 
