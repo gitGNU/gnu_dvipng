@@ -1,3 +1,7 @@
+2008-01-10  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* set.c: Correct typo
+
 2007-12-12  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* special.c: Correct header test, add proper ps::[start] and
@@ -30,6 +34,14 @@
 
 	* dvi.c:
 	* dvipng.c: dvi->flags resets now when the dvi is reopened 
+
+2007-08-06  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* ft.c:
+	* misc.c:
+	* t1.c:
+	* tfm.c:
+	* vf.c: Memory fixes
 
 2007-07-24  Jan-Ake Larsson  <jalar@mai.liu.se>
 
