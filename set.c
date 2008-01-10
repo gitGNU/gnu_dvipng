@@ -36,7 +36,7 @@
 #define gdAlphaMax                      127
 #endif
 #ifndef HAVE_GDIMAGEPNGEX
-#define  gdImagePngEX(i,f,z)                 gdImagePng(i,f)
+#define  gdImagePngEx(i,f,z)                 gdImagePng(i,f)
 #endif
 
 /* Persistent color cache. Index is ink thickness, 
