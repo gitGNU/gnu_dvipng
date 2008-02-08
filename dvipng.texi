@@ -1646,7 +1646,7 @@ Longstreet, Bernhard Simon, Bob McElrath, Georg Schwarz, Jason Farmer,
 Brian V. Smith, Samuel Hathaway, Thomas R. Shemanske, Stephen Gibson,
 Christian Ridderstr@"om, Ezra Peisach, William H Wheeler, Thomas
 Klausner, Harald Koenig, Adrian Bunk, Kevin Smith, Jason Riedy,
-Wolfram Krause, and Reinhard Kotucha.
+Wolfram Krause, Reinhard Kotucha, and Takeshi Abe.
 
 @ifset man
 @c man begin NOTES
