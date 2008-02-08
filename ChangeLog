@@ -1,33 +1,11 @@
-2008-02-08  Jan-Ake Larsson  <jalar@mai.liu.se>
+2008-02-08  Jan-Ake Larsson  <jalar@isy.liu.se>
 
-	* Makefile.in:
-	* color.c
-	* commands.h
-	* configure.ac
-	* draw.c
-	* dvi.c
-	* dvipng.c
-	* dvipng.h
-	* dvipng.texi
-	* enc.c
-	* font.c
-	* fontmap.c
-	* ft.c
-	* macros.texi
-	* miktex.h
-	* misc.c
-	* papersiz.c
-	* pk.c
-	* ppagelist.c
-	* set.c
-	* sfd.c
-	* special.c
-	* t1.c
-	* test_dvipng.tex
-	* tfm.c
-	* vf.c
-	* COPYING:
-	* COPYING.LESSER: Change to LGPLv3 
+	* Makefile.in, INSTALL, README, color.c, commands.h, configure.ac,
+	* draw.c, dvi.c, dvipng.1, dvipng.c, dvipng.h, dvipng.texi, enc.c,
+	* font.c, fontmap.c, ft.c, install.texi, macros.texi, miktex.h, 
+	* misc.c, papersiz.c, pk.c, ppagelist.c, readme.texi, set.c, sfd.c,
+	* special.c, t1.c, test_dvipng.tex, tfm.c, vf.c, COPYING,
+	* COPYING.LESSER: Change to LGPLv3
 
 	* install.texi: 
 	* README: 
