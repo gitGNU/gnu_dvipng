@@ -1,3 +1,38 @@
+2008-02-08  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* Makefile.in:
+	* color.c
+	* commands.h
+	* configure.ac
+	* draw.c
+	* dvi.c
+	* dvipng.c
+	* dvipng.h
+	* dvipng.texi
+	* enc.c
+	* font.c
+	* fontmap.c
+	* ft.c
+	* macros.texi
+	* miktex.h
+	* misc.c
+	* papersiz.c
+	* pk.c
+	* ppagelist.c
+	* set.c
+	* sfd.c
+	* special.c
+	* t1.c
+	* test_dvipng.tex
+	* tfm.c
+	* vf.c
+	* COPYING:
+	* COPYING.LESSER: Change to LGPLv3 
+
+	* install.texi: 
+	* README: 
+	* dvipng.texi: Add blurb about MediaWiki, and cosmetic changes
+
 2008-01-10  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* set.c: Correct typo
