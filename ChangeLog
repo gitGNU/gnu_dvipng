@@ -1,4 +1,4 @@
-2008-02-08  Jan-Ake Larsson  <jalar@isy.liu.se>
+2008-02-08  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* Makefile.in, INSTALL, README, color.c, commands.h, configure.ac,
 	* draw.c, dvi.c, dvipng.1, dvipng.c, dvipng.h, dvipng.texi, enc.c,
