@@ -62,7 +62,7 @@ bool DecodeArgs(int argc, char ** argv)
     Message(BE_NONQUIET,"This is %s",programname);
     if (strcmp(basename(programname),PACKAGE_NAME)!=0)
       Message(BE_NONQUIET," (%s)", PACKAGE_NAME);
-    Message(BE_NONQUIET," %s Copyright 2002-2006 Jan-Ake Larsson\n",
+    Message(BE_NONQUIET," %s Copyright 2002-2008 Jan-Ake Larsson\n",
 	    PACKAGE_VERSION);
   }
 
@@ -505,11 +505,11 @@ bool DecodeArgs(int argc, char ** argv)
 #ifdef HAVE_LIBT1
 	  printf("Using t1lib %s\n", T1_GetLibIdent());
 #endif
-	  puts ("Copyright (C) 2002-2005 Jan-Ake Larsson.\n\
+	  puts ("Copyright (C) 2002-2008 Jan-Ake Larsson.\n\
 There is NO warranty.  You may redistribute this software\n\
-under the terms of the GNU General Public License.\n\
-For more information about these matters, see the files\n\
-named COPYING and dvipng.c.");
+under the terms of the GNU Lesser General Public License\n\
+version 3, see the COPYING file in the dvipng distribution\n\
+or <http://www.gnu.org/licenses/>.");
 	  exit (EXIT_SUCCESS); 
 	}
 	if (*p != '0')
