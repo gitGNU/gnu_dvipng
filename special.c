@@ -349,16 +349,17 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
     int hresolution,vresolution;
     int pngheight,pngwidth;
 
-    /* Remove quotation marks around filename */
+    /* Remove quotation marks around filename. If no quotation marks,
+       use first word as filename */
     if (*psname=='"') {
-      char* tmp;
       psname++;
-      tmp=strrchr(psname,'"');
-      if (tmp!=NULL) {
-	*tmp='\0';
-	special=tmp+1;
-      } else
-	special=NULL;
+      special=strrchr(psname,'"');
+    } else {
+      special=strchr(psname,' ');
+    }
+    if (special!=NULL) {
+      *special='\0';
+      special++;
     }
     
     /* Retrieve parameters */
