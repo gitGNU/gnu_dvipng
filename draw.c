@@ -24,17 +24,13 @@
 
 #include "dvipng.h"
 
-/* #define NO_DRIFT */
-
 #ifdef DEBUG
 #include <ctype.h> /* isprint */
 #endif
 
 struct stack_entry {  
   dviunits    h, v, w, x, y, z; /* stack entry                           */
-#ifndef NO_DRIFT
   subpixels    hh,vv;
-#endif
 } stack[STACK_SIZE];           /* stack                                 */
 int       sp = 0;              /* stack pointer                         */
 
@@ -44,16 +40,10 @@ dviunits    w=0;                 /* current horizontal spacing      */
 dviunits    x=0;                 /* current horizontal spacing      */
 dviunits    y=0;                 /* current vertical spacing        */
 dviunits    z=0;                 /* current vertical spacing        */
-#ifndef NO_DRIFT
 subpixels   hh;                  /* current rounded horizontal position     */
 subpixels   vv;                  /* current rounded vertical position       */
-#else
-# define hh PIXROUND(h,dvi->conv*shrinkfactor)
-# define vv PIXROUND(v,dvi->conv*shrinkfactor)
-#endif
 
 
-#ifndef NO_DRIFT
 #define MAXDRIFT 1
 #define CHECK_MAXDRIFT(x,xx) if ( xx-PIXROUND(x,dvi->conv*shrinkfactor) < -MAXDRIFT ) { \
                                DEBUG_PRINT(DEBUG_DVI,(" add 1 to")); \
@@ -82,10 +72,6 @@ subpixels   vv;                  /* current rounded vertical position       */
                       else \
 		        vv += PIXROUND( temp,dvi->conv*shrinkfactor ); \
                       CHECK_MAXDRIFT(v,vv)
-#else
-#define MoveRight(b)  h += (dviunits) b
-#define MoveDown(a)   v += (dviunits) a
-#endif
 
 
 #define DO_VFCONV(a) ((((struct font_entry*) parent)->type==DVI_TYPE)?a:\
@@ -150,10 +136,8 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
   if (/*command >= SETC_000 &&*/ *command <= SETC_127) {
     temp = SetChar((int32_t)*command);
     h += temp;
-#ifndef NO_DRIFT
     hh += PIXROUND(temp,dvi->conv*shrinkfactor);
     CHECK_MAXDRIFT(h,hh);
-#endif
   } else if (*command >= FONT_00 && *command <= FONT_63) {
     SetFntNum((int32_t)*command - FONT_00,parent);
   } else switch (*command)  {
@@ -168,10 +152,8 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
     {
       temp = SetChar(UNumRead(command+1, dvi_commandlength[*command]-1));
       h += temp;
-#ifndef NO_DRIFT
       hh += PIXROUND(temp,dvi->conv*shrinkfactor);
       CHECK_MAXDRIFT(h,hh);
-#endif
     }    
     break;
   case SET_RULE:
@@ -181,10 +163,8 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
 		   DO_VFCONV(UNumRead(command+5, 4)),
 		   hh, vv);
     h += temp;
-#ifndef NO_DRIFT
     hh += PIXROUND(temp,dvi->conv*shrinkfactor);
     CHECK_MAXDRIFT(h,hh);
-#endif
     break;
   case PUT_RULE:
     DEBUG_PRINT(DEBUG_DVI,(" %d %d",
@@ -207,10 +187,8 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
     stack[sp].x = x;
     stack[sp].y = y;
     stack[sp].z = z;
-#ifndef NO_DRIFT
     stack[sp].hh = hh;
     stack[sp].vv = vv;
-#endif
     sp++;
     break;
   case POP:
@@ -223,10 +201,8 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
     x = stack[sp].x;
     y = stack[sp].y;
     z = stack[sp].z;
-#ifndef NO_DRIFT
     hh = stack[sp].hh;
     vv = stack[sp].vv;
-#endif
     break;
   case RIGHT1: case RIGHT2: case RIGHT3: case RIGHT4:
     DEBUG_PRINT(DEBUG_DVI,(" %d",
@@ -302,10 +278,8 @@ void BeginVFMacro(struct font_entry* currentvf)
   stack[sp].x = x;
   stack[sp].y = y;
   stack[sp].z = z;
-#ifndef NO_DRIFT
   stack[sp].hh = hh;
   stack[sp].vv = vv;
-#endif
   sp++;
   w = x = y = z = 0;
   DEBUG_PRINT(DEBUG_DVI,("\n  START VF:\tPUSH, W = X = Y = Z = 0"));
@@ -323,10 +297,8 @@ void EndVFMacro(void)
   x = stack[sp].x;
   y = stack[sp].y;
   z = stack[sp].z;
-#ifndef NO_DRIFT
   hh = stack[sp].hh;
   vv = stack[sp].vv;
-#endif
   DEBUG_PRINT(DEBUG_DVI,("\n  END VF:\tPOP                                  "));
 }
 
@@ -341,10 +313,8 @@ void DrawPage(dviunits hoffset, dviunits voffset)
   h = hoffset;
   v = voffset;
   w = x = y = z = 0;
-#ifndef NO_DRIFT
   hh = PIXROUND( h , dvi->conv*shrinkfactor );
   vv = PIXROUND( v , dvi->conv*shrinkfactor );
-#endif
   currentfont = NULL;    /* No default font                  */
 
   command=DVIGetCommand(dvi);
