@@ -35,37 +35,42 @@ struct stack_entry {
 struct stack_entry* dvi_stack=stack;
 
 #define MAXDRIFT 1
-#define CHECK_MAXDRIFT(x,xx) if ( xx-PIXROUND(x,dvi->conv*shrinkfactor) < -MAXDRIFT ) { \
-                               DEBUG_PRINT(DEBUG_DVI,(" add 1 to")); \
-			       xx += 1; \
-                             } \
-                             if ( xx-PIXROUND(x,dvi->conv*shrinkfactor) > MAXDRIFT ) { \
-                               DEBUG_PRINT(DEBUG_DVI,(" sub 1 to")); \
-			       xx -= 1; \
-                             } \
-                             if (PIXROUND(h,dvi->conv*shrinkfactor) != hh \
-                                 || PIXROUND(v,dvi->conv*shrinkfactor) != vv) \
-                                DEBUG_PRINT(DEBUG_DVI,(" drift (%d,%d)", \
-                                             hh-PIXROUND(h,dvi->conv*shrinkfactor), \
-                                             vv-PIXROUND(v,dvi->conv*shrinkfactor))); 
-#define MoveRight(x)  temp=x; h += temp; \
-                      if ( currentfont==NULL \
-                           || temp > currentfont->s/6 || temp < -currentfont->s/6*4 ) \
-                        hh = PIXROUND(h,dvi->conv*shrinkfactor); \
-                      else \
-                        hh += PIXROUND( temp,dvi->conv*shrinkfactor ); \
-                      CHECK_MAXDRIFT(h,hh)
-#define MoveDown(x)   temp=x; v += temp; \
-                      if ( currentfont==NULL \
-                           || temp > currentfont->s/6*5 || temp < currentfont->s/6*(-5) ) \
-                        vv = PIXROUND(v,dvi->conv*shrinkfactor); \
-                      else \
-		        vv += PIXROUND( temp,dvi->conv*shrinkfactor ); \
-                      CHECK_MAXDRIFT(v,vv)
+#define CHECK_MAXDRIFT(x,xx) \
+  if ( xx-PIXROUND(x,dvi->conv*shrinkfactor) < -MAXDRIFT ) {            \
+    DEBUG_PRINT(DEBUG_DVI,(" add 1 to"));		                \
+    xx += 1;						                \
+  }									\
+  if ( xx-PIXROUND(x,dvi->conv*shrinkfactor) > MAXDRIFT ) {		\
+    DEBUG_PRINT(DEBUG_DVI,(" sub 1 to"));				\
+    xx -= 1;								\
+  }									\
+  if (PIXROUND(dvi_stack->h,dvi->conv*shrinkfactor) != dvi_stack->hh	\
+      || PIXROUND(dvi_stack->v,dvi->conv*shrinkfactor) != dvi_stack->vv)\
+    DEBUG_PRINT(DEBUG_DVI,                                              \
+                (" drift (%d,%d)",					\
+		 dvi_stack->hh-PIXROUND(dvi_stack->h,dvi->conv*shrinkfactor), \
+		 dvi_stack->vv-PIXROUND(dvi_stack->v,dvi->conv*shrinkfactor))); 
 
+#define MoveRight(x) \
+  temp=x; dvi_stack->h += temp;		                                \
+  if ( currentfont==NULL						\
+       || temp > currentfont->s/6 || temp < -currentfont->s/6*4 )	\
+    dvi_stack->hh = PIXROUND(dvi_stack->h,dvi->conv*shrinkfactor);		\
+  else									\
+    dvi_stack->hh += PIXROUND( temp,dvi->conv*shrinkfactor );		\
+  CHECK_MAXDRIFT(dvi_stack->h,dvi_stack->hh)
+
+#define MoveDown(x) \
+  temp=x; dvi_stack->v += temp;		                                \
+  if ( currentfont==NULL						\
+       || temp > currentfont->s/6*5 || temp < currentfont->s/6*(-5) )	\
+    dvi_stack->vv = PIXROUND(dvi_stack->v,dvi->conv*shrinkfactor);		\
+  else									\
+    dvi_stack->vv += PIXROUND( temp,dvi->conv*shrinkfactor );		\
+  CHECK_MAXDRIFT(dvi_stack->v,dvi_stack->vv)
 
 #define DO_VFCONV(a) ((((struct font_entry*) parent)->type==DVI_TYPE)?a:\
-    (dviunits)((int64_t) a *  ((struct font_entry*) parent)->s / (1 << 20)))
+  (dviunits)((int64_t) a * ((struct font_entry*) parent)->s / (1 << 20)))
 
 
 dviunits SetChar(int32_t c)
