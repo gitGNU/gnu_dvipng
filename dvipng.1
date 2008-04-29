@@ -129,7 +129,7 @@
 .\" ========================================================================
 .\"
 .IX Title "DVIPNG 1"
-.TH DVIPNG 1 "2008-02-08" "dvipng 1.9" "User commands"
+.TH DVIPNG 1 "2008-04-29" "dvipng 1.10" "User commands"
 .SH "NAME"
 dvipng \- A DVI\-to\-PNG translator
 .SH "SYNOPSIS"
@@ -247,11 +247,11 @@ On some high-res screens, the value is instead 120 dpi. Good luck!
 .IP "\fB\-\-depth*\fR" 4
 .IX Item "--depth*"
 Report the depth of the image. This only works reliably when the
-LaTeX style \fIpreview.sty\fR from preview-latex is used. It
-reports the number of pixels from the bottom of the image to the
-baseline of the image. This can be used for vertical positioning of the
-image in, e.g., web documents, where one would use (Cascading
-StyleSheets 1)
+LaTeX style \fIpreview.sty\fR from preview-latex is used with
+the \fBactive\fR option. It reports the number of pixels from the
+bottom of the image to the baseline of the image. This can be used for
+vertical positioning of the image in, e.g., web documents, where one
+would use (Cascading StyleSheets 1)
 .Sp
 .Vb 1
 \&  <IMG SRC="<filename.png>" STYLE="vertical-align: -<depth>px">
@@ -305,10 +305,11 @@ option.
 .IP "\fB\-\-height*\fR" 4
 .IX Item "--height*"
 Report the height of the image. This only works reliably when the
-LaTeX style \fIpreview.sty\fR from preview-latex is used. It
-reports the number of pixels from the top of the image to the
-baseline of the image. The total height of the image is obtained as the
-sum of the values reported from \fB\-\-height\fR and \fB\-\-depth\fR.
+LaTeX style \fIpreview.sty\fR from preview-latex is used with
+the \fBactive\fR option. It reports the number of pixels from the top
+of the image to the baseline of the image. The total height of the
+image is obtained as the sum of the values reported from
+\&\fB\-\-height\fR and \fB\-\-depth\fR.
 .IP "\fB\-l [=]\fR\fInum\fR" 4
 .IX Item "-l [=]num"
 The last page printed will be the first one numbered \fInum\fR. Default
