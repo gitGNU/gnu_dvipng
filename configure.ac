@@ -23,7 +23,7 @@
 #************************************************************************
 
 # Process this file with autoconf to produce a configure script.
-AC_INIT([dvipng], [1.9], [dvipng@nongnu.org])
+AC_INIT([dvipng], [1.10], [dvipng@nongnu.org])
 AC_CONFIG_SRCDIR([dvipng.c])
 
 AC_ARG_ENABLE(debug, 
@@ -143,7 +143,7 @@ AC_CHECK_FUNCS([dup2 memset munmap pow putenv strchr strrchr strtol strstr])
 if test "$enable_timing" = "yes"; then
   AC_CHECK_FUNCS([ftime gettimeofday])
 fi
-AC_CHECK_FUNCS([gdImageCreateTrueColor gdImagePngEx gdImageCreateFromPngPtr gdImageGif FT_Library_Version])
+AC_CHECK_FUNCS([gdImageCreateTrueColor gdImageCreateFromJpeg gdImagePngEx gdImageCreateFromPngPtr gdImageGif FT_Library_Version])
 if test "$ac_cv_func_gdImageGif" = "yes"; then
    INSTALL_BIN_TARGET="install-dvigif"
 else
@@ -217,6 +217,7 @@ AC_MSG_RESULT([
      the --truecolor switch, full alpha 
      transparency, proper rescaling of 
      included bitmaps, and jpeg inclusion:  $ac_cv_func_gdImageCreateTrueColor
+   Your gd has jpeg inclusion enabled:      $ac_cv_func_gdImageCreateFromJpeg
    Your gd is new enough (>=2.0.12) to 
      enable transparent backgrounds for EPS
      inclusion and the -z (compression)
