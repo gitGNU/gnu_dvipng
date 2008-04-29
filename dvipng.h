@@ -434,7 +434,7 @@ EXTERN struct internal_state {
 #define PARSE_STDIN                  (1<<2)
 #define EXPAND_BBOX                  (1<<3)
 #define TIGHT_BBOX                   (1<<4)
-//#define CACHE_IMAGES                 (1<<5)
+/* #define CACHE_IMAGES                 (1<<5) */
 #define FORCE_TRUECOLOR              (1<<6)
 #define USE_FREETYPE                 (1<<7)
 #define USE_LIBT1                    (1<<8)
