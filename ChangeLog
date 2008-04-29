@@ -1,3 +1,15 @@
+2008-04-29  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* special.c: Change to HAVE_...JPEG
+
+	* dvipng.h: Remove c++ comment
+
+	* dvipng.texi:
+	Use 'active' in the 'preview' package, remove unused text
+
+	* Makefile.in:
+	Install dvipng.1 from the tarball, mark maintainer targets
+
 2008-02-08  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* Makefile.in, INSTALL, README, color.c, commands.h, configure.ac,
