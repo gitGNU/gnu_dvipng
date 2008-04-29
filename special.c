@@ -196,6 +196,7 @@ ps2png(struct pscode* pscodep, char *device, int hresolution, int vresolution,
   
   close(downpipe[0]);
   psstream=fdopen(downpipe[1],"wb");
+  /* fclose(psstream);  psstream=fopen("test.ps","wb"); */
   if (psstream == NULL) 
     close(downpipe[1]);
   close(uppipe[1]);
@@ -434,7 +435,7 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
 	break;
       case 0xff: /* JPEG magic: 0xffd8 */
 	DEBUG_PRINT(DEBUG_DVI,("\n  INCLUDE JPEG \t%s",image.filename));
-#ifdef HAVE_GDIMAGECREATETRUECOLOR
+#ifdef HAVE_GDIMAGECREATEFROMJPEG
 #ifdef HAVE_GDIMAGECREATEFROMPNGPTR
 	psimage=gdImageCreateFromJpegPtr(image.fmmap.size,image.fmmap.mmap);
 #else
@@ -666,8 +667,6 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
 	   libgd 2.0.12 upwards */
 #ifdef HAVE_GDIMAGEPNGEX
 	if (page_imagep->trueColor) {
-	  //	  DEBUG_PRINT((DEBUG_DVI | DEBUG_GS),
-	  //      ("\n  GS RENDER \t%s -> pngalpha ",image.filename));
 	  /* Render across the whole image */ 
 	  psimage = ps2png(pscodep, "-sDEVICE=pngalpha", 
 			   dpi,dpi, 
