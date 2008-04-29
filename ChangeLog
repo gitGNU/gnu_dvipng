@@ -1,11 +1,15 @@
 2008-04-29  Jan-Ake Larsson  <jalar@mai.liu.se>
 
+	* configure.ac: Prepare for 1.10, check for gdImageCreateJpeg
+
+	* aclocal.m4: Cosmetic changes
+
 	* special.c: Change to HAVE_...JPEG
 
 	* dvipng.h: Remove c++ comment
 
-	* dvipng.texi:
-	Use 'active' in the 'preview' package, remove unused text
+	* dvipng.texi: Prepare for 1.10. Use 'active' in the 'preview'
+	package, remove unused text
 
 	* Makefile.in:
 	Install dvipng.1 from the tarball, mark maintainer targets
