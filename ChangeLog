@@ -1,5 +1,7 @@
 2008-04-29  Jan-Ake Larsson  <jalar@mai.liu.se>
 
+	* dvipng.1: Prepare for 1.10
+
 	* configure.ac: Prepare for 1.10, check for gdImageCreateJpeg
 
 	* aclocal.m4: Cosmetic changes
