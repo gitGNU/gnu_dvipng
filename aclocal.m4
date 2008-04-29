@@ -162,7 +162,7 @@ dnl					[, ACTION-IF-NOT-FOUND]])
 dnl
 AC_DEFUN(MAKEINFO_CHECK_MACRO,
 [if test -n "$MAKEINFO" -a "$makeinfo" != ":"; then
-  AC_MSG_CHECKING([if $MAKEINFO understands @$1{}])
+  AC_MSG_CHECKING([for @$1{}])
   echo \\\\input texinfo > conftest.texi
   echo @$1{test} >> conftest.texi
   if $MAKEINFO conftest.texi > /dev/null 2> /dev/null; then
@@ -194,7 +194,7 @@ dnl
 dnl Check for enc, cmap, sfd formats
 dnl
 AC_DEFUN(AC_HAS_KPSE_ENC_FORMATS,
- [AC_MSG_CHECKING([whether kpse_enc_format is in kpathsea/tex-file.h])
+ [AC_MSG_CHECKING([for kpse_enc_format])
   AC_TRY_COMPILE([
     #include <stdio.h>
     #include <kpathsea/kpathsea.h>],
