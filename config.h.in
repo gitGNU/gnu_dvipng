@@ -51,6 +51,9 @@
 /* Define to 1 if you have the `FT_Library_Version' function. */
 #undef HAVE_FT_LIBRARY_VERSION
 
+/* Define to 1 if you have the `gdImageCreateFromJpeg' function. */
+#undef HAVE_GDIMAGECREATEFROMJPEG
+
 /* Define to 1 if you have the `gdImageCreateFromPngPtr' function. */
 #undef HAVE_GDIMAGECREATEFROMPNGPTR
 
