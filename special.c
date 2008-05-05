@@ -51,7 +51,7 @@ void PSCodeInit(struct pscode *entry, char *special)
   entry->code=NULL;
   entry->filename=NULL;
   entry->postcode=NULL;
-  entry->fmmap.mmap=NULL;
+  entry->fmmap.data=NULL;
   if (special==NULL)
     return;
   if (strncmp(special,"header=",7)==0)
@@ -88,7 +88,7 @@ void ClearPSHeaders(void)
 
   while(temp!=NULL) {
     psheaderp=psheaderp->next;
-    if (temp->fmmap.mmap!=NULL)
+    if (temp->fmmap.data!=NULL)
       UnMmapFile(&(temp->fmmap));
     free(temp);
     temp=psheaderp;
@@ -103,7 +103,7 @@ void writepscode(struct pscode* pscodep, FILE* psstream)
       putc('\n',psstream);
       DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\t%s",pscodep->code));
     }
-    if (pscodep->filename!=NULL && pscodep->fmmap.mmap==NULL) {
+    if (pscodep->filename!=NULL && pscodep->fmmap.data==NULL) {
       char* filepath=
 	kpse_find_file(pscodep->filename,kpse_tex_ps_header_format,false);
       if (filepath==NULL) {
@@ -114,13 +114,13 @@ void writepscode(struct pscode* pscodep, FILE* psstream)
 	page_flags |= PAGE_GAVE_WARN;
       }
     }
-    if (pscodep->fmmap.mmap!=NULL) {
+    if (pscodep->fmmap.data!=NULL) {
       unsigned char* position;
 
       DEBUG_PRINT(DEBUG_GS,("\n  PS FILE:\t%s",pscodep->filename));
-      position=(unsigned char*)pscodep->fmmap.mmap;
+      position=(unsigned char*)pscodep->fmmap.data;
       while(position 
-	    < (unsigned char*)pscodep->fmmap.mmap + pscodep->fmmap.size) {
+	    < (unsigned char*)pscodep->fmmap.data + pscodep->fmmap.size) {
 	putc(*position,psstream);
 	position++;
       }
@@ -411,11 +411,11 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
 	return;
       } 
       Message(BE_NONQUIET," <%s",psname);
-      switch ((unsigned char)*image.fmmap.mmap) {
+      switch ((unsigned char)*image.fmmap.data) {
       case 0x89: /* PNG magic: "\211PNG\r\n\032\n" */
 	DEBUG_PRINT(DEBUG_DVI,("\n  INCLUDE PNG \t%s",image.filename));
 #ifdef HAVE_GDIMAGECREATEFROMPNGPTR
-	psimage=gdImageCreateFromPngPtr(image.fmmap.size,image.fmmap.mmap);
+	psimage=gdImageCreateFromPngPtr(image.fmmap.size,image.fmmap.data);
 #else
 	psstream=fopen(image.filename,"rb");
 	psimage=gdImageCreateFromPng(psstream);
@@ -427,7 +427,7 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
 	DEBUG_PRINT(DEBUG_DVI,("\n  INCLUDE GIF \t%s",image.filename));
 #ifdef HAVE_GDIMAGEGIF
 	psimage=rescale(gdImageCreateFromGifPtr(image.fmmap.size,
-						image.fmmap.mmap),
+						image.fmmap.data),
 			pngwidth,pngheight);
 #else
 	DEBUG_PRINT(DEBUG_DVI,(" (NO GIF DECODER)"));
@@ -437,7 +437,7 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
 	DEBUG_PRINT(DEBUG_DVI,("\n  INCLUDE JPEG \t%s",image.filename));
 #ifdef HAVE_GDIMAGECREATEFROMJPEG
 #ifdef HAVE_GDIMAGECREATEFROMPNGPTR
-	psimage=gdImageCreateFromJpegPtr(image.fmmap.size,image.fmmap.mmap);
+	psimage=gdImageCreateFromJpegPtr(image.fmmap.size,image.fmmap.data);
 #else
 	psstream=fopen(image.filename,"rb");
 	psimage=gdImageCreateFromJpeg(psstream);

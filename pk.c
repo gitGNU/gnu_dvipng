@@ -322,7 +322,7 @@ void InitPK(struct font_entry * tfontp)
   Message(BE_VERBOSE,"<%s>", tfontp->name);
   if (MmapFile(tfontp->name,&(tfontp->fmmap)))
     Fatal("font file %s unusable", tfontp->name);
-  position=(unsigned char*)tfontp->fmmap.mmap;
+  position=(unsigned char*)tfontp->fmmap.data;
   if (tfontp->fmmap.size < 2 || tfontp->fmmap.size < 3+*(position+2)+16) 
     Fatal("PK file %s ends prematurely",tfontp->name);
   if (*position++ != PK_PRE) 
@@ -352,7 +352,7 @@ void InitPK(struct font_entry * tfontp)
   position = skip_specials(position);
   while (*position != PK_POST) {
     DEBUG_PRINT(DEBUG_PK,("\n  @%ld PK CHAR:\t%d",
-			  (long)position - (long)tfontp->fmmap.mmap, *position));
+			  (long)position - (long)tfontp->fmmap.data, *position));
     if ((tcharptr = malloc(sizeof(struct char_entry))) == NULL)
       Fatal("cannot malloc space for char_entry");
     tcharptr->flag_byte = *position;

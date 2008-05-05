@@ -101,8 +101,8 @@ struct colorname* LoadColornameFile(char* filename, bool should_exist)
   }
   DEBUG_PRINT(DEBUG_COLOR,("\n  OPEN COLOR NAMES:\t'%s'", filepath));
   if (MmapFile(filepath,&fmmap)) return NULL;
-  pos=fmmap.mmap;
-  max=fmmap.mmap+fmmap.size;
+  pos=fmmap.data;
+  max=fmmap.data+fmmap.size;
   while (pos<max && *pos!='\\') pos++;
   while(pos+9<max && strncmp(pos,"\\endinput",9)!=0) {
     if (pos+17<max && strncmp(pos,"\\DefineNamedColor",17)==0) {

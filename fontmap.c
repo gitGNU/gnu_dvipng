@@ -143,8 +143,8 @@ struct psfontmap *SearchPSFontMap(char* fontname,
 
   if (pos==end && search_mmap!=searching_mmap) {
     searching_mmap=search_mmap;
-    pos=searching_mmap->mmap;
-    end=searching_mmap->mmap+searching_mmap->size;
+    pos=searching_mmap->data;
+    end=searching_mmap->data+searching_mmap->size;
   }
   while(pos<end && (entry==NULL || strcmp(entry->tfmname,fontname)!=0)) {
     while(pos < end 
