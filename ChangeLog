@@ -1,3 +1,8 @@
+2008-05-05  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* color.c, dvipng.h, enc.c, fontmap.c, misc.c, pk.c, sfd.c,
+	special.c, tfm.c, vf.c: Change name of fmmap struct element
+
 2008-04-29  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* dvipng.1: Prepare for 1.10
