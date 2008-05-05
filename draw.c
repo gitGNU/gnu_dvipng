@@ -289,9 +289,8 @@ void DrawPage(dviunits hoffset, dviunits voffset)
       * encountering EOP.
       */
 {
-  struct dvi_command command;  /* current command                  */
+  unsigned char*  command;  /* current command                  */
 
-  command.buffer = NULL;
   dvi_stack->h = hoffset;
   dvi_stack->v = voffset;
   dvi_stack->w = dvi_stack->x = dvi_stack->y = dvi_stack->z = 0;
@@ -299,12 +298,12 @@ void DrawPage(dviunits hoffset, dviunits voffset)
   dvi_stack->vv = PIXROUND( dvi_stack->v , dvi->conv*shrinkfactor );
   currentfont = NULL;    /* No default font                  */
 
-  DVIGetCommand(dvi,&command);
-  DEBUG_PRINT(DEBUG_DVI,("DRAW CMD:\t%s", dvi_commands[*command.buffer]));
-  while (*command.buffer != EOP)  {
-    DrawCommand(command.buffer,dvi);
-    DVIGetCommand(dvi,&command);
-    DEBUG_PRINT(DEBUG_DVI,("DRAW CMD:\t%s", dvi_commands[*command.buffer]));
+  command=DVIGetCommand(dvi);
+  DEBUG_PRINT(DEBUG_DVI,("DRAW CMD:\t%s", dvi_commands[*command]));
+  while (*command != EOP)  {
+    DrawCommand(command,dvi);
+    command=DVIGetCommand(dvi);
+    DEBUG_PRINT(DEBUG_DVI,("DRAW CMD:\t%s", dvi_commands[*command]));
   } 
 }
 
@@ -369,13 +368,6 @@ void DrawPages(void)
       DrawPage(x_offset*dvi->conv*shrinkfactor,
 	       y_offset*dvi->conv*shrinkfactor);
       if ( ! (option_flags & MODE_PICKY && page_flags & PAGE_GAVE_WARN )) {
-#ifdef FALLBACK
-	if (page_flags & PAGE_GAVE_WARN) {
-	  SeekPage(dvi,dvi_pos);
-	  FallbackDrawPage(x_offset*dvi->conv*shrinkfactor,
-			   y_offset*dvi->conv*shrinkfactor);
-	}
-#endif
 	WriteImage(dvi->outname,dvi_pos->count[pagecounter]);
 #ifdef TIMING
 	++ndone;

@@ -169,13 +169,6 @@ struct dvi_data {    /* dvi entry */
   uint32_t     flags;           /* Preview-latex flags               */
 };
 
-struct dvi_command {
-  int      length;
-  uint32_t strlen;
-  size_t   buflen;
-  unsigned char *buffer;
-};
-
 #define PAGE_POST      INT32_MAX
 #define PAGE_LASTPAGE  INT32_MAX-1
 #define PAGE_MAXPAGE   INT32_MAX-2    /* assume no pages out of this range */
@@ -205,7 +198,7 @@ struct page_list*NextPage(struct dvi_data*, struct page_list*);
 struct page_list*PrevPage(struct dvi_data*, struct page_list*);
 int              SeekPage(struct dvi_data*, struct page_list*);
 bool             DVIFollowToggle(void);
-void             DVIGetCommand(struct dvi_data*,struct dvi_command*);
+unsigned char*   DVIGetCommand(struct dvi_data*);
 bool             DVIIsNextPSSpecial(struct dvi_data*);
 uint32_t         CommandLength(unsigned char*); 
 void             ClearPSHeaders(void);

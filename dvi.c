@@ -59,25 +59,24 @@ static unsigned char fgetc_follow(FILE* fp)
 void DVIInit(struct dvi_data* dvi)
 {
   int     k;
-  struct dvi_command pre;
+  unsigned char* pre;
   struct stat stat;
 
   fseek(dvi->filep,0,SEEK_SET);
-  pre.buffer=NULL;
-  DVIGetCommand(dvi,&pre);
-  if (*pre.buffer != PRE) {
+  pre=DVIGetCommand(dvi);
+  if (*pre != PRE) {
     Fatal("PRE does not occur first - are you sure this is a DVI file?");
   }
-  k = UNumRead(pre.buffer+1,1);
+  k = UNumRead(pre+1,1);
   DEBUG_PRINT(DEBUG_DVI,("DVI START:\tPRE %d",k));
   if (k != DVIFORMAT) {
     Fatal("DVI format = %d, can only process DVI format %d files",
 	  k, DVIFORMAT);
   }
-  dvi->num = UNumRead(pre.buffer+2, 4);
-  dvi->den = UNumRead(pre.buffer+6, 4);
+  dvi->num = UNumRead(pre+2, 4);
+  dvi->den = UNumRead(pre+6, 4);
   DEBUG_PRINT(DEBUG_DVI,(" %d/%d",dvi->num,dvi->den));
-  dvi->mag = UNumRead(pre.buffer+10, 4); /*FIXME, see font.c*/
+  dvi->mag = UNumRead(pre+10, 4); /*FIXME, see font.c*/
   DEBUG_PRINT(DEBUG_DVI,(" %d",dvi->mag));
   if ( usermag > 0 && usermag != dvi->mag ) {
     Warning("DVI magnification of %d over-ridden by user (%ld)",
@@ -88,9 +87,9 @@ void DVIInit(struct dvi_data* dvi)
 		    ((double)dvi->mag / 1000.0) *
 		    ((double)dpi*shrinkfactor/254000.0)))+0.5;
   DEBUG_PRINT(DEBUG_DVI,(" (%d)",dvi->conv));
-  k = UNumRead(pre.buffer+14,1);
-  DEBUG_PRINT(DEBUG_DVI,(" '%.*s'",k,pre.buffer+15));
-  Message(BE_VERBOSE,"'%.*s' -> %s\n",k,pre.buffer+15,dvi->outname);
+  k = UNumRead(pre+14,1);
+  DEBUG_PRINT(DEBUG_DVI,(" '%.*s'",k,pre+15));
+  Message(BE_VERBOSE,"'%.*s' -> %s\n",k,pre+15,dvi->outname);
   fstat(fileno(dvi->filep), &stat);
   dvi->mtime = stat.st_mtime;
   dvi->pagelistp=NULL;
@@ -165,54 +164,59 @@ struct dvi_data* DVIOpen(char* dviname,char* outname)
   return(dvi);
 }
 
-void DVIGetCommand(struct dvi_data* dvi, struct dvi_command* command)
+unsigned char* DVIGetCommand(struct dvi_data* dvi)
      /* This function reads in and stores the next dvi command. */
      /* Mmap is not appropriate here, we may want to read from
 	half-written files. */
 { 
-  unsigned char *current = command->buffer;
+  static unsigned char* command=NULL;
+  static uint32_t commlen=0;
+  unsigned char *current = command;
+  int length;
+  uint32_t strlength=0;
 
-  if (command->buffer==NULL) {
-    command->buflen=STRSIZE;
-    if ((current=command->buffer=malloc(command->buflen))==NULL)
+  if (commlen==0) {
+    commlen=STRSIZE;
+    if ((current=command=malloc(commlen))==NULL)
       Fatal("cannot allocate memory for DVI command");
   }
   DEBUG_PRINT(DEBUG_DVI,("\n@%ld ", ftell(dvi->filep)));
   *(current++) = fgetc_follow(dvi->filep);
-  command->length = dvi_commandlength[*(command->buffer)];
-  if (command->length < 0)
-    Fatal("undefined DVI op-code %d",*(command->buffer));
-  while(current < command->buffer+command->length) 
+  length = dvi_commandlength[*command];
+  if (length < 0)
+    Fatal("undefined DVI op-code %d",*command);
+  while(current < command+length) 
     *(current++) = fgetc_follow(dvi->filep);
-  switch (*(command->buffer)) {
+  switch (*command) {
   case XXX4:
-    command->strlen =                   *(current - 4);
+    strlength =                   *(current - 4);
   case XXX3:
-    command->strlen = command->strlen * 256 + *(current - 3);
+    strlength = strlength * 256 + *(current - 3);
   case XXX2: 
-    command->strlen = command->strlen * 256 + *(current - 2);
+    strlength = strlength * 256 + *(current - 2);
   case XXX1:
-    command->strlen = command->strlen * 256 + *(current - 1);
+    strlength = strlength * 256 + *(current - 1);
     break;
   case FNT_DEF1: case FNT_DEF2: case FNT_DEF3: case FNT_DEF4:
-    command->strlen = *(current - 1) + *(current - 2);
+    strlength = *(current - 1) + *(current - 2);
     break;
   case PRE: 
-    command->strlen = *(current - 1);
+    strlength = *(current - 1);
     break;
   }
-  if (command->strlen > 0) { /* Read string */
-    if (command->strlen+1 + (uint32_t)command->length > command->buflen) {
+  if (strlength > 0) { /* Read string */
+    if (strlength+1 + (uint32_t)length > commlen) {
       /* string + command length exceeds that of buffer */
-      command->buflen=command->strlen+1 + (uint32_t)command->length;
-      if ((command=realloc(command,command->buflen))==NULL)
+      commlen=strlength+1 + (uint32_t)length;
+      if ((command=realloc(command,commlen))==NULL)
 	Fatal("cannot allocate memory for DVI command");
-      current = command->buffer + command->length;
+      current = command + length;
     }
-    while(current < command->buffer+command->length+command->strlen) 
+    while(current < command+length+strlength) 
       *(current++) = fgetc_follow(dvi->filep);
     *current='\0';
   }
+  return(command);
 }
 
 bool DVIIsNextPSSpecial(struct dvi_data* dvi)
@@ -276,74 +280,67 @@ uint32_t CommandLength(unsigned char* command)
 void SkipPage(struct dvi_data* dvi)
 { 
   /* Skip present page */
-  struct dvi_command command;
+  unsigned char* command;           
 
-  command.buffer=NULL;
-  DVIGetCommand(dvi,&command);
-  while (*command.buffer != EOP)  {
-    switch (*command.buffer)  {
+  command=DVIGetCommand(dvi);
+  while (*command != EOP)  {
+    switch (*command)  {
     case FNT_DEF1: case FNT_DEF2: case FNT_DEF3: case FNT_DEF4:
-      DEBUG_PRINT(DEBUG_DVI,("NOSKIP CMD:\t%s", dvi_commands[*command.buffer]));
-      FontDef(command.buffer,dvi);
+      DEBUG_PRINT(DEBUG_DVI,("NOSKIP CMD:\t%s", dvi_commands[*command]));
+      FontDef(command,dvi);
       break;
     case XXX1: case XXX2: case XXX3: case XXX4:
-      DEBUG_PRINT(DEBUG_DVI,("NOSKIP CMD:\t%s %d", 
-			     dvi_commands[*command.buffer],
-			     UNumRead(command.buffer+1, 
-				      dvi_commandlength[*command.buffer]-1)));
-      SetSpecial((char*)command.buffer+dvi_commandlength[*command.buffer],
-		 0,0);
+      DEBUG_PRINT(DEBUG_DVI,("NOSKIP CMD:\t%s %d", dvi_commands[*command],
+			     UNumRead(command+1, dvi_commandlength[*command]-1)));
+      SetSpecial((char*)command + dvi_commandlength[*command],0,0);
       break;
     case BOP: case PRE: case POST: case POST_POST:
-      Fatal("%s occurs within page", dvi_commands[*command.buffer]);
+      Fatal("%s occurs within page", dvi_commands[*command]);
       break;
 #ifdef DEBUG
     default:
-      DEBUG_PRINT(DEBUG_DVI,("SKIP CMD:\t%s", dvi_commands[*command.buffer]));
+      DEBUG_PRINT(DEBUG_DVI,("SKIP CMD:\t%s", dvi_commands[*command]));
 #endif
     }
-    DVIGetCommand(dvi,&command);
+    command=DVIGetCommand(dvi);
   } /* while */
-  DEBUG_PRINT(DEBUG_DVI,("SKIP CMD:\t%s", dvi_commands[*command.buffer]));
-  if (command.buflen>0)
-    free(command.buffer);
+  DEBUG_PRINT(DEBUG_DVI,("SKIP CMD:\t%s", dvi_commands[*command]));
 }
 
 struct page_list* InitPage(struct dvi_data* dvi)
 {
   /* Find page start, return pointer to page_list entry if found */
   struct page_list* tpagelistp=NULL;
-  struct dvi_command command;
+  unsigned char* command;           
 
-  command.buffer=NULL;
-  DVIGetCommand(dvi,&command);
+  command=DVIGetCommand(dvi);
   /* Skip until page start or postamble */
-  while((*command.buffer != BOP) && (*command.buffer != POST)) {
-    switch(*command.buffer) {
+  while((*command != BOP) && (*command != POST)) {
+    switch(*command) {
     case FNT_DEF1: case FNT_DEF2: case FNT_DEF3: case FNT_DEF4:
-      DEBUG_PRINT(DEBUG_DVI,("NOPAGE CMD:\t%s", dvi_commands[*command.buffer]));
-      FontDef(command.buffer,dvi);
+      DEBUG_PRINT(DEBUG_DVI,("NOPAGE CMD:\t%s", dvi_commands[*command]));
+      FontDef(command,dvi);
       break;
     case NOP:
       DEBUG_PRINT(DEBUG_DVI,("NOPAGE CMD:\tNOP"));
       break;
     default:
-      Fatal("%s occurs outside page", dvi_commands[*command.buffer]);
+      Fatal("%s occurs outside page", dvi_commands[*command]);
     }
-    DVIGetCommand(dvi,&command);
+    command=DVIGetCommand(dvi);
   }
   if ((tpagelistp = 
        malloc(sizeof(struct page_list)
 	      +(csp+1-2)*sizeof(struct dvi_color)))==NULL)
     Fatal("cannot allocate memory for new page entry");
   tpagelistp->next = NULL;
-  if ( *command.buffer == BOP ) {  /*  Init page */
+  if ( *command == BOP ) {  /*  Init page */
     int i;
     DEBUG_PRINT(DEBUG_DVI,("PAGE START:\tBOP"));
     StoreColorStack(tpagelistp);
     tpagelistp->offset = ftell(dvi->filep)-45;
     for (i = 0; i <= 9; i++) {
-      tpagelistp->count[i] = UNumRead(command.buffer + 1 + i*4, 4);
+      tpagelistp->count[i] = UNumRead(command + 1 + i*4, 4);
       DEBUG_PRINT(DEBUG_DVI,(" %d",tpagelistp->count[i]));
     }
     if (dvi->pagelistp==NULL) 
