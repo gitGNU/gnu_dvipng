@@ -1,5 +1,7 @@
 2008-05-05  Jan-Ake Larsson  <jalar@mai.liu.se>
 
+	* draw.c, dvi.c: Init dvi command struct
+
 	* draw.c, dvi.c, dvipng.h: Create dvi command struct 
 
 	* special.c: Rearrange code
