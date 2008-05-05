@@ -23,10 +23,6 @@
 ************************************************************************/
 
 #include "dvipng.h"
-#include <fcntl.h>
-#if HAVE_ALLOCA_H
-# include <alloca.h>
-#endif
 
 #define SKIPSPACES(s) while(s && *s==' ' && *s!='\0') s++
 
@@ -306,8 +302,38 @@ rescale(gdImagePtr psimage, int pngwidth, int pngheight)
   return(scaledimage);
 }
 
+void newpsheader(char* special) {
+  struct pscode* tmp;
+  char* txt;
 
-/*-->SetSpecial*/
+  if (strncmp(special,"! /pgfH",7)==0) {
+    SetSpecial("header=tex.pro",0,0);
+    SetSpecial("header=special.pro",0,0);
+    SetSpecial("! TeXDict begin",0,0);
+  }
+  if (psheaderp==NULL) {
+    if ((tmp=psheaderp=malloc(sizeof(struct pscode)))==NULL)
+      Fatal("cannot allocate space for PostScript header struct");
+  } else {
+    tmp=psheaderp;
+    /* No duplicates. This still misses pre=..., because we still
+       change that. To be fixed */
+    while(tmp->next!=NULL) {
+      tmp=tmp->next;
+      if (strcmp(tmp->special,special)==0)
+	return;
+    }
+    if ((tmp->next=malloc(sizeof(struct pscode)))==NULL)
+      Fatal("cannot allocate space for PostScript header struct");
+    tmp=tmp->next;
+  }
+  DEBUG_PRINT(DEBUG_GS,("\n  PS HEADER "));
+  if ((txt=malloc(strlen(special)+1))==NULL)
+    Fatal("cannot malloc space for PostScript header");
+  strcpy(txt,special);
+  PSCodeInit(tmp,txt);
+}
+
 /*********************************************************************/
 /****************************  SetSpecial  ***************************/
 /*********************************************************************/
@@ -366,13 +392,20 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
     /* Retrieve parameters */
     SKIPSPACES(special);
     while(special && *special) {
-      if (strncmp(special,"llx=",4)==0) llx = strtol(special+4,&special,10);
-      else if (strncmp(special,"lly=",4)==0) lly = strtol(special+4,&special,10);
-      else if (strncmp(special,"urx=",4)==0) urx = strtol(special+4,&special,10);
-      else if (strncmp(special,"ury=",4)==0) ury = strtol(special+4,&special,10);
-      else if (strncmp(special,"rwi=",4)==0) rwi = strtol(special+4,&special,10);
-      else if (strncmp(special,"rhi=",4)==0) rhi = strtol(special+4,&special,10);
-      else if (strncmp(special,"clip",4)==0) {clip = true; special=special+4;}
+      if (strncmp(special,"llx=",4)==0)
+	llx = strtol(special+4,&special,10);
+      else if (strncmp(special,"lly=",4)==0)
+	lly = strtol(special+4,&special,10);
+      else if (strncmp(special,"urx=",4)==0)
+	urx = strtol(special+4,&special,10);
+      else if (strncmp(special,"ury=",4)==0)
+	ury = strtol(special+4,&special,10);
+      else if (strncmp(special,"rwi=",4)==0)
+	rwi = strtol(special+4,&special,10);
+      else if (strncmp(special,"rhi=",4)==0)
+	rhi = strtol(special+4,&special,10);
+      else if (strncmp(special,"clip",4)==0)
+	{clip = true; special=special+4;}
       while (*special && *special!=' ') special++;
       SKIPSPACES(special);
     }
@@ -712,35 +745,7 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
   }
 
   if (special[0]=='!' || strncmp(special,"header=",7)==0) { /* PS header */
-    struct pscode* tmp;
-    char* txt;
-
-    if (strncmp(special,"! /pgfH",7)==0) {
-      SetSpecial("header=tex.pro",0,0);
-      SetSpecial("header=special.pro",0,0);
-      SetSpecial("! TeXDict begin",0,0);
-    }
-    if (psheaderp==NULL) {
-      if ((tmp=psheaderp=malloc(sizeof(struct pscode)))==NULL)
-	Fatal("cannot allocate space for PostScript header struct");
-    } else {
-      tmp=psheaderp;
-      /* No duplicates. This still misses pre=..., because we still
-	 change that. To be fixed */
-      while(tmp->next!=NULL) {
-	tmp=tmp->next;
-	if (strcmp(tmp->special,special)==0)
-	  return;
-      }
-      if ((tmp->next=malloc(sizeof(struct pscode)))==NULL)
-	Fatal("cannot allocate space for PostScript header struct");
-      tmp=tmp->next;
-    }
-    DEBUG_PRINT(DEBUG_GS,("\n  PS HEADER "));
-    if ((txt=malloc(strlen(special)+1))==NULL)
-      Fatal("cannot malloc space for PostScript header");
-    strcpy(txt,special);
-    PSCodeInit(tmp,txt);
+    newpsheader(special);
     return;
   }
 
