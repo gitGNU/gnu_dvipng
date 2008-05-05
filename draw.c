@@ -291,6 +291,7 @@ void DrawPage(dviunits hoffset, dviunits voffset)
 {
   struct dvi_command command;  /* current command                  */
 
+  command.buffer = NULL;
   dvi_stack->h = hoffset;
   dvi_stack->v = voffset;
   dvi_stack->w = dvi_stack->x = dvi_stack->y = dvi_stack->z = 0;

@@ -63,6 +63,7 @@ void DVIInit(struct dvi_data* dvi)
   struct stat stat;
 
   fseek(dvi->filep,0,SEEK_SET);
+  pre.buffer=NULL;
   DVIGetCommand(dvi,&pre);
   if (*pre.buffer != PRE) {
     Fatal("PRE does not occur first - are you sure this is a DVI file?");
@@ -171,7 +172,7 @@ void DVIGetCommand(struct dvi_data* dvi, struct dvi_command* command)
 { 
   unsigned char *current = command->buffer;
 
-  if (command->buflen==0) {
+  if (command->buffer==NULL) {
     command->buflen=STRSIZE;
     if ((current=command->buffer=malloc(command->buflen))==NULL)
       Fatal("cannot allocate memory for DVI command");
@@ -277,6 +278,7 @@ void SkipPage(struct dvi_data* dvi)
   /* Skip present page */
   struct dvi_command command;
 
+  command.buffer=NULL;
   DVIGetCommand(dvi,&command);
   while (*command.buffer != EOP)  {
     switch (*command.buffer)  {
@@ -313,6 +315,7 @@ struct page_list* InitPage(struct dvi_data* dvi)
   struct page_list* tpagelistp=NULL;
   struct dvi_command command;
 
+  command.buffer=NULL;
   DVIGetCommand(dvi,&command);
   /* Skip until page start or postamble */
   while((*command.buffer != BOP) && (*command.buffer != POST)) {
