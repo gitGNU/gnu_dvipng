@@ -55,7 +55,7 @@ struct stack_entry* dvi_stack=stack;
   temp=x; dvi_stack->h += temp;		                                \
   if ( currentfont==NULL						\
        || temp > currentfont->s/6 || temp < -currentfont->s/6*4 )	\
-    dvi_stack->hh = PIXROUND(dvi_stack->h,dvi->conv*shrinkfactor);		\
+    dvi_stack->hh = PIXROUND(dvi_stack->h,dvi->conv*shrinkfactor);	\
   else									\
     dvi_stack->hh += PIXROUND( temp,dvi->conv*shrinkfactor );		\
   CHECK_MAXDRIFT(dvi_stack->h,dvi_stack->hh)
@@ -64,7 +64,7 @@ struct stack_entry* dvi_stack=stack;
   temp=x; dvi_stack->v += temp;		                                \
   if ( currentfont==NULL						\
        || temp > currentfont->s/6*5 || temp < currentfont->s/6*(-5) )	\
-    dvi_stack->vv = PIXROUND(dvi_stack->v,dvi->conv*shrinkfactor);		\
+    dvi_stack->vv = PIXROUND(dvi_stack->v,dvi->conv*shrinkfactor);	\
   else									\
     dvi_stack->vv += PIXROUND( temp,dvi->conv*shrinkfactor );		\
   CHECK_MAXDRIFT(dvi_stack->v,dvi_stack->vv)
@@ -289,7 +289,7 @@ void DrawPage(dviunits hoffset, dviunits voffset)
       * encountering EOP.
       */
 {
-  unsigned char*  command;  /* current command                  */
+  struct dvi_command command;  /* current command                  */
 
   dvi_stack->h = hoffset;
   dvi_stack->v = voffset;
@@ -298,12 +298,12 @@ void DrawPage(dviunits hoffset, dviunits voffset)
   dvi_stack->vv = PIXROUND( dvi_stack->v , dvi->conv*shrinkfactor );
   currentfont = NULL;    /* No default font                  */
 
-  command=DVIGetCommand(dvi);
-  DEBUG_PRINT(DEBUG_DVI,("DRAW CMD:\t%s", dvi_commands[*command]));
-  while (*command != EOP)  {
-    DrawCommand(command,dvi);
-    command=DVIGetCommand(dvi);
-    DEBUG_PRINT(DEBUG_DVI,("DRAW CMD:\t%s", dvi_commands[*command]));
+  DVIGetCommand(dvi,&command);
+  DEBUG_PRINT(DEBUG_DVI,("DRAW CMD:\t%s", dvi_commands[*command.buffer]));
+  while (*command.buffer != EOP)  {
+    DrawCommand(command.buffer,dvi);
+    DVIGetCommand(dvi,&command);
+    DEBUG_PRINT(DEBUG_DVI,("DRAW CMD:\t%s", dvi_commands[*command.buffer]));
   } 
 }
 
@@ -368,6 +368,13 @@ void DrawPages(void)
       DrawPage(x_offset*dvi->conv*shrinkfactor,
 	       y_offset*dvi->conv*shrinkfactor);
       if ( ! (option_flags & MODE_PICKY && page_flags & PAGE_GAVE_WARN )) {
+#ifdef FALLBACK
+	if (page_flags & PAGE_GAVE_WARN) {
+	  SeekPage(dvi,dvi_pos);
+	  FallbackDrawPage(x_offset*dvi->conv*shrinkfactor,
+			   y_offset*dvi->conv*shrinkfactor);
+	}
+#endif
 	WriteImage(dvi->outname,dvi_pos->count[pagecounter]);
 #ifdef TIMING
 	++ndone;
