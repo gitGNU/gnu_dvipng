@@ -218,3 +218,20 @@ AC_DEFUN(AC_GS_HAS_DEVICE,
     $2
   fi
 ])
+
+dnl
+dnl GS_CHECK_DEVICES
+dnl
+AC_DEFUN(GS_CHECK_DEVICES,
+ [GS_WARN=""
+  AC_GS_HAS_DEVICE(pngalpha,
+    [GS_WARN="Your EPS inclusions will be cropped to the 
+              boundingbox, and rendered on an opaque background. 
+              Upgrade GhostScript to avoid this."
+     AC_GS_HAS_DEVICE(png16m,
+       [GS_WARN="Your EPS inclusions may not work.
+                 Upgrade/install GhostScript to avoid this."])])
+  if test -n "$GS_WARN"; then
+    AC_MSG_WARN([$GS_WARN])
+  fi
+])

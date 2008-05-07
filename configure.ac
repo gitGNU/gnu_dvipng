@@ -50,25 +50,17 @@ AC_ARG_WITH(gs,
     GS=no
   else
     AC_PATH_PROG(GS,["$withval"])
+    GS_CHECK_DEVICES
   fi],
   [AC_CHECK_PROG(GS,gs,gs)
-  if test -z "$GS"; then
+  if test -n "$GS"; then
+    GS_CHECK_DEVICES
+  else
     GS="gs"
     AC_MSG_WARN([Cannot find GhostScript in your PATH])
   fi
 ])
 AC_DEFINE_UNQUOTED(GS_PATH, "$GS", [Define as the path to GhostScript.])
-GS_WARN=""
-AC_GS_HAS_DEVICE(pngalpha,
-   [GS_WARN="Your EPS inclusions will be cropped to the 
-             boundingbox, and rendered on an opaque background. 
-             Upgrade GhostScript to avoid this."
-   AC_GS_HAS_DEVICE(png16m,
-      [GS_WARN="Your EPS inclusions may not work.
-             Upgrade/install GhostScript to avoid this."])])
-if test -n "$GS_WARN"; then
-  AC_MSG_WARN([$GS_WARN])
-fi
 
 # Checks for libraries.
 AC_CHECK_LIB(m, pow)
