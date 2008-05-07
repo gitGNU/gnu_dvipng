@@ -109,6 +109,8 @@ version 3, see the COPYING file in the dvipng distribution or
 Todo
 ====
 
+   * Use gs shared library for speed and possibly for functionality.
+
    * Fix T1lib and PK rendering so it is on par with Freetype.
 
    * Enable a named pipe as DVI
