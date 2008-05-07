@@ -1,5 +1,7 @@
 2008-05-07  Jan-Ake Larsson  <jalar@mai.liu.se>
 
+	* README, readme.texi: Mention gs shared lib in TODO
+
 	* aclocal.m4, configure.ac: Move gs device check so that it can be
 	called from different points 
 
