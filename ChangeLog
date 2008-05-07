@@ -1,3 +1,7 @@
+2008-05-08  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* special.c: Add warning about DVI code in PS environment 
+
 2008-05-07  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* README, readme.texi: Mention gs interpreter lib in TODO
