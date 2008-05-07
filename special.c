@@ -654,6 +654,7 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
     if (page_imagep != NULL) { /* Draw into image */
       static struct pscode *pscodep=NULL;
       static bool psenvironment=false;
+      bool nextisps;
       struct pscode *tmp;
       gdImagePtr psimage=NULL;
       char *txt;
@@ -678,10 +679,19 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
       else if (strncmp(special,"ps::[end]",9)==0)
 	psenvironment=false;
       else if (strcmp(special,"ps:: pgfo")==0)
+	/* PostScript code to start page for pgf PostScript
+	   specials. The first numbers are generally valid for the bop
+	   instruction, and the latter code is to move the origin to
+	   the right place. */
 	special="ps:: 39139632 55387786 1000 600 600 (tikzdefault.dvi) @start 1 0 bop pgfo 0 0 matrix defaultmatrix transform itransform translate";
       else if (strcmp(special,"ps:: pgfc")==0)
 	special="ps:: pgfc eop end";
-      if (psenvironment || DVIIsNextPSSpecial(dvi)) {
+      nextisps=DVIIsNextPSSpecial(dvi);
+      if (psenvironment || nextisps) {
+	if (!nextisps) {
+	  Warning("PostScript environment contains DVI commands");
+	  page_flags |= PAGE_GAVE_WARN;
+	}
 	/* Don't use alloca, we do not want to run out of stack space */
 	DEBUG_PRINT(DEBUG_GS,("\n  PS SPECIAL "));
 	txt=malloc(strlen(special)+1);
