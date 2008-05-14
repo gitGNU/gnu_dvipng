@@ -1,5 +1,9 @@
 2008-05-14  Jan-Ake Larsson  <jalar@mai.liu.se>
 
+	* Release 1.11
+	
+	* RELEASE: Prepare for 1.11 
+
 	* special.c: Fix PS inclusion regression
 
 2008-05-09  Jan-Ake Larsson  <jalar@mai.liu.se>
