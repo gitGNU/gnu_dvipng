@@ -2,7 +2,7 @@
 
 	* Release 1.11
 	
-	* RELEASE: Prepare for 1.11 
+	* configure.ac, dvipng.1, dvipng.texi, RELEASE: Prepare for 1.11
 
 	* special.c: Fix PS inclusion regression
 
