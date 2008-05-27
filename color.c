@@ -51,17 +51,19 @@ void initcolor()
    cstack[1].blue=0; 
 }
 
-struct colorname * NewColor(char* name, int nname,
+struct colorname * NewColor(char* prefix, int nprefix,
+              char* name, int nname,
 	      char* model, int nmodel,
 	      char* values, int nvalues)
 {
   struct colorname *tmp = 
-    malloc(sizeof(struct colorname)+3+nname+nmodel+nvalues);
+    malloc(sizeof(struct colorname)+3+nprefix+nname+nmodel+nvalues);
   if (tmp==NULL) 
     Fatal("Cannot allocate space for color name");
-  tmp->color=tmp->name+nname+1;
-  strncpy(tmp->name,name,nname);
-  tmp->name[nname]='\0';
+  tmp->color=tmp->name+nprefix+nname+1;
+  strncpy(tmp->name,prefix,nprefix);
+  strncpy(tmp->name+nprefix,name,nname);
+  tmp->name[nprefix+nname]='\0';
   strncpy(tmp->color,model,nmodel);
   tmp->color[nmodel]=' ';
   strncpy(tmp->color+nmodel+1,values,nvalues);
@@ -80,17 +82,17 @@ struct colorname * NewColor(char* name, int nname,
 #define FINDWORD(s) while(s<max && \
                   (*s=='{'||*s==' '||*s=='%'||*s=='\n'||*s==';')) s++
 #define FINDARG(s) while(s<max && *s!='{') s++; FINDWORD(s)
-#define FINDMODELEND(s,n) n=0; while(s<max && *s!='}') { s++; n++; }
+#define FINDMODELEND(s,n) n=0; while(s<max && *s!='}' && *s!='/') { s++; n++; }
 #define FINDNAMEEND(s,n) n=0; while(s<max && *s!='}' && *s!=',') { s++; n++; }
-#define FINDVALEND(s,n) n=0; while(s<max && *s!='}' && *s!=';') { s++; n++; }
+#define FINDVALEND(s,n) n=0; while(s<max && *s!='}' && *s!='/' && *s!=';') { s++; n++; }
 #define BLANKCOMMAS(s) 
 
 struct colorname* LoadColornameFile(char* filename, bool should_exist)
 {
   struct colorname *list=NULL,*tmp=NULL; 
   char *filepath,*pos,*max;
-  char *name,*values,*model;
-  int nname,nvalues,nmodel;
+  char *prefix="",*name,*values,*model;
+  int nprefix=0,nname,nvalues,nmodel;
   struct filemmap fmmap;
 
   TEMPSTR(filepath,kpse_find_file(filename,kpse_tex_format,false));
@@ -105,7 +107,13 @@ struct colorname* LoadColornameFile(char* filename, bool should_exist)
   max=fmmap.data+fmmap.size;
   while (pos<max && *pos!='\\') pos++;
   while(pos+9<max && strncmp(pos,"\\endinput",9)!=0) {
-    if (pos+17<max && strncmp(pos,"\\DefineNamedColor",17)==0) {
+    if ((pos+20<max && strncmp(pos,"\\def\\colornameprefix",20)==0) 
+	|| (pos+32<max 
+	    && strncmp(pos,"\\providecommand*\\colornameprefix",32)==0)) {
+      FINDARG(pos);
+      prefix=pos;
+      FINDNAMEEND(pos,nprefix);
+    } else if (pos+17<max && strncmp(pos,"\\DefineNamedColor",17)==0) {
       model=NULL;
       nname=nmodel=nvalues=0;
       FINDARG(pos);             /* skip first argument */
@@ -118,10 +126,11 @@ struct colorname* LoadColornameFile(char* filename, bool should_exist)
       FINDARG(pos);             /* find fourth argument: color values */
       values=pos;
       FINDVALEND(pos,nvalues);
-      tmp=NewColor(name,nname,model,nmodel,values,nvalues);
+      tmp=NewColor(prefix,nprefix,name,nname,model,nmodel,values,nvalues);
       tmp->next=list;
       list=tmp;
-    } else if (pos+15<max && strncmp(pos,"\\definecolorset",15)==0) {
+    } else if ((pos+15<max && strncmp(pos,"\\definecolorset",15)==0)
+	       || (pos+16<max && strncmp(pos,"\\preparecolorset",16)==0)) {
       char *model;
       FINDARG(pos);             /* find first argument: color model */
       model=pos;
@@ -135,7 +144,7 @@ struct colorname* LoadColornameFile(char* filename, bool should_exist)
 	pos++;
 	values=pos;
 	FINDVALEND(pos,nvalues);
-	tmp=NewColor(name,nname,model,nmodel,values,nvalues);
+	tmp=NewColor(prefix,nprefix,name,nname,model,nmodel,values,nvalues);
 	tmp->next=list;
 	list=tmp;
 	FINDWORD(pos);
