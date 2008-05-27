@@ -1,3 +1,9 @@
+2008-05-27  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* readme.texi: Mention new color models in xcolor
+
+	* color.c: Adjust for new version of xcolor, mainly color prefixes
+
 2008-05-14  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* Release 1.11
