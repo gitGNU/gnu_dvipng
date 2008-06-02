@@ -1,3 +1,12 @@
+2008-06-02  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* special.c: Some (most?) literal PostScript specials seem to
+	depend on tex.pro and possibly special.pro, always load these
+
+	* configure.ac: Fix gs checks
+
+	* misc.c: Correct last mmap element
+
 2008-05-27  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* readme.texi: Mention new color models in xcolor
