@@ -306,18 +306,21 @@ void newpsheader(char* special) {
   struct pscode* tmp;
   char* txt;
 
-  if (strncmp(special,"! /pgfH",7)==0) {
-    SetSpecial("header=tex.pro",0,0);
-    SetSpecial("header=special.pro",0,0);
-    SetSpecial("! TeXDict begin",0,0);
+  if (psheaderp==NULL && strcmp(special,"header=tex.pro")!=0) {
+    newpsheader("header=tex.pro");
+    newpsheader("header=special.pro");
   }
+  if (strncmp(special,"! /pgfH",7)==0)
+    newpsheader("! TeXDict begin");
   if (psheaderp==NULL) {
     if ((tmp=psheaderp=malloc(sizeof(struct pscode)))==NULL)
       Fatal("cannot allocate space for PostScript header struct");
   } else {
-    tmp=psheaderp;
     /* No duplicates. This still misses pre=..., because we still
        change that. To be fixed */
+    tmp=psheaderp;
+    if (strcmp(tmp->special,special)==0)
+      return;
     while(tmp->next!=NULL) {
       tmp=tmp->next;
       if (strcmp(tmp->special,special)==0)
