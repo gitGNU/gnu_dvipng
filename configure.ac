@@ -46,21 +46,19 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_ARG_WITH(gs,
   AC_HELP_STRING([--with-gs=/PATH/TO/gs],[Hard-wire the location of GhostScript]), 
-  [if test "x$withval" = xno ; then
-    GS=no
-  else
+  [if test "x$withval" != xno ; then
     AC_PATH_PROG(GS,["$withval"])
+    AC_DEFINE_UNQUOTED(GS_PATH, "$GS", [Define as the path to GhostScript.])
     GS_CHECK_DEVICES
   fi],
   [AC_CHECK_PROG(GS,gs,gs)
+  AC_DEFINE_UNQUOTED(GS_PATH, "gs", [Define as the path to GhostScript.])
   if test -n "$GS"; then
     GS_CHECK_DEVICES
   else
-    GS="gs"
     AC_MSG_WARN([Cannot find GhostScript in your PATH])
   fi
 ])
-AC_DEFINE_UNQUOTED(GS_PATH, "$GS", [Define as the path to GhostScript.])
 
 # Checks for libraries.
 AC_CHECK_LIB(m, pow)
