@@ -310,6 +310,9 @@ void newpsheader(char* special) {
     newpsheader("header=tex.pro");
     newpsheader("header=special.pro");
   }
+  if (strcmp(special+strlen(special)-4,".xcp")==0
+      && strncmp(special,"header=",7)==0) 
+    InitXColorPrologue(special+7);
   if (strncmp(special,"! /pgfH",7)==0)
     newpsheader("! TeXDict begin");
   if (psheaderp==NULL) {
