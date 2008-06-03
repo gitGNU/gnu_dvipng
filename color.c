@@ -37,8 +37,11 @@ struct colorname {
   struct colorname *next;
   char*             color;
   char              name[1];
-} *dvipsnam=NULL,*svgnam=NULL,*xcolor=NULL;
+} *colornamep=NULL,*xcp=NULL;
 
+char *colordef[]={"xcolor.sty","dvipsnam.def",
+		  "svgnam.def","x11nam.def",NULL};
+char *xcpname=NULL;
 
 void initcolor() 
 {
@@ -85,9 +88,11 @@ struct colorname * NewColor(char* prefix, int nprefix,
 #define FINDMODELEND(s,n) n=0; while(s<max && *s!='}' && *s!='/') { s++; n++; }
 #define FINDNAMEEND(s,n) n=0; while(s<max && *s!='}' && *s!=',') { s++; n++; }
 #define FINDVALEND(s,n) n=0; while(s<max && *s!='}' && *s!='/' && *s!=';') { s++; n++; }
+#define FINDLASTVALEND(s) while(s<max && *s!='}' && *s!=';') s++
+#define FINDPSNAMEEND(s,n) n=0; while(s<max && *s!='{') { s++; n++; }
 #define BLANKCOMMAS(s) 
 
-struct colorname* LoadColornameFile(char* filename, bool should_exist)
+struct colorname* LoadColornameFile(char* filename)
 {
   struct colorname *list=NULL,*tmp=NULL; 
   char *filepath,*pos,*max;
@@ -96,11 +101,8 @@ struct colorname* LoadColornameFile(char* filename, bool should_exist)
   struct filemmap fmmap;
 
   TEMPSTR(filepath,kpse_find_file(filename,kpse_tex_format,false));
-  if (filepath == NULL) {
-    if (should_exist)
-      Warning("color name file '%s' could not be found",filename);
+  if (filepath == NULL)
     return NULL;
-  }
   DEBUG_PRINT(DEBUG_COLOR,("\n  OPEN COLOR NAMES:\t'%s'", filepath));
   if (MmapFile(filepath,&fmmap)) return NULL;
   pos=fmmap.data;
@@ -110,10 +112,13 @@ struct colorname* LoadColornameFile(char* filename, bool should_exist)
     if ((pos+20<max && strncmp(pos,"\\def\\colornameprefix",20)==0) 
 	|| (pos+32<max 
 	    && strncmp(pos,"\\providecommand*\\colornameprefix",32)==0)) {
+      DEBUG_PRINT(DEBUG_COLOR,("\n  \t'%.20s'", pos));
       FINDARG(pos);
       prefix=pos;
       FINDNAMEEND(pos,nprefix);
+      DEBUG_PRINT(DEBUG_COLOR,("\n  \tCOLOR PREFIX '%.*s'",nprefix,prefix));
     } else if (pos+17<max && strncmp(pos,"\\DefineNamedColor",17)==0) {
+      DEBUG_PRINT(DEBUG_COLOR,("\n  \t'%.17s'", pos));
       model=NULL;
       nname=nmodel=nvalues=0;
       FINDARG(pos);             /* skip first argument */
@@ -132,6 +137,7 @@ struct colorname* LoadColornameFile(char* filename, bool should_exist)
     } else if ((pos+15<max && strncmp(pos,"\\definecolorset",15)==0)
 	       || (pos+16<max && strncmp(pos,"\\preparecolorset",16)==0)) {
       char *model;
+      DEBUG_PRINT(DEBUG_COLOR,("\n  \t'%.15s'", pos));
       FINDARG(pos);             /* find first argument: color model */
       model=pos;
       FINDMODELEND(pos,nmodel);
@@ -144,6 +150,7 @@ struct colorname* LoadColornameFile(char* filename, bool should_exist)
 	pos++;
 	values=pos;
 	FINDVALEND(pos,nvalues);
+	FINDLASTVALEND(pos);
 	tmp=NewColor(prefix,nprefix,name,nname,model,nmodel,values,nvalues);
 	tmp->next=list;
 	list=tmp;
@@ -158,29 +165,73 @@ struct colorname* LoadColornameFile(char* filename, bool should_exist)
   return(list);
 }
 
+void ClearXColorPrologue(void)
+{
+  struct colorname *next;
+  while (xcp) {
+    next=xcp->next;
+    free(xcp);
+    xcp=next;
+  }
+  if (xcpname!=NULL) {
+    free(xcpname);
+    xcpname=NULL;
+  }
+}
+
 void ClearColorNames(void)
 {
-  struct colorname *tmp=dvipsnam,*next=NULL;
-  while (tmp!=NULL) {
-    next=tmp->next;
-    free(tmp);
-    tmp=next;
+  struct colorname *next;
+  while (colornamep) {
+    next=colornamep->next;
+    free(colornamep);
+    colornamep=next;
   }
-  dvipsnam=NULL;
-  tmp=svgnam;
-  while (tmp!=NULL) {
-    next=tmp->next;
-    free(tmp);
-    tmp=next;
+  ClearXColorPrologue();
+}
+
+void InitXColorPrologue(char* name)
+{
+  ClearXColorPrologue();
+  xcpname=malloc(strlen(name)+1);
+  if (xcpname==NULL)
+    Fatal("cannot malloc memory for xcolor prologue name");
+  strcpy(xcpname,name);
+}
+
+struct colorname* LoadXColorPrologue(void)
+{
+  struct colorname *list=NULL,*tmp=NULL; 
+  char *filepath,*pos,*max;
+  char *prefix="",*name,*values,*model;
+  int nprefix=0,nname,nvalues,nmodel;
+  struct filemmap fmmap;
+
+  TEMPSTR(filepath,kpse_find_file(xcpname,kpse_program_text_format,false));
+  if (filepath == NULL)
+    return NULL;
+  DEBUG_PRINT(DEBUG_COLOR,("\n  OPEN XCOLOR PROLOGUE:\t'%s'", filepath));
+  if (MmapFile(filepath,&fmmap)) return NULL;
+  pos=fmmap.data;
+  max=fmmap.data+fmmap.size;
+  while(pos<max) {
+    while (pos<max && *pos!='/') pos++;
+    if (*pos=='/') {
+      nname=nmodel=nvalues=0;
+      name=++pos;                /* first argument: color name */
+      FINDPSNAMEEND(pos,nname);
+      values=++pos;              /* second argument: color values */
+      FINDVALEND(pos,nvalues);
+      model=pos+3;               /* third argument: color model, prefixed by 'XC' */
+      while(pos<max && *pos!=' ' && *pos!='\n') pos++;
+      nmodel=pos-model;
+      tmp=NewColor(prefix,nprefix,name,nname,model,nmodel,values,nvalues);
+      tmp->next=list;
+      list=tmp;
+    }
   }
-  svgnam=NULL;
-  tmp=xcolor;
-  while (tmp!=NULL) {
-    next=tmp->next;
-    free(tmp);
-    tmp=next;
-  }
-  xcolor=NULL;
+  UnMmapFile(&fmmap);
+  return(list);
 }
 
 #define FTO255(a) ((int) (255*a+0.5))
@@ -196,6 +247,7 @@ void ClearColorNames(void)
 void stringrgb(char* color,int *r,int *g,int *b)
 {
   char* end;
+  static int unloaded=1;
 
   DEBUG_PRINT(DEBUG_COLOR,("\n  COLOR SPEC:\t'%s' (",color));
   SKIPSPACES(color);
@@ -283,26 +335,23 @@ void stringrgb(char* color,int *r,int *g,int *b)
     /* Model not found, probably a color name */
     struct colorname *tmp;
 
-    if (dvipsnam==NULL) 
-      dvipsnam=LoadColornameFile("dvipsnam.def",true);
-    tmp=dvipsnam;
-    while(tmp!=NULL && tmp->name!=NULL && strcmp(color,tmp->name)) 
+    if (xcp==NULL && xcpname!=NULL)
+      xcp=LoadXColorPrologue();
+    tmp=xcp;
+    while(tmp!=NULL && strcmp(color,tmp->name)!=0)
       tmp=tmp->next;
     if (tmp==NULL) {
-      if (svgnam==NULL) 
-	svgnam=LoadColornameFile("svgnam.def",false);
-      tmp=svgnam;
-      while(tmp!=NULL && tmp->name!=NULL && strcmp(color,tmp->name)) 
+      if (colornamep==NULL)
+	colornamep=LoadColornameFile(colordef[0]);
+      tmp=colornamep;
+      while((tmp->next!=NULL || colordef[unloaded]!=NULL)
+	    && strcmp(color,tmp->name)!=0) {
+	if (tmp->next==NULL)
+	  tmp->next=LoadColornameFile(colordef[unloaded++]);
 	tmp=tmp->next;
-      if (tmp==NULL) {
-	if (xcolor==NULL) 
-	  xcolor=LoadColornameFile("xcolor.sty",false);
-	tmp=xcolor;
-	while(tmp!=NULL && tmp->name!=NULL && strcmp(color,tmp->name)) 
-	  tmp=tmp->next;
       }
     }
-    if (tmp!=NULL) {
+    if (strcmp(color,tmp->name)==0) {
       /* Found: one-level recursion */
       DEBUG_PRINT(DEBUG_COLOR,("\n    ---RECURSION--- "))
       stringrgb(tmp->color,r,g,b);
