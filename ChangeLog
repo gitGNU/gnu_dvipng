@@ -1,3 +1,7 @@
+2008-06-04  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* special.c: Add the color PostScript prologue
+
 2008-06-03  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* dvipng.h, special.c: Support xcolor PostScript prologue
