@@ -308,6 +308,7 @@ void newpsheader(char* special) {
 
   if (psheaderp==NULL && strcmp(special,"header=tex.pro")!=0) {
     newpsheader("header=tex.pro");
+    newpsheader("header=color.pro");
     newpsheader("header=special.pro");
   }
   if (strcmp(special+strlen(special)-4,".xcp")==0
