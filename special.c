@@ -288,6 +288,9 @@ rescale(gdImagePtr psimage, int pngwidth, int pngheight)
 		 pngwidth,pngheight));
 #ifdef HAVE_GDIMAGECREATETRUECOLOR
     scaledimage=gdImageCreateTrueColor(pngwidth,pngheight);
+    /* Copy with overwrite, remember that this is the rescaled source
+       image. The real target has alpha blending on. */
+    gdImageAlphaBlending(scaledimage,0);
     gdImageCopyResampled(scaledimage,psimage,0,0,0,0,
 			 pngwidth,pngheight,
 			 gdImageSX(psimage),gdImageSY(psimage));
