@@ -1,3 +1,10 @@
+2009-02-23    <jalar@pcbjalar.mai.liu.se>
+
+	* INSTALL, README, install.texi, readme.texi, special.c: Correct
+	date for copyright
+
+	* RELEASE, configure.ac, dvipng.1, dvipng.texi: Prepare for 1.12 
+
 2009-01-23  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* special.c: Keep transparent background in rescaled included
