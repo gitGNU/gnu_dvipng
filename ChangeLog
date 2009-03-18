@@ -1,5 +1,9 @@
 2009-02-23  Jan-Ake Larsson  <jalar@mai.liu.se>
 
+	* Release 1.12
+
+2009-02-23  Jan-Ake Larsson  <jalar@mai.liu.se>
+
 	* INSTALL, README, install.texi, readme.texi, special.c: Correct
 	date for copyright
 
