@@ -87,8 +87,8 @@
 /* Define to 1 if you have the `gd' library (-lgd). */
 #undef HAVE_LIBGD
 
-/* Define to 1 if you have the `gen' library (-lgen). */
-#undef HAVE_LIBGEN
+/* Define to 1 if you have the <libgen.h> header file. */
+#undef HAVE_LIBGEN_H
 
 /* Define to 1 if you have the `kpathsea' library (-lkpathsea). */
 #undef HAVE_LIBKPATHSEA

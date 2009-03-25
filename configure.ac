@@ -63,7 +63,6 @@ AC_ARG_WITH(gs,
 # Checks for libraries.
 AC_CHECK_LIB(m, pow)
 AC_CHECK_LIB(z, deflate)
-AC_CHECK_LIB(gen, basename)
 AC_CHECK_LIB([png], [png_read_image],,
              [AC_MSG_ERROR([cannot find/use libpng])])
 AC_CHECK_LIB([gd], [gdImageCreate],,
@@ -82,7 +81,7 @@ AC_SUBST(PSFONTS_O)
 AC_HEADER_STDC
 AC_CHECK_HEADERS([gd.h png.h kpathsea/kpathsea.h],,
 		 [AC_MSG_ERROR([cannot find/use $ac_header])])
-AC_CHECK_HEADERS([t1lib.h])
+AC_CHECK_HEADERS([t1lib.h libgen.h])
 AC_CHECK_FT2(,[CFLAGS="$FT2_CFLAGS $CFLAGS"
 	LIBS="$FT2_LIBS $LIBS"
 	PSFONTS_O="$PSFONTS_O sfd.o ft.o"	
