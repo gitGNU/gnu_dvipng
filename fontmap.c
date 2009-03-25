@@ -25,7 +25,7 @@
 #include "dvipng.h"
 
 static struct filemmap psfont_mmap;
-#if HAVE_FT2
+#ifdef HAVE_FT2
 static struct filemmap ttfont_mmap;
 #endif
 static struct psfontmap *psfontmap=NULL;
@@ -106,10 +106,10 @@ struct psfontmap *NewPSFont(struct psfontmap* copyfrom)
     newentry->psfile = copyword(copyfrom->psfile);
     newentry->encname = copyword(copyfrom->encname);
     newentry->encoding = copyfrom->encoding;
-#if HAVE_LIBT1
+#ifdef HAVE_LIBT1
     newentry->t1_transformp = copyfrom->t1_transformp;
 #endif
-#if HAVE_FT2
+#ifdef HAVE_FT2
     newentry->ft_transformp = copyfrom->ft_transformp;
     newentry->subfont = copyfrom->subfont;
 #endif
@@ -120,10 +120,10 @@ struct psfontmap *NewPSFont(struct psfontmap* copyfrom)
     newentry->psfile = NULL;
     newentry->encname = NULL;
     newentry->encoding = NULL;
-#if HAVE_LIBT1
+#ifdef HAVE_LIBT1
     newentry->t1_transformp = NULL;
 #endif
-#if HAVE_FT2
+#ifdef HAVE_FT2
     newentry->ft_transformp = NULL;
     newentry->subfont = NULL;
 #endif
@@ -249,14 +249,14 @@ void ReadPSFontMap(struct psfontmap *entry)
 	}
 	free(word);
       }
-#if HAVE_FT2
+#ifdef HAVE_FT2
       entry->ft_transformp=&(entry->ft_transform);
       entry->ft_transform.xx=(FT_Fixed)(cxx*0x10000);
       entry->ft_transform.xy=(FT_Fixed)(cxy*0x10000);
       entry->ft_transform.yx=0;
       entry->ft_transform.yy=0x10000;
 #endif
-#if HAVE_LIBT1
+#ifdef HAVE_LIBT1
       entry->t1_transformp=&(entry->t1_transform);
       entry->t1_transform.cxx=cxx;
       entry->t1_transform.cxy=cxy;

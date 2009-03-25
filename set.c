@@ -18,12 +18,12 @@
   License along with this program. If not, see
   <http://www.gnu.org/licenses/>.
 
-  Copyright (C) 2002-2008 Jan-Åke Larsson
+  Copyright (C) 2002-2009 Jan-Åke Larsson
 
 ************************************************************************/
 
 #include "dvipng.h"
-#if HAVE_ALLOCA_H
+#ifdef HAVE_ALLOCA_H
 # include <alloca.h>
 #endif
 #include <math.h>

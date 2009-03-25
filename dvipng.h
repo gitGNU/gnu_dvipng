@@ -18,7 +18,7 @@
   License along with this program. If not, see
   <http://www.gnu.org/licenses/>.
 
-  Copyright (C) 2002-2008 Jan-Åke Larsson
+  Copyright (C) 2002-2009 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -478,16 +478,16 @@ EXTERN unsigned int debug INIT(0);
 
 /************************timing stuff*********************/
 #ifdef TIMING
-#if TIME_WITH_SYS_TIME
-# include <sys/time.h>
-# include <time.h>
-#else
-# if HAVE_SYS_TIME_H
+# ifdef TIME_WITH_SYS_TIME
 #  include <sys/time.h>
-# else
 #  include <time.h>
+# else
+#  if HAVE_SYS_TIME_H
+#   include <sys/time.h>
+#  else
+#   include <time.h>
+#  endif
 # endif
-#endif
 EXTERN double timer INIT(0);
 EXTERN double my_tic,my_toc INIT(0);
 EXTERN int      ndone INIT(0);          /* number of pages converted       */

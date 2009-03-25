@@ -18,7 +18,7 @@
   License along with this program. If not, see
   <http://www.gnu.org/licenses/>.
 
-  Copyright (C) 2002-2008 Jan-Åke Larsson
+  Copyright (C) 2002-2009 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -195,7 +195,7 @@ bool DecodeArgs(int argc, char ** argv)
 	}
 	break ;
       case 't':       /* specify paper format, only for cropmarks */
-#if HAVE_GDIMAGECREATETRUECOLOR
+#ifdef HAVE_GDIMAGECREATETRUECOLOR
 	/* Truecolor */
 	if (strncmp(p,"ruecolor",8)==0) { 
 	  if (p[8] != '0') {
