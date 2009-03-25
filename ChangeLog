@@ -1,3 +1,12 @@
+2009-03-25  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* config.h.in, configure.ac: Check for libgen.h, not libgen
+
+	* special.c: Put declarations before code
+
+	* color.c, dvipng.h, fontmap.c, ft.c, misc.c, pk.c, set.c, t1.c,
+	tfm.c: Exchange #if for #ifdef
+
 2009-02-23  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* Release 1.12
