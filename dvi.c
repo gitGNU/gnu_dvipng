@@ -102,14 +102,14 @@ struct dvi_data* DVIOpen(char* dviname,char* outname)
   struct dvi_data* dvi;
 
   if ((dvi = calloc(1,sizeof(struct dvi_data)))==NULL)
-    Fatal("cannot allocate memory for DVI struct");
+    Fatal("cannot malloc memory for DVI struct");
 
   dvi->type = DVI_TYPE;
   dvi->fontnump=NULL;
 
   dvi->name = malloc(strlen(dviname)+5);
   if (dvi->name==NULL)
-    Fatal("cannot allocate space for DVI filename");
+    Fatal("cannot malloc space for DVI filename");
   strcpy(dvi->name, dviname);
   tmpstring = strrchr(dvi->name, '.');
   if (tmpstring == NULL || strcmp(tmpstring,".dvi") != 0) 
@@ -120,7 +120,7 @@ struct dvi_data* DVIOpen(char* dviname,char* outname)
     if (dvi->outname==NULL) {
       free(dvi->name);
       free(dvi);
-      Fatal("cannot allocate space for output filename");
+      Fatal("cannot malloc space for output filename");
     }
     strcpy(dvi->outname,basename(dviname));
     tmpstring = strrchr(dvi->outname, '.');
@@ -132,7 +132,7 @@ struct dvi_data* DVIOpen(char* dviname,char* outname)
     if (dvi->outname==NULL) {
       free(dvi->name);
       free(dvi);
-      Fatal("cannot allocate space for output filename");
+      Fatal("cannot malloc space for output filename");
     }
     strcpy(dvi->outname,outname);
   }
@@ -178,7 +178,7 @@ unsigned char* DVIGetCommand(struct dvi_data* dvi)
   if (commlen==0) {
     commlen=STRSIZE;
     if ((current=command=malloc(commlen))==NULL)
-      Fatal("cannot allocate memory for DVI command");
+      Fatal("cannot malloc memory for DVI command");
   }
   DEBUG_PRINT(DEBUG_DVI,("\n@%ld ", ftell(dvi->filep)));
   *(current++) = fgetc_follow(dvi->filep);
@@ -209,7 +209,7 @@ unsigned char* DVIGetCommand(struct dvi_data* dvi)
       /* string + command length exceeds that of buffer */
       commlen=strlength+1 + (uint32_t)length;
       if ((command=realloc(command,commlen))==NULL)
-	Fatal("cannot allocate memory for DVI command");
+	Fatal("cannot malloc memory for DVI command");
       current = command + length;
     }
     while(current < command+length+strlength) 
@@ -332,7 +332,7 @@ struct page_list* InitPage(struct dvi_data* dvi)
   if ((tpagelistp = 
        malloc(sizeof(struct page_list)
 	      +(csp+1-2)*sizeof(struct dvi_color)))==NULL)
-    Fatal("cannot allocate memory for new page entry");
+    Fatal("cannot malloc memory for new page entry");
   tpagelistp->next = NULL;
   if ( *command == BOP ) {  /*  Init page */
     int i;

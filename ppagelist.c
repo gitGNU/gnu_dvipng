@@ -119,7 +119,7 @@ void ListPage(int32_t pslow, int32_t pshigh)
   if (pl == NULL) {
     if ((pl = (struct pp_list *)malloc(sizeof(struct pp_list)))
 	==NULL) 
-      Fatal("cannot allocate memory for page queue");
+      Fatal("cannot malloc memory for page queue");
     pl -> next = ppages;
     ppages = pl;
   }
