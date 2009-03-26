@@ -1,3 +1,15 @@
+2009-03-26    <jalar@pcbjalar.mai.liu.se>
+
+	* configure.ac, dvipng.h: Remove the last remnants of alloca 
+
+	* draw.c, font.c, ft.c, pk.c, t1.c, vf.c: Make the name element of
+	the font struct a pointer, not an array
+
+	* dvi.c, ppagelist.c: Change error msg to mention malloc
+
+	* color.c, enc.c, pk.c, set.c, sfd.c, special.c, tfm.c: Don't use
+	alloca
+
 2009-03-25  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* config.h.in, configure.ac: Check for libgen.h, not libgen
