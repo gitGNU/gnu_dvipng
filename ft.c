@@ -23,9 +23,6 @@
 ************************************************************************/
 
 #include "dvipng.h"
-#ifdef HAVE_ALLOCA_H
-# include <alloca.h>
-#endif
 
 void LoadFT(int32_t c, struct char_entry * ptr)
 {
@@ -60,7 +57,7 @@ void LoadFT(int32_t c, struct char_entry * ptr)
   DEBUG_PRINT(DEBUG_FT,(" (%dx%d)",bitmap.width,bitmap.rows));
     
   if ((ptr->data = calloc(bitmap.width*bitmap.rows,sizeof(char))) == NULL)
-    Fatal("unable to allocate image space for char %c", (char)c);
+    Fatal("unable to malloc image space for char %c", (char)c);
   ptr->w = bitmap.width;
   ptr->h = bitmap.rows;
 
@@ -168,7 +165,9 @@ void DoneFT(struct font_entry *tfontp)
     }
     c++;
   }
-  tfontp->name[0]='\0';
+  if (tfontp->name!=NULL)
+    free(tfontp->name);
+  tfontp->name=NULL;
 }
 
 

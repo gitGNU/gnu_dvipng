@@ -23,9 +23,6 @@
 ************************************************************************/
 
 #include "dvipng.h"
-#ifdef HAVE_ALLOCA_H
-# include <alloca.h>
-#endif
 
 #define PK_POST 245
 #define PK_PRE 247
@@ -200,14 +197,10 @@ void LoadPK(int32_t c, register struct char_entry * ptr)
   ptr->w = shrunk_width;
   ptr->h = shrunk_height;
   pos+=n;
-  buffer = alloca(shrunk_width*shrunk_height*
-		  shrinkfactor*shrinkfactor*sizeof(char));
-  (void)memset(buffer,0,shrunk_width*shrunk_height*
-	       shrinkfactor*shrinkfactor*sizeof(char));
+  buffer = calloc(shrunk_width*shrunk_height*
+		  shrinkfactor*shrinkfactor,sizeof(char));
   DEBUG_PRINT(DEBUG_GLYPH,("\nDRAW GLYPH %d\n", (int)c));
-  /*
-    Raster char
-  */
+  /* Raster char */
   if (dyn_f == 14) {	/* get raster by bits */
     int bitweight = 0;
     for (j = j_offset; j < (int) height; j++) {	/* get all rows */
@@ -290,7 +283,7 @@ void LoadPK(int32_t c, register struct char_entry * ptr)
     shrinkfactor 3 produces.)
   */
   if ((ptr->data = calloc(shrunk_width*shrunk_height,sizeof(char))) == NULL)
-    Fatal("unable to allocate image space for char %c", (char)c);
+    Fatal("unable to malloc image space for char %c", (char)c);
   for (j = 0; j < (int) height; j++) {	
     for (i = 0; i < (int) width; i++) {    
       /* if (((i % shrinkfactor) == 0) && ((j % shrinkfactor) == 0))
@@ -309,6 +302,7 @@ void LoadPK(int32_t c, register struct char_entry * ptr)
     }
     DEBUG_PRINT(DEBUG_GLYPH,("|\n"));
   }	 
+  free(buffer);
 }
 
 void InitPK(struct font_entry * tfontp)
@@ -403,5 +397,7 @@ void DonePK(struct font_entry *tfontp)
     }
     c++;
   }
-  tfontp->name[0]='\0';
+  if (tfontp->name!=NULL)
+    free(tfontp->name);
+  tfontp->name=NULL;
 }

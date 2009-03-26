@@ -23,9 +23,6 @@
 ************************************************************************/
 
 #include "dvipng.h"
-#ifdef HAVE_ALLOCA_H
-# include <alloca.h>
-#endif
 
 void LoadT1(int32_t c, struct char_entry * ptr)
 {
@@ -100,7 +97,7 @@ void LoadT1(int32_t c, struct char_entry * ptr)
     Shrink raster while doing antialiasing. 
   */
   if ((ptr->data = calloc(shrunk_width*shrunk_height,sizeof(char))) == NULL)
-    Fatal("unable to allocate image space for char %c", (char)c);
+    Fatal("unable to malloc image space for char %c", (char)c);
   for (j = 0; j < original_height; j++) {	
     for (i = 0; i < (original_width+7)/8 ; i++) {    
       for (k = 0; k < 8 ; k++) {
@@ -187,7 +184,9 @@ void DoneT1(struct font_entry *tfontp)
     }
     c++;
   }
-  tfontp->name[0]='\0';
+  if (tfontp->name!=NULL)
+    free(tfontp->name);
+  tfontp->name=NULL;
 }
 
 

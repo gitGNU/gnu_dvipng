@@ -125,7 +125,7 @@ void FontDef(unsigned char* command, void* parent)
   /* If not found, create new */
   if (tfontnump==NULL) {
     if ((tfontnump=malloc(sizeof(struct font_num)))==NULL) 
-      Fatal("cannot allocate memory for new font number");
+      Fatal("cannot malloc memory for new font number");
     tfontnump->k=k;
     switch (((struct font_entry*)parent)->type) {
     case FONT_TYPE_VF:
@@ -174,7 +174,7 @@ void FontDef(unsigned char* command, void* parent)
   strncpy(tfontptr->n,(char*)current+14,a+l); /* full font name */
   tfontptr->n[a+l] = '\0';
   
-  tfontptr->name[0] = '\0';
+  tfontptr->name = NULL;
   for (i = FIRSTFNTCHAR; i <= LASTFNTCHAR; i++) {
     tfontptr->chr[i] = NULL;
   }
@@ -202,32 +202,28 @@ char* kpse_find_t1_or_tt(char* filename)
 
 void FontFind(struct font_entry * tfontptr)
 {
-#ifdef HAVE_LIBKPATHSEA
   kpse_glyph_file_type font_ret;
-  char *name;
 
   /* tfontptr->dpi = kpse_magstep_fix (tfontptr->dpi, resolution, NULL); */
   DEBUG_PRINT(DEBUG_DVI,("\n  FIND FONT:\t%s %d",tfontptr->n,tfontptr->dpi));
 
-  TEMPSTR(name,kpse_find_vf (tfontptr->n));
-  if (name!=NULL) {
-    strcpy (tfontptr->name, name);
+  tfontptr->name = kpse_find_vf (tfontptr->n);
+  if (tfontptr->name!=NULL) 
     InitVF(tfontptr);
-  }
 #ifdef HAVE_FT2_OR_LIBT1
-  if ((option_flags & (USE_FREETYPE | USE_LIBT1)) && name==NULL) {
+  else if (option_flags & (USE_FREETYPE | USE_LIBT1)) {
     tfontptr->psfontmap = FindPSFontMap(tfontptr->n);
-    if (tfontptr->psfontmap!=NULL) {
-      TEMPSTR(name,kpse_find_t1_or_tt(tfontptr->psfontmap->psfile));
-    } else
-      TEMPSTR(name,kpse_find_t1_or_tt(tfontptr->n));
-    if (name!=NULL) {
-      strcpy (tfontptr->name, name);
-      TEMPSTR(name,kpse_find_file(tfontptr->n, kpse_tfm_format, false));
-      if (name!=NULL) {
-	if (!ReadTFM(tfontptr,name)) {
-	  Warning("unable to read tfm file %s", name);
-	  name=NULL;
+    if (tfontptr->psfontmap!=NULL)
+      tfontptr->name=kpse_find_t1_or_tt(tfontptr->psfontmap->psfile);
+    else
+      tfontptr->name=kpse_find_t1_or_tt(tfontptr->n);
+    if (tfontptr->name!=NULL) {
+      char* tfmname=kpse_find_file(tfontptr->n, kpse_tfm_format, false);
+      if (tfmname!=NULL) {
+	if (!ReadTFM(tfontptr,tfmname)) {
+	  Warning("unable to read tfm file %s", tfmname);
+	  free(tfontptr->name);
+	  tfontptr->name=NULL;
 	} else 
 #ifdef HAVE_FT2
 	  if ((option_flags & USE_FREETYPE)==0 || !InitFT(tfontptr)) {
@@ -237,37 +233,38 @@ void FontFind(struct font_entry * tfontptr)
 #endif
 	      /* if Freetype or T1 loading fails for some reason, fall
 		 back to PK font */
-	      name=NULL; 
-	    }
-#ifdef HAVE_FT2
+	      free(tfontptr->name);
+	      tfontptr->name=NULL;
 #ifdef HAVE_LIBT1
+	    }
+#endif
+#ifdef HAVE_FT2
 	  }
 #endif
-#endif
+	free(tfmname);
       }
     }
   }
 #endif /* HAVE_FT2_OR_LIBT1 */
-  if (name==NULL) {
-    TEMPSTR(name,kpse_find_pk (tfontptr->n, tfontptr->dpi, &font_ret));
-    if (name!=NULL) {
-      strcpy (tfontptr->name, name);
+  if (tfontptr->name==NULL) {
+    tfontptr->name=kpse_find_pk (tfontptr->n, tfontptr->dpi, &font_ret);
+    if (tfontptr->name!=NULL) {
       if (!FILESTRCASEEQ (tfontptr->n, font_ret.name)) {
 	page_flags |= PAGE_GAVE_WARN;
 	Warning("font %s not found, using %s at %d dpi instead",
 		tfontptr->n, font_ret.name, font_ret.dpi);
 	tfontptr->c = 0; /* no checksum warning */
-      } else if (!kpse_bitmap_tolerance ((double)font_ret.dpi, (double) tfontptr->dpi)) {
+      } else if (!kpse_bitmap_tolerance ((double)font_ret.dpi, 
+					 (double) tfontptr->dpi)) {
 	page_flags |= PAGE_GAVE_WARN;
 	Warning("font %s at %d dpi not found, using %d dpi instead",
-		tfontptr->name, tfontptr->dpi, font_ret.dpi);
+		tfontptr->n, tfontptr->dpi, font_ret.dpi);
       }
       InitPK(tfontptr);
     } else {
       page_flags |= PAGE_GAVE_WARN;
       Warning("font %s at %d dpi not found, characters will be left blank",
 	      tfontptr->n, tfontptr->dpi);
-      strcpy (tfontptr->name, "None");
 #ifndef MIKTEX
       tfontptr->fmmap.fd = 0;
 #else  /* MIKTEX */
@@ -277,26 +274,6 @@ void FontFind(struct font_entry * tfontptr)
       tfontptr->designsize = 0;
     }
   }
-#else /* not HAVE_LIBKPATHSEA */
-      /* Ouch time! findfile not implemented (old cruft from dvilj) */
-  /* Total argh, since none of this is adapted to vf and the like */
-  if (!(findfile(PXLpath,
-		 tfontptr->n,
-		 tfontptr->dpi,
-		 tfontptr->name,
-		 false,
-		 0))) {
-    Warning(tfontptr->name); /* contains error messsage */
-#ifndef MIKTEX
-    tfontptr->fmmap.fd = 0;
-#else  /* MIKTEX */
-    tfontptr->fmmap.hFile = INVALID_HANDLE_VALUE;
-#endif
-#ifdef __riscos
-    MakeMetafontFile(PXLpath, tfontptr->n, tfontptr->dpi);
-#endif
-  }
-#endif 
 }
 
 
@@ -340,6 +317,8 @@ void ClearFonts(void)
   while(hfontptr!=NULL) {
     tmp=hfontptr->next;
     DoneFont(hfontptr);
+    if (hfontptr->name != NULL)
+      free(hfontptr->name);
     free(hfontptr);
     hfontptr=tmp;
   }
@@ -370,7 +349,7 @@ void SetFntNum(int32_t k, void* parent /* dvi/vf */)
     Fatal("font %d undefined", k);
 
   currentfont = tfontnump->fontp;
-  if (currentfont->name[0]=='\0')
+  if (currentfont->name==NULL)
     FontFind(currentfont);
 }
 

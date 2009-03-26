@@ -139,5 +139,7 @@ void DoneVF(struct font_entry *tfontp)
   }
   FreeFontNumP(tfontp->vffontnump);
   tfontp->vffontnump=NULL;
-  tfontp->name[0]='\0';
+  if (tfontp->name!=NULL)
+    free(tfontp->name);
+  tfontp->name=NULL;
 }

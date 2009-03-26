@@ -246,7 +246,7 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
       FontDef(command, parent); 
     } else {
       Fatal("%s within VF macro from %s",dvi_commands[*command],
-	    ((struct font_entry*)parent)->name);
+	    ((struct font_entry*)parent)->n);
     }
     break;
   case PRE: case POST: case POST_POST:
