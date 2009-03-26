@@ -23,9 +23,6 @@
 ************************************************************************/
 
 #include "dvipng.h"
-#ifdef HAVE_ALLOCA_H
-# include <alloca.h>
-#endif
 
 bool ReadTFM(struct font_entry * tfontp, char* tfmname)
 {
@@ -44,7 +41,7 @@ bool ReadTFM(struct font_entry * tfontp, char* tfmname)
   ec = UNumRead(position+6,2);
   nw = UNumRead(position+8,2);
   DEBUG_PRINT(DEBUG_TFM,(" %d %d %d %d",lh,bc,ec,nw));
-  width=alloca(nw*sizeof(dviunits));  
+  width=malloc(nw*sizeof(dviunits));  
   c=0;
   position=position+24+(lh+ec-bc+1)*4;
   while( c < nw ) {
@@ -72,8 +69,7 @@ bool ReadTFM(struct font_entry * tfontp, char* tfmname)
     c++;
     position += 4;
   }
+  free(width);
   UnMmapFile(&fmmap);
   return(true);
 }
-  
-

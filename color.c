@@ -23,9 +23,6 @@
 ************************************************************************/
 
 #include "dvipng.h"
-#ifdef HAVE_ALLOCA_H
-# include <alloca.h>
-#endif
 
 /*
  * Color. We delete and recreate the gdImage for each new page. This
@@ -62,7 +59,7 @@ struct colorname * NewColor(char* prefix, int nprefix,
   struct colorname *tmp = 
     malloc(sizeof(struct colorname)+3+nprefix+nname+nmodel+nvalues);
   if (tmp==NULL) 
-    Fatal("Cannot allocate space for color name");
+    Fatal("Cannot malloc space for color name");
   tmp->color=tmp->name+nprefix+nname+1;
   strncpy(tmp->name,prefix,nprefix);
   strncpy(tmp->name+nprefix,name,nname);
@@ -99,12 +96,16 @@ struct colorname* LoadColornameFile(char* filename)
   char *prefix="",*name,*values,*model;
   int nprefix=0,nname,nvalues,nmodel;
   struct filemmap fmmap;
+  boolean mmapfailed;
 
-  TEMPSTR(filepath,kpse_find_file(filename,kpse_tex_format,false));
+  filepath=kpse_find_file(filename,kpse_tex_format,false);
   if (filepath == NULL)
     return NULL;
   DEBUG_PRINT(DEBUG_COLOR,("\n  OPEN COLOR NAMES:\t'%s'", filepath));
-  if (MmapFile(filepath,&fmmap)) return NULL;
+  mmapfailed=MmapFile(filepath,&fmmap);
+  free(filepath);
+  if (mmapfailed)
+    return NULL;
   pos=fmmap.data;
   max=fmmap.data+fmmap.size;
   while (pos<max && *pos!='\\') pos++;
@@ -206,12 +207,16 @@ struct colorname* LoadXColorPrologue(void)
   char *prefix="",*name,*values,*model;
   int nprefix=0,nname,nvalues,nmodel;
   struct filemmap fmmap;
+  boolean mmapfailed;
 
-  TEMPSTR(filepath,kpse_find_file(xcpname,kpse_program_text_format,false));
+  filepath=kpse_find_file(xcpname,kpse_program_text_format,false);
   if (filepath == NULL)
     return NULL;
   DEBUG_PRINT(DEBUG_COLOR,("\n  OPEN XCOLOR PROLOGUE:\t'%s'", filepath));
-  if (MmapFile(filepath,&fmmap)) return NULL;
+  mmapfailed = MmapFile(filepath,&fmmap);
+  free(filepath);
+  if (mmapfailed)
+    return NULL;
   pos=fmmap.data;
   max=fmmap.data+fmmap.size;
   while(pos<max) {

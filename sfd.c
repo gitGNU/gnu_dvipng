@@ -30,17 +30,21 @@ struct subfont* ReadSubfont(char* sfdname, char *infix)
   char *pos,*max,*sfdfile=NULL;
   struct subfont* sfdp=NULL;
   struct filemmap fmmap;
+  boolean mmapfailed;
   
   /* OK, find subfont and look for correct infix */
 #ifdef HAVE_KPSE_ENC_FORMATS
-  TEMPSTR(sfdfile,kpse_find_file(sfdname,kpse_sfd_format,false));
+  sfdfile=kpse_find_file(sfdname,kpse_sfd_format,false);
 #endif
   if (sfdfile == NULL) {
     Warning("subfont file %s could not be found",sfdname);
     return(NULL);
   }
   DEBUG_PRINT((DEBUG_FT|DEBUG_ENC),("\n  OPEN SUBFONT:\t'%s'", sfdfile));
-  if (MmapFile(sfdfile,&fmmap)) return(NULL);
+  mmapfailed = MmapFile(sfdfile,&fmmap);
+  free(sfdfile);
+  if (mmapfailed)
+    return(NULL);
   pos=fmmap.data;
   max=fmmap.data+fmmap.size;
   while(pos<max && (*pos==' ' || *pos=='\n' || *pos=='\t')) pos++;
@@ -66,7 +70,7 @@ struct subfont* ReadSubfont(char* sfdname, char *infix)
 
     if ((sfdp = calloc(sizeof(struct subfont)+strlen(sfdname)+1
 		       +strlen(infix)+1,1))==NULL) {
-      Warning("cannot alloc space for subfont",sfdfile);
+      Warning("cannot alloc space for subfont",sfdname);
       UnMmapFile(&fmmap);
       return(NULL);
     }
@@ -126,7 +130,7 @@ struct psfontmap* FindSubFont(struct psfontmap* entry, char* fontname)
   if (*postfix!='@')
     return(NULL);
   /* Extract subfont name */
-  sfdname=alloca(postfix-sfdspec+1);
+  sfdname=malloc(postfix-sfdspec+1);
   strncpy(sfdname,sfdspec,postfix-sfdspec);
   sfdname[postfix-sfdspec]='\0';
   /* Check postfix */
@@ -134,7 +138,7 @@ struct psfontmap* FindSubFont(struct psfontmap* entry, char* fontname)
   if (strcmp(sfdwant+strlen(sfdwant)-strlen(postfix),postfix)!=0)
     return(NULL);
   /* Extract infix */
-  infix=alloca(strlen(sfdwant)-strlen(postfix)+1);
+  infix=malloc(strlen(sfdwant)-strlen(postfix)+1);
   strncpy(infix,sfdwant,strlen(sfdwant)-strlen(postfix));
   infix[strlen(sfdwant)-strlen(postfix)]='\0';
   DEBUG_PRINT(DEBUG_ENC,("\n  SUBFONT %s %s %s",fontname,sfdname,infix)); 
@@ -154,6 +158,8 @@ struct psfontmap* FindSubFont(struct psfontmap* entry, char* fontname)
     entry->tfmname=copyword(fontname);
     entry->subfont=temp;
   }
+  free(infix);
+  free(sfdname);
   return(entry);
 }
 

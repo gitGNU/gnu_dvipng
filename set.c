@@ -23,19 +23,16 @@
 ************************************************************************/
 
 #include "dvipng.h"
-#ifdef HAVE_ALLOCA_H
-# include <alloca.h>
-#endif
 #include <math.h>
 
 #ifndef HAVE_GDIMAGECREATETRUECOLOR
 #define gdImageColorAllocateAlpha(i,r,g,b,a) gdImageColorAllocate(i,r,g,b) 
 #define gdImageColorResolveAlpha(i,r,g,b,a)  gdImageColorResolve(i,r,g,b) 
 #define gdImageAlpha(i,c)                    0
-#define gdAlphaMax                      127
+#define gdAlphaMax                           127
 #endif
 #ifndef HAVE_GDIMAGEPNGEX
-#define  gdImagePngEx(i,f,z)                 gdImagePng(i,f)
+#define gdImagePngEx(i,f,z)                  gdImagePng(i,f)
 #endif
 
 /* Persistent color cache. Index is ink thickness, 
@@ -99,7 +96,7 @@ void ChangeColor(gdImagePtr imagep,int x1,int y1,
 
 void WriteImage(char *pngname, int pagenum)
 {
-  char* pos;
+  char* pos, *freeme=NULL;
   FILE* outfp=NULL;
 
   /* Set transparent background. Maybe alpha is not available or
@@ -146,9 +143,9 @@ void WriteImage(char *pngname, int pagenum)
 	|| (*pos=='0' && pos[1]>='1' && pos[1]<='9' && pos[2]=='d')) {
       /* %d -> pagenumber, so add 9 string positions 
 	 since pagenumber max +-2^31 or +-2*10^9 */
-      char* tempname = alloca(strlen(pngname)+9);
-      sprintf(tempname,pngname,pagenum);
-      pngname = tempname;
+      freeme = malloc(strlen(pngname)+9);
+      sprintf(freeme,pngname,pagenum);
+      pngname = freeme;
     } else {
       Fatal("unacceptible format spec in output file name");
     }
@@ -171,6 +168,8 @@ void WriteImage(char *pngname, int pagenum)
     gdImagePngEx(page_imagep,outfp,compression);
   fclose(outfp);
   DEBUG_PRINT(DEBUG_DVI,("\n  WROTE:   \t%s\n",pngname));
+  if (freeme)
+    free(freeme);
   DestroyImage();
 }
 

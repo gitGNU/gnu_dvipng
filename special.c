@@ -321,7 +321,7 @@ void newpsheader(char* special) {
     newpsheader("! TeXDict begin");
   if (psheaderp==NULL) {
     if ((tmp=psheaderp=malloc(sizeof(struct pscode)))==NULL)
-      Fatal("cannot allocate space for PostScript header struct");
+      Fatal("cannot malloc space for PostScript header struct");
   } else {
     /* No duplicates. This still misses pre=..., because we still
        change that. To be fixed */
@@ -334,7 +334,7 @@ void newpsheader(char* special) {
 	return;
     }
     if ((tmp->next=malloc(sizeof(struct pscode)))==NULL)
-      Fatal("cannot allocate space for PostScript header struct");
+      Fatal("cannot malloc space for PostScript header struct");
     tmp=tmp->next;
   }
   DEBUG_PRINT(DEBUG_GS,("\n  PS HEADER "));
@@ -447,7 +447,7 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
 #endif
 
       PSCodeInit(&image, NULL);
-      TEMPSTR(image.filename,kpse_find_file(psname,kpse_pict_format,0));
+      image.filename=kpse_find_file(psname,kpse_pict_format,0);
       if (MmapFile(image.filename,&(image.fmmap)) || image.fmmap.size==0) {
 	Warning("Image file %s unusable, image will be left blank",
 		image.filename);
@@ -575,6 +575,7 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
         Warning("Unable to load %s, image will be left blank",image.filename);
         page_flags |= PAGE_GAVE_WARN;
       } 
+      free(image.filename);
       Message(BE_NONQUIET,">");
     } else { /* Don't draw */
       page_flags |= PAGE_TRUECOLOR;
@@ -676,13 +677,13 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
       if (pscodep==NULL) {
 	Message(BE_NONQUIET," <literal PS");
 	if ((tmp=pscodep=malloc(sizeof(struct pscode)))==NULL)
-	  Fatal("cannot allocate space for raw PostScript struct");
+	  Fatal("cannot malloc space for raw PostScript struct");
       } else {
 	tmp=pscodep;
 	while(tmp->next != NULL)
 	  tmp=tmp->next;
 	if ((tmp->next=malloc(sizeof(struct pscode)))==NULL)
-	  Fatal("cannot allocate space for raw PostScript struct");
+	  Fatal("cannot malloc space for raw PostScript struct");
 	tmp=tmp->next;
       }
       if (strncmp(special,"ps::[begin]",11)==0)
@@ -703,7 +704,6 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
 	  Warning("PostScript environment contains DVI commands");
 	  page_flags |= PAGE_GAVE_WARN;
 	}
-	/* Don't use alloca, we do not want to run out of stack space */
 	DEBUG_PRINT(DEBUG_GS,("\n  PS SPECIAL "));
 	txt=malloc(strlen(special)+1);
 	strcpy(txt,special);
