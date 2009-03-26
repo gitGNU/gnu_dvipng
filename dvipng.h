@@ -132,19 +132,6 @@ typedef int32_t dviunits;
 /* integer round to the nearest number, not towards zero */
 #define PIXROUND(num,den) ((num)>0 ? ((num)+(den)/2)/(den) : -(((den)/2-(num))/(den)))
 
-#ifdef HAVE_ALLOCA_H
-# include <alloca.h>
-#elif defined _AIX
-# define alloca __alloca
-#endif
-#define TEMPSTR(s,a) { char* tmp=a; \
-               if (tmp!=NULL) {\
-                 s=alloca(strlen(tmp)+1);strcpy(s,tmp);free(tmp);\
-               } else \
-                 s=NULL;}
-
-/*************************************************************************/
-
 
 /********************************************************/
 /***********************  dvi.h  ************************/
@@ -292,7 +279,7 @@ struct font_entry {    /* font entry */
   uint8_t      a, l;                                                   
   char         n[STRSIZE];      /* FNT_DEF command parameters        */
   int          dpi;             /* computed from s and d             */
-  char         name[STRSIZE];   /* full name of PK/VF file           */
+  char *       name;            /* full name of PK/VF file           */
   struct filemmap fmmap;        /* file memory map                   */
   uint32_t     magnification;   /* magnification read from font file */
   uint32_t     designsize;      /* design size read from font file   */
