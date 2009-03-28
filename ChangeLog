@@ -1,4 +1,8 @@
-2009-03-26    <jalar@pcbjalar.mai.liu.se>
+2009-03-28  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* config.h.in: Remove the last remnants of alloca 
+
+2009-03-26  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* configure.ac, dvipng.h: Remove the last remnants of alloca 
 
