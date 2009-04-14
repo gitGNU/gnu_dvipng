@@ -314,7 +314,6 @@ struct psfontmap* FindPSFontMap(char* fontname)
       search_mmap_p=&ttfont_mmap;
       entry=SearchPSFontMap(fontname,search_mmap_p);
     }
-#endif
   }
   if(entry==NULL) {
     struct psfontmap* entry_subfont=NULL;
@@ -330,6 +329,7 @@ struct psfontmap* FindPSFontMap(char* fontname)
 	  entry=entry->next;
       }
     }
+#endif
   }
   if (entry!=NULL && entry->psfile==NULL) 
     ReadPSFontMap(entry);
