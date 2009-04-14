@@ -1,3 +1,7 @@
+2009-04-14  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* fontmap.c: Make the thing build without FT2
+
 2009-03-28  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* config.h.in: Remove the last remnants of alloca 
