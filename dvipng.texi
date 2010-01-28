@@ -610,6 +610,11 @@ DVI, e.g., via a PostScript special (i.e., the @samp{graphics} or
 Enable verbose operation. This will currently indicate what fonts is
 used, in addition to the usual output.
 
+@item --width*
+@cindex width reporting
+Report the width of the image. See also @samp{--height} and
+@samp{--depth}.
+
 @item -x @var{num}
 @cindex magnification, overriding DVI
 Set the @math{x} magnification ratio to @math{@var{num}/1000}. Overrides
@@ -893,7 +898,7 @@ Longstreet, Bernhard Simon, Bob McElrath, Georg Schwarz, Jason Farmer,
 Brian V. Smith, Samuel Hathaway, Thomas R. Shemanske, Stephen Gibson,
 Christian Ridderstr@"om, Ezra Peisach, William H Wheeler, Thomas
 Klausner, Harald Koenig, Adrian Bunk, Kevin Smith, Jason Riedy,
-Wolfram Krause, Reinhard Kotucha, and Takeshi Abe.
+Wolfram Krause, Reinhard Kotucha, Takeshi Abe, and Waldeck Schutzer.
 
 @ifset man
 @c man begin NOTES

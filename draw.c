@@ -364,6 +364,7 @@ void DrawPages(void)
 #endif
       Message(REPORT_DEPTH," depth=%d", y_width-y_offset-1);
       Message(REPORT_HEIGHT," height=%d", y_offset+1);
+      Message(REPORT_WIDTH," width=%d", x_width);
       page_flags &= ~PAGE_PREVIEW_BOP;
       DrawPage(x_offset*dvi->conv*shrinkfactor,
 	       y_offset*dvi->conv*shrinkfactor);

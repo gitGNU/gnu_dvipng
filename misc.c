@@ -538,6 +538,18 @@ or <http://www.gnu.org/licenses/>.");
 	  Warning("Non-numeric quality (-Q) value, ignored");
 	}
 	break;
+      case 'w':
+	if (strncmp(p,"idth",4) == 0 ) { /* Width reporting */ 
+	  if (p[4] != '0') {
+	    option_flags |= REPORT_WIDTH;
+	    Message(PARSE_STDIN,"Width reporting on\n",p);
+	  } else {
+	    option_flags &= ~REPORT_WIDTH;
+	    Message(PARSE_STDIN,"Width reporting off\n");
+	  }
+	  break;
+	}
+	goto DEFAULT;
 #ifdef HAVE_GDIMAGEPNGEX
       case 'z':
 	if (*p == 0 && argv[i+1])
