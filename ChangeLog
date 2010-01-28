@@ -1,3 +1,7 @@
+2010-01-28  Jan-Ake Larsson  <jalar@mai.liu.se>
+
+	* draw.c, dvipng.h, dvipng.texi, misc.c: Add width reporting
+
 2009-04-14  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* fontmap.c: Make the thing build without FT2
