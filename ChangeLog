@@ -1,4 +1,4 @@
-2010-02-11  Jan-Ake Larsson  <jalar@malachite.isy.liu.se>
+2010-02-11  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* color.c, draw.c, dvi.c, enc.c, font.c, fontmap.c, ft.c,
 	      papersiz.c, pk.c, ppagelist.c, set.c, sfd.c, special.c,
