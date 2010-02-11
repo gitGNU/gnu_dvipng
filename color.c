@@ -51,10 +51,10 @@ void initcolor()
    cstack[1].blue=0; 
 }
 
-struct colorname * NewColor(char* prefix, int nprefix,
-              char* name, int nname,
-	      char* model, int nmodel,
-	      char* values, int nvalues)
+static struct colorname * NewColor(char* prefix, int nprefix,
+				   char* name, int nname,
+				   char* model, int nmodel,
+				   char* values, int nvalues)
 {
   struct colorname *tmp = 
     malloc(sizeof(struct colorname)+3+nprefix+nname+nmodel+nvalues);
@@ -89,7 +89,7 @@ struct colorname * NewColor(char* prefix, int nprefix,
 #define FINDPSNAMEEND(s,n) n=0; while(s<max && *s!='{') { s++; n++; }
 #define BLANKCOMMAS(s) 
 
-struct colorname* LoadColornameFile(char* filename)
+static struct colorname* LoadColornameFile(char* filename)
 {
   struct colorname *list=NULL,*tmp=NULL; 
   char *filepath,*pos,*max;
@@ -166,7 +166,7 @@ struct colorname* LoadColornameFile(char* filename)
   return(list);
 }
 
-void ClearXColorPrologue(void)
+static void ClearXColorPrologue(void)
 {
   struct colorname *next;
   while (xcp) {
@@ -200,7 +200,7 @@ void InitXColorPrologue(char* name)
   strcpy(xcpname,name);
 }
 
-struct colorname* LoadXColorPrologue(void)
+static struct colorname* LoadXColorPrologue(void)
 {
   struct colorname *list=NULL,*tmp=NULL; 
   char *filepath,*pos,*max;
