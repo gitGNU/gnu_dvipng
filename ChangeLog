@@ -1,3 +1,12 @@
+2010-02-11  Jan-Ake Larsson  <jalar@malachite.isy.liu.se>
+
+	* color.c, draw.c, dvi.c, enc.c, font.c, fontmap.c, ft.c,
+	      papersiz.c, pk.c, ppagelist.c, set.c, sfd.c, special.c,
+	      t1.c: Declare functions used only in one file as static to
+	      avoid warnings when compiling with 'gcc
+	      --Wmissing-prototypes', suggested by Peter Breitenlohner
+	      <peb@mppmu.mpg.de>
+
 2010-01-28  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* draw.c, dvipng.h, dvipng.texi, misc.c: Add width reporting
