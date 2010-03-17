@@ -18,7 +18,7 @@
   License along with this program. If not, see
   <http://www.gnu.org/licenses/>.
 
-  Copyright (C) 2002-2008 Jan-Åke Larsson
+  Copyright (C) 2002-2010 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -30,9 +30,14 @@
 # ifdef HAVE_LIBGEN_H
 #  include <libgen.h>
 # else
-# define basename xbasename
-#endif
-# define SLEEP    sleep(1)
+#  define basename xbasename
+# endif
+# ifdef WIN32
+#  define SLEEP   Sleep(1000)
+#  include <stdlib.h>
+# else
+#  define SLEEP   sleep(1)
+# endif /* WIN32 */
 #endif	/* MIKTEX */
 #include <sys/stat.h>
 
