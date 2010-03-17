@@ -18,12 +18,12 @@
 #  License along with this program. If not, see
 #  <http://www.gnu.org/licenses/>.
 #
-#  Copyright (C) 2002-2009 Jan-Åke Larsson
+#  Copyright (C) 2002-2010 Jan-Åke Larsson
 #
 #************************************************************************
 
 # Process this file with autoconf to produce a configure script.
-AC_INIT([dvipng], [1.12], [dvipng@nongnu.org])
+AC_INIT([dvipng], [1.13], [dvipng@nongnu.org])
 AC_CONFIG_SRCDIR([dvipng.c])
 
 AC_ARG_ENABLE(debug, 
