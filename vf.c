@@ -27,11 +27,10 @@
 #define VF_ID 202
 #define LONG_CHAR 242
 
-int32_t SetVF(int32_t c) 
+int32_t SetVF(struct char_entry* ptr) 
 {
   struct font_entry* currentvf;
   unsigned char *command,*end;
-  struct char_entry* ptr=currentfont->chr[c];
 
   currentvf=currentfont;
   BeginVFMacro(currentvf);

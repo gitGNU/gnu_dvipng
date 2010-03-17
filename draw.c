@@ -79,9 +79,15 @@ dviunits SetChar(int32_t c)
 
   if (currentfont==NULL) 
     Fatal("faulty DVI, trying to set character from null font");
-
-  if (c>=0 && c<=LASTFNTCHAR) 
-    ptr = currentfont->chr[c];
+  if (c<0 || c>LASTFNTCHAR) {
+    Warning("glyph index out of range (%d), skipping",c);
+    return(0);
+  }
+  ptr=currentfont->chr[c];
+  if (ptr==NULL) {
+    Warning("unable to draw glyph %d, skipping",c);
+    return(0);
+  }
 #ifdef DEBUG
   switch (currentfont->type) {
   case FONT_TYPE_VF: DEBUG_PRINT(DEBUG_DVI,("\n  VF CHAR:\t")); break;
@@ -90,15 +96,15 @@ dviunits SetChar(int32_t c)
   case FONT_TYPE_FT: DEBUG_PRINT(DEBUG_DVI,("\n  FT CHAR:\t")); break;
   default: DEBUG_PRINT(DEBUG_DVI,("\n  NO CHAR:\t"))
   }
-  if (isprint(c))
+  if (debug & DEBUG_DVI && c>=0 && c<=UCHAR_MAX && isprint(c))
     DEBUG_PRINT(DEBUG_DVI,("'%c' ",c));
   DEBUG_PRINT(DEBUG_DVI,("%d at (%d,%d) tfmw %d", c,
 			 dvi_stack->hh,dvi_stack->vv,ptr?ptr->tfmw:0));
 #endif
   if (currentfont->type==FONT_TYPE_VF) {
-    return(SetVF(c));
+    return(SetVF(ptr));
   } else {
-    if (ptr!=NULL && ptr->data == NULL) 
+    if (ptr->data == NULL) 
       switch(currentfont->type) {
       case FONT_TYPE_PK:	LoadPK(c, ptr); break;
 #ifdef HAVE_LIBT1
@@ -111,8 +117,8 @@ dviunits SetChar(int32_t c)
 	Fatal("undefined fonttype %d",currentfont->type);
       }
     if (page_imagep != NULL)
-      return(SetGlyph(c, dvi_stack->hh, dvi_stack->vv));
-    else if (ptr!=NULL) {
+      return(SetGlyph(ptr, dvi_stack->hh, dvi_stack->vv));
+    else {
       /* Expand bounding box if necessary */
       min(x_min,dvi_stack->hh - ptr->xOffset/shrinkfactor);
       min(y_min,dvi_stack->vv - ptr->yOffset/shrinkfactor);
