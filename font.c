@@ -18,7 +18,7 @@
   License along with this program. If not, see
   <http://www.gnu.org/licenses/>.
 
-  Copyright (C) 2002-2008 Jan-Åke Larsson
+  Copyright (C) 2002-2010 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -161,9 +161,9 @@ void FontDef(unsigned char* command, void* parent)
   tfontptr->next = hfontptr;
   hfontptr = tfontptr;
   tfontnump->fontp = tfontptr;
-#ifndef MIKTEX
+#ifndef WIN32
   tfontptr->fmmap.fd = 0;
-#else  /* MIKTEX */
+#else  /* WIN32 */
   tfontptr->fmmap.hFile = INVALID_HANDLE_VALUE;
 #endif
   tfontptr->c = c; /* checksum */
@@ -265,9 +265,9 @@ static void FontFind(struct font_entry * tfontptr)
       page_flags |= PAGE_GAVE_WARN;
       Warning("font %s at %d dpi not found, characters will be left blank",
 	      tfontptr->n, tfontptr->dpi);
-#ifndef MIKTEX
+#ifndef WIN32
       tfontptr->fmmap.fd = 0;
-#else  /* MIKTEX */
+#else  /* WIN32 */
       tfontptr->fmmap.hFile = INVALID_HANDLE_VALUE;
 #endif
       tfontptr->magnification = 0;
