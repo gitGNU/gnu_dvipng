@@ -657,13 +657,14 @@ void DecodeString(char *string)
   int     strc=1;
   strv[0]=NULL;                       /* No program name */
 
-  while (*string==' ' || *string=='\t' || *string=='\n') 
+  while (*string==' ' || *string=='\t' || *string=='\r' || *string=='\n') 
     string++;
   while (*string!='\0') {
     strv[strc++]=string;
     if (*string!='\'') {
       /* Normal split at whitespace */
-      while (*string!=' ' && *string!='\t' && *string!='\n' && *string!='\0') 
+      while (*string!=' ' && *string!='\t' \
+	     && *string!='\n' && *string!='\r' && *string!='\0')
 	string++;
     } else {
       /* String delimiter found , so search for next */
@@ -673,7 +674,7 @@ void DecodeString(char *string)
     }
     if (*string!='\0')
       *string++='\0';
-    while (*string==' ' || *string=='\t' || *string=='\n') 
+    while (*string==' ' || *string=='\t' || *string=='\r' || *string=='\n') 
       string++;
   }
   if (strc>1) /* Nonempty */
