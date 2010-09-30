@@ -709,6 +709,8 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
   }
 
   if (special[0]=='"' || strncmp(special,"ps:",3)==0) { /* Raw PostScript */
+    if (option_flags & NO_RAW_PS)
+      return; 
     if (page_imagep != NULL) { /* Draw into image */
       static struct pscode *pscodep=NULL;
       static bool psenvironment=false;
@@ -722,7 +724,7 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
 	 several specials. Check for those, and concatenate them so
 	 that they're given to one and the same invocation of gs */
       if (pscodep==NULL) {
-	Message(BE_NONQUIET," <raw PS");
+	Message(BE_NONQUIET," <raw PostScript");
 	if ((tmp=pscodep=malloc(sizeof(struct pscode)))==NULL)
 	  Fatal("cannot malloc space for raw PostScript struct");
       } else {

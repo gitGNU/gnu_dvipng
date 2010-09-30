@@ -440,6 +440,14 @@ bool DecodeArgs(int argc, char ** argv)
 	    option_flags &= ~NO_GSSAFER;
 	    Message(PARSE_STDIN,"GhostScript calls use -dSAFER\n");
 	  }
+	} else if (strncmp(p,"orawpostscript",8)==0) { 
+	  if (p[8] != '0') {
+	    option_flags |= NO_RAW_PS;
+	    Message(PARSE_STDIN,"Conversion of raw PostScript will not be attempted\n",p);
+	  } else {
+	    option_flags &= ~NO_RAW_PS;
+	    Message(PARSE_STDIN,"Conversion of raw PostScript will be attempted\n",p);
+	  }
 	} else
 	  goto DEFAULT;
 	break ;
