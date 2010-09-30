@@ -9,8 +9,8 @@ dvipng [options] [filename] -
 @c man end
 @end ifset
 
-@set version 1.13
-@set month-year March 2010
+@set version 1.14
+@set month-year October 2010
 
 @c Put everything in one index (arbitrarily chosen to be the concept index).
 @syncodeindex fn cp
@@ -421,10 +421,10 @@ overridden by the @samp{MISSFONT_LOG} environment variable or
 configuration file value.
 @end ignore
 
-@item --noghostscript*
+@item --nogs*
 @cindex GhostScript, turning off
 This switch prohibits the internal call to GhostScript for displaying
-PostScript specials. @samp{--noghostscript0} turns the call back on.
+PostScript specials. @samp{--nogs0} turns the call back on.
 
 @item --nogssafer*
 @cindex GhostScript and -dSAFER
@@ -435,6 +435,13 @@ GhostScript interpreter is run with the option @samp{-dSAFER}. The
 @samp{-dSAFER} option in Ghostscript disables PostScript operators such
 as deletefile, to prevent possibly malicious PostScript programs from
 having any effect.
+
+@item --norawps*
+@cindex PostScript, turning off raw PostScript specials
+Some packages generate lots of non-rendering raw PostScript
+specials. This switch turns off the internal call to GhostScript intended to 
+display these raw PostScript specials. @samp{--norawps0} turns the call
+back on.
 
 @item -o @var{name}
 @cindex output, redirecting

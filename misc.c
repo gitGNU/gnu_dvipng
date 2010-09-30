@@ -440,8 +440,16 @@ bool DecodeArgs(int argc, char ** argv)
 	    option_flags &= ~NO_GSSAFER;
 	    Message(PARSE_STDIN,"GhostScript calls use -dSAFER\n");
 	  }
-	} else if (strncmp(p,"orawpostscript",8)==0) { 
-	  if (p[8] != '0') {
+	} else if (strncmp(p,"ogs",3)==0) { 
+	  if (p[3] != '0') {
+	    option_flags |= NO_GHOSTSCRIPT;
+	    Message(PARSE_STDIN,"No GhostScript calls\n",p);
+	  } else {
+	    option_flags &= ~NO_GHOSTSCRIPT;
+	    Message(PARSE_STDIN,"GhostScript calls made\n");
+	  }
+	} else if (strncmp(p,"orawps",6)==0) { 
+	  if (p[6] != '0') {
 	    option_flags |= NO_RAW_PS;
 	    Message(PARSE_STDIN,"Conversion of raw PostScript will not be attempted\n",p);
 	  } else {
@@ -612,15 +620,16 @@ or <http://www.gnu.org/licenses/>.");
     fprintf(stdout,"  -fg s        Foreground color (TeX-style color)\n");
     fprintf(stdout,"  --follow*    Wait for data at end-of-file\n");
 #ifdef HAVE_FT2
-    fprintf(stdout,"  --freetype*  FreeType font rendering (default on)\n");
+    fprintf(stdout,"  --freetype*  FreeType font rendering (preferred, default on)\n");
 #endif
     fprintf(stdout,"  --gamma #    Control color interpolation\n");
 #ifdef HAVE_GDIMAGEGIF
     fprintf(stdout,"  --gif        Output GIF images (dvigif default)\n");
 #endif
     fprintf(stdout,"  --height*    Output the image height on stdout\n");
-    fprintf(stdout,"  --noghostscript*  Don't use ghostscript for PostScript specials\n");
+    fprintf(stdout,"  --nogs*      Don't use ghostscript for PostScript specials\n");
     fprintf(stdout,"  --nogssafer* Don't use -dSAFER in ghostscript calls\n");
+    fprintf(stdout,"  --norawps*   Don't convert raw PostScript specials\n");
 #ifdef HAVE_GDIMAGECREATETRUECOLOR
     fprintf(stdout,"  --palette*   Force palette output\n");
 #endif
@@ -636,6 +645,7 @@ or <http://www.gnu.org/licenses/>.");
     fprintf(stdout,"  --truecolor* Truecolor output\n");
 #endif
     fprintf(stdout,"  -Q #         Quality (T1lib and PK subsampling)\n");
+    fprintf(stdout,"  --width*     Output the image width on stdout\n");
 #ifdef HAVE_GDIMAGEPNGEX
     fprintf(stdout,"  -z #         PNG compression level\n");
 #endif
