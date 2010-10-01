@@ -718,11 +718,37 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
       struct pscode *tmp;
       gdImagePtr psimage=NULL;
       char *txt;
-      const char *newspecial=NULL; /* Avoid warning from special="..." */
+      const char *specialend=special+strlen(special);
+      const char *newspecial=NULL; 
       
+      /* hyperref non-rendering PostScript specials. */
+      if (strcmp(specialend-11,"pdfmark end")==0
+	  || strcmp(specialend-7,"H.A end")==0
+	  || strcmp(specialend-7,"H.B end")==0
+	  || strcmp(specialend-7,"H.L end")==0
+	  || strcmp(specialend-7,"H.R end")==0
+	  || strcmp(specialend-7,"H.S end")==0
+	  || strcmp(specialend-7,"H.V end")==0
+	  || strncmp(special,"ps:SDict begin /product",23)==0)
+	if (pscodep==NULL)
+	  return;
+	else
+	  newspecial="";
+      /* pgf PostScript specials. */
+      else if (strcmp(special,"ps:: pgfo")==0)
+	/* pgf page start. The first numbers are generally valid for
+	   the bop instruction, and the latter code is to move the
+	   origin to the right place. */
+	newspecial="ps:: 39139632 55387786 1000 600 600 (tikzdefault.dvi) @start 1 0 bop pgfo 0 0 matrix defaultmatrix transform itransform translate";
+      else if (strcmp(special,"ps:: pgfc")==0)
+	newspecial="ps:: pgfc eop end";
       /* Some packages split their raw PostScript code into
 	 several specials. Check for those, and concatenate them so
 	 that they're given to one and the same invocation of gs */
+      else if (strncmp(special,"ps::[begin]",11)==0)
+	psenvironment=true;
+      else if (strncmp(special,"ps::[end]",9)==0)
+	psenvironment=false;
       if (pscodep==NULL) {
 	Message(BE_NONQUIET," <raw PostScript");
 	if ((tmp=pscodep=malloc(sizeof(struct pscode)))==NULL)
@@ -735,18 +761,6 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
 	  Fatal("cannot malloc space for raw PostScript struct");
 	tmp=tmp->next;
       }
-      if (strncmp(special,"ps::[begin]",11)==0)
-	psenvironment=true;
-      else if (strncmp(special,"ps::[end]",9)==0)
-	psenvironment=false;
-      else if (strcmp(special,"ps:: pgfo")==0)
-	/* PostScript code to start page for pgf PostScript
-	   specials. The first numbers are generally valid for the bop
-	   instruction, and the latter code is to move the origin to
-	   the right place. */
-	newspecial="ps:: 39139632 55387786 1000 600 600 (tikzdefault.dvi) @start 1 0 bop pgfo 0 0 matrix defaultmatrix transform itransform translate";
-      else if (strcmp(special,"ps:: pgfc")==0)
-	newspecial="ps:: pgfc eop end";
       nextisps=DVIIsNextPSSpecial(dvi);
       if (psenvironment || nextisps) {
 	if (!nextisps) {
