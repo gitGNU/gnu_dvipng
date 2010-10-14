@@ -26,6 +26,13 @@
 #define DVIPNG_H
 #include "config.h"
 
+/* Autoconf may define malloc to rpl_malloc, if the system does not
+ * have a GNU Libc-compatible malloc (for which malloc(0) gives a
+ * valid pointer). We don't need that (yet) */
+#ifdef malloc
+# undef malloc
+#endif
+
 #define  STRSIZE         255     /* stringsize for file specifications  */
 
 #define  FIRSTFNTCHAR  0
@@ -104,14 +111,6 @@ typedef int bool;
    /* If we have neither, should fall back to fprintf with fixed args.  */
 # endif
 #endif
-
-/* Autoconf may define malloc to rpl_malloc, if the system does not
- * have a GNU Libc-compatible malloc (for which malloc(0) gives a
- * valid pointer). We don't need that (yet) */
-#ifdef malloc
-# undef malloc
-#endif
-
 
 /*************************************************************/
 /*************************  protos.h  ************************/
