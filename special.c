@@ -151,7 +151,7 @@ ps2png(struct pscode* pscodep, const char *device, int hresolution, int vresolut
 #ifndef WIN32
   pid_t pid;
 #else /* WIN32 */
-  int nexitcode = STILL_ACTIVE;
+  unsigned long nexitcode = STILL_ACTIVE;
   HANDLE hchild;
   int savestdin, savestdout;
 #endif /* WIN32 */
@@ -169,7 +169,6 @@ ps2png(struct pscode* pscodep, const char *device, int hresolution, int vresolut
   char resolution[STRSIZE]; 
   /*   char devicesize[STRSIZE];  */
   gdImagePtr psimage=NULL;
-  static bool showpage=false;
 
   sprintf(resolution, "-r%dx%d",hresolution,vresolution);
   /* Future extension for \rotatebox
@@ -265,21 +264,27 @@ ps2png(struct pscode* pscodep, const char *device, int hresolution, int vresolut
 #endif /* MIKTEX */
   if (psstream) {
     writepscode(psheaderp,psstream);
+    /* Page size */
     DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\t<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice",
 			  urx - llx, ury - lly,llx,lly));
     fprintf(psstream, "<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice\n",
 	    urx - llx, ury - lly,llx,lly);
+    /* Background color */
     if ( bgred < 255 || bggreen < 255 || bgblue < 255 ) {
       DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\tgsave %f %f %f setrgbcolor clippath fill grestore",
 			    bgred/255.0, bggreen/255.0, bgblue/255.0));
-      fprintf(psstream, "gsave %f %f %f setrgbcolor clippath fill grestore",
+      fprintf(psstream, "gsave %f %f %f setrgbcolor clippath fill grestore\n",
 	      bgred/255.0, bggreen/255.0, bgblue/255.0);
     }
+    /* Ensure one (and only one) showpage */
+    DEBUG_PRINT(DEBUG_GS,("\n  PS CODE: /DVIPNGDICT 100 dict def DVIPNGDICT begin /showpage {} def"));
+    fprintf(psstream, " /DVIPNGDICT 100 dict def DVIPNGDICT begin /showpage {} def ");
+
     writepscode(pscodep,psstream);
-    if (showpage) {
-      DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\tshowpage"));
-      fprintf(psstream, " showpage ");
-    }
+
+    DEBUG_PRINT(DEBUG_GS,("\n  PS CODE: end showpage"));
+    fprintf(psstream, " end showpage\n");
+
     fclose(psstream);
   }
   if (pngstream) {
@@ -291,7 +296,7 @@ ps2png(struct pscode* pscodep, const char *device, int hresolution, int vresolut
   waitpid(pid,NULL,0);
 #else
   while(nexitcode == STILL_ACTIVE)
-    GetExitCodeProcess((HANDLE)hchild, (unsigned long*)&nexitcode);
+    GetExitCodeProcess((HANDLE)hchild, &nexitcode);
   CloseHandle((HANDLE)hchild);
   _dup2(savestdin, fileno(stdin));
   _dup2(savestdout, fileno(stdout));
@@ -303,14 +308,6 @@ ps2png(struct pscode* pscodep, const char *device, int hresolution, int vresolut
 #endif /* MIKTEX */
   if (psimage == NULL) {
     DEBUG_PRINT(DEBUG_GS,("\n  GS OUTPUT:\tNO IMAGE "));
-    if (!showpage) {
-      showpage=true;
-      DEBUG_PRINT(DEBUG_GS,("(will try adding \"showpage\") "));
-      psimage=ps2png(pscodep,
-		     device, hresolution, vresolution, llx, lly, urx, ury,
-		     bgred,bggreen,bgblue);
-      showpage=false;
-    }
 #ifdef DEBUG
   } else {
     DEBUG_PRINT(DEBUG_GS,("\n  GS OUTPUT:\t%dx%d image ",
