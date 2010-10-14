@@ -1,8 +1,24 @@
+2010-10-14  Jan-Åke Larsson  <jan-ake.larsson@liu.se>
+
+	* dvipng.h (malloc): Put malloc def first
+
+	* special.c (ps2png): Ensure one and only one showpage, and do it
+	in PostScript instead of in C as suggested by Akira's previous patch
+
+2010-10-02  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* special.c (ps2png): Drop unused 'bool showpage' for WIN32.
+
+2010-09-20  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* special.c (ps2png): fix WIN32 bug that dvipng.exe waits
+	infinitely for some kind of eps files.
+
 2010-03-17  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* Release 1.13
 
-	* misc.c: Correct copyright year 
+	* misc.c: Correct copyright year
 
 	* RELEASE: Prepare for 1.13
 
@@ -28,7 +44,7 @@
 	ppagelist.c, special.c: Avoid compiler warnings
 
 	* dvipng.texi, configure.ac: Prepare for 1.13
-	
+
 	* draw.c, dvipng.h, set.c, vf.c: Adjust glyph-index bounds
 	test. Remove possible segfault from isprint().
 
@@ -50,11 +66,11 @@
 
 2009-03-28  Jan-Ake Larsson  <jalar@mai.liu.se>
 
-	* config.h.in: Remove the last remnants of alloca 
+	* config.h.in: Remove the last remnants of alloca
 
 2009-03-26  Jan-Ake Larsson  <jalar@mai.liu.se>
 
-	* configure.ac, dvipng.h: Remove the last remnants of alloca 
+	* configure.ac, dvipng.h: Remove the last remnants of alloca
 
 	* draw.c, font.c, ft.c, pk.c, t1.c, vf.c: Make the name element of
 	the font struct a pointer, not an array
@@ -80,7 +96,7 @@
 	* INSTALL, README, install.texi, readme.texi, special.c: Correct
 	date for copyright
 
-	* RELEASE, configure.ac, dvipng.1, dvipng.texi: Prepare for 1.12 
+	* RELEASE, configure.ac, dvipng.1, dvipng.texi: Prepare for 1.12
 
 2009-01-23  Jan-Ake Larsson  <jalar@mai.liu.se>
 
@@ -116,7 +132,7 @@
 2008-05-14  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* Release 1.11
-	
+
 	* configure.ac, dvipng.1, dvipng.texi, RELEASE: Prepare for 1.11
 
 	* special.c: Fix PS inclusion regression
@@ -124,27 +140,27 @@
 2008-05-09  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* Release 1.10
-	
+
 	* RELEASE: Prepare for 1.10
 
 2008-05-08  Jan-Ake Larsson  <jalar@mai.liu.se>
 
-	* special.c: Add warning about DVI code in PS environment 
+	* special.c: Add warning about DVI code in PS environment
 
 2008-05-07  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* README, readme.texi: Mention gs interpreter lib in TODO
 
 	* aclocal.m4, configure.ac: Move gs device check so that it can be
-	called from different points 
+	called from different points
 
 2008-05-05  Jan-Ake Larsson  <jalar@mai.liu.se>
 
-	* draw.c, dvi.c, dvipng.h: Revert creation of dvi command struct 
+	* draw.c, dvi.c, dvipng.h: Revert creation of dvi command struct
 
 	* draw.c, dvi.c: Init dvi command struct
 
-	* draw.c, dvi.c, dvipng.h: Create dvi command struct 
+	* draw.c, dvi.c, dvipng.h: Create dvi command struct
 
 	* special.c: Rearrange code
 
