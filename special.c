@@ -102,7 +102,7 @@ void ClearPSHeaders(void)
   }
 }
 
-static void writepscode(struct pscode* pscodep, FILE* psstream)
+static void writepscode(FILE* psstream,struct pscode* pscodep)
 {
   while (pscodep!=NULL) {
     if (pscodep->code!=NULL) {
@@ -225,7 +225,6 @@ ps2png(struct pscode* pscodep, const char *device, int hresolution, int vresolut
 #endif /* WIN32 */
   close(downpipe[0]);
   psstream=fdopen(downpipe[1],"wb");
-  /* fclose(psstream);  psstream=fopen("test.ps","wb"); */
   if (psstream == NULL) 
     close(downpipe[1]);
   close(uppipe[1]);
@@ -263,7 +262,7 @@ ps2png(struct pscode* pscodep, const char *device, int hresolution, int vresolut
   }
 #endif /* MIKTEX */
   if (psstream) {
-    writepscode(psheaderp,psstream);
+    writepscode(psstream,psheaderp);
     /* Page size */
     DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\t<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice",
 			  urx - llx, ury - lly,llx,lly));
@@ -280,7 +279,7 @@ ps2png(struct pscode* pscodep, const char *device, int hresolution, int vresolut
     DEBUG_PRINT(DEBUG_GS,("\n  PS CODE: /DVIPNGDICT 100 dict def DVIPNGDICT begin /showpage {} def"));
     fprintf(psstream, " /DVIPNGDICT 100 dict def DVIPNGDICT begin /showpage {} def ");
 
-    writepscode(pscodep,psstream);
+    writepscode(psstream,pscodep);
 
     DEBUG_PRINT(DEBUG_GS,("\n  PS CODE: end showpage"));
     fprintf(psstream, " end showpage\n");
@@ -306,14 +305,14 @@ ps2png(struct pscode* pscodep, const char *device, int hresolution, int vresolut
 #else /* MIKTEX */
   CloseHandle(pi.hProcess);
 #endif /* MIKTEX */
+#ifdef DEBUG
   if (psimage == NULL) {
     DEBUG_PRINT(DEBUG_GS,("\n  GS OUTPUT:\tNO IMAGE "));
-#ifdef DEBUG
   } else {
     DEBUG_PRINT(DEBUG_GS,("\n  GS OUTPUT:\t%dx%d image ",
 			  gdImageSX(psimage),gdImageSY(psimage)));
-#endif
   }
+#endif
   return psimage;
 }
 
