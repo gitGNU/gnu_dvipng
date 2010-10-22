@@ -132,13 +132,14 @@ be output as @file{foo1.png}, @file{foo2.png}, @file{foo3.png}, and
 @file{foo4.png}, respectively.
 
 If you have enabled the PostScript font support (via FreeType or T1lib),
-fonts will be rendered as they are needed. Otherwise, if you use fonts
-that have not been used on your system before, they may be automatically
-generated; this process can take a few minutes, so progress reports
-appear by default. The next time the same font is used, it will have
-been saved on disk, so rendering will go much faster. (If dvipng tries
-to endlessly generate the same fonts over and over again, something is
-wrong. @xref{Unable to generate fonts,,, kpathsea, Kpathsea}.)
+fonts will be rendered as they are needed. Otherwise, dvipng will use
+bitmapped (PK) fonts, and if you use PK fonts that have not been used on
+your system before, they may be automatically generated; this process
+can take a few minutes, so progress reports appear by default. The next
+time the same font is used, it will have been saved on disk, so
+rendering will go much faster. (If dvipng tries to endlessly generate
+the same fonts over and over again, something is wrong. @xref{Unable to
+generate fonts,,, kpathsea, Kpathsea}.)
 
 Many options are available (see the next section).  For a brief summary
 of available options, just type
@@ -213,9 +214,11 @@ fallback color makes the default border width 1 px. @xref{Color}.
 
 @item --bdpi @var{num}
 @cindex base resolution, setting
-Set the base (Metafont) resolution, both horizontal and vertical, to
-@var{num} dpi (dots per inch). This option is necessary when manually
-selecting Metafont mode with the --mode option (see below).
+This option only has an effect when using bitmapped (PK) fonts. The
+option sets the base (Metafont) resolution, both horizontal and
+vertical, to @var{num} dpi (dots per inch). This option is necessary
+when manually selecting Metafont mode with the --mode option (see
+below).
 
 @item -bg @var{color_spec}
 @cindex background color (option)
@@ -340,12 +343,12 @@ available if the FreeType2 font library was present at compilation time.
 If this is the case, dvipng will have direct support for PostScript
 Type1 and TrueType fonts internally, rather than using @samp{gsftopk}
 for rendering the fonts. If you have PostScript versions of Computer
-Modern installed, there will be no need to generate bitmapped variants
-on disk of these. Then, you can render images at different (and unusual)
-resolutions without cluttering the disk with lots of bitmapped fonts.
-Note that if you have both FreeType and T1lib on your system, FreeType
-will be preferred by dvipng. If you for some reason would want to use
-T1lib rendering, use this option.
+Modern installed, there will be no need to generate bitmapped (PK)
+variants on disk of these. Then, you can render images at different (and
+unusual) resolutions without cluttering the disk with lots of bitmapped
+fonts.  Note that if you have both FreeType and T1lib on your system,
+FreeType will be preferred by dvipng. If you for some reason would want
+to use T1lib rendering, use this option.
 
 @item --gamma @var{num}
 @cindex gamma
@@ -392,20 +395,20 @@ no matter what the pages are actually numbered.
 @item --mode @var{mode}
 @cindex mode name, specifying
 @cindex Metafont mode, specifying
-Use @var{mode} as the Metafont device name for the PK fonts (both for
-path searching and font generation). This needs to be augmented with the
-base device resolution, given with the @samp{--bdpi} option. See the
-file @url{ftp://ftp.tug.org/tex/modes.mf} for a list of resolutions and
-mode names for most devices. @xref{Unable to generate fonts,,, kpathsea,
+This option only has an effect when using bitmapped (PK) fonts. Use
+@var{mode} as the Metafont device name for the PK fonts (both for path
+searching and font generation). This needs to be augmented with the base
+device resolution, given with the @samp{--bdpi} option. See the file
+@url{ftp://ftp.tug.org/tex/modes.mf} for a list of resolutions and mode
+names for most devices. @xref{Unable to generate fonts,,, kpathsea,
 Kpathsea}.
 
 @item -M*
 @cindex font generation, avoiding
 @pindex mktexpk@r{, avoiding}
 @c this description repeated in kpathsea.texi
-Turns off automatic PK font generation (@file{mktexpk}). This will have
-no effect when using PostScript fonts, since no PK font generation will
-be done anyway.
+This option only has an effect when using bitmapped (PK) fonts. It turns
+off automatic PK font generation (@file{mktexpk}). 
 @ignore
 @flindex missfont.log
 If @code{mktexpk}, the invocation is appended to a file
@@ -438,10 +441,10 @@ having any effect.
 
 @item --norawps*
 @cindex PostScript, turning off raw PostScript specials
-Some packages generate lots of non-rendering raw PostScript
-specials. This switch turns off the internal call to GhostScript intended to 
-display these raw PostScript specials. @samp{--norawps0} turns the call
-back on.
+Some packages generate raw PostScript specials, even non-rendering such
+specials.  This switch turns off the internal call to GhostScript
+intended to display these raw PostScript specials. @samp{--norawps0}
+turns the call back on.
 
 @item -o @var{name}
 @cindex output, redirecting
@@ -476,14 +479,13 @@ the document, no matter what the pages are actually numbered.
 
 @item --palette*
 @cindex forcing palette output
-Starting from @samp{dvipng} 1.8, the output PNG will be a truecolor
-png when an external image is included, to avoid unnecessary delay and
-quality reduction, and enable the EPS translator to draw on a
-transparent background and outside of the boundingbox. This switch
-will force palette (256-color) output and make @samp{dvipng} revert to
-the old behaviour, where included images were opaque and always
-clipped to the boundingbox. This will also override the
-@samp{--truecolor} switch if present.
+When an external image is included, @samp{dvipng} will automatically
+switch to truecolor mode, to avoid unnecessary delay and quality
+reduction, and enable the EPS translator to draw on a transparent
+background and outside of the boundingbox. This switch will force
+palette (256-color) output and make @samp{dvipng} revert to opaque
+clipped image inclusion. This will also override the @samp{--truecolor}
+switch if present.
 
 @item --picky*
 @cindex no erroneous images
@@ -531,10 +533,10 @@ output; report no warnings (only errors) to standard error.
 @cindex antialiasing levels@r{, number of}
 @cindex quality
 Set the quality to @var{num}. That is, choose the number of antialiasing
-levels for PK and T1lib rendering to be @var{num}*@var{num}+1. The default
-value is 4 which gives 17 levels of antialiasing for antialiased fonts
-from these two. If FreeType is available, its rendering is unaffected by
-this option.
+levels for bitmapped fonts (PK) and fonts rendered using T1lib, to be
+@var{num}*@var{num}+1. The default value is 4 which gives 17 levels of
+antialiasing for antialiased fonts from these two. If FreeType is
+available, its rendering is unaffected by this option.
 
 @item -r*
 @cindex reverse pagination
@@ -593,17 +595,17 @@ only include all ink put on the page, producing neat images.
 
 @item --t1lib*
 @cindex T1lib font rendering
-Enable/disable T1lib font rendering (default on). This option is
-available if the T1lib font library was present at compilation time. If
-this is the case, dvipng will have direct support for PostScript Type1
-fonts internally, rather than using @samp{gsftopk} for rendering the
-fonts. If you have PostScript versions of Computer Modern installed,
-there will be no need to generate bitmapped variants on disk of these.
-Then, you can render images at different (and unusual) resolutions
-without cluttering the disk with lots of bitmapped fonts. Note that if
-you have both FreeType and T1lib on your system FreeType will be
-preferred by dvipng, and if you for some reason rather want to use
-T1lib, give the option @samp{--freetype0} (see above).
+Enable T1lib font rendering (default on). This option is available if
+the T1lib font library was present at compilation time. If this is the
+case, dvipng will have direct support for PostScript Type1 fonts
+internally, rather than using @samp{gsftopk} for rendering the fonts. If
+you have PostScript versions of Computer Modern installed, there will be
+no need to generate bitmapped variants on disk of these.  Then, you can
+render images at different (and unusual) resolutions without cluttering
+the disk with lots of bitmapped fonts. Note that if you have both
+FreeType and T1lib on your system, FreeType will be preferred by dvipng,
+and if you for some reason rather want to use T1lib, give the option
+@samp{--freetype0} (see above).
 
 @item --truecolor*
 @cindex truecolor output
@@ -624,12 +626,14 @@ Report the width of the image. See also @samp{--height} and
 
 @item -x @var{num}
 @cindex magnification, overriding DVI
-Set the @math{x} magnification ratio to @math{@var{num}/1000}. Overrides
-the magnification specified in the DVI file.  Must be between 10 and
-100000.  It is recommended that you use standard magstep values (1095,
-1200, 1440, 1728, 2074, 2488, 2986, and so on) to help reduce the total
-number of PK files generated.  @var{num} may be a real number, not an
-integer, for increased precision.
+This option is deprecated; it should not be used. It is much better to
+select the output resolution directly with the @samp{-D} option. This
+option sets the magnification ratio to @math{@var{num}/1000} and
+overrides the magnification specified in the DVI file.  Must be between
+10 and 100000.  It is recommended that you use standard magstep values
+(1095, 1200, 1440, 1728, 2074, 2488, 2986, and so on) to help reduce the
+total number of PK files generated.  @var{num} may be a real number, not
+an integer, for increased precision.
 
 @item -z @var{num}
 @cindex compression
@@ -666,12 +670,14 @@ correspond directly to the zlib compression levels.''
 @samp{graphicx} and @samp{graphics} packages, without the need of
 specifying a driver to these packages. This means that it recognizes
 the encapsulated postscript inclusion meant for @samp{dvips}, but is
-also able (from version 1.8) to include bitmapped graphics, see the
-details below.
+also able (from version 1.8) to include bitmapped graphics. It also
+tries to handle some of the raw PostScript that is output from various
+packages. Some of the possibilities and problems are mentioned below.
 
 @menu
 * Encapsulated PostScript::    An internal call to GhostScript
 * Bitmapped graphics::         PNG, JPEG and GIF
+* Raw PostScript::             Ignore or give to GhostScript
 @end menu
 
 @node Encapsulated PostScript
@@ -733,6 +739,36 @@ wide:
 @example
 \includegraphics[bb=0 0 300 400,witdh=1.5in]@{imagename.png@}
 @end example
+
+@node Raw PostScript
+@section Raw PostScript
+
+dvipng attempts to handle raw PostScript. Rendering raw PostScript
+specials on top of the page needs @samp{truecolor} mode (which is
+automatically selected), and the @samp{pngalpha} device in GhostScript.
+
+Included PostScript headers are respected, and if the header
+@samp{tex.pro} is included, dvipng also throws in @samp{color.pro} and
+@samp{special.pro}. The package @samp{xcolor} includes its own headers
+with color names, and this is not only kept as a PostScript header, but
+is also read and interpreted by dvipng itself. An attempt is also made
+to respect the PGF header. The non-rendering specials from
+@samp{hyperref} are handled via some heuristics and do not give an
+error.
+
+Really rendering and moving things with raw PostScript specials is more
+troublesome. The \rotatebox macro serves as a good example. The dvips
+driver of the graphicx package surrounds DVI glyphs with PostScript code
+so that after conversion by dvips, the glyphs (now themselves in
+PostScript) will be rotated in the desired way. dvipng does not handle
+this, at present. An attempt has been made to handle the rendering
+specials output by PGF (tikz), and also PSTricks. Some things work, but
+others do not.  This is especially clear when mixing PostScript and DVI
+rendering commands such as glyphs. dvipng cannot at present detect if
+PostScript code moves @samp{currentpoint} or rotates the frame since
+GhostScript does not return such information. A recommendation would be
+to produce images from these packages as EPS files and include them into
+your document in the standard manner.
 
 @node Color
 @chapter Color
@@ -910,7 +946,7 @@ Waldeck Schutzer.
 
 @ifset man
 @c man begin NOTES
-The full manual is accessible in the info format, on most systems by typing
+The full manual is accessible in info format, on most systems by typing
 @example
 info dvipng
 @end example
