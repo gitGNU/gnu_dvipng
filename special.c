@@ -31,6 +31,7 @@
 #include <fcntl.h>
 #include <io.h>
 #include <process.h>
+#define pipe(p) _pipe(p, 65536, O_BINARY | _O_NOINHERIT)
 #define snprintf _snprintf
 #endif /* WIN32 */
 #endif
@@ -146,8 +147,14 @@ static gdImagePtr
 ps2png(struct pscode* pscodep, const char *device, int hresolution, int vresolution,
        int llx, int lly, int urx, int ury, int bgred, int bggreen, int bgblue)
 {
+  int pspipe[2], pngpipe[2];
+#define READ_END 0
+#define WRITE_END 1
+  FILE *psstream=NULL, *pngstream=NULL;
+  char resolution[STRSIZE]; 
+  /*   char devicesize[STRSIZE];  */
+  gdImagePtr psimage=NULL;
 #ifndef MIKTEX
-  int downpipe[2], uppipe[2];
 #ifndef WIN32
   pid_t pid;
 #else /* WIN32 */
@@ -163,14 +170,11 @@ ps2png(struct pscode* pscodep, const char *device, int hresolution, int vresolut
   _TCHAR szCommandLine[2048];
   _TCHAR szGsPath[_MAX_PATH];
 #define GS_PATH szGsPath
-  int fd;
+#define fdopen _tfdopen
+#define close _close
 #endif /* MIKTEX */
-  FILE *psstream=NULL, *pngstream=NULL;
-  char resolution[STRSIZE]; 
-  /*   char devicesize[STRSIZE];  */
-  gdImagePtr psimage=NULL;
 
-  sprintf(resolution, "-r%dx%d",hresolution,vresolution);
+  snprintf(resolution,STRSIZE,"-r%dx%d",hresolution,vresolution);
   /* Future extension for \rotatebox
   status=sprintf(devicesize, "-g%dx%d",
 		 //(int)((sin(atan(1.0))+1)*
@@ -186,17 +190,17 @@ ps2png(struct pscode* pscodep, const char *device, int hresolution, int vresolut
 	       (option_flags & NO_GSSAFER) ? "-": "-dSAFER", 
 	       (option_flags & NO_GSSAFER) ? "": "- "));
 #ifndef MIKTEX
+  if (pipe(pspipe) || pipe(pngpipe)) return(NULL);
 #ifndef WIN32
-  if (pipe(downpipe) || pipe(uppipe)) return(NULL);
-  /* Ready to fork */
-  pid = fork ();
-  if (pid == 0) { /* Child process.  Execute gs. */       
-    close(downpipe[1]);
-    dup2(downpipe[0], STDIN_FILENO);
-    close(downpipe[0]);
-    close(uppipe[0]);
-    dup2(uppipe[1], STDOUT_FILENO);
-    close(uppipe[1]);
+  /* We have fork: execute gs in child */
+  pid = fork();
+  if (pid == 0) { /* Child, execute gs. */       
+    close(pspipe[WRITE_END]);
+    dup2(pspipe[READ_END], STDIN_FILENO);
+    close(pspipe[READ_END]);
+    close(pngpipe[READ_END]);
+    dup2(pngpipe[WRITE_END], STDOUT_FILENO);
+    close(pngpipe[WRITE_END]);
     execlp(GS_PATH, GS_PATH, device, resolution, /*devicesize,*/
 	   "-dBATCH", "-dNOPAUSE", "-q", "-sOutputFile=-", 
 	   "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
@@ -206,94 +210,79 @@ ps2png(struct pscode* pscodep, const char *device, int hresolution, int vresolut
     _exit (EXIT_FAILURE);
   }
 #else /* WIN32 */
-  if (_pipe(downpipe, 65536, O_BINARY | _O_NOINHERIT)==-1 ||
-      _pipe(uppipe, 65536, O_BINARY | _O_NOINHERIT)==-1) 
-     return NULL;
-  else {
-    savestdin = _dup(fileno(stdin));
-    _dup2(downpipe[0], fileno(stdin));
-    savestdout = _dup(fileno(stdout));
-    _dup2(uppipe[1], fileno(stdout));
-    if ((hchild=
-	 (HANDLE)spawnlp(_P_NOWAIT, GS_PATH, GS_PATH, device, resolution,
-			 "-dBATCH", "-dNOPAUSE", "-q", "-sOutputFile=-", 
-			 "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
-			 (option_flags & NO_GSSAFER) ? "-": "-dSAFER", 
-			 (option_flags & NO_GSSAFER) ? NULL : "-", NULL))==0)
-      return NULL;
-  }
+  /* No fork but spawn: execute gs in present process environment.
+     Save fileno's, attach pipes to this process' stdin and stdout. */       
+  savestdin = _dup(fileno(stdin));
+  _dup2(pspipe[READ_END], fileno(stdin));
+  savestdout = _dup(fileno(stdout));
+  _dup2(pngpipe[WRITE_END], fileno(stdout));
+  if ((hchild=
+       (HANDLE)spawnlp(_P_NOWAIT, GS_PATH, GS_PATH, device, resolution,
+		       "-dBATCH", "-dNOPAUSE", "-q", "-sOutputFile=-", 
+		       "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
+		       (option_flags & NO_GSSAFER) ? "-": "-dSAFER", 
+		       (option_flags & NO_GSSAFER) ? NULL : "-", NULL))==0)
+    return NULL;
 #endif /* WIN32 */
-  close(downpipe[0]);
-  psstream=fdopen(downpipe[1],"wb");
-  if (psstream == NULL) 
-    close(downpipe[1]);
-  close(uppipe[1]);
-  pngstream=fdopen(uppipe[0],"rb");
-  if (pngstream == NULL) 
-    close(uppipe[0]);
+  close(pspipe[READ_END]);
+  close(pngpipe[WRITE_END]);
 #else /* MIKTEX */
+  /* No fork but miktex_start_process3: execute gs using that.
+     Attach file descriptors to that process' stdin and stdout. */       
   if (! miktex_find_miktex_executable("mgs.exe", szGsPath)) {
       Warning("Ghostscript could not be found");
       return(NULL);
   }
-  sprintf(szCommandLine,"\"%s\" %s %s %s %s %s %s %s %s %s %s",/* %s",*/
-	  szGsPath, device, resolution, /*devicesize,*/
-	  "-dBATCH", "-dNOPAUSE", "-q", "-sOutputFile=-", 
-	  "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
-	  (option_flags & NO_GSSAFER) ? "-": "-dSAFER", 
-	  (option_flags & NO_GSSAFER) ? "": "-");
+  snprintf(szCommandLine,2048,"\"%s\" %s %s %s %s %s %s %s %s %s %s",/* %s",*/
+	   szGsPath, device, resolution, /*devicesize,*/
+	   "-dBATCH", "-dNOPAUSE", "-q", "-sOutputFile=-", 
+	   "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
+	   (option_flags & NO_GSSAFER) ? "-": "-dSAFER", 
+	   (option_flags & NO_GSSAFER) ? "": "-");
   if (! miktex_start_process_3(szCommandLine, &pi, INVALID_HANDLE_VALUE,
 			       &hPsStream, &hPngStream, &hStdErr, 0)) {
       Warning("Ghostscript could not be started");
       return(NULL);
   }
   CloseHandle (pi.hThread);
-  fd = _open_osfhandle((intptr_t)hPsStream, _O_WRONLY);
-  if (fd >= 0) { 
-    psstream = _tfdopen(fd, "wb");
-    if (psstream == NULL) 
-      _close (fd);
-  }
-  fd = _open_osfhandle((intptr_t)hPngStream, _O_RDONLY);
-  if (fd >= 0) {
-    pngstream = _tfdopen(fd, "rb");
-    if (pngstream == NULL) 
-      _close (fd);
-  }
+  pspipe[WRITE_END] = _open_osfhandle((intptr_t)hPsStream, _O_WRONLY);
+  pngpipe[READ_END] = _open_osfhandle((intptr_t)hPngStream, _O_RDONLY);
 #endif /* MIKTEX */
-  if (psstream) {
-    writepscode(psstream,psheaderp);
-    /* Page size */
-    DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\t<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice",
-			  urx - llx, ury - lly,llx,lly));
-    fprintf(psstream, "<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice\n",
-	    urx - llx, ury - lly,llx,lly);
-    /* Background color */
-    if ( bgred < 255 || bggreen < 255 || bgblue < 255 ) {
-      DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\tgsave %f %f %f setrgbcolor clippath fill grestore",
-			    bgred/255.0, bggreen/255.0, bgblue/255.0));
-      fprintf(psstream, "gsave %f %f %f setrgbcolor clippath fill grestore\n",
-	      bgred/255.0, bggreen/255.0, bgblue/255.0);
+  if (pspipe[WRITE_END] >= 0) {
+    if ((psstream=fdopen(pspipe[WRITE_END],"wb")) == NULL) 
+      close(pspipe[WRITE_END]);
+    else {
+      writepscode(psstream,psheaderp);
+      /* Page size */
+      DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\t<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice",
+			    urx - llx, ury - lly,llx,lly));
+      fprintf(psstream, "<</PageSize[%d %d]/PageOffset[%d %d[1 1 dtransform exch]{0 ge{neg}if exch}forall]>>setpagedevice\n",
+	      urx - llx, ury - lly,llx,lly);
+      /* Background color */
+      if ( bgred < 255 || bggreen < 255 || bgblue < 255 ) {
+	DEBUG_PRINT(DEBUG_GS,("\n  PS CODE:\tgsave %f %f %f setrgbcolor clippath fill grestore",
+			      bgred/255.0, bggreen/255.0, bgblue/255.0));
+	fprintf(psstream, "gsave %f %f %f setrgbcolor clippath fill grestore\n",
+		bgred/255.0, bggreen/255.0, bgblue/255.0);
+      }
+      writepscode(psstream,pscodep);
+      fclose(psstream);
     }
-    /* Ensure one (and only one) showpage */
-    DEBUG_PRINT(DEBUG_GS,("\n  PS CODE: /DVIPNGDICT 100 dict def DVIPNGDICT begin /showpage {} def"));
-    fprintf(psstream, " /DVIPNGDICT 100 dict def DVIPNGDICT begin /showpage {} def ");
-
-    writepscode(psstream,pscodep);
-
-    DEBUG_PRINT(DEBUG_GS,("\n  PS CODE: end showpage"));
-    fprintf(psstream, " end showpage\n");
-
-    fclose(psstream);
   }
-  if (pngstream) {
-    psimage = gdImageCreateFromPng(pngstream);
-    fclose(pngstream);
+  if (pngpipe[READ_END] >= 0) {
+    if((pngstream=fdopen(pngpipe[READ_END],"rb")) == NULL) 
+      close(pngpipe[READ_END]);
+    else {
+      psimage = gdImageCreateFromPng(pngstream);
+      fclose(pngstream);
+    }
   }
 #ifndef MIKTEX
 #ifndef WIN32
+  /* Wait for child */
   waitpid(pid,NULL,0);
 #else
+  /* Wait for spawned process, restore stdin and stdout */
   while(nexitcode == STILL_ACTIVE)
     GetExitCodeProcess((HANDLE)hchild, &nexitcode);
   CloseHandle((HANDLE)hchild);
@@ -303,6 +292,7 @@ ps2png(struct pscode* pscodep, const char *device, int hresolution, int vresolut
   close(savestdout);
 #endif /* WIN32 */
 #else /* MIKTEX */
+  /* Close miktex process */
   CloseHandle(pi.hProcess);
 #endif /* MIKTEX */
 #ifdef DEBUG
@@ -535,10 +525,13 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
 #endif
 	break;
       default:  /* Default, PostScript magic: "%!PS-Adobe" */
-	if (option_flags & NO_GHOSTSCRIPT) {
+      	if (option_flags & NO_GHOSTSCRIPT) {
 	  Warning("GhostScript calls disallowed by --noghostscript" );
 	  page_flags |= PAGE_GAVE_WARN;
 	} else {
+	  /* Ensure one (and only one) showpage */
+	  image.code=" /DVIPNGDICT 100 dict def DVIPNGDICT begin /showpage {} def ";
+	  image.postcode=" end showpage\n";
 	  /* Use alpha blending, and render transparent postscript
 	     images. The alpha blending works correctly only from
 	     libgd 2.0.12 upwards */
