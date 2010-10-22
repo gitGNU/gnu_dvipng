@@ -1,3 +1,17 @@
+2010-10-22  Jan-Åke Larsson  <jan-ake.larsson@liu.se>
+
+	* configure.ac: Prepare for 1.14
+
+	* special.c: Tidy up the three different calls to gs on different
+	systems.
+
+	* dvipng.texi: Some adjustments, document handling of raw
+	PostScript
+
+2010-10-21  Jan-Åke Larsson  <jan-ake.larsson@liu.se>
+
+	* special.c: Code cleanup
+
 2010-10-14  Jan-Åke Larsson  <jan-ake.larsson@liu.se>
 
 	* dvipng.h (malloc): Put malloc def first
