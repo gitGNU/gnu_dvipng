@@ -1,3 +1,7 @@
+2010-10-23  Jan-흆e Larsson  <jan-ake.larsson@liu.se>
+
+	* dvipng.1, RELEASE: Prepare for 1.14
+
 2010-10-22  Jan-흆e Larsson  <jan-ake.larsson@liu.se>
 
 	* configure.ac: Prepare for 1.14
@@ -22,6 +26,26 @@
 2010-10-02  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* special.c (ps2png): Drop unused 'bool showpage' for WIN32.
+
+2010-10-01  Jan-흆e Larsson  <jan-ake.larsson@liu.se>
+
+	* special.c: Add heuristics to ignore non-rendering specials from
+	hyperref
+
+2010-09-30  Jan-흆e Larsson  <jan-ake.larsson@liu.se>
+
+	* special.c, misc.c, dvipng.h, dvipng.texi: Add option to not try
+	converting raw PostScript
+
+2010-09-29  Jan-흆e Larsson  <jan-ake.larsson@liu.se>
+
+	* special.c (ps2png): Reap zombies
+
+	* papersiz.c: Fix bug in length decoder
+
+2010-09-22  Jan-흆e Larsson  <jan-ake.larsson@liu.se>
+
+	* color.c, enc.c, fontmap.c, misc.c, sfd.c: Handle CRLF correctly
 
 2010-09-20  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
 
