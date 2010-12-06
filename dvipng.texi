@@ -770,6 +770,15 @@ GhostScript does not return such information. A recommendation would be
 to produce images from these packages as EPS files and include them into
 your document in the standard manner.
 
+Another way to handle this would be to use a slower fallback (with dvips
+and gs, for example). If you want to disable raw PostScript handling in
+dvipng, use the switch @samp{--norawps}.  This switch turns off the
+internal call to GhostScript intended to display these raw PostScript
+specials. Further, when dvipng encounters raw PostScript and the gs call
+is turned off, it gives a warning. It is now possible to use the switch
+@samp{--picky} to disable page rendering of pages with warnings, and use
+the slower fallback for these pages.
+
 @node Color
 @chapter Color
 
