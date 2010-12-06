@@ -526,7 +526,7 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
 	break;
       default:  /* Default, PostScript magic: "%!PS-Adobe" */
       	if (option_flags & NO_GHOSTSCRIPT) {
-	  Warning("GhostScript calls disallowed by --noghostscript" );
+	  Warning("GhostScript calls disallowed by --nogs" );
 	  page_flags |= PAGE_GAVE_WARN;
 	} else {
 	  /* Ensure one (and only one) showpage */
@@ -698,8 +698,11 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
   }
 
   if (special[0]=='"' || strncmp(special,"ps:",3)==0) { /* Raw PostScript */
-    if (option_flags & NO_RAW_PS)
+    if (option_flags & NO_RAW_PS) {
+      Warning("Raw PostScript rendering disallowed by --norawps" );
+      page_flags |= PAGE_GAVE_WARN;
       return; 
+    }
     if (page_imagep != NULL) { /* Draw into image */
       static struct pscode *pscodep=NULL;
       static bool psenvironment=false;
@@ -774,7 +777,7 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
       PSCodeInit(tmp,special);
       /* Now, render image */
       if (option_flags & NO_GHOSTSCRIPT)
-	Warning("GhostScript calls disallowed by --noghostscript" );
+	Warning("GhostScript calls disallowed by --nogs" );
       else {
 	/* Use alpha blending, and render transparent postscript
 	   images. The alpha blending works correctly only from
