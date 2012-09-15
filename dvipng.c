@@ -105,15 +105,13 @@ int main(int argc, char ** argv)
     char    line[STRSIZE];
 
     printf("%s> ",dvi!=NULL?dvi->name:"");
-    fgets(line,STRSIZE,stdin);
-    while(!feof(stdin)) {
+    while(fgets(line,STRSIZE,stdin)) {
       DecodeString(line);
       if (dvi!=NULL) {
 	DVIReOpen(dvi);
 	DrawPages();
       }
       printf("%s> ",dvi!=NULL?dvi->name:"");
-      fgets(line,STRSIZE,stdin);
     }
     printf("\n");
   }
