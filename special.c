@@ -18,7 +18,7 @@
   License along with this program. If not, see
   <http://www.gnu.org/licenses/>.
 
-  Copyright (C) 2002-2010 Jan-Åke Larsson
+  Copyright (C) 2002-2010,2012 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -380,16 +380,23 @@ static void newpsheader(const char* special) {
 /****************************  SetSpecial  ***************************/
 /*********************************************************************/
 
-void SetSpecial(char * special, int32_t hh, int32_t vv)
+void SetSpecial(char *start, char *end, int32_t hh, int32_t vv)
 /* interpret a \special command, made up of keyword=value pairs,
  * or !header or ps:raw_PostScript
  */
 {
+  char *buffer,*special;
+
+  if ((buffer=malloc(end-start+1))==NULL)
+      Fatal("Cannot allocate space for special");
+  special=memcpy(buffer,start,end-start);
+  special[end-start]='\0';
   DEBUG_PRINT(DEBUG_DVI,(" '%s'",special));
   SKIPSPACES(special);
   /********************** Color specials ***********************/
   if (strncmp(special,"background ",11)==0) {
     background(special+11);
+    free(buffer);
     return;
   }
   if (strncmp(special,"color ",6)==0) {
@@ -403,6 +410,7 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
       else 
 	resetcolorstack(special);
     }
+    free(buffer);
     return;
   }
 
@@ -484,6 +492,7 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
 	Warning("Image file %s unusable, image will be left blank",
 		image.filename);
 	page_flags |= PAGE_GAVE_WARN;
+	free(buffer);
 	return;
       } 
       Message(BE_NONQUIET," <%s",psname);
@@ -623,6 +632,7 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
       max(x_max,hh+pngwidth);
       max(y_max,vv+1);
     }
+    free(buffer);
     return;
   }
 
@@ -635,6 +645,7 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
       length++;
     if (page_imagep==NULL) 
       Message(BE_NONQUIET," (preview-latex version %.*s)",length,special);
+    free(buffer);
     return;
   }
 
@@ -647,6 +658,7 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
 	Message(BE_NONQUIET," (preview-latex tightpage option detected, will use its bounding box)");
       dvi->flags |= DVI_PREVIEW_LATEX_TIGHTPAGE;
     }
+    free(buffer);
     return;
   }
   if (strncmp(special,"!userdict",9)==0 
@@ -654,6 +666,7 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
     if (page_imagep==NULL && ~dvi->flags & DVI_PREVIEW_LATEX_TIGHTPAGE) 
       Message(BE_NONQUIET," (preview-latex <= 0.9.1 tightpage option detected, will use its bounding box)");
     dvi->flags |= DVI_PREVIEW_LATEX_TIGHTPAGE;
+    free(buffer);
     return;
   }
 
@@ -663,6 +676,7 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
     dvi->flags |= DVI_PREVIEW_BOP_HOOK;
     if (page_imagep==NULL) 
       Message(BE_VERBOSE," (preview-latex beginning-of-page-hook detected)");
+    free(buffer);
     return;
   }
 
@@ -694,6 +708,7 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
       (((ht>0)?ht:0)+adj_ury+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor-1;
     y_width_tightpage  = y_offset_tightpage+1
       +(((dp>0)?dp:0)-adj_lly+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor;
+    free(buffer);
     return;
   }
 
@@ -701,6 +716,7 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
     if (option_flags & NO_RAW_PS) {
       Warning("Raw PostScript rendering disallowed by --norawps" );
       page_flags |= PAGE_GAVE_WARN;
+      free(buffer);
       return; 
     }
     if (page_imagep != NULL) { /* Draw into image */
@@ -722,9 +738,10 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
 	  || strcmp(specialend-7,"H.S end")==0
 	  || strcmp(specialend-7,"H.V end")==0
 	  || strncmp(special,"ps:SDict begin /product",23)==0)
-	if (pscodep==NULL)
+	if (pscodep==NULL) {
+	  free(buffer);
 	  return;
-	else
+	} else
 	  newspecial="";
       /* pgf PostScript specials. */
       else if (strcmp(special,"ps:: pgfo")==0)
@@ -766,6 +783,7 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
 	  Fatal("cannot allocate space for raw PostScript special");
 	strcpy(txt,newspecial);
 	PSCodeInit(tmp,txt);
+	free(buffer);
 	return;
       }
       DEBUG_PRINT(DEBUG_DVI,("\n  LAST PS SPECIAL "));
@@ -823,15 +841,18 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
     } else { /* Don't draw */
       page_flags |= PAGE_TRUECOLOR;
     }
+    free(buffer);
     return;
   }
 
   if (strncmp(special,"papersize=",10)==0) { /* papersize spec, ignored */
+    free(buffer);
     return;
   }
 
   if (special[0]=='!' || strncmp(special,"header=",7)==0) { /* PS header */
     newpsheader(special);
+    free(buffer);
     return;
   }
 
@@ -839,6 +860,7 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
     if ( page_imagep != NULL )
       Message(BE_NONQUIET," at (%ld,%ld) source \\special{%s}",
 	      hh, vv, special);
+    free(buffer);
     return;
   }
   if ( page_imagep != NULL ) {
@@ -846,5 +868,6 @@ void SetSpecial(char * special, int32_t hh, int32_t vv)
 	    hh, vv, special);
     page_flags |= PAGE_GAVE_WARN;
   }
+  free(buffer);
 }
 

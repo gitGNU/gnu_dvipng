@@ -18,7 +18,7 @@
   License along with this program. If not, see
   <http://www.gnu.org/licenses/>.
 
-  Copyright (C) 2002-2010 Jan-Åke Larsson
+  Copyright (C) 2002-2010,2012 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -297,7 +297,10 @@ static void SkipPage(struct dvi_data* dvi)
     case XXX1: case XXX2: case XXX3: case XXX4:
       DEBUG_PRINT(DEBUG_DVI,("NOSKIP CMD:\t%s %d", dvi_commands[*command],
 			     UNumRead(command+1, dvi_commandlength[*command]-1)));
-      SetSpecial((char*)command + dvi_commandlength[*command],0,0);
+      SetSpecial((char*)command + dvi_commandlength[*command],
+		 (char*)command + dvi_commandlength[*command]
+		 +UNumRead(command+1, dvi_commandlength[*command]-1),
+		 0,0);
       break;
     case BOP: case PRE: case POST: case POST_POST:
       Fatal("%s occurs within page", dvi_commands[*command]);

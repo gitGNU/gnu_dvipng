@@ -18,7 +18,7 @@
   License along with this program. If not, see
   <http://www.gnu.org/licenses/>.
 
-  Copyright (C) 2002-2010 Jan-Åke Larsson
+  Copyright (C) 2002-2010,2012 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -377,7 +377,7 @@ dviunits  SetGlyph(struct char_entry *ptr, int32_t hh,int32_t vv);
 void      Gamma(double gamma);
 int32_t   SetVF(struct char_entry *ptr);
 int32_t   SetRule(int32_t, int32_t, int32_t, int32_t);
-void      SetSpecial(char *, int32_t, int32_t);
+void      SetSpecial(char *, char *, int32_t, int32_t);
 void      BeginVFMacro(struct font_entry*);
 void      EndVFMacro(void);
 

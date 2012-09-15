@@ -18,7 +18,7 @@
   License along with this program. If not, see
   <http://www.gnu.org/licenses/>.
 
-  Copyright (C) 2002-2010 Jan-Åke Larsson
+  Copyright (C) 2002-2010,2012 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -245,6 +245,8 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
     DEBUG_PRINT(DEBUG_DVI,(" %d",
 		 UNumRead(command+1, dvi_commandlength[*command]-1)));
     SetSpecial((char*)command + dvi_commandlength[*command],
+	       (char*)command + dvi_commandlength[*command]
+	       +UNumRead(command+1, dvi_commandlength[*command]-1),
 	       dvi_stack->hh,dvi_stack->vv);
     break;
   case FNT_DEF1: case FNT_DEF2: case FNT_DEF3: case FNT_DEF4:
