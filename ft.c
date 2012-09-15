@@ -30,6 +30,7 @@ void LoadFT(int32_t c, struct char_entry * ptr)
   FT_UInt    glyph_i;
   int i,j,k;
   unsigned char* bit;
+  static bool hintwarning=false;
 
   DEBUG_PRINT(DEBUG_FT,("\n  LOAD FT CHAR\t%d (%d)",c,ptr->tfmw));
   if (currentfont->psfontmap!=NULL
@@ -45,12 +46,17 @@ void LoadFT(int32_t c, struct char_entry * ptr)
   } else
     glyph_i = FT_Get_Char_Index( currentfont->face, c );
   if (FT_Load_Glyph( currentfont->face, glyph_i,
-		     FT_LOAD_RENDER | FT_LOAD_TARGET_LIGHT )
-      /* On some configurations (with FreeType <= 2.1.7) the above
-	 fails, while the below works */
-      && FT_Load_Glyph( currentfont->face, glyph_i,
-			FT_LOAD_RENDER | FT_LOAD_NO_HINTING ))
-    Fatal("cannot load FT char %d",c);
+		     FT_LOAD_RENDER | FT_LOAD_TARGET_LIGHT )) {
+    /* On some configurations (with FreeType <= 2.1.7) the above
+       fails, while the below works */
+    if (!hintwarning) {
+      hintwarning=true;
+      Warning("the used FreeType does not have target_light hinting");
+    }
+    if (FT_Load_Glyph( currentfont->face, glyph_i,
+		       FT_LOAD_RENDER | FT_LOAD_NO_HINTING ))
+      Fatal("cannot load FT char %d",c);
+  }
   ptr->xOffset = -currentfont->face->glyph->bitmap_left*shrinkfactor;
   ptr->yOffset = (currentfont->face->glyph->bitmap_top-1)*shrinkfactor;
   bitmap=currentfont->face->glyph->bitmap;
