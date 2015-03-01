@@ -9,8 +9,8 @@ dvipng [options] [filename] -
 @c man end
 @end ifset
 
-@set version 1.14
-@set month-year October 2010
+@set version 1.15
+@set month-year February 2015
 
 @c Put everything in one index (arbitrarily chosen to be the concept index).
 @syncodeindex fn cp
@@ -39,8 +39,8 @@ dvipng [options] [filename] -
 @author by Jan-@AA{}ke Larsson.
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 2002-2010 Jan-@AA{}ke Larsson
- 
+Copyright @copyright{} 2002-2015 Jan-@AA{}ke Larsson
+
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
 are preserved on all copies.
@@ -131,7 +131,7 @@ PNG format. If there are four pages in @file{foo.dvi}, those pages will
 be output as @file{foo1.png}, @file{foo2.png}, @file{foo3.png}, and
 @file{foo4.png}, respectively.
 
-If you have enabled the PostScript font support (via FreeType or T1lib),
+If you have enabled the PostScript font support (via FreeType),
 fonts will be rendered as they are needed. Otherwise, dvipng will use
 bitmapped (PK) fonts, and if you use PK fonts that have not been used on
 your system before, they may be automatically generated; this process
@@ -239,12 +239,12 @@ both variants will use the latter behaviour.  @xref{Color}.
 Set the debug flags, showing what dvipng (thinks it) is doing. This will
 work unless dvipng has been compiled without the @code{DEBUG} option
 (not recommended). Set the flags as you need them, use @samp{-d -1} as
-the first option for maximum output. @xref{Debug options}. 
+the first option for maximum output. @xref{Debug options}.
 
 @item -D @var{num}
 @cindex output resolution, setting
 Set the output resolution, both horizontal and vertical, to @var{num}
-dpi (dots per inch). 
+dpi (dots per inch).
 
 One may want to adjust this to fit a certain text font size (e.g., on
 a web page), and for a text font height of @var{font_px} pixels (in
@@ -258,7 +258,7 @@ proprietary browsers have font height in pt (points), not pixels. You
 have to rescale that to pixels, using the screen resolution (default
 is usually 96 dpi) which means the formula is
 @example
-@var{font_px} = @var{font_pt} * 96 / 72 [pt * px/in / (pt/in)] 
+@var{font_px} = @var{font_pt} * 96 / 72 [pt * px/in / (pt/in)]
 @end example
 On some high-res screens, the value is instead 120 dpi. Good luck!
 
@@ -346,9 +346,7 @@ for rendering the fonts. If you have PostScript versions of Computer
 Modern installed, there will be no need to generate bitmapped (PK)
 variants on disk of these. Then, you can render images at different (and
 unusual) resolutions without cluttering the disk with lots of bitmapped
-fonts.  Note that if you have both FreeType and T1lib on your system,
-FreeType will be preferred by dvipng. If you for some reason would want
-to use T1lib rendering, use this option.
+fonts.
 
 @item --gamma @var{num}
 @cindex gamma
@@ -408,7 +406,7 @@ Kpathsea}.
 @pindex mktexpk@r{, avoiding}
 @c this description repeated in kpathsea.texi
 This option only has an effect when using bitmapped (PK) fonts. It turns
-off automatic PK font generation (@file{mktexpk}). 
+off automatic PK font generation (@file{mktexpk}).
 @ignore
 @flindex missfont.log
 If @code{mktexpk}, the invocation is appended to a file
@@ -459,10 +457,10 @@ file was @samp{@var{file}.dvi}.
 @cindex offset pages
 Move the origin by @var{x-offset},@var{y-offset}, a comma-separated
 pair of dimensions such as @samp{.1in,-.3cm}.
-@c (@pxref{papersize special}).  
+@c (@pxref{papersize special}).
 The origin of the page is shifted from the default position
 (of one inch down, one inch to the right from the upper left corner of
-the paper) by this amount.  
+the paper) by this amount.
 
 @item -p [=]@var{num}
 @cindex first page printed
@@ -533,7 +531,7 @@ output; report no warnings (only errors) to standard error.
 @cindex antialiasing levels@r{, number of}
 @cindex quality
 Set the quality to @var{num}. That is, choose the number of antialiasing
-levels for bitmapped fonts (PK) and fonts rendered using T1lib, to be
+levels for bitmapped fonts (PK), to be
 @var{num}*@var{num}+1. The default value is 4 which gives 17 levels of
 antialiasing for antialiased fonts from these two. If FreeType is
 available, its rendering is unaffected by this option.
@@ -566,7 +564,7 @@ output files, and opening of any absolute filenames.
 Set the paper type to @var{papertype}.
 @c usually defined in one of the
 @c configuration files, along with the appropriate PostScript code to
-@c select it (@pxref{Config file paper sizes}).  
+@c select it (@pxref{Config file paper sizes}).
 You can also specify a @var{papertype} of @samp{landscape}, which
 rotates a document by 90 degrees. To rotate a document whose paper type
 is not the default, you can use the @samp{-t} option twice, once for the
@@ -590,22 +588,8 @@ and in addition the DVI origin, located 1in from the top and 1in from
 the left edge of the paper. This usually gives whitespace above and to
 the left in the produced image. The value @samp{tight} will make dvipng
 only include all ink put on the page, producing neat images.
-@c (@pxref{papersize special}).  
+@c (@pxref{papersize special}).
 @c This option overrides any papersize special in the DVI file.
-
-@item --t1lib*
-@cindex T1lib font rendering
-Enable T1lib font rendering (default on). This option is available if
-the T1lib font library was present at compilation time. If this is the
-case, dvipng will have direct support for PostScript Type1 fonts
-internally, rather than using @samp{gsftopk} for rendering the fonts. If
-you have PostScript versions of Computer Modern installed, there will be
-no need to generate bitmapped variants on disk of these.  Then, you can
-render images at different (and unusual) resolutions without cluttering
-the disk with lots of bitmapped fonts. Note that if you have both
-FreeType and T1lib on your system, FreeType will be preferred by dvipng,
-and if you for some reason rather want to use T1lib, give the option
-@samp{--freetype0} (see above).
 
 @item --truecolor*
 @cindex truecolor output
@@ -614,8 +598,8 @@ truecolor output is automatic if you include an external image in your
 DVI, e.g., via a PostScript special (i.e., the @samp{graphics} or
 @samp{graphicx} package). This switch is overridden by the
 @samp{--palette} switch.
- 
-@item -v* 
+
+@item -v*
 Enable verbose operation. This will currently indicate what fonts is
 used, in addition to the usual output.
 
@@ -664,7 +648,7 @@ correspond directly to the zlib compression levels.''
 @c man end
 
 @node Graphics
-@chapter Graphics 
+@chapter Graphics
 
 @samp{dvipng} attempts to handle graphics as included by the
 @samp{graphicx} and @samp{graphics} packages, without the need of
@@ -789,8 +773,8 @@ specials start with the keyword @samp{color} or the keyword
 @samp{background}, followed by a color specification.
 
 @menu
-* Color specifications::        
-* Color specials::              
+* Color specifications::
+* Color specials::
 @end menu
 
 
@@ -804,9 +788,9 @@ by-value spec starts with the name of a color model (one of @samp{rgb},
 @samp{hsb}, @samp{cmy}, @samp{cmyk}, or @samp{gray}) followed by the
 appropriate number of parameters. Thus, the color specification
 @samp{rgb 0.3 0.4 0.5} would correspond to the color that is @samp{0.3
-0.4 0.5} in its red, blue and green values. The color model used 
-internally in dvipng is @samp{RGB} (discretized to 256 levels), for 
-details on the formulas used in conversion, see the @samp{xcolor} 
+0.4 0.5} in its red, blue and green values. The color model used
+internally in dvipng is @samp{RGB} (discretized to 256 levels), for
+details on the formulas used in conversion, see the @samp{xcolor}
 documentation.
 
 By-name color specifications are single (case-dependent) words and are
@@ -869,7 +853,7 @@ yourself in such a situation.
 @section Contact information
 
 Bug reports should be sent to
-@email{dvipng@@nongnu.org}. 
+@email{dvipng@@nongnu.org}.
 
 Questions, suggestions for new features, pleas for help, and/or praise
 should go to @email{dvipng@@nongnu.org}. For more information on this
@@ -892,14 +876,14 @@ parameter to this flag is an integer that tells what errors are
 currently being tracked.  To track a certain class of debug messages,
 simply provide the appropriate number given below; if you wish to track
 multiple classes, sum the numbers of the classes you wish to track.  To
-track all classes, you can use @code{-1}.  
+track all classes, you can use @code{-1}.
 
 Some of these debugging options are actually provided by Kpathsea
 (@pxref{Debugging, , , kpathsea, Kpathsea}).
 
 The classes are:
 @table @asis
-@item 1 
+@item 1
 Normal dvi op-codes
 @item 2
 Virtual fonts
@@ -918,16 +902,15 @@ Color specials
 @item 256
 GhostScript specials
 @item 512
-T1lib calls
-@item 1024
 Kpathsea @code{stat} calls
-@item 2048
+@item 1024
 Kpathsea hash table lookups
-@item 4096
+@item 2048
 Kpathsea path element expansion
-@item 8192
+@item 4096
 Kpathsea path searches
 @ignore
+@item 8192
 @item 16384
 @end ignore
 
@@ -966,7 +949,7 @@ This program is released under the GNU Lesser General Public License
 version 3, see the COPYING file in the dvipng distribution or
 @url{http://www.gnu.org/licenses/gpl.html}.
 
-Copyright @copyright{} 2002-2010 Jan-@AA{}ke Larsson
+Copyright @copyright{} 2002-2015 Jan-@AA{}ke Larsson
 @c man end
 @end ifset
 
@@ -989,11 +972,10 @@ License along with this program. If not, see
 
 @sp 2
 @noindent
-Copyright @copyright{} 2002-2010 Jan-@AA{}ke Larsson
+Copyright @copyright{} 2002-2015 Jan-@AA{}ke Larsson
 
 @node Index
 @unnumbered Index
 
 @printindex cp
 @bye
-

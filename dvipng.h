@@ -18,7 +18,7 @@
   License along with this program. If not, see
   <http://www.gnu.org/licenses/>.
 
-  Copyright (C) 2002-2010,2012 Jan-Åke Larsson
+  Copyright (C) 2002-2015 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -79,14 +79,8 @@ typedef unsigned long long      uint64_t;
 #endif
 
 #ifdef HAVE_FT2
-#define HAVE_FT2_OR_LIBT1
-#include <ft2build.h>  
+#include <ft2build.h>
 #include FT_FREETYPE_H
-#endif
-
-#ifdef HAVE_LIBT1
-#define HAVE_FT2_OR_LIBT1
-#include <t1lib.h>
 #endif
 
 #ifdef HAVE_STDBOOL_H
@@ -158,7 +152,7 @@ struct dvi_data {    /* dvi entry */
 #define PAGE_POST      INT32_MAX
 #define PAGE_LASTPAGE  INT32_MAX-1
 #define PAGE_MAXPAGE   INT32_MAX-2    /* assume no pages out of this range */
-#define PAGE_FIRSTPAGE INT32_MIN  
+#define PAGE_FIRSTPAGE INT32_MIN
 #define PAGE_MINPAGE   INT32_MIN+1    /* assume no pages out of this range */
 
 struct dvi_color {
@@ -186,7 +180,7 @@ int              SeekPage(struct dvi_data*, struct page_list*);
 bool             DVIFollowToggle(void);
 unsigned char*   DVIGetCommand(struct dvi_data*);
 bool             DVIIsNextPSSpecial(struct dvi_data*);
-uint32_t         CommandLength(unsigned char*); 
+uint32_t         CommandLength(unsigned char*);
 void             ClearPSHeaders(void);
 
 /********************************************************/
@@ -237,28 +231,21 @@ struct subfont {
   int32_t         charindex[256];
 };
 
-#ifdef HAVE_FT2_OR_LIBT1
+#ifdef HAVE_FT2
 struct psfontmap {
   struct psfontmap *next;
   char *line,*psfile,*tfmname,*encname,*end;
   struct encoding* encoding;
-#ifdef HAVE_FT2
   FT_Matrix* ft_transformp;
   FT_Matrix ft_transform;
   struct subfont* subfont;
-#endif
-#ifdef HAVE_LIBT1
-  T1_TMATRIX* t1_transformp;
-  T1_TMATRIX t1_transform;
-#endif
 };
 #endif
 
 #define FONT_TYPE_PK            1
 #define FONT_TYPE_VF            2
 #define FONT_TYPE_FT            3
-#define FONT_TYPE_T1            4
-struct char_entry {                /* PK/FT/T1 Glyph/VF Macro             */
+struct char_entry {                /* PK/FT Glyph/VF Macro                */
   dviunits       tfmw;             /* TFM width                           */
   unsigned char *data;             /* glyph data, either pixel data
 				    * (0=transp, 255=max ink) or VF macro */
@@ -274,22 +261,17 @@ struct char_entry {                /* PK/FT/T1 Glyph/VF Macro             */
 struct font_entry {    /* font entry */
   int          type;            /* PK/VF/Type1 ...                   */
   struct font_entry *next;
-  uint32_t     c, s, d;                                                
-  uint8_t      a, l;                                                   
+  uint32_t     c, s, d;
+  uint8_t      a, l;
   char         n[STRSIZE];      /* FNT_DEF command parameters        */
   int          dpi;             /* computed from s and d             */
   char *       name;            /* full name of PK/VF file           */
   struct filemmap fmmap;        /* file memory map                   */
   uint32_t     magnification;   /* magnification read from font file */
   uint32_t     designsize;      /* design size read from font file   */
-  void *       chr[NFNTCHARS];  /* character information             */ 
+  void *       chr[NFNTCHARS];  /* character information             */
 #ifdef HAVE_FT2
   FT_Face      face;            /* Freetype2 face                    */
-#endif
-#ifdef HAVE_LIBT1
-  int          T1id;            /* T1lib font id                     */
-#endif
-#ifdef HAVE_FT2_OR_LIBT1
   struct psfontmap* psfontmap;  /* Font transformation               */
 #endif
   struct font_num *vffontnump;  /* VF local font numbering           */
@@ -311,10 +293,10 @@ void    DoneVF(struct font_entry *oldfontp);
 
 void    FontDef(unsigned char*, void* /* dvi/vf */);
 void    ClearFonts(void);
-void    SetFntNum(int32_t, void* /* dvi/vf */);      
+void    SetFntNum(int32_t, void* /* dvi/vf */);
 void    FreeFontNumP(struct font_num *hfontnump);
 
-#ifdef HAVE_FT2_OR_LIBT1
+#ifdef HAVE_FT2
 char*   copyword(char* orig);
 struct psfontmap *NewPSFont(struct psfontmap* copyfrom);
 void    InitPSFontMap(void);
@@ -323,20 +305,11 @@ struct psfontmap* FindPSFontMap(char*);
 struct encoding* FindEncoding(char*);
 void    ClearEncoding(void);
 bool    ReadTFM(struct font_entry *, char*);
-#endif
-
-#ifdef HAVE_FT2
 bool    InitFT(struct font_entry *);
 void    DoneFT(struct font_entry *tfontp);
 void    LoadFT(int32_t, struct char_entry *);
 struct psfontmap* FindSubFont(struct psfontmap* entry, char* fontname);
 void    ClearSubfont(void);
-#endif
-
-#ifdef HAVE_LIBT1
-bool    InitT1(struct font_entry *);
-void    DoneT1(struct font_entry *tfontp);
-void    LoadT1(int32_t, struct char_entry *);
 #endif
 
 /********************************************************/
@@ -368,7 +341,7 @@ struct page_list*   NextPPage(void* /* dvi */, struct page_list*);
 
 void      CreateImage(pixels width, pixels height);
 void      DestroyImage(void);
-void      DrawCommand(unsigned char*, void* /* dvi/vf */); 
+void      DrawCommand(unsigned char*, void* /* dvi/vf */);
 void      DrawPages(void);
 void      WriteImage(char*, int);
 void      LoadPK(int32_t, register struct char_entry *);
@@ -422,21 +395,20 @@ EXTERN struct internal_state {
 #define TIGHT_BBOX                   (1<<4)
 #define FORCE_TRUECOLOR              (1<<5)
 #define USE_FREETYPE                 (1<<6)
-#define USE_LIBT1                    (1<<7)
-#define REPORT_HEIGHT                (1<<8)
-#define REPORT_DEPTH                 (1<<9)
-#define REPORT_WIDTH                 (1<<10)
-#define DVI_PAGENUM                  (1<<11)
-#define MODE_PICKY                   (1<<12)
-#define GIF_OUTPUT                   (1<<13)
-#define MODE_STRICT                  (1<<14)
-#define NO_GHOSTSCRIPT               (1<<15)
-#define NO_GSSAFER                   (1<<16)
-#define BG_TRANSPARENT               (1<<17)
-#define BG_TRANSPARENT_ALPHA         (1<<18)
-#define FORCE_PALETTE                (1<<19)
-#define NO_RAW_PS                    (1<<20)
-EXTERN uint32_t option_flags INIT(BE_NONQUIET | USE_FREETYPE | USE_LIBT1);
+#define REPORT_HEIGHT                (1<<7)
+#define REPORT_DEPTH                 (1<<8)
+#define REPORT_WIDTH                 (1<<9)
+#define DVI_PAGENUM                  (1<<10)
+#define MODE_PICKY                   (1<<11)
+#define GIF_OUTPUT                   (1<<12)
+#define MODE_STRICT                  (1<<13)
+#define NO_GHOSTSCRIPT               (1<<14)
+#define NO_GSSAFER                   (1<<15)
+#define BG_TRANSPARENT               (1<<16)
+#define BG_TRANSPARENT_ALPHA         (1<<17)
+#define FORCE_PALETTE                (1<<18)
+#define NO_RAW_PS                    (1<<19)
+EXTERN uint32_t option_flags INIT(BE_NONQUIET | USE_FREETYPE);
 
 #define PAGE_GAVE_WARN               1
 #define PAGE_PREVIEW_BOP             (1<<1)
@@ -456,8 +428,7 @@ EXTERN unsigned int debug INIT(0);
 #define DEBUG_ENC                    (1<<6)
 #define DEBUG_COLOR                  (1<<7)
 #define DEBUG_GS                     (1<<8)
-#define DEBUG_T1                     (1<<9)
-#define LASTDEBUG                    DEBUG_T1
+#define LASTDEBUG                    DEBUG_GS
 #define DEBUG_DEFAULT                DEBUG_DVI
 #else
 #define DEBUG_PRINT(a,b)
@@ -511,13 +482,13 @@ EXTERN int   compression INIT(1);
 # define  min(x,y)       if ((y)<(x)) x = y
 
 /* These are in pixels*/
-EXTERN  int x_min INIT(0); 
+EXTERN  int x_min INIT(0);
 EXTERN  int y_min INIT(0);
 EXTERN  int x_max INIT(0);
 EXTERN  int y_max INIT(0);
 
 /* Page size: default set by -T */
-EXTERN  int x_width_def INIT(0); 
+EXTERN  int x_width_def INIT(0);
 EXTERN  int y_width_def INIT(0);
 
 /* Offset: default set by -O and -T bbox */
@@ -525,14 +496,14 @@ EXTERN  int x_offset_def INIT(0);
 EXTERN  int y_offset_def INIT(0);
 
 /* Preview-latex's tightpage */
-EXTERN  int x_width_tightpage INIT(0); 
+EXTERN  int x_width_tightpage INIT(0);
 EXTERN  int y_width_tightpage INIT(0);
 EXTERN  int x_offset_tightpage INIT(0);
 EXTERN  int y_offset_tightpage INIT(0);
 
 /* Paper size: set by -t, for cropmark purposes only */
 /* This has yet to be written */
-EXTERN  int x_pwidth INIT(0); 
+EXTERN  int x_pwidth INIT(0);
 EXTERN  int y_pwidth INIT(0);
 
 /* The transparent border preview-latex desires */
@@ -554,10 +525,6 @@ EXTERN struct dvi_data* dvi INIT(NULL);
 
 #ifdef HAVE_FT2
 EXTERN FT_Library libfreetype INIT(NULL);
-#endif
-
-#ifdef HAVE_LIBT1
-EXTERN void* libt1 INIT(NULL);
 #endif
 
 #define  EXIT_FATAL    EXIT_FAILURE+1

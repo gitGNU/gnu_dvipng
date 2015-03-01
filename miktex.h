@@ -18,7 +18,7 @@
   License along with this program. If not, see
   <http://www.gnu.org/licenses/>.
 
-  Copyright (C) 2002-2008 Jan-Åke Larsson
+  Copyright (C) 2002-2015 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -124,9 +124,6 @@
 /* Define to 1 if you have the `png' library (-lpng). */
 #define HAVE_LIBPNG 1
 
-/* Define to 1 if you have the `t1' library (-lt1). */
-#undef HAVE_LIBT1
-
 /* Define to 1 if you have the `z' library (-lz). */
 #undef HAVE_LIBZ
 
@@ -144,7 +141,7 @@
 #undef HAVE_MMAP
 
 /* Define to 1 if you have the `munmap' function. */
-#undef HAVE_MUNMAP 
+#undef HAVE_MUNMAP
 
 /* Define to 1 if you have the <png.h> header file. */
 #define HAVE_PNG_H 1
@@ -193,9 +190,6 @@
 
 /* Define to 1 if you have <sys/wait.h> that is POSIX.1 compatible. */
 #undef HAVE_SYS_WAIT_H
-
-/* Define to 1 if you have the <t1lib.h> header file. */
-#undef HAVE_T1LIB_H
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H

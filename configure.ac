@@ -18,23 +18,23 @@
 #  License along with this program. If not, see
 #  <http://www.gnu.org/licenses/>.
 #
-#  Copyright (C) 2002-2010 Jan-Åke Larsson
+#  Copyright (C) 2002-2015 Jan-Åke Larsson
 #
 #************************************************************************
 
 # Process this file with autoconf to produce a configure script.
-AC_INIT([dvipng], [1.14], [dvipng@nongnu.org])
+AC_INIT([dvipng], [1.15], [dvipng@nongnu.org])
 AC_CONFIG_SRCDIR([dvipng.c])
 
-AC_ARG_ENABLE(debug, 
-  AC_HELP_STRING([--disable-debug],[Compile without debug (-d) option]), 
+AC_ARG_ENABLE(debug,
+  AC_HELP_STRING([--disable-debug],[Compile without debug (-d) option]),
     [ if test "$enableval" = yes ; then
       AC_DEFINE(DEBUG, 1, [Define as 1 to get the debug (-d) option.])
-      fi ],	
+      fi ],
     [ enable_debug="yes";
       AC_DEFINE(DEBUG, 1, [Define as 1 to get the debug (-d) option.])])
-AC_ARG_ENABLE(timing, 
-  AC_HELP_STRING([--enable-timing],[Output execution time of dvipng]), 
+AC_ARG_ENABLE(timing,
+  AC_HELP_STRING([--enable-timing],[Output execution time of dvipng]),
    [ if test "$enableval" = yes ; then
      AC_DEFINE(TIMING, 1, [Define as 1 to get execution time output.])
      fi ])
@@ -45,7 +45,7 @@ AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_ARG_WITH(gs,
-  AC_HELP_STRING([--with-gs=/PATH/TO/gs],[Hard-wire the location of GhostScript]), 
+  AC_HELP_STRING([--with-gs=/PATH/TO/gs],[Hard-wire the location of GhostScript]),
   [if test "x$withval" != xno ; then
     AC_PATH_PROG(GS,["$withval"])
     AC_DEFINE_UNQUOTED(GS_PATH, "$GS", [Define as the path to GhostScript.])
@@ -68,29 +68,22 @@ AC_CHECK_LIB([png], [png_read_image],,
 AC_CHECK_LIB([gd], [gdImageCreate],,
              [AC_MSG_ERROR([cannot find/use libgd
 This drawing library can be downloaded at http://www.boutell.com/gd])])
-AC_CHECK_LIB([kpathsea], [kpse_set_program_name],, 
+AC_CHECK_LIB([kpathsea], [kpse_set_program_name],,
              AC_MSG_ERROR([cannot find/use libkpathsea]))
-AC_CHECK_LIB([t1], [T1_InitLib])
-PSFONTS_O=""
-if test "$ac_cv_lib_t1_T1_InitLib" = yes; then
-  PSFONTS_O="t1.o"
-fi
-AC_SUBST(PSFONTS_O)
 
-# Checks for header files. 
+# Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([gd.h png.h kpathsea/kpathsea.h],,
 		 [AC_MSG_ERROR([cannot find/use $ac_header])])
-AC_CHECK_HEADERS([t1lib.h libgen.h])
+AC_CHECK_HEADERS([libgen.h])
+PSFONTS_O=""
+AC_SUBST(PSFONTS_O)
 AC_CHECK_FT2(,[CFLAGS="$FT2_CFLAGS $CFLAGS"
 	LIBS="$FT2_LIBS $LIBS"
-	PSFONTS_O="$PSFONTS_O sfd.o ft.o"	
+	PSFONTS_O="sfd.o ft.o enc.o fontmap.o tfm.o"
 	AC_DEFINE(HAVE_FT2, 1, [Define to 1 if you have freetype2])
 	ac_have_freetype2="yes"],
 	[ac_have_freetype2="no"])
-if test -n "$PSFONTS_O"; then
-  PSFONTS_O="$PSFONTS_O enc.o fontmap.o tfm.o"
-fi
 AC_HEADER_SYS_WAIT
 AC_HEADER_TIME
 AC_HEADER_STDBOOL
@@ -145,7 +138,7 @@ MAKEINFO_CHECK_MACROS(acronym env option)
 AC_PATH_PROG(INSTALL_INFO, install-info, :, $PATH /usr/sbin /sbin)
 
 # SELFAUTO
-AC_ARG_ENABLE(selfauto-set, 
+AC_ARG_ENABLE(selfauto-set,
   AC_HELP_STRING([--enable-selfauto-set],
   [This option will make the final binary explicitly set the
    $SELFAUTO... variables to make it look as dvipng is installed in the
@@ -202,22 +195,21 @@ AC_MSG_RESULT([
 
    The -d (debug) switch is enabled:        $enable_debug
    Your gd is new enough (>=2.0) to enable
-     the --truecolor switch, full alpha 
-     transparency, proper rescaling of 
+     the --truecolor switch, full alpha
+     transparency, proper rescaling of
      included bitmaps, and jpeg inclusion:  $ac_cv_func_gdImageCreateTrueColor
    Your gd has jpeg inclusion enabled:      $ac_cv_func_gdImageCreateFromJpeg
-   Your gd is new enough (>=2.0.12) to 
+   Your gd is new enough (>=2.0.12) to
      enable transparent backgrounds for EPS
      inclusion and the -z (compression)
      switch:                                $ac_cv_func_gdImagePngEx
    Your gd is new enough (>=2.0.21) to
      allow image creation from memory       $ac_cv_func_gdImageCreateFromPngPtr
    Your gd is new enough (>=2.0.28) to
-     enable gif inclusion and output 
+     enable gif inclusion and output
      (dvigif):                              $ac_cv_func_gdImageGif
    FreeType font rendering available:       $ac_have_freetype2
    Support for subfonts (CJK-LaTeX):        $ac_have_freetype2
-   T1lib font rendering available:          $ac_cv_lib_t1_T1_InitLib
 ])
 
 AC_CONFIG_HEADER([config.h])

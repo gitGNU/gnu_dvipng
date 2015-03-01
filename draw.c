@@ -18,7 +18,7 @@
   License along with this program. If not, see
   <http://www.gnu.org/licenses/>.
 
-  Copyright (C) 2002-2010,2012 Jan-Åke Larsson
+  Copyright (C) 2002-2015 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -28,7 +28,7 @@
 #include <ctype.h> /* isprint */
 #endif
 
-struct stack_entry {  
+struct stack_entry {
   dviunits    h, v, w, x, y, z; /* stack entry                           */
   subpixels   hh,vv;
 } stack[STACK_SIZE+1];          /* stack + space for current pos         */
@@ -49,7 +49,7 @@ struct stack_entry* dvi_stack=stack;
     DEBUG_PRINT(DEBUG_DVI,                                              \
                 (" drift (%d,%d)",					\
 		 dvi_stack->hh-PIXROUND(dvi_stack->h,dvi->conv*shrinkfactor), \
-		 dvi_stack->vv-PIXROUND(dvi_stack->v,dvi->conv*shrinkfactor))); 
+		 dvi_stack->vv-PIXROUND(dvi_stack->v,dvi->conv*shrinkfactor)));
 
 #define MoveRight(x) \
   temp=x; dvi_stack->h += temp;		                                \
@@ -77,7 +77,7 @@ dviunits SetChar(int32_t c)
 {
   struct char_entry* ptr=NULL;
 
-  if (currentfont==NULL) 
+  if (currentfont==NULL)
     Fatal("faulty DVI, trying to set character from null font");
   if (c<0 || c>LASTFNTCHAR) {
     Warning("glyph index out of range (%d), skipping",c);
@@ -92,7 +92,6 @@ dviunits SetChar(int32_t c)
   switch (currentfont->type) {
   case FONT_TYPE_VF: DEBUG_PRINT(DEBUG_DVI,("\n  VF CHAR:\t")); break;
   case FONT_TYPE_PK: DEBUG_PRINT(DEBUG_DVI,("\n  PK CHAR:\t")); break;
-  case FONT_TYPE_T1: DEBUG_PRINT(DEBUG_DVI,("\n  T1 CHAR:\t")); break;
   case FONT_TYPE_FT: DEBUG_PRINT(DEBUG_DVI,("\n  FT CHAR:\t")); break;
   default: DEBUG_PRINT(DEBUG_DVI,("\n  NO CHAR:\t"))
   }
@@ -104,12 +103,9 @@ dviunits SetChar(int32_t c)
   if (currentfont->type==FONT_TYPE_VF) {
     return(SetVF(ptr));
   } else {
-    if (ptr->data == NULL) 
+    if (ptr->data == NULL)
       switch(currentfont->type) {
       case FONT_TYPE_PK:	LoadPK(c, ptr); break;
-#ifdef HAVE_LIBT1
-      case FONT_TYPE_T1:	LoadT1(c, ptr); break;
-#endif
 #ifdef HAVE_FT2
       case FONT_TYPE_FT:	LoadFT(c, ptr); break;
 #endif
@@ -156,7 +152,7 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
       dvi_stack->h += temp;
       dvi_stack->hh += PIXROUND(temp,dvi->conv*shrinkfactor);
       CHECK_MAXDRIFT(dvi_stack->h,dvi_stack->hh);
-    }    
+    }
     break;
   case SET_RULE:
     DEBUG_PRINT(DEBUG_DVI,(" %d %d",
@@ -251,7 +247,7 @@ void DrawCommand(unsigned char* command, void* parent /* dvi/vf */)
     break;
   case FNT_DEF1: case FNT_DEF2: case FNT_DEF3: case FNT_DEF4:
     if (((struct font_entry*)parent)->type==DVI_TYPE) {
-      FontDef(command, parent); 
+      FontDef(command, parent);
     } else {
       Fatal("%s within VF macro from %s",dvi_commands[*command],
 	    ((struct font_entry*)parent)->n);
@@ -292,7 +288,7 @@ void EndVFMacro(void)
 }
 
 
-static void DrawPage(dviunits hoffset, dviunits voffset) 
+static void DrawPage(dviunits hoffset, dviunits voffset)
      /* To be used after having read BOP and will exit cleanly when
       * encountering EOP.
       */
@@ -312,7 +308,7 @@ static void DrawPage(dviunits hoffset, dviunits voffset)
     DrawCommand(command,dvi);
     command=DVIGetCommand(dvi);
     DEBUG_PRINT(DEBUG_DVI,("DRAW CMD:\t%s", dvi_commands[*command]));
-  } 
+  }
 }
 
 void DrawPages(void)
@@ -342,7 +338,7 @@ void DrawPages(void)
 	y_offset_def=y_offset_tightpage;
       }
       if (x_width_def >= 0) { /* extend BBOX */
-	min(x_min,-x_offset_def); 
+	min(x_min,-x_offset_def);
 	max(x_max,x_min + x_width_def);
 	min(y_min,-y_offset_def);
 	max(y_max,y_min + y_width_def);
@@ -350,7 +346,7 @@ void DrawPages(void)
       if (x_width_def <= 0 || option_flags & EXPAND_BBOX) {
 	x_width = x_max-x_min;
 	y_width = y_max-y_min;
-	x_offset = -x_min; /* offset by moving topleft corner */ 
+	x_offset = -x_min; /* offset by moving topleft corner */
 	y_offset = -y_min; /* offset by moving topleft corner */
       } else {
 	x_width=x_width_def;
@@ -365,7 +361,7 @@ void DrawPages(void)
       DEBUG_PRINT(DEBUG_DVI,("\n@%d PAGE START:\tBOP",dvi_pos->offset));
       {
 	int i;
-	for (i=0;i<10;i++) 
+	for (i=0;i<10;i++)
 	  DEBUG_PRINT(DEBUG_DVI,(" %d",dvi_pos->count[i]));
 	DEBUG_PRINT(DEBUG_DVI,(" (%d)\n",dvi_pos->count[10]));
       }

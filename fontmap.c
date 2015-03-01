@@ -18,7 +18,7 @@
   License along with this program. If not, see
   <http://www.gnu.org/licenses/>.
 
-  Copyright (C) 2002-2010 Jan-Åke Larsson
+  Copyright (C) 2002-2015 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -30,7 +30,7 @@ static struct filemmap ttfont_mmap;
 #endif
 static struct psfontmap *psfontmap=NULL;
 
-static char* newword(char** buffer, char* end) 
+static char* newword(char** buffer, char* end)
 {
   char *word,*pos=*buffer;
 
@@ -43,7 +43,7 @@ static char* newword(char** buffer, char* end)
   return(word);
 }
 
-char* copyword(char* orig) 
+char* copyword(char* orig)
 {
   char *word;
 
@@ -76,8 +76,8 @@ void InitPSFontMap(void)
   if (psfont_name==NULL) {
     Warning("cannot find ps2pk.map, nor psfonts.map");
   } else {
-    DEBUG_PRINT((DEBUG_FT|DEBUG_T1),
-		("\n  OPEN PSFONT MAP:\t'%s'", psfont_name));  
+    DEBUG_PRINT(DEBUG_FT,
+		("\n  OPEN PSFONT MAP:\t'%s'", psfont_name));
     if (MmapFile(psfont_name,&psfont_mmap)) {
       Warning("psfonts map %s could not be opened", psfont_name);
     }
@@ -86,7 +86,7 @@ void InitPSFontMap(void)
 #ifdef HAVE_FT2
   psfont_name=find_format("ttfonts.map");
   if (psfont_name!=NULL) {
-    DEBUG_PRINT(DEBUG_FT,("\n  OPEN TTFONT MAP:\t'%s'", psfont_name));  
+    DEBUG_PRINT(DEBUG_FT,("\n  OPEN TTFONT MAP:\t'%s'", psfont_name));
     if (MmapFile(psfont_name,&ttfont_mmap)) {
       Warning("ttfonts map %s could not be opened", psfont_name);
     }
@@ -106,9 +106,6 @@ struct psfontmap *NewPSFont(struct psfontmap* copyfrom)
     newentry->psfile = copyword(copyfrom->psfile);
     newentry->encname = copyword(copyfrom->encname);
     newentry->encoding = copyfrom->encoding;
-#ifdef HAVE_LIBT1
-    newentry->t1_transformp = copyfrom->t1_transformp;
-#endif
 #ifdef HAVE_FT2
     newentry->ft_transformp = copyfrom->ft_transformp;
     newentry->subfont = copyfrom->subfont;
@@ -120,9 +117,6 @@ struct psfontmap *NewPSFont(struct psfontmap* copyfrom)
     newentry->psfile = NULL;
     newentry->encname = NULL;
     newentry->encoding = NULL;
-#ifdef HAVE_LIBT1
-    newentry->t1_transformp = NULL;
-#endif
 #ifdef HAVE_FT2
     newentry->ft_transformp = NULL;
     newentry->subfont = NULL;
@@ -147,8 +141,8 @@ static struct psfontmap *SearchPSFontMap(char* fontname,
     end=searching_mmap->data+searching_mmap->size;
   }
   while(pos<end && (entry==NULL || strcmp(entry->tfmname,fontname)!=0)) {
-    while(pos < end 
-	  && (*pos=='\r' || *pos=='\n' || *pos==' ' || *pos=='\t' 
+    while(pos < end
+	  && (*pos=='\r' || *pos=='\n' || *pos==' ' || *pos=='\t'
 	      || *pos=='%' || *pos=='*' || *pos==';' || *pos=='#')) {
       while(pos < end && *pos!='\r' && *pos!='\n') pos++; /* skip comments/empty rows */
       pos++;
@@ -158,9 +152,9 @@ static struct psfontmap *SearchPSFontMap(char* fontname,
       entry->line = pos;
       /* skip <something and quoted entries */
       while(pos < end && (*pos=='<' || *pos=='"')) {
-	if (*pos=='<') 
+	if (*pos=='<')
 	  while(pos < end && *pos!=' ' && *pos!='\t') pos++;
-	else 
+	else
 	  while(pos < end && *pos!='"') pos++;
 	while(pos < end && (*pos==' ' || *pos=='\t')) pos++;
       }
@@ -200,52 +194,52 @@ static void ReadPSFontMap(struct psfontmap *entry)
 {
   char *pos,*end,*psname;
   int nameno = 0;
-    
-  DEBUG_PRINT((DEBUG_FT|DEBUG_T1),("\n  PSFONTMAP: %s ",entry->tfmname));
+
+  DEBUG_PRINT(DEBUG_FT,("\n  PSFONTMAP: %s ",entry->tfmname));
   pos=entry->line;
   end=entry->end;
-  while(pos < end) { 
+  while(pos < end) {
     if (*pos=='<') {                               /* filename follows */
       pos++;
       if (pos<end && *pos=='<') {           /* <<download.font */
 	pos++;
 	entry->psfile = newword((char**)&pos,end);
-	DEBUG_PRINT((DEBUG_FT|DEBUG_T1),("<%s ",entry->psfile));
+	DEBUG_PRINT(DEBUG_FT,("<%s ",entry->psfile));
       } else if (pos<end && *pos=='[') {    /* <[encoding.file */
 	pos++;
 	entry->encname = newword((char**)&pos,end);
-	DEBUG_PRINT((DEBUG_FT|DEBUG_T1),("<[%s ",entry->encname));
+	DEBUG_PRINT(DEBUG_FT,("<[%s ",entry->encname));
       } else {                                     /* <some.file      */
-	char* word =newword((char**)&pos,end); 
+	char* word =newword((char**)&pos,end);
 	if (strncmp(word+strlen(word)-4,".enc",4)==0) {/* <some.enc */
 	  entry->encname=word;
-	  DEBUG_PRINT((DEBUG_FT|DEBUG_T1),("<[%s ",entry->encname));
-	} else {                                   /* <font    */  
+	  DEBUG_PRINT(DEBUG_FT,("<[%s ",entry->encname));
+	} else {                                   /* <font    */
 	  entry->psfile=word;
-	  DEBUG_PRINT((DEBUG_FT|DEBUG_T1),("<%s ",entry->psfile));
+	  DEBUG_PRINT(DEBUG_FT,("<%s ",entry->psfile));
 	}
       }
     } else if (*pos=='"') { /* PS code: reencoding/tranformation exists */
       char *word;
       double cxx=1.0,cxy=0.0;
       pos++;
-      DEBUG_PRINT((DEBUG_FT|DEBUG_T1),("\""));
+      DEBUG_PRINT(DEBUG_FT,("\""));
       while(pos < end && *pos!='"') {
 	word=newword((char**)&pos,end);
 	while(pos < end && (*pos==' ' || *pos=='\t')) pos++;
 	if (pos+10<end && strncmp(pos,"ExtendFont",10)==0) {
 	  cxx=strtod(word,NULL);
 	  pos+=10;
-	  DEBUG_PRINT((DEBUG_FT|DEBUG_T1),("%f ExtendFont ",cxx));
+	  DEBUG_PRINT(DEBUG_FT,("%f ExtendFont ",cxx));
 	} else if (pos+9<end && strncmp(pos,"SlantFont",9)==0) {
 	  pos+=9;
 	  cxy=strtod(word,NULL);
-	  DEBUG_PRINT((DEBUG_FT|DEBUG_T1),("%f SlantFont ",cxy));
+	  DEBUG_PRINT(DEBUG_FT,("%f SlantFont ",cxy));
 	} else if (pos+12<end && strncmp(pos,"ReEncodeFont",12)==0) {
 	    pos+=12;
-	    DEBUG_PRINT((DEBUG_FT|DEBUG_T1),("%s ReEncodeFont ",word));
+	    DEBUG_PRINT(DEBUG_FT,("%s ReEncodeFont ",word));
 	} else {
-	    DEBUG_PRINT((DEBUG_FT|DEBUG_T1),("(?:%s) ",word));
+	    DEBUG_PRINT(DEBUG_FT,("(?:%s) ",word));
 	}
 	free(word);
       }
@@ -256,14 +250,7 @@ static void ReadPSFontMap(struct psfontmap *entry)
       entry->ft_transform.yx=0;
       entry->ft_transform.yy=0x10000;
 #endif
-#ifdef HAVE_LIBT1
-      entry->t1_transformp=&(entry->t1_transform);
-      entry->t1_transform.cxx=cxx;
-      entry->t1_transform.cxy=cxy;
-      entry->t1_transform.cyx=0.0;
-      entry->t1_transform.cyy=1.0;
-#endif
-      DEBUG_PRINT((DEBUG_FT|DEBUG_T1),("\" "));
+      DEBUG_PRINT(DEBUG_FT,("\" "));
       pos++;
     } else {                                      /* bare word */
       switch (++nameno) {
@@ -273,12 +260,12 @@ static void ReadPSFontMap(struct psfontmap *entry)
 	break;
       case 2:                    /* second word is psname, NOT psfile */
 	psname = newword((char**)&pos,end);
-	DEBUG_PRINT((DEBUG_FT|DEBUG_T1),("(%s) ",psname));
+	DEBUG_PRINT(DEBUG_FT,("(%s) ",psname));
 	free(psname);
 	break;
       case 3:                             /* third word is encoding */
 	entry->encname = newword((char**)&pos,end);
-	DEBUG_PRINT((DEBUG_FT|DEBUG_T1),("<[%s ",entry->encname));
+	DEBUG_PRINT(DEBUG_FT,("<[%s ",entry->encname));
 	break;
       default:
 	while(pos<end && *pos!=' ' && *pos!='\t') pos++;
@@ -287,13 +274,13 @@ static void ReadPSFontMap(struct psfontmap *entry)
     }
     while(pos < end && (*pos==' ' || *pos=='\t')) pos++;
   }
-  if (entry->psfile==NULL) { 
+  if (entry->psfile==NULL) {
     /* No psfile-name given, use tfmname */
     entry->psfile=copyword(entry->tfmname);
-    DEBUG_PRINT((DEBUG_FT|DEBUG_T1),(" <%s ",entry->psfile));
+    DEBUG_PRINT(DEBUG_FT,(" <%s ",entry->psfile));
   }
-  if (entry->encname!=NULL 
-      && (entry->encoding=FindEncoding(entry->encname))==NULL) 
+  if (entry->encname!=NULL
+      && (entry->encoding=FindEncoding(entry->encname))==NULL)
     Warning("unable to load font encoding '%s' for %s",
 	    entry->encname,entry->tfmname);
 }
@@ -303,7 +290,7 @@ struct psfontmap* FindPSFontMap(char* fontname)
 {
   struct psfontmap *entry;
   static struct filemmap* search_mmap_p=&psfont_mmap;
-	
+
   entry=psfontmap;
   while(entry!=NULL && strcmp(entry->tfmname,fontname)!=0)
     entry=entry->next;
@@ -331,9 +318,9 @@ struct psfontmap* FindPSFontMap(char* fontname)
     }
 #endif
   }
-  if (entry!=NULL && entry->psfile==NULL) 
+  if (entry!=NULL && entry->psfile==NULL)
     ReadPSFontMap(entry);
-  if (entry!=NULL && entry->encname!=NULL && entry->encoding==NULL) 
+  if (entry!=NULL && entry->encname!=NULL && entry->encoding==NULL)
     /* Encoding given but it cannot be found. Unusable font */
     return(NULL);
   return(entry);

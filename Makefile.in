@@ -18,7 +18,7 @@
 #  License along with this program. If not, see
 #  <http://www.gnu.org/licenses/>.
 #
-#  Copyright (C) 2002-2008 Jan-Åke Larsson
+#  Copyright (C) 2002-2015 Jan-Åke Larsson
 #
 #************************************************************************
 
@@ -64,7 +64,7 @@ install: @INSTALL_BIN_TARGET@   @INSTALL_BIN_TARGET@-docs
 ####################################### The program
 
 dvipng: $(objects)
-	$(CC) $(LDFLAGS) $(objects) -o dvipng $(LIBS) 
+	$(CC) $(LDFLAGS) $(objects) -o dvipng $(LIBS)
 
 $(objects): dvipng.h commands.h config.h
 
@@ -83,7 +83,7 @@ dvipng.dvi: $(TEXIFILES)
 	-$(TEXIDVI) -I $(srcdir) $(srcdir)/dvipng.texi
 
 dvipng.ps: dvipng.dvi
-	$(DVIPS) -Ppdf dvipng.dvi 
+	$(DVIPS) -Ppdf dvipng.dvi
 
 dvipng.info: $(TEXIFILES) dvipng.help
 	-$(MAKEINFO) -I$(srcdir) $(srcdir)/dvipng.texi
@@ -100,7 +100,7 @@ www: $(TEXIFILES) dvipng.help
 	   -I $(srcdir) $(srcdir)/dvipng.texi
 	(cd html; for i in *; do \
 	   sed -e "s/Jan-A/Jan-\&Aring\;/g" $$i > ../www/$$i; \
-	done) 
+	done)
 	cp www/dvipng.html www/index.html
 	rm -rf html
 
@@ -156,7 +156,7 @@ README: readme.texi
 		-I$(srcdir) $(srcdir)/readme.texi --output README
 
 dvipng.1: dvipng.texi readme.texi
-	texi2pod.pl -D man $(srcdir)/dvipng.texi | \
+	./texi2pod.pl -D man $(srcdir)/dvipng.texi | \
 	sed -es/@//g -es/previewlatex/preview-latex/g -es/{}//g > dvipng.pod
 	pod2man --center="User commands" --release=$(PACKAGE_STRING)\
 		dvipng.pod > dvipng.1
@@ -166,4 +166,3 @@ dist: INSTALL README dvipng.1 distclean
 
 # SunOS make suffix rule wierdness
 .cps.h:
-

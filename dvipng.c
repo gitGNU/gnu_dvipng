@@ -18,7 +18,7 @@
   License along with this program. If not, see
   <http://www.gnu.org/licenses/>.
 
-  Copyright (C) 2002-2008 Jan-Åke Larsson
+  Copyright (C) 2002-2015 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -36,7 +36,7 @@
 int main(int argc, char ** argv)
 {
   bool parsestdin;
-    
+
 #ifdef TIMING
 # ifdef HAVE_GETTIMEOFDAY
   gettimeofday(&Tp, NULL);
@@ -95,7 +95,7 @@ int main(int argc, char ** argv)
     kpse_init_prog("DVIPNG", 300, "cx", "cmr10");
 #endif
 
-#ifdef HAVE_FT2_OR_LIBT1
+#ifdef HAVE_FT2
   InitPSFontMap();
 #endif
 
@@ -126,12 +126,12 @@ int main(int argc, char ** argv)
   timer = timebuffer.time + timebuffer.millitm/1000.0 - timer;
 #  endif
 # endif
-  
-  if (ndone > 0) 
+
+  if (ndone > 0)
     fprintf(stderr,
 	    "Time of complete run: %.2f s, %d page(s), %.4f s/page.\n",
 	    timer, ndone, timer / ndone);
-  if (my_toc >= 0.0001) 
+  if (my_toc >= 0.0001)
     fprintf(stderr,
 	    "Thereof in TIC/TOC region %.5f s.\n",my_toc);
 #endif
@@ -139,24 +139,14 @@ int main(int argc, char ** argv)
   ClearFonts();
   DVIClose(dvi);
   ClearColorNames();
-#ifdef HAVE_FT2_OR_LIBT1
+#ifdef HAVE_FT2
   ClearPSFontMap();
   ClearEncoding();
-#endif
-#ifdef HAVE_FT2
   ClearSubfont();
-  if (libfreetype!=NULL && FT_Done_FreeType(libfreetype)) 
-    Fatal("an error occured during freetype destruction"); 
+  if (libfreetype!=NULL && FT_Done_FreeType(libfreetype))
+    Fatal("an error occured during freetype destruction");
   libfreetype = NULL;
-#endif  
-#ifdef HAVE_LIBT1
-  if (libt1!=NULL && T1_CloseLib())
-    Fatal("an error occured during t1lib destruction"); 
-  libt1 = NULL;
-#endif  
+#endif
 
   exit(exitcode);
 }
-
-
-

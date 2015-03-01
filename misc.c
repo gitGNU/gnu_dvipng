@@ -18,7 +18,7 @@
   License along with this program. If not, see
   <http://www.gnu.org/licenses/>.
 
-  Copyright (C) 2002-2010 Jan-Åke Larsson
+  Copyright (C) 2002-2015 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -62,7 +62,7 @@ bool DecodeArgs(int argc, char ** argv)
     Message(BE_NONQUIET,"This is %s",programname);
     if (strcmp(basename(programname),PACKAGE_NAME)!=0)
       Message(BE_NONQUIET," (%s)", PACKAGE_NAME);
-    Message(BE_NONQUIET," %s Copyright 2002-2010 Jan-Ake Larsson\n",
+    Message(BE_NONQUIET," %s Copyright 2002-2015 Jan-Ake Larsson\n",
 	    PACKAGE_VERSION);
   }
 
@@ -77,7 +77,7 @@ bool DecodeArgs(int argc, char ** argv)
       switch (c) {
       case 'd':       /* selects Debug output */
 	if (*p>'9' && *p!='-') {
-	  if (strncmp(p,"vinum",5)==0) { 
+	  if (strncmp(p,"vinum",5)==0) {
 	    if (p[5] != '0') {
 	      option_flags |= DVI_PAGENUM;
 	      Message(PARSE_STDIN,"DVI page number output on\n",p);
@@ -86,7 +86,7 @@ bool DecodeArgs(int argc, char ** argv)
 	      Message(PARSE_STDIN,"DVI page number output off\n");
 	    }
 	    break;
-	  } else if (strncmp(p,"epth",4)==0) { /* Depth reporting */ 
+	  } else if (strncmp(p,"epth",4)==0) { /* Depth reporting */
 	    if (p[4] != '0') {
 	      option_flags |= REPORT_DEPTH;
 	      Message(PARSE_STDIN,"Depth reporting on\n",p);
@@ -97,14 +97,14 @@ bool DecodeArgs(int argc, char ** argv)
 	    break;
 	  }
 	  goto DEFAULT;
-	} else { 
+	} else {
 #ifdef DEBUG
 	  if (*p == 0 && argv[i+1])
 	    p = argv[i+1];
 	  debug = atoi(p);
 	  if (debug > 0) {
 	    if (p == argv[i+1]) i++;
-	  } else 
+	  } else
 	    debug = DEBUG_DEFAULT;
 	  Message(PARSE_STDIN,"Debug output enabled\n");
 #ifdef HAVE_LIBKPATHSEA
@@ -130,7 +130,7 @@ bool DecodeArgs(int argc, char ** argv)
         makeTexPK = (*p == '0');
 #ifdef HAVE_LIBKPATHSEA
         kpse_set_program_enabled (kpse_pk_format, makeTexPK, kpse_src_cmdline);
-#endif 
+#endif
 	if (makeTexPK)
 	  Message(PARSE_STDIN,"MakeTeXPK enabled\n");
 	else
@@ -148,7 +148,7 @@ bool DecodeArgs(int argc, char ** argv)
       case 'h':
 	if (strcmp(p,"elp") == 0 ) {
 	  break;
-	} else if (strncmp(p,"eight",5) == 0 ) { /* Height reporting */ 
+	} else if (strncmp(p,"eight",5) == 0 ) { /* Height reporting */
 	  if (p[5] != '0') {
 	    option_flags |= REPORT_HEIGHT;
 	    Message(PARSE_STDIN,"Height reporting on\n",p);
@@ -166,7 +166,7 @@ bool DecodeArgs(int argc, char ** argv)
 	Message(PARSE_STDIN,"Offset: (%d,%d)\n",x_offset_def,y_offset_def);
         break ;
       case 'e':
-	if (strncmp(p,"xpand-bbox",10) == 0 ) {	
+	if (strncmp(p,"xpand-bbox",10) == 0 ) {
 	  if (p[10] != '0') {
 	    option_flags |= EXPAND_BBOX;
 	    Message(PARSE_STDIN,"BBox expansion on\n",p);
@@ -197,28 +197,16 @@ bool DecodeArgs(int argc, char ** argv)
       case 't':       /* specify paper format, only for cropmarks */
 #ifdef HAVE_GDIMAGECREATETRUECOLOR
 	/* Truecolor */
-	if (strncmp(p,"ruecolor",8)==0) { 
+	if (strncmp(p,"ruecolor",8)==0) {
 	  if (p[8] != '0') {
-	    option_flags |= FORCE_TRUECOLOR; 
+	    option_flags |= FORCE_TRUECOLOR;
 	    Message(PARSE_STDIN,"Truecolor mode on\n",p);
-	  } else { 
-	    option_flags &= ~FORCE_TRUECOLOR; 
+	  } else {
+	    option_flags &= ~FORCE_TRUECOLOR;
 	    Message(PARSE_STDIN,"Truecolor mode off\n");
 	  }
-	} else 
+	} else
 #endif
-#ifdef HAVE_LIBT1
-	if ( strncmp(p,"1lib",4) == 0 ) { /* -t1lib activation */
-	  if (p[4] != '0') {
-	    option_flags |= USE_LIBT1;
-	    Message(PARSE_STDIN,"t1lib rendering on\n",p);
-	  } else { 
-	    option_flags &= ~USE_LIBT1;
-	    Message(PARSE_STDIN,"t1lib rendering off\n");
-	  } 
-        } else
-#endif
-
 	  { /* cropmarks not implemented yet */
 	    if (*p == 0 && argv[i+1])
 	      p = argv[++i] ;
@@ -252,16 +240,16 @@ bool DecodeArgs(int argc, char ** argv)
 	  p++;
 	  if (*p == 0 && argv[i+1])
 	    p = argv[++i] ;
-	  if (strncmp(p,"Transparent",11) == 0 ) 
+	  if (strncmp(p,"Transparent",11) == 0 )
 	    option_flags |= BG_TRANSPARENT_ALPHA;
-	  else if (strncmp(p,"transparent",11) == 0 ) 
+	  else if (strncmp(p,"transparent",11) == 0 )
 	    option_flags |= BG_TRANSPARENT;
 	  else
 	    background(p);
-	  if (option_flags & BG_TRANSPARENT) 
+	  if (option_flags & BG_TRANSPARENT)
 	    Message(PARSE_STDIN,"Transp. background (fallback rgb %d,%d,%d)\n",
 		    cstack[0].red,cstack[0].green,cstack[0].blue);
-	  else 
+	  else
 	    Message(PARSE_STDIN,"Background: rgb %d,%d,%d\n",
 		    cstack[0].red,cstack[0].green,cstack[0].blue);
 	  break;
@@ -299,7 +287,7 @@ bool DecodeArgs(int argc, char ** argv)
 		    bordercolor.red, bordercolor.green, bordercolor.blue);
 	  }
 	  break;
-	} 
+	}
 	goto DEFAULT;
       case 'f':
 	if ( *p == 'g' ) { /* -fg foreground color */
@@ -315,7 +303,7 @@ bool DecodeArgs(int argc, char ** argv)
 	  if (p[7] != '0') {
 	    option_flags |= USE_FREETYPE;
 	    Message(PARSE_STDIN,"FreeType rendering on\n",p);
-	  } else { 
+	  } else {
 	    option_flags &= ~USE_FREETYPE;
 	    Message(PARSE_STDIN,"FreeType rendering off\n");
 	  }
@@ -333,7 +321,7 @@ bool DecodeArgs(int argc, char ** argv)
 	if (*p == 0 && argv[i+1])
 	  p = argv[++i] ;
 	number = atoi(p);
-	if (number < 1 || number > 1000000) 
+	if (number < 1 || number > 1000000)
 	  Warning("Bad magnification parameter (-x or -y), ignored");
 	else {
 	  usermag=number;
@@ -342,7 +330,7 @@ bool DecodeArgs(int argc, char ** argv)
 	}
 	break ;
       case 'g' :
-	if (strncmp(p,"amma",4)==0) { /* --gamma correction */ 
+	if (strncmp(p,"amma",4)==0) { /* --gamma correction */
 	  double gamma=0.0;
 
 	  p+=4;
@@ -358,7 +346,7 @@ bool DecodeArgs(int argc, char ** argv)
 	  Message(PARSE_STDIN,"Gamma value is %s\n", gamma);
 	  break;
 #ifdef HAVE_GDIMAGEGIF
-	} else if (strncmp(p,"if",2)==0) { /* --gif output */ 
+	} else if (strncmp(p,"if",2)==0) { /* --gif output */
 	  option_flags |= GIF_OUTPUT;
 	  Message(PARSE_STDIN,"GIF output\n");
 	  break;
@@ -374,10 +362,10 @@ bool DecodeArgs(int argc, char ** argv)
 	  Message(PARSE_STDIN,"Page list: %s\n",p);
 	  if (ParsePages(p))
 	    Fatal("bad page list specifier (-pp)");
-	} else if (strncmp(p,"ng",2)==0) { /* --png output */ 
+	} else if (strncmp(p,"ng",2)==0) { /* --png output */
 	  option_flags &= ~GIF_OUTPUT;
 	  Message(PARSE_STDIN,"PNG output\n");
-	} else if (strncmp(p,"icky",4)==0) { 
+	} else if (strncmp(p,"icky",4)==0) {
 	  if (p[4] != '0') {
 	    option_flags |= MODE_PICKY;
 	    Message(PARSE_STDIN,"No images output for pages with warnings\n",p);
@@ -385,7 +373,7 @@ bool DecodeArgs(int argc, char ** argv)
 	    option_flags &= ~MODE_PICKY;
 	    Message(PARSE_STDIN,"Images output even for pages with warnings\n");
 	  }
-	} else if (strncmp(p,"alette",6)==0) { 
+	} else if (strncmp(p,"alette",6)==0) {
 	  if (p[6] != '0') {
 	    option_flags |= FORCE_PALETTE;
 	    Message(PARSE_STDIN,"Forcing 256-color PNG output\n",p);
@@ -412,7 +400,7 @@ bool DecodeArgs(int argc, char ** argv)
 	}
 	break ;
       case 's' :
-	if (strncmp(p,"trict",5)==0) { 
+	if (strncmp(p,"trict",5)==0) {
 	  if (p[5] != '0') {
 	    option_flags |= MODE_STRICT;
 	    Message(PARSE_STDIN,"Warnings are fatal\n",p);
@@ -424,7 +412,7 @@ bool DecodeArgs(int argc, char ** argv)
 	  goto DEFAULT;
 	break ;
       case 'n' :
-	if (strncmp(p,"oghostscript",12)==0) { 
+	if (strncmp(p,"oghostscript",12)==0) {
 	  if (p[12] != '0') {
 	    option_flags |= NO_GHOSTSCRIPT;
 	    Message(PARSE_STDIN,"No GhostScript calls\n",p);
@@ -432,7 +420,7 @@ bool DecodeArgs(int argc, char ** argv)
 	    option_flags &= ~NO_GHOSTSCRIPT;
 	    Message(PARSE_STDIN,"GhostScript calls made\n");
 	  }
-	} else if (strncmp(p,"ogssafer",8)==0) { 
+	} else if (strncmp(p,"ogssafer",8)==0) {
 	  if (p[8] != '0') {
 	    option_flags |= NO_GSSAFER;
 	    Message(PARSE_STDIN,"GhostScript calls does not use -dSAFER\n",p);
@@ -440,7 +428,7 @@ bool DecodeArgs(int argc, char ** argv)
 	    option_flags &= ~NO_GSSAFER;
 	    Message(PARSE_STDIN,"GhostScript calls use -dSAFER\n");
 	  }
-	} else if (strncmp(p,"ogs",3)==0) { 
+	} else if (strncmp(p,"ogs",3)==0) {
 	  if (p[3] != '0') {
 	    option_flags |= NO_GHOSTSCRIPT;
 	    Message(PARSE_STDIN,"No GhostScript calls\n",p);
@@ -448,7 +436,7 @@ bool DecodeArgs(int argc, char ** argv)
 	    option_flags &= ~NO_GHOSTSCRIPT;
 	    Message(PARSE_STDIN,"GhostScript calls made\n");
 	  }
-	} else if (strncmp(p,"orawps",6)==0) { 
+	} else if (strncmp(p,"orawps",6)==0) {
 	  if (p[6] != '0') {
 	    option_flags |= NO_RAW_PS;
 	    Message(PARSE_STDIN,"Conversion of raw PostScript will not be attempted\n",p);
@@ -469,7 +457,7 @@ bool DecodeArgs(int argc, char ** argv)
 	  if (*p == '=') {
 	    abspage=true;
 	    p++ ;
-	  } 
+	  }
 	  if ((*p>='0'&&*p<='9') || (*p=='-' && *(p+1)>='0' && *(p+1)<='9')) {
 	    lastpage = atoi(p);
 	    LastPage(lastpage,abspage);
@@ -511,22 +499,19 @@ bool DecodeArgs(int argc, char ** argv)
 	    Warning("the Freetype library seems unusable");
 	  else {
 	    FT_Int      amajor, aminor, apatch;
-	    
+
 	    FT_Library_Version( libfreetype, &amajor, &aminor, &apatch );
 	    printf("Using libft %d.%d.%d\n",amajor, aminor, apatch);
-	    FT_Done_FreeType(libfreetype);	    
+	    FT_Done_FreeType(libfreetype);
 	  }
 #  endif
 #endif
-#ifdef HAVE_LIBT1
-	  printf("Using t1lib %s\n", T1_GetLibIdent());
-#endif
-	  puts ("Copyright (C) 2002-2010 Jan-Ake Larsson.\n\
+	  puts ("Copyright (C) 2002-2015 Jan-Ake Larsson.\n\
 There is NO warranty.  You may redistribute this software\n\
 under the terms of the GNU Lesser General Public License\n\
 version 3, see the COPYING file in the dvipng distribution\n\
 or <http://www.gnu.org/licenses/>.");
-	  exit (EXIT_SUCCESS); 
+	  exit (EXIT_SUCCESS);
 	}
 	if (*p != '0')
 	  option_flags |= BE_NONQUIET | BE_VERBOSE;
@@ -555,7 +540,7 @@ or <http://www.gnu.org/licenses/>.");
 	}
 	break;
       case 'w':
-	if (strncmp(p,"idth",4) == 0 ) { /* Width reporting */ 
+	if (strncmp(p,"idth",4) == 0 ) { /* Width reporting */
 	  if (p[4] != '0') {
 	    option_flags |= REPORT_WIDTH;
 	    Message(PARSE_STDIN,"Width reporting on\n",p);
@@ -590,9 +575,9 @@ or <http://www.gnu.org/licenses/>.");
     }
   }
   if (dviname != NULL) {
-    if (dvi != NULL && dvi->filep != NULL) 
+    if (dvi != NULL && dvi->filep != NULL)
       DVIClose(dvi);
-    dvi=DVIOpen(dviname,outname);  
+    dvi=DVIOpen(dviname,outname);
   }
 
   if (dvi==NULL) {
@@ -638,18 +623,15 @@ or <http://www.gnu.org/licenses/>.");
     fprintf(stdout,"  --png        Output PNG images (dvipng default)\n");
 #endif
     fprintf(stdout,"  --strict     When a warning occurs, exit\n");
-#ifdef HAVE_LIBT1
-    fprintf(stdout,"  --t1lib*     T1lib font rendering (default on)\n");
-#endif
 #ifdef HAVE_GDIMAGECREATETRUECOLOR
     fprintf(stdout,"  --truecolor* Truecolor output\n");
 #endif
-    fprintf(stdout,"  -Q #         Quality (T1lib and PK subsampling)\n");
+    fprintf(stdout,"  -Q #         Quality (PK subsampling)\n");
     fprintf(stdout,"  --width*     Output the image width on stdout\n");
 #ifdef HAVE_GDIMAGEPNGEX
     fprintf(stdout,"  -z #         PNG compression level\n");
 #endif
-    
+
     fprintf(stdout,"\n   # = number   f = file   s = string  * = suffix, '0' to turn off\n");
     fprintf(stdout,"       c = comma-separated dimension pair (e.g., 3.2in,-32.1cm)\n\n");
     /*#ifdef HAVE_LIBKPATHSEA
@@ -663,7 +645,7 @@ or <http://www.gnu.org/licenses/>.");
       exit(EXIT_SUCCESS);
     }
   }
-  if ((option_flags & PARSE_STDIN) == 0 && (!ppused)) 
+  if ((option_flags & PARSE_STDIN) == 0 && (!ppused))
     ParsePages("-");
   return((option_flags & PARSE_STDIN) != 0);
 }
@@ -675,7 +657,7 @@ void DecodeString(char *string)
   int     strc=1;
   strv[0]=NULL;                       /* No program name */
 
-  while (*string==' ' || *string=='\t' || *string=='\r' || *string=='\n') 
+  while (*string==' ' || *string=='\t' || *string=='\r' || *string=='\n')
     string++;
   while (*string!='\0') {
     strv[strc++]=string;
@@ -687,12 +669,12 @@ void DecodeString(char *string)
     } else {
       /* String delimiter found , so search for next */
       strv[strc-1]=++string;
-      while (*string!='\'' && *string!='\0') 
+      while (*string!='\'' && *string!='\0')
 	string++;
     }
     if (*string!='\0')
       *string++='\0';
-    while (*string==' ' || *string=='\t' || *string=='\r' || *string=='\n') 
+    while (*string==' ' || *string=='\t' || *string=='\r' || *string=='\n')
       string++;
   }
   if (strc>1) /* Nonempty */
@@ -704,7 +686,7 @@ void DecodeString(char *string)
 uint32_t UNumRead(unsigned char* current, register int n)
 {
   uint32_t x = (unsigned char) *(current)++; /* number being constructed */
-  while(--n) 
+  while(--n)
     x = (x << 8) | *(current)++;
   return(x);
 }
@@ -730,7 +712,7 @@ void Fatal (const char *fmt, ...)
   fprintf(stderr, "\n");
   fprintf(stderr, "%s: Fatal error, ", programname);
   vfprintf(stderr, fmt, args);
-  
+
   fprintf(stderr, "\n\n");
   va_end(args);
 
@@ -738,11 +720,7 @@ void Fatal (const char *fmt, ...)
 #ifdef HAVE_FT2
   if (libfreetype)
     (void) FT_Done_FreeType(libfreetype); /* at this point, ignore error */
-#endif  
-#ifdef HAVE_LIBT1
-  if (libt1)
-    (void) T1_CloseLib(); /* at this point, ignore error */
-#endif  
+#endif
   exit(EXIT_FATAL);
 }
 
@@ -821,7 +799,7 @@ bool MmapFile (char *filename,struct filemmap *fmmap)
   close(fmmap->fd);
 # endif /* HAVE_MMAP */
 #else /* WIN32 */
-  fmmap->hFile = CreateFile(filename, GENERIC_READ, FILE_SHARE_READ, 0, 
+  fmmap->hFile = CreateFile(filename, GENERIC_READ, FILE_SHARE_READ, 0,
 			    OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, 0);
   if (fmmap->hFile == INVALID_HANDLE_VALUE) {
     Warning("cannot open file <%s>", filename);

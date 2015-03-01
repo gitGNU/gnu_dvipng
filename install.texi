@@ -1,5 +1,5 @@
 @c install.texi
-@c 
+@c
 @c Part of the dvipng distribution
 
 @include macros.texi
@@ -9,15 +9,15 @@
 @end ifset
 @c -----------------------
 Installing dvipng should be simple: merely @code{./configure},
-@code{make}, and @code{make install}. 
+@code{make}, and @code{make install}.
 
 @ifclear rawfile
 @menu
-* Prerequisites::               
-* Configure::                   
-* Build/install::               
+* Prerequisites::
+* Configure::
+* Build/install::
 * Installation outside the texmf tree::
-* Advice for non-privileged users::  
+* Advice for non-privileged users::
 @end menu
 @end ifclear
 
@@ -57,15 +57,6 @@ resolutions without cluttering the disk with lots of bitmapped fonts.
 Finally, it will enable subfont support in dvipng. That is, if you want
 to render CJK-@LaTeX{} characters, you must have FreeType 2 installed.
 
-@item The font-rendering library T1lib
-
-An alternative to FreeType 2 is T1lib, but this will enable only
-PostScript fonts in dvipng and will not include subfont support. Also
-here, you can render images at different (and unusual) resolutions
-without cluttering the disk with lots of bitmapped fonts. If both
-FreeType 2 and T1lib are present, FreeType will be internally
-preferred by dvipng but T1lib can be chosen at runtime.
-
 @item libpng and libz
 
 To be able to compress and write PNG files to disk, dvipng (or really
@@ -74,7 +65,7 @@ any modern system, if not, download them and install them.
 
 @item The @code{texinfo} package
 
-This is needed for building the documentation. 
+This is needed for building the documentation.
 @end itemize
 
 @node Configure
@@ -150,7 +141,7 @@ Once @file{configure} has been run, simply enter
 make
 @end example
 
-@noindent 
+@noindent
 at the prompt to compile the C code, and build the documentation files.
 To install the files into the locations chosen earlier, type
 
@@ -158,7 +149,7 @@ To install the files into the locations chosen earlier, type
 make install
 @end example
 
-@noindent 
+@noindent
 You may need special privileges to install, e.g., if you are installing
 into system directories.
 
@@ -199,5 +190,5 @@ This program is released under the GNU Lesser General Public License
 version 3, see the COPYING file in the dvipng distribution or
 @url{http://www.gnu.org/licenses/}.
 
-Copyright @copyright{} 2002-2009 Jan-@AA{}ke Larsson
+Copyright @copyright{} 2002-2015 Jan-@AA{}ke Larsson
 @end ifset
