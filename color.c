@@ -18,7 +18,7 @@
   License along with this program. If not, see
   <http://www.gnu.org/licenses/>.
 
-  Copyright (C) 2002-2010 Jan-Åke Larsson
+  Copyright (C) 2002-2015 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -40,15 +40,15 @@ const char *colordef[]={"xcolor.sty","dvipsnam.def",
 			"svgnam.def","x11nam.def",NULL};
 char *xcpname=NULL;
 
-void initcolor(void) 
+void initcolor(void)
 {
    csp = 1;
-   cstack[0].red=255; 
-   cstack[0].green=255; 
-   cstack[0].blue=255; 
-   cstack[1].red=0; 
-   cstack[1].green=0; 
-   cstack[1].blue=0; 
+   cstack[0].red=255;
+   cstack[0].green=255;
+   cstack[0].blue=255;
+   cstack[1].red=0;
+   cstack[1].green=0;
+   cstack[1].blue=0;
 }
 
 static struct colorname * NewColor(const char* prefix, int nprefix,
@@ -56,9 +56,9 @@ static struct colorname * NewColor(const char* prefix, int nprefix,
 				   char* model, int nmodel,
 				   char* values, int nvalues)
 {
-  struct colorname *tmp = 
+  struct colorname *tmp =
     malloc(sizeof(struct colorname)+3+nprefix+nname+nmodel+nvalues);
-  if (tmp==NULL) 
+  if (tmp==NULL)
     Fatal("Cannot malloc space for color name");
   tmp->color=tmp->name+nprefix+nname+1;
   strncpy(tmp->name,prefix,nprefix);
@@ -69,13 +69,13 @@ static struct colorname * NewColor(const char* prefix, int nprefix,
   strncpy(tmp->color+nmodel+1,values,nvalues);
   tmp->color[nmodel+nvalues+1]='\0';
   model=tmp->color;
-  while(*model!='\0') { 
-    if (*model==',') 
-      *model=' '; 
+  while(*model!='\0') {
+    if (*model==',')
+      *model=' ';
     model++;
   }
   DEBUG_PRINT(DEBUG_COLOR,("\n  COLOR NAME:\t'%s' '%s'",
-			   tmp->name,tmp->color)); 
+			   tmp->name,tmp->color));
   return(tmp);
 }
 
@@ -87,11 +87,11 @@ static struct colorname * NewColor(const char* prefix, int nprefix,
 #define FINDVALEND(s,n) n=0; while(s<max && *s!='}' && *s!='/' && *s!=';') { s++; n++; }
 #define FINDLASTVALEND(s) while(s<max && *s!='}' && *s!=';') s++
 #define FINDPSNAMEEND(s,n) n=0; while(s<max && *s!='{') { s++; n++; }
-#define BLANKCOMMAS(s) 
+#define BLANKCOMMAS(s)
 
 static struct colorname* LoadColornameFile(const char* filename)
 {
-  struct colorname *list=NULL,*tmp=NULL; 
+  struct colorname *list=NULL,*tmp=NULL;
   char *filepath,*pos,*max;
   const char *prefix="";
   char *name,*values,*model;
@@ -111,8 +111,8 @@ static struct colorname* LoadColornameFile(const char* filename)
   max=fmmap.data+fmmap.size;
   while (pos<max && *pos!='\\') pos++;
   while(pos+9<max && strncmp(pos,"\\endinput",9)!=0) {
-    if ((pos+20<max && strncmp(pos,"\\def\\colornameprefix",20)==0) 
-	|| (pos+32<max 
+    if ((pos+20<max && strncmp(pos,"\\def\\colornameprefix",20)==0)
+	|| (pos+32<max
 	    && strncmp(pos,"\\providecommand*\\colornameprefix",32)==0)) {
       DEBUG_PRINT(DEBUG_COLOR,("\n  \t'%.20s'", pos));
       FINDARG(pos);
@@ -203,7 +203,7 @@ void InitXColorPrologue(const char* name)
 
 static struct colorname* LoadXColorPrologue(void)
 {
-  struct colorname *list=NULL,*tmp=NULL; 
+  struct colorname *list=NULL,*tmp=NULL;
   char *filepath,*pos,*max;
   const char *prefix="";
   char *name,*values,*model;
@@ -230,7 +230,7 @@ static struct colorname* LoadXColorPrologue(void)
       values=++pos;              /* second argument: color values */
       FINDVALEND(pos,nvalues);
       model=pos+3;               /* third argument: color model, prefixed by 'XC' */
-      while(pos<max && *pos!=' ' && *pos!='\r' && *pos!='\n') pos++; 
+      while(pos<max && *pos!=' ' && *pos!='\r' && *pos!='\n') pos++;
       nmodel=pos-model;
       tmp=NewColor(prefix,nprefix,name,nname,model,nmodel,values,nvalues);
       tmp->next=list;
@@ -254,7 +254,7 @@ static struct colorname* LoadXColorPrologue(void)
 void stringrgb(const char* color,int *r,int *g,int *b)
 {
   char* end;
-  static int unloaded=1;
+  static int unloaded=0;
 
   DEBUG_PRINT(DEBUG_COLOR,("\n  COLOR SPEC:\t'%s' (",color));
   SKIPSPACES(color);
@@ -300,9 +300,9 @@ void stringrgb(const char* color,int *r,int *g,int *b)
     *r = c+k<255 ? 255-(c+k) : 0;
     *g = m+k<255 ? 255-(m+k) : 0;
     *b = y+k<255 ? 255-(y+k) : 0;
-  } else if (strncmp(color,"hsb ",4)==0 
+  } else if (strncmp(color,"hsb ",4)==0
 	     || strncmp(color,"HSB ",4)==0) {
-    /* The hsb and HSB models really need more presicion. 
+    /* The hsb and HSB models really need more presicion.
        Use double and convert back*/
     double hu,sa,br,f,R,G,B;
     int i;
@@ -320,19 +320,19 @@ void stringrgb(const char* color,int *r,int *g,int *b)
     i=6*hu;
     f=6*hu-i;
     switch(i) {
-    case 0: 
+    case 0:
       R = br*(1-sa*0);     G = br*(1-sa*(1-f)); B = br*(1-sa*1); break;
-    case 1: 
+    case 1:
       R = br*(1-sa*f);     G = br*(1-sa*0);     B = br*(1-sa*1); break;
-    case 2: 
+    case 2:
       R = br*(1-sa*1);     G = br*(1-sa*0);     B = br*(1-sa*(1-f)); break;
-    case 3: 
+    case 3:
       R = br*(1-sa*1);     G = br*(1-sa*f);     B = br*(1-sa*0); break;
-    case 4: 
+    case 4:
       R = br*(1-sa*(1-f)); G = br*(1-sa*1);     B = br*(1-sa*0); break;
-    case 5: 
+    case 5:
       R = br*(1-sa*0);     G = br*(1-sa*1);     B = br*(1-sa*f); break;
-    default: 
+    default:
       R = br*(1-sa*0);     G = br*(1-sa*1);     B = br*(1-sa*1);
     }
     *r=FTO255(R);
@@ -348,14 +348,13 @@ void stringrgb(const char* color,int *r,int *g,int *b)
     while(tmp!=NULL && strcmp(color,tmp->name)!=0)
       tmp=tmp->next;
     if (tmp==NULL) {
-      if (colornamep==NULL)
-	colornamep=LoadColornameFile(colordef[0]);
+      while (colornamep==NULL && colordef[unloaded]!=NULL)
+        colornamep=LoadColornameFile(colordef[unloaded++]);
       tmp=colornamep;
-      while((tmp->next!=NULL || colordef[unloaded]!=NULL)
-	    && strcmp(color,tmp->name)!=0) {
-	if (tmp->next==NULL)
-	  tmp->next=LoadColornameFile(colordef[unloaded++]);
-	tmp=tmp->next;
+      while(tmp!=NULL && strcmp(color,tmp->name)!=0) {
+        while (tmp->next==NULL && colordef[unloaded]!=NULL)
+          tmp->next=LoadColornameFile(colordef[unloaded++]);
+        tmp=tmp->next;
       }
     }
     if (strcmp(color,tmp->name)==0) {
