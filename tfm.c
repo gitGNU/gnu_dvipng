@@ -27,8 +27,8 @@
 bool ReadTFM(struct font_entry * tfontp, char* tfmname)
 {
   struct filemmap fmmap;
-  struct char_entry *tcharptr;  
-  unsigned char *position; 
+  struct char_entry *tcharptr;
+  unsigned char *position;
   int lh,bc,ec,nw, c;
   dviunits* width;
 
@@ -41,35 +41,38 @@ bool ReadTFM(struct font_entry * tfontp, char* tfmname)
   ec = UNumRead(position+6,2);
   nw = UNumRead(position+8,2);
   DEBUG_PRINT(DEBUG_TFM,(" %d %d %d %d",lh,bc,ec,nw));
-  width=malloc(nw*sizeof(dviunits));  
-  c=0;
-  position=position+24+(lh+ec-bc+1)*4;
-  while( c < nw ) {
-    width[c] = SNumRead(position,4);
-    c++;
-    position += 4; 
+  if (nw>0) {
+    if ((width=malloc(nw*sizeof(dviunits)))==NULL)
+      Fatal("cannot allocate memory for TFM widths");
+    c=0;
+    position=position+24+(lh+ec-bc+1)*4;
+    while( c < nw ) {
+      width[c] = SNumRead(position,4);
+      c++;
+      position += 4;
+    }
+    /* Read char widths */
+    c=bc;
+    position=(unsigned char*)fmmap.data+24+lh*4;
+    while(c <= ec) {
+      DEBUG_PRINT(DEBUG_TFM,("\n@%ld TFM METRICS:\t",
+			     (long)position - (long)fmmap.data));
+      if ((tcharptr=malloc(sizeof(struct char_entry)))==NULL)
+        Fatal("cannot allocate memory for TFM char entry");
+      tcharptr->data=NULL;
+      tcharptr->tfmw=width[*position];
+      DEBUG_PRINT(DEBUG_TFM,("%d [%d] %d",c,*position,tcharptr->tfmw));
+      tcharptr->tfmw = (dviunits)
+        ((int64_t) tcharptr->tfmw * tfontp->s / (1 << 20));
+      DEBUG_PRINT(DEBUG_TFM,(" (%d)",tcharptr->tfmw));
+      if (c >= NFNTCHARS) /* Only positive for now */
+        Fatal("tfm file %s exceeds char numbering limit",tfmname);
+      tfontp->chr[c] = tcharptr;
+      c++;
+      position += 4;
+    }
+    free(width);
   }
-  
-  /* Read char widths */
-  c=bc;
-  position=(unsigned char*)fmmap.data+24+lh*4;
-  while(c <= ec) {
-    DEBUG_PRINT(DEBUG_TFM,("\n@%ld TFM METRICS:\t", 
-			   (long)position - (long)fmmap.data));
-    tcharptr=xmalloc(sizeof(struct char_entry));
-    tcharptr->data=NULL;
-    tcharptr->tfmw=width[*position];
-    DEBUG_PRINT(DEBUG_TFM,("%d [%d] %d",c,*position,tcharptr->tfmw));
-    tcharptr->tfmw = (dviunits) 
-      ((int64_t) tcharptr->tfmw * tfontp->s / (1 << 20));
-    DEBUG_PRINT(DEBUG_TFM,(" (%d)",tcharptr->tfmw));
-    if (c >= NFNTCHARS) /* Only positive for now */
-      Fatal("tfm file %s exceeds char numbering limit",tfmname);
-    tfontp->chr[c] = tcharptr;
-    c++;
-    position += 4;
-  }
-  free(width);
   UnMmapFile(&fmmap);
   return(true);
 }

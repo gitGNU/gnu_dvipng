@@ -116,8 +116,10 @@ AC_HAS_KPSE_ENC_FORMATS
 
 # Checks for library functions.
 AC_FUNC_FORK
-AC_FUNC_MALLOC
+# We always allocate nonzero chunks
+# AC_FUNC_MALLOC
 AC_FUNC_MMAP
+# AC_FUNC_REALLOC
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([dup2 memset munmap pow putenv strchr strrchr strtol strstr])

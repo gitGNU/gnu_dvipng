@@ -18,7 +18,7 @@
   License along with this program. If not, see
   <http://www.gnu.org/licenses/>.
 
-  Copyright (C) 2002-2010 Jan-Åke Larsson
+  Copyright (C) 2002-2015 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -27,7 +27,7 @@
 #define VF_ID 202
 #define LONG_CHAR 242
 
-int32_t SetVF(struct char_entry* ptr) 
+int32_t SetVF(struct char_entry* ptr)
 {
   struct font_entry* currentvf;
   unsigned char *command,*end;
@@ -40,7 +40,7 @@ int32_t SetVF(struct char_entry* ptr)
     DEBUG_PRINT(DEBUG_DVI,("\n  VF MACRO:\t%s ", dvi_commands[*command]));
     DrawCommand(command,currentvf);
     command += CommandLength(command);
-  } 
+  }
   EndVFMacro();
   currentfont=currentvf;
   return(ptr->tfmw);
@@ -52,21 +52,21 @@ void InitVF(struct font_entry * tfontp)
 {
   unsigned char* position;
   int length;
-  struct char_entry *tcharptr;  
+  struct char_entry *tcharptr;
   uint32_t c=0;
   struct font_num *tfontnump;  /* temporary font_num pointer   */
-  
+
   DEBUG_PRINT((DEBUG_DVI|DEBUG_VF),("\n  OPEN FONT:\t'%s'", tfontp->name));
   Message(BE_VERBOSE,"<%s>", tfontp->name);
   if (MmapFile(tfontp->name,&(tfontp->fmmap)))
     Fatal("font file %s unusable", tfontp->name);
   position=(unsigned char*)tfontp->fmmap.data;
-  if (*(position) != PRE) 
+  if (*(position) != PRE)
     Fatal("unknown font format in file %s",tfontp->name);
-  if (*(position+1) != VF_ID) 
+  if (*(position+1) != VF_ID)
       Fatal( "wrong version %d of vf file %s (should be 202)",
 	     (int)*(position+1),tfontp->name);
-  DEBUG_PRINT(DEBUG_VF,("\n  VF_PRE:\t'%.*s'", 
+  DEBUG_PRINT(DEBUG_VF,("\n  VF_PRE:\t'%.*s'",
 		(int)*(position+2), position+3));
   position = position+3 + *(position+2);
   c=UNumRead(position, 4);
@@ -79,10 +79,10 @@ void InitVF(struct font_entry * tfontp)
   /* Read font definitions */
   position += 8;
   while(*position >= FNT_DEF1 && *position <= FNT_DEF4) {
-    DEBUG_PRINT(DEBUG_VF,("\n  @%ld VF:\t%s", 
-			  (long)position - (long)tfontp->fmmap.data, 
+    DEBUG_PRINT(DEBUG_VF,("\n  @%ld VF:\t%s",
+			  (long)position - (long)tfontp->fmmap.data,
 			  dvi_commands[*position]));
-    FontDef(position,tfontp);	
+    FontDef(position,tfontp);
     length = dvi_commandlength[*position];
     position += length + *(position + length-1) + *(position+length-2);
   }
@@ -92,12 +92,12 @@ void InitVF(struct font_entry * tfontp)
     tfontnump = tfontnump->next;
   }
   tfontp->defaultfont=tfontnump->k;
-  
   /* Read char definitions */
   while(*position < FNT_DEF1) {
-    DEBUG_PRINT(DEBUG_VF,("\n@%ld VF CHAR:\t", 
+    DEBUG_PRINT(DEBUG_VF,("\n@%ld VF CHAR:\t",
 			  (long)position - (long)tfontp->fmmap.data));
-    tcharptr=xmalloc(sizeof(struct char_entry));
+    if ((tcharptr=malloc(sizeof(struct char_entry)))==NULL)
+      Fatal("cannot allocate memory for VF char entry");
     switch (*position) {
     case LONG_CHAR:
       tcharptr->length = UNumRead(position+1,4);
@@ -112,7 +112,7 @@ void InitVF(struct font_entry * tfontp)
       position += 5;
     }
     DEBUG_PRINT(DEBUG_VF,("%d %d %d",tcharptr->length,c,tcharptr->tfmw));
-    tcharptr->tfmw = (int32_t) 
+    tcharptr->tfmw = (int32_t)
       ((int64_t) tcharptr->tfmw * tfontp->s / (1 << 20));
     DEBUG_PRINT(DEBUG_VF,(" (%d)",tcharptr->tfmw));
     if (c >= NFNTCHARS) /* Only positive for now */

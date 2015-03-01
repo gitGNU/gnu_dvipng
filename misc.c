@@ -783,8 +783,7 @@ bool MmapFile (char *filename,struct filemmap *fmmap)
     return(true);
   }
 # else /* HAVE_MMAP */
-  fmmap->data = malloc(fmmap->size);
-  if (fmmap->data == NULL) {
+	if ((fmmap->data = malloc(fmmap->size+1)) == NULL) {
     Warning("cannot malloc space for <%s>",filename);
     close(fmmap->fd);
     return(true);

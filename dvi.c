@@ -112,25 +112,20 @@ struct dvi_data* DVIOpen(char* dviname,char* outname)
   struct dvi_data* dvi;
 
   if ((dvi = calloc(1,sizeof(struct dvi_data)))==NULL)
-    Fatal("cannot malloc memory for DVI struct");
-
+    Fatal("cannot allocate memory for DVI struct");
   dvi->type = DVI_TYPE;
   dvi->fontnump=NULL;
-
-  dvi->name = malloc(strlen(dviname)+5);
-  if (dvi->name==NULL)
-    Fatal("cannot malloc space for DVI filename");
+  if ((dvi->name = malloc(strlen(dviname)+5))==NULL)
+    Fatal("cannot allocate space for DVI filename");
   strcpy(dvi->name, dviname);
   tmpstring = strrchr(dvi->name, '.');
   if (tmpstring == NULL || strcmp(tmpstring,".dvi") != 0)
     strcat(dvi->name, ".dvi");
-
   if (outname==NULL) {
-    dvi->outname = malloc(strlen(basename(dviname))+7);
-    if (dvi->outname==NULL) {
+    if ((dvi->outname = malloc(strlen(basename(dviname))+7))==NULL) {
       free(dvi->name);
       free(dvi);
-      Fatal("cannot malloc space for output filename");
+      Fatal("cannot allocate space for output filename");
     }
     strcpy(dvi->outname,basename(dviname));
     tmpstring = strrchr(dvi->outname, '.');
@@ -138,15 +133,13 @@ struct dvi_data* DVIOpen(char* dviname,char* outname)
       *tmpstring = '\0';
     strcat(dvi->outname, "%d.png");
   } else {
-    dvi->outname = malloc(strlen(outname)+1);
-    if (dvi->outname==NULL) {
+    if ((dvi->outname = malloc(strlen(outname)+1))==NULL) {
       free(dvi->name);
       free(dvi);
-      Fatal("cannot malloc space for output filename");
+      Fatal("cannot allocate space for output filename");
     }
     strcpy(dvi->outname,outname);
   }
-
   if ((dvi->filep = fopen(dvi->name,"rb")) == NULL) {
     /* do not insist on .dvi */
     tmpstring = strrchr(dvi->name, '.');
@@ -188,7 +181,7 @@ unsigned char* DVIGetCommand(struct dvi_data* dvi)
   if (commlen==0) {
     commlen=STRSIZE;
     if ((current=command=malloc(commlen))==NULL)
-      Fatal("cannot malloc memory for DVI command");
+      Fatal("cannot allocate memory for DVI command");
   }
   DEBUG_PRINT(DEBUG_DVI,("\n@%ld ", ftell(dvi->filep)));
   *(current++) = fgetc_follow(dvi->filep);
@@ -219,7 +212,7 @@ unsigned char* DVIGetCommand(struct dvi_data* dvi)
       /* string + command length exceeds that of buffer */
       commlen=strlength+1 + (uint32_t)length;
       if ((command=realloc(command,commlen))==NULL)
-	Fatal("cannot malloc memory for DVI command");
+	Fatal("cannot allocate memory for DVI command");
       current = command + length;
     }
     while(current < command+length+strlength)
@@ -345,7 +338,7 @@ static struct page_list* InitPage(struct dvi_data* dvi)
   if ((tpagelistp =
        malloc(sizeof(struct page_list)
 	      +(csp+1-2)*sizeof(struct dvi_color)))==NULL)
-    Fatal("cannot malloc memory for new page entry");
+    Fatal("cannot allocate memory for new page entry");
   tpagelistp->next = NULL;
   if ( *command == BOP ) {  /*  Init page */
     int i;

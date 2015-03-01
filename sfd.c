@@ -25,13 +25,13 @@
 #include "dvipng.h"
 struct subfont* subfontp=NULL;
 
-static struct subfont* ReadSubfont(char* sfdname, char *infix) 
+static struct subfont* ReadSubfont(char* sfdname, char *infix)
 {
   char *pos,*max,*sfdfile=NULL;
   struct subfont* sfdp=NULL;
   struct filemmap fmmap;
   boolean mmapfailed;
-  
+
   /* OK, find subfont and look for correct infix */
 #ifdef HAVE_KPSE_ENC_FORMATS
   sfdfile=kpse_find_file(sfdname,kpse_sfd_format,false);
@@ -52,7 +52,7 @@ static struct subfont* ReadSubfont(char* sfdname, char *infix)
     while(pos<max && *pos!='\r' && *pos!='\n') pos++;
     while(pos<max && (*pos==' ' || *pos=='\r' || *pos=='\n' || *pos=='\t')) pos++;
   }
-  while(pos+strlen(infix)<max 
+  while(pos+strlen(infix)<max
 	&& (strncmp(pos,infix,strlen(infix))!=0
 	    || (pos[strlen(infix)]!=' ' && pos[strlen(infix)]!='\t'))) {
     /* skip lines, taking line continuation into account */
@@ -71,7 +71,7 @@ static struct subfont* ReadSubfont(char* sfdname, char *infix)
 
     if ((sfdp = calloc(sizeof(struct subfont)+strlen(sfdname)+1
 		       +strlen(infix)+1,1))==NULL) {
-      Warning("cannot alloc space for subfont",sfdname);
+      Warning("cannot allocate memory for subfont",sfdname);
       UnMmapFile(&fmmap);
       return(NULL);
     }
@@ -84,7 +84,7 @@ static struct subfont* ReadSubfont(char* sfdname, char *infix)
       number=strtol(pos,&pos,0);
       while(pos<max && (*pos==' ' || *pos=='\t')) pos++;
       switch(*pos) {
-      case ':': 
+      case ':':
 	codepoint=number;
 	pos++;
 	break;
@@ -92,14 +92,14 @@ static struct subfont* ReadSubfont(char* sfdname, char *infix)
 	range=strtol(pos+1,&pos,0);
 	while(codepoint<256 && number<range) {
 	  sfdp->charindex[codepoint]=number;
-	  DEBUG_PRINT(DEBUG_ENC,("\n  SUBFONT MAP %d %d",codepoint,number)); 
+	  DEBUG_PRINT(DEBUG_ENC,("\n  SUBFONT MAP %d %d",codepoint,number));
 	  number++;
 	  codepoint++;
 	}
       default:
 	if (codepoint<256)
 	  sfdp->charindex[codepoint]=number;
-	DEBUG_PRINT(DEBUG_ENC,("\n  SUBFONT MAP %d %d",codepoint,number)); 
+	DEBUG_PRINT(DEBUG_ENC,("\n  SUBFONT MAP %d %d",codepoint,number));
       }
       while(pos<max && (*pos==' ' || *pos=='\t')) pos++;
       /* take line continuation into account */
@@ -113,7 +113,7 @@ static struct subfont* ReadSubfont(char* sfdname, char *infix)
   return (sfdp);
 }
 
-struct psfontmap* FindSubFont(struct psfontmap* entry, char* fontname) 
+struct psfontmap* FindSubFont(struct psfontmap* entry, char* fontname)
 {
   struct subfont *temp=subfontp;
   char *sfdspec=entry->tfmname,*sfdwant=fontname,
@@ -124,7 +124,7 @@ struct psfontmap* FindSubFont(struct psfontmap* entry, char* fontname)
     sfdwant++;
   }
   /* Find delimiter */
-  if (*sfdspec!='@') 
+  if (*sfdspec!='@')
     return(NULL);
   sfdspec++;
   postfix=sfdspec;
@@ -133,7 +133,8 @@ struct psfontmap* FindSubFont(struct psfontmap* entry, char* fontname)
   if (*postfix!='@')
     return(NULL);
   /* Extract subfont name */
-  sfdname=malloc(postfix-sfdspec+1);
+  if ((sfdname=malloc(postfix-sfdspec+1))==NULL)
+    Fatal("cannot allocate memory for subfont name");
   strncpy(sfdname,sfdspec,postfix-sfdspec);
   sfdname[postfix-sfdspec]='\0';
   /* Check postfix */
@@ -141,12 +142,13 @@ struct psfontmap* FindSubFont(struct psfontmap* entry, char* fontname)
   if (strcmp(sfdwant+strlen(sfdwant)-strlen(postfix),postfix)!=0)
     return(NULL);
   /* Extract infix */
-  infix=malloc(strlen(sfdwant)-strlen(postfix)+1);
+  if ((infix=malloc(strlen(sfdwant)-strlen(postfix)+1))==NULL)
+    Fatal("cannot allocate memory for subfont infix");
   strncpy(infix,sfdwant,strlen(sfdwant)-strlen(postfix));
   infix[strlen(sfdwant)-strlen(postfix)]='\0';
-  DEBUG_PRINT(DEBUG_ENC,("\n  SUBFONT %s %s %s",fontname,sfdname,infix)); 
+  DEBUG_PRINT(DEBUG_ENC,("\n  SUBFONT %s %s %s",fontname,sfdname,infix));
   /* Find subfont */
-  while(temp!=NULL 
+  while(temp!=NULL
 	&& (strcmp(sfdname,temp->name)!=0 || strcmp(infix,temp->infix)!=0))
     temp=temp->next;
   if (temp==NULL) {
@@ -176,4 +178,3 @@ void ClearSubfont(void)
     temp=subfontp;
   }
 }
-

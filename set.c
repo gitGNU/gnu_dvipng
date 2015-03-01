@@ -145,7 +145,8 @@ void WriteImage(char *pngname, int pagenum)
 	|| (*pos=='0' && pos[1]>='1' && pos[1]<='9' && pos[2]=='d')) {
       /* %d -> pagenumber, so add 9 string positions
 	 since pagenumber max +-2^31 or +-2*10^9 */
-      freeme = malloc(strlen(pngname)+9);
+      if ((freeme = malloc(strlen(pngname)+9))==NULL)
+				Fatal("cannot allocate memory for output file name");
       sprintf(freeme,pngname,pagenum);
       pngname = freeme;
     } else {

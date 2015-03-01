@@ -62,7 +62,7 @@ static uint32_t pk_packed_num(unsigned char** pos)
   } else if (i <= (int)dyn_f) {
     return ((uint32_t)i);
   } else if (i < 14) {
-    return ((i-(uint32_t)dyn_f - 1) * 16 + (uint32_t)getnyb(pos) 
+    return ((i-(uint32_t)dyn_f - 1) * 16 + (uint32_t)getnyb(pos)
 	    + dyn_f + 1);
   } else {
     if (i == 14) {
@@ -83,7 +83,7 @@ static unsigned char* skip_specials(unsigned char* pos)
     switch (*pos++) {
     case 243:
       i = *pos++;
-    case 242: 
+    case 242:
       i = 256 * i + *pos++;
     case 241:
       i = 256 * i + *pos++;
@@ -92,9 +92,9 @@ static unsigned char* skip_specials(unsigned char* pos)
       DEBUG_PRINT(DEBUG_PK,("\n  PK SPECIAL\t'%.*s' ",(int)i,pos));
       pos += i;
       break;
-    case 244: 
+    case 244:
 #ifdef DEBUG
-      { 
+      {
 	uint32_t c;
 	c=UNumRead(pos,4);
 	DEBUG_PRINT(DEBUG_PK,("\n  PK SPECIAL\t%d",c));
@@ -102,14 +102,14 @@ static unsigned char* skip_specials(unsigned char* pos)
 #endif
       pos += 4;
       break;
-    case 245: 
+    case 245:
       break;
     case 246:
       DEBUG_PRINT(DEBUG_PK,("\n  PK\tNOP "));
       break;
     case 247: case 248: case 249: case 250:
     case 251: case 252: case 253: case 254:
-    case 255: 
+    case 255:
       Fatal("unexpected PK flagbyte %d", (int)*pos);
     }
   }
@@ -152,7 +152,7 @@ void LoadPK(int32_t c, register struct char_entry * ptr)
   ptr->tfmw = (dviunits)
     ((int64_t) ptr->tfmw * currentfont->s / 0x100000 );
   DEBUG_PRINT(DEBUG_PK,(" (%d)",ptr->tfmw));
-  
+
   width   = UNumRead(pos, n);
   height  = UNumRead(pos+=n, n);
   DEBUG_PRINT(DEBUG_PK,(" %dx%d",width,height));
@@ -160,7 +160,7 @@ void LoadPK(int32_t c, register struct char_entry * ptr)
   if (width > 0x7fff || height > 0x7fff)
     Fatal("character %d too large in file %s", c, currentfont->name);
 
-  /* 
+  /*
    * Hotspot issues: Shrinking to the topleft corner rather than the
      hotspot will displace glyphs a fraction of a pixel. We deal with
      this in as follows: The glyph is shrunk to its hotspot by
@@ -169,7 +169,7 @@ void LoadPK(int32_t c, register struct char_entry * ptr)
      will then act as shrinking to the hotspot. This may enlarge the
      bitmap somewhat, of course.  (Also remember that the below
      calculation of i/j_offset is in integer arithmetics.)
-     
+
      There will still be a displacement from rounding the dvi
      position, but vertically it will be equal for all glyphs on a
      line, so we displace a whole line vertically by fractions of a
@@ -189,7 +189,7 @@ void LoadPK(int32_t c, register struct char_entry * ptr)
   ptr->yOffset = yoffset+j_offset;
 
   DEBUG_PRINT(DEBUG_PK,(" (%dx%d)",width,height));
-  /* 
+  /*
      Extra marginal so that we do not crop the image when shrinking.
   */
   shrunk_width = (width + shrinkfactor - 1) / shrinkfactor;
@@ -197,8 +197,9 @@ void LoadPK(int32_t c, register struct char_entry * ptr)
   ptr->w = shrunk_width;
   ptr->h = shrunk_height;
   pos+=n;
-  buffer = calloc(shrunk_width*shrunk_height*
-		  shrinkfactor*shrinkfactor,sizeof(char));
+  if ((buffer = calloc(shrunk_width*shrunk_height*
+											 shrinkfactor*shrinkfactor,sizeof(char)))==NULL)
+    Fatal("cannot allocate space for pk buffer");
   DEBUG_PRINT(DEBUG_GLYPH,("\nDRAW GLYPH %d\n", (int)c));
   /* Raster char */
   if (dyn_f == 14) {	/* get raster by bits */
@@ -228,25 +229,25 @@ void LoadPK(int32_t c, register struct char_entry * ptr)
       count = pk_packed_num(&pos);
       while (count > 0) {
 	if (i+count < width) {
-	  if (paint_switch) 
+	  if (paint_switch)
 	    for(k=0;k<count;k++) {
 	      buffer[k+i+j*width]=1;
 	      DEBUG_PRINT(DEBUG_GLYPH,("*"));
 	    }
 #ifdef DEBUG
-	  else for(k=0;k<count;k++) 
+	  else for(k=0;k<count;k++)
 	    DEBUG_PRINT(DEBUG_GLYPH,(" "));
 #endif
 	  i += count;
 	  count = 0;
 	} else {
-	  if (paint_switch) 
+	  if (paint_switch)
 	    for(k=i;k<width;k++) {
 	      buffer[k+j*width]=1;
 	      DEBUG_PRINT(DEBUG_GLYPH,("#"));
 	    }
 #ifdef DEBUG
-	  else for(k=i;k<width;k++) 
+	  else for(k=i;k<width;k++)
 	    DEBUG_PRINT(DEBUG_GLYPH,(" "));
 #endif
 	  DEBUG_PRINT(DEBUG_GLYPH,("|\n"));
@@ -272,7 +273,7 @@ void LoadPK(int32_t c, register struct char_entry * ptr)
       paint_switch = 1 - paint_switch;
     }
     if (i>i_offset)
-      Fatal("wrong number of bits stored: char. %c, font %s", 
+      Fatal("wrong number of bits stored: char. %c, font %s",
 	    (char)c, currentfont->name);
     if (j>height)
       Fatal("bad PK file %s, too many bits", currentfont->name);
@@ -284,8 +285,8 @@ void LoadPK(int32_t c, register struct char_entry * ptr)
   */
   if ((ptr->data = calloc(shrunk_width*shrunk_height,sizeof(char))) == NULL)
     Fatal("unable to malloc image space for char %c", (char)c);
-  for (j = 0; j < (int) height; j++) {	
-    for (i = 0; i < (int) width; i++) {    
+  for (j = 0; j < (int) height; j++) {
+    for (i = 0; i < (int) width; i++) {
       /* if (((i % shrinkfactor) == 0) && ((j % shrinkfactor) == 0))
 	 ptr->data[i/shrinkfactor+j/shrinkfactor*shrunk_width] =
 	 buffer[i+j*width];
@@ -293,15 +294,15 @@ void LoadPK(int32_t c, register struct char_entry * ptr)
       ptr->data[i/shrinkfactor+j/shrinkfactor*shrunk_width] +=
 	buffer[i+j*width];
     }
-  }	
-  for (j = 0; j < shrunk_height; j++) {	
-    for (i = 0; i < shrunk_width; i++) {    
+  }
+  for (j = 0; j < shrunk_height; j++) {
+    for (i = 0; i < shrunk_width; i++) {
       ptr->data[i+j*shrunk_width] = ptr->data[i+j*shrunk_width]
 	*255/shrinkfactor/shrinkfactor;
       DEBUG_PRINT(DEBUG_GLYPH,("%3u ",ptr->data[i+j*shrunk_width]));
     }
     DEBUG_PRINT(DEBUG_GLYPH,("|\n"));
-  }	 
+  }
   free(buffer);
 }
 
@@ -317,11 +318,11 @@ void InitPK(struct font_entry * tfontp)
   if (MmapFile(tfontp->name,&(tfontp->fmmap)))
     Fatal("font file %s unusable", tfontp->name);
   position=(unsigned char*)tfontp->fmmap.data;
-  if (tfontp->fmmap.size < 2 || tfontp->fmmap.size < 3+*(position+2)+16) 
+  if (tfontp->fmmap.size < 2 || tfontp->fmmap.size < 3+*(position+2)+16)
     Fatal("PK file %s ends prematurely",tfontp->name);
-  if (*position++ != PK_PRE) 
+  if (*position++ != PK_PRE)
     Fatal("unknown font format in file %s",tfontp->name);
-  if (*position++ != PK_ID) 
+  if (*position++ != PK_ID)
     Fatal( "wrong version %d of PK file %s (should be 89)",
 	   (int)*(position-1),tfontp->name);
   DEBUG_PRINT(DEBUG_PK,("\n  PK_PRE:\t'%.*s'",(int)*position, position+1));
@@ -330,7 +331,7 @@ void InitPK(struct font_entry * tfontp)
   tfontp->designsize = UNumRead(position, 4);
   DEBUG_PRINT(DEBUG_PK,(" %d", tfontp->designsize));
   tfontp->type = FONT_TYPE_PK;
-  
+
   c = UNumRead(position+4, 4);
   DEBUG_PRINT(DEBUG_PK,(" %d", c));
   CheckChecksum (tfontp->c, c, tfontp->name);
@@ -348,7 +349,7 @@ void InitPK(struct font_entry * tfontp)
     DEBUG_PRINT(DEBUG_PK,("\n  @%ld PK CHAR:\t%d",
 			  (long)position - (long)tfontp->fmmap.data, *position));
     if ((tcharptr = malloc(sizeof(struct char_entry))) == NULL)
-      Fatal("cannot malloc space for char_entry");
+      Fatal("cannot allocate space for char_entry");
     tcharptr->flag_byte = *position;
     tcharptr->data = NULL;
     tcharptr->tfmw = 0;

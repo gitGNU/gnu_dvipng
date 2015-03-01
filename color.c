@@ -56,9 +56,8 @@ static struct colorname * NewColor(const char* prefix, int nprefix,
 				   char* model, int nmodel,
 				   char* values, int nvalues)
 {
-  struct colorname *tmp =
-    malloc(sizeof(struct colorname)+3+nprefix+nname+nmodel+nvalues);
-  if (tmp==NULL)
+  struct colorname *tmp;
+  if ((tmp=malloc(sizeof(struct colorname)+3+nprefix+nname+nmodel+nvalues))==NULL)
     Fatal("Cannot malloc space for color name");
   tmp->color=tmp->name+nprefix+nname+1;
   strncpy(tmp->name,prefix,nprefix);
@@ -195,8 +194,7 @@ void ClearColorNames(void)
 void InitXColorPrologue(const char* name)
 {
   ClearXColorPrologue();
-  xcpname=malloc(strlen(name)+1);
-  if (xcpname==NULL)
+  if ((xcpname=malloc(strlen(name)+1))==NULL)
     Fatal("cannot malloc memory for xcolor prologue name");
   strcpy(xcpname,name);
 }
