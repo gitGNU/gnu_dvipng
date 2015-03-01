@@ -18,7 +18,7 @@
   License along with this program. If not, see
   <http://www.gnu.org/licenses/>.
 
-  Copyright (C) 2002-2010,2012 Jan-Åke Larsson
+  Copyright (C) 2002-2015 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -26,7 +26,7 @@
 
 #ifndef MIKTEX
 #ifndef WIN32
-#include <wait.h>
+#include <sys/wait.h>
 #else /* WIN32 */
 #include <fcntl.h>
 #include <io.h>
@@ -38,7 +38,7 @@
 
 #define SKIPSPACES(s) while(s && *s==' ' && *s!='\0') s++
 
-/* PostScript can come as a string (headers and raw specials) or 
+/* PostScript can come as a string (headers and raw specials) or
    a memory-mapped file (headers and included EPS figures). */
 
 struct pscode {
@@ -127,7 +127,7 @@ static void writepscode(FILE* psstream,struct pscode* pscodep)
 
       DEBUG_PRINT(DEBUG_GS,("\n  PS FILE:\t%s",pscodep->filename));
       position=(unsigned char*)pscodep->fmmap.data;
-      while(position 
+      while(position
 	    < (unsigned char*)pscodep->fmmap.data + pscodep->fmmap.size) {
 	putc(*position,psstream);
 	position++;
@@ -151,7 +151,7 @@ ps2png(struct pscode* pscodep, const char *device, int hresolution, int vresolut
 #define READ_END 0
 #define WRITE_END 1
   FILE *psstream=NULL, *pngstream=NULL;
-  char resolution[STRSIZE]; 
+  char resolution[STRSIZE];
   /*   char devicesize[STRSIZE];  */
   gdImagePtr psimage=NULL;
 #ifndef MIKTEX
@@ -178,23 +178,23 @@ ps2png(struct pscode* pscodep, const char *device, int hresolution, int vresolut
   /* Future extension for \rotatebox
   status=sprintf(devicesize, "-g%dx%d",
 		 //(int)((sin(atan(1.0))+1)*
-		 (urx - llx)*hresolution/72,//), 
+		 (urx - llx)*hresolution/72,//),
 		 //(int)((sin(atan(1.0))+1)*
 		 (ury - lly)*vresolution/72);//);
   */
   DEBUG_PRINT(DEBUG_GS,
 	      ("\n  GS CALL:\t%s %s %s %s %s %s %s %s %s %s %s",/* %s", */
 	       GS_PATH, device, resolution, /*devicesize,*/
-	       "-dBATCH", "-dNOPAUSE", "-q", "-sOutputFile=-", 
+	       "-dBATCH", "-dNOPAUSE", "-q", "-sOutputFile=-",
 	       "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
-	       (option_flags & NO_GSSAFER) ? "-": "-dSAFER", 
+	       (option_flags & NO_GSSAFER) ? "-": "-dSAFER",
 	       (option_flags & NO_GSSAFER) ? "": "- "));
 #ifndef MIKTEX
   if (pipe(pspipe) || pipe(pngpipe)) return(NULL);
 #ifndef WIN32
   /* We have fork: execute gs in child */
   pid = fork();
-  if (pid == 0) { /* Child, execute gs. */       
+  if (pid == 0) { /* Child, execute gs. */
     close(pspipe[WRITE_END]);
     dup2(pspipe[READ_END], STDIN_FILENO);
     close(pspipe[READ_END]);
@@ -202,25 +202,25 @@ ps2png(struct pscode* pscodep, const char *device, int hresolution, int vresolut
     dup2(pngpipe[WRITE_END], STDOUT_FILENO);
     close(pngpipe[WRITE_END]);
     execlp(GS_PATH, GS_PATH, device, resolution, /*devicesize,*/
-	   "-dBATCH", "-dNOPAUSE", "-q", "-sOutputFile=-", 
+	   "-dBATCH", "-dNOPAUSE", "-q", "-sOutputFile=-",
 	   "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
-	   (option_flags & NO_GSSAFER) ? "-": "-dSAFER", 
+	   (option_flags & NO_GSSAFER) ? "-": "-dSAFER",
 	   (option_flags & NO_GSSAFER) ? NULL: "-",
 	   NULL);
     _exit (EXIT_FAILURE);
   }
 #else /* WIN32 */
   /* No fork but spawn: execute gs in present process environment.
-     Save fileno's, attach pipes to this process' stdin and stdout. */       
+     Save fileno's, attach pipes to this process' stdin and stdout. */
   savestdin = _dup(fileno(stdin));
   _dup2(pspipe[READ_END], fileno(stdin));
   savestdout = _dup(fileno(stdout));
   _dup2(pngpipe[WRITE_END], fileno(stdout));
   if ((hchild=
        (HANDLE)spawnlp(_P_NOWAIT, GS_PATH, GS_PATH, device, resolution,
-		       "-dBATCH", "-dNOPAUSE", "-q", "-sOutputFile=-", 
+		       "-dBATCH", "-dNOPAUSE", "-q", "-sOutputFile=-",
 		       "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
-		       (option_flags & NO_GSSAFER) ? "-": "-dSAFER", 
+		       (option_flags & NO_GSSAFER) ? "-": "-dSAFER",
 		       (option_flags & NO_GSSAFER) ? NULL : "-", NULL))==0)
     return NULL;
 #endif /* WIN32 */
@@ -228,16 +228,16 @@ ps2png(struct pscode* pscodep, const char *device, int hresolution, int vresolut
   close(pngpipe[WRITE_END]);
 #else /* MIKTEX */
   /* No fork but miktex_start_process3: execute gs using that.
-     Attach file descriptors to that process' stdin and stdout. */       
+     Attach file descriptors to that process' stdin and stdout. */
   if (! miktex_find_miktex_executable("mgs.exe", szGsPath)) {
       Warning("Ghostscript could not be found");
       return(NULL);
   }
   snprintf(szCommandLine,2048,"\"%s\" %s %s %s %s %s %s %s %s %s %s",/* %s",*/
 	   szGsPath, device, resolution, /*devicesize,*/
-	   "-dBATCH", "-dNOPAUSE", "-q", "-sOutputFile=-", 
+	   "-dBATCH", "-dNOPAUSE", "-q", "-sOutputFile=-",
 	   "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4",
-	   (option_flags & NO_GSSAFER) ? "-": "-dSAFER", 
+	   (option_flags & NO_GSSAFER) ? "-": "-dSAFER",
 	   (option_flags & NO_GSSAFER) ? "": "-");
   if (! miktex_start_process_3(szCommandLine, &pi, INVALID_HANDLE_VALUE,
 			       &hPsStream, &hPngStream, &hStdErr, 0)) {
@@ -249,7 +249,7 @@ ps2png(struct pscode* pscodep, const char *device, int hresolution, int vresolut
   pngpipe[READ_END] = _open_osfhandle((intptr_t)hPngStream, _O_RDONLY);
 #endif /* MIKTEX */
   if (pspipe[WRITE_END] >= 0) {
-    if ((psstream=fdopen(pspipe[WRITE_END],"wb")) == NULL) 
+    if ((psstream=fdopen(pspipe[WRITE_END],"wb")) == NULL)
       close(pspipe[WRITE_END]);
     else {
       writepscode(psstream,psheaderp);
@@ -270,7 +270,7 @@ ps2png(struct pscode* pscodep, const char *device, int hresolution, int vresolut
     }
   }
   if (pngpipe[READ_END] >= 0) {
-    if((pngstream=fdopen(pngpipe[READ_END],"rb")) == NULL) 
+    if((pngstream=fdopen(pngpipe[READ_END],"rb")) == NULL)
       close(pngpipe[READ_END]);
     else {
       psimage = gdImageCreateFromPng(pngstream);
@@ -312,7 +312,7 @@ rescale(gdImagePtr psimage, int pngwidth, int pngheight)
   gdImagePtr scaledimage=psimage;
   /* Rescale unless correct size */
   if (psimage!=NULL
-      && gdImageSX(psimage)!=pngwidth 
+      && gdImageSX(psimage)!=pngwidth
       && gdImageSY(psimage)!=pngheight) {
     DEBUG_PRINT(DEBUG_DVI,
 		("\n  RESCALE INCLUDED BITMAP \t(%d,%d) -> (%d,%d)",
@@ -347,7 +347,7 @@ static void newpsheader(const char* special) {
     newpsheader("header=special.pro");
   }
   if (strcmp(special+strlen(special)-4,".xcp")==0
-      && strncmp(special,"header=",7)==0) 
+      && strncmp(special,"header=",7)==0)
     InitXColorPrologue(special+7);
   if (strncmp(special,"! /pgfH",7)==0)
     newpsheader("! TeXDict begin");
@@ -407,7 +407,7 @@ void SetSpecial(char *start, char *end, int32_t hh, int32_t vv)
     } else {
       if (strcmp(special,"pop")==0)
 	popcolor();
-      else 
+      else
 	resetcolorstack(special);
     }
     free(buffer);
@@ -438,7 +438,7 @@ void SetSpecial(char *start, char *end, int32_t hh, int32_t vv)
       *special='\0';
       special++;
     }
-    
+
     /* Retrieve parameters */
     SKIPSPACES(special);
     while(special && *special) {
@@ -459,7 +459,7 @@ void SetSpecial(char *start, char *end, int32_t hh, int32_t vv)
       while (*special && *special!=' ') special++;
       SKIPSPACES(special);
     }
-    
+
     /* Calculate resolution, and use our base resolution as a fallback. */
     /* The factor 10 is magic, the dvips graphicx driver needs this.    */
     hresolution = ((dpi*rwi+urx-llx-1)/(urx - llx)+9)/10;
@@ -467,18 +467,18 @@ void SetSpecial(char *start, char *end, int32_t hh, int32_t vv)
     if (vresolution==0) vresolution = hresolution;
     if (hresolution==0) hresolution = vresolution;
     if (hresolution==0) hresolution = vresolution = dpi;
-      
+
     /* Convert from postscript 72 dpi resolution to our given resolution */
     pngwidth  = (dpi*rwi+719)/720; /* +719: round up */
     pngheight = (dpi*rhi+719)/720;
-    if (pngwidth==0)  
+    if (pngwidth==0)
       pngwidth  = ((dpi*rhi*(urx-llx)+ury-lly-1)/(ury-lly)+719)/720;
-    if (pngheight==0) 
+    if (pngheight==0)
       pngheight = ((dpi*rwi*(ury-lly)+urx-llx-1)/(urx-llx)+719)/720;
     if (pngheight==0) {
       pngwidth  = (dpi*(urx-llx)+71)/72;
       pngheight = (dpi*(ury-lly)+71)/72;
-    }    
+    }
     if (page_imagep != NULL) { /* Draw into image */
       struct pscode image;
       gdImagePtr psimage=NULL;
@@ -494,7 +494,7 @@ void SetSpecial(char *start, char *end, int32_t hh, int32_t vv)
 	page_flags |= PAGE_GAVE_WARN;
 	free(buffer);
 	return;
-      } 
+      }
       Message(BE_NONQUIET," <%s",psname);
       switch ((unsigned char)*image.fmmap.data) {
       case 0x89: /* PNG magic: "\211PNG\r\n\032\n" */
@@ -551,7 +551,7 @@ void SetSpecial(char *start, char *end, int32_t hh, int32_t vv)
 	    DEBUG_PRINT((DEBUG_DVI | DEBUG_GS),
 			("\n  GS RENDER \t%s -> pngalpha ",image.filename));
 	    if (!clip) {
-	      /* Render across the whole image */ 
+	      /* Render across the whole image */
 	      tllx=llx-(hh+1)*72/hresolution;
 	      tlly=lly-(gdImageSY(page_imagep)-vv-1)*72/vresolution;
 	      turx=llx+(gdImageSX(page_imagep)-hh)*72/hresolution;
@@ -564,8 +564,8 @@ void SetSpecial(char *start, char *end, int32_t hh, int32_t vv)
 	      DEBUG_PRINT((DEBUG_DVI | DEBUG_GS),(", CLIPPED TO BBOX"));
 #endif
 	    }
-	    psimage = ps2png(&image, "-sDEVICE=pngalpha", 
-			     hresolution, vresolution, 
+	    psimage = ps2png(&image, "-sDEVICE=pngalpha",
+			     hresolution, vresolution,
 			     tllx, tlly, turx, tury,
 			     255,255,255);
 	    if (psimage==NULL)
@@ -578,7 +578,7 @@ void SetSpecial(char *start, char *end, int32_t hh, int32_t vv)
 	    DEBUG_PRINT((DEBUG_DVI | DEBUG_GS),
 			("\n  GS RENDER \t%s -> png16m", image.filename));
 	    psimage = ps2png(&image, "-sDEVICE=png16m",
-			     hresolution, vresolution, 
+			     hresolution, vresolution,
 			     llx, lly, urx, ury,
 			     cstack[0].red,cstack[0].green,cstack[0].blue);
 	    clip=true;
@@ -607,7 +607,7 @@ void SetSpecial(char *start, char *end, int32_t hh, int32_t vv)
 	Warning("Using libgd < 2.0.12, opaque image inclusion");
 	page_flags |= PAGE_GAVE_WARN;
 #endif
-	gdImageCopy(page_imagep, psimage, 
+	gdImageCopy(page_imagep, psimage,
 		    hh, vv-gdImageSY(psimage)+1,
 		    0,0,
 		    gdImageSX(psimage),gdImageSY(psimage));
@@ -618,7 +618,7 @@ void SetSpecial(char *start, char *end, int32_t hh, int32_t vv)
       } else {
         Warning("Unable to load %s, image will be left blank",image.filename);
         page_flags |= PAGE_GAVE_WARN;
-      } 
+      }
       free(image.filename);
       Message(BE_NONQUIET,">");
     } else { /* Don't draw */
@@ -638,32 +638,32 @@ void SetSpecial(char *start, char *end, int32_t hh, int32_t vv)
 
   /******************* Raw PostScript ********************/
 
-  if (strncmp(special,"!/preview@version(",18)==0) { 
+  if (strncmp(special,"!/preview@version(",18)==0) {
     int length=0;
     special+=18;
-    while (special[length]!='\0' && special[length]!=')') 
+    while (special[length]!='\0' && special[length]!=')')
       length++;
-    if (page_imagep==NULL) 
+    if (page_imagep==NULL)
       Message(BE_NONQUIET," (preview-latex version %.*s)",length,special);
     free(buffer);
     return;
   }
 
   /* preview-latex' tightpage option */
-  if (strncmp(special,"!/preview@tightpage",19)==0) { 
+  if (strncmp(special,"!/preview@tightpage",19)==0) {
     special+=19;
     SKIPSPACES(special);
     if (strncmp(special,"true",4)==0) {
-      if (page_imagep==NULL) 
+      if (page_imagep==NULL)
 	Message(BE_NONQUIET," (preview-latex tightpage option detected, will use its bounding box)");
       dvi->flags |= DVI_PREVIEW_LATEX_TIGHTPAGE;
     }
     free(buffer);
     return;
   }
-  if (strncmp(special,"!userdict",9)==0 
+  if (strncmp(special,"!userdict",9)==0
       && strstr(special+10,"7{currentfile token not{stop}if 65781.76 div")!=NULL) {
-    if (page_imagep==NULL && ~dvi->flags & DVI_PREVIEW_LATEX_TIGHTPAGE) 
+    if (page_imagep==NULL && ~dvi->flags & DVI_PREVIEW_LATEX_TIGHTPAGE)
       Message(BE_NONQUIET," (preview-latex <= 0.9.1 tightpage option detected, will use its bounding box)");
     dvi->flags |= DVI_PREVIEW_LATEX_TIGHTPAGE;
     free(buffer);
@@ -671,16 +671,16 @@ void SetSpecial(char *start, char *end, int32_t hh, int32_t vv)
   }
 
   /* preview-latex' dvips bop-hook redefinition */
-  if (strncmp(special,"!userdict",9)==0 
+  if (strncmp(special,"!userdict",9)==0
       && strstr(special+10,"preview-bop-")!=NULL) {
     dvi->flags |= DVI_PREVIEW_BOP_HOOK;
-    if (page_imagep==NULL) 
+    if (page_imagep==NULL)
       Message(BE_VERBOSE," (preview-latex beginning-of-page-hook detected)");
     free(buffer);
     return;
   }
 
-  if (dvi->flags & DVI_PREVIEW_BOP_HOOK && ~page_flags & PAGE_PREVIEW_BOP 
+  if (dvi->flags & DVI_PREVIEW_BOP_HOOK && ~page_flags & PAGE_PREVIEW_BOP
       && strncmp(special,"ps::",4)==0) {
     /* Hokay, decode bounding box */
     dviunits adj_llx,adj_lly,adj_urx,adj_ury,ht,dp,wd;
@@ -693,18 +693,18 @@ void SetSpecial(char *start, char *end, int32_t hh, int32_t vv)
     wd = strtol(special,&special,10);
     page_flags |= PAGE_PREVIEW_BOP;
     if (wd>0) {
-      x_offset_tightpage = 
+      x_offset_tightpage =
 	(-adj_llx+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor;
       x_width_tightpage  = x_offset_tightpage
 	+(wd+adj_urx+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor;
     } else {
-      x_offset_tightpage = 
+      x_offset_tightpage =
 	(-wd+adj_urx+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor;
       x_width_tightpage  = x_offset_tightpage
 	+(-adj_llx+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor;
     }
     /* y-offset = height - 1 */
-    y_offset_tightpage = 
+    y_offset_tightpage =
       (((ht>0)?ht:0)+adj_ury+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor-1;
     y_width_tightpage  = y_offset_tightpage+1
       +(((dp>0)?dp:0)-adj_lly+dvi->conv*shrinkfactor-1)/dvi->conv/shrinkfactor;
@@ -717,7 +717,7 @@ void SetSpecial(char *start, char *end, int32_t hh, int32_t vv)
       Warning("Raw PostScript rendering disallowed by --norawps" );
       page_flags |= PAGE_GAVE_WARN;
       free(buffer);
-      return; 
+      return;
     }
     if (page_imagep != NULL) { /* Draw into image */
       static struct pscode *pscodep=NULL;
@@ -727,8 +727,8 @@ void SetSpecial(char *start, char *end, int32_t hh, int32_t vv)
       gdImagePtr psimage=NULL;
       char *txt;
       const char *specialend=special+strlen(special);
-      const char *newspecial=NULL; 
-      
+      const char *newspecial=NULL;
+
       /* hyperref non-rendering PostScript specials. */
       if (strcmp(specialend-11,"pdfmark end")==0
 	  || strcmp(specialend-7,"H.A end")==0
@@ -802,9 +802,9 @@ void SetSpecial(char *start, char *end, int32_t hh, int32_t vv)
 	   libgd 2.0.12 upwards */
 #ifdef HAVE_GDIMAGEPNGEX
 	if (page_imagep->trueColor) {
-	  /* Render across the whole image */ 
-	  psimage = ps2png(pscodep, "-sDEVICE=pngalpha", 
-			   dpi,dpi, 
+	  /* Render across the whole image */
+	  psimage = ps2png(pscodep, "-sDEVICE=pngalpha",
+			   dpi,dpi,
 			   -(hh+1)*72/dpi,
 			   -(gdImageSY(page_imagep)-vv-1)*72/dpi,
 			   (gdImageSX(page_imagep)-hh)*72/dpi,
@@ -812,7 +812,7 @@ void SetSpecial(char *start, char *end, int32_t hh, int32_t vv)
 			   255,255,255);
 	  if (psimage!=NULL) {
 	    gdImageAlphaBlending(page_imagep,1);
-	    gdImageCopy(page_imagep, psimage, 
+	    gdImageCopy(page_imagep, psimage,
 			0,0,0,0,
 			gdImageSX(psimage),gdImageSY(psimage));
 	    gdImageAlphaBlending(page_imagep,0);
@@ -835,7 +835,7 @@ void SetSpecial(char *start, char *end, int32_t hh, int32_t vv)
       pscodep=NULL;
       if (newspecial != NULL)
 	free(special);
-      if (psimage==NULL) 
+      if (psimage==NULL)
 	page_flags |= PAGE_GAVE_WARN;
       Message(BE_NONQUIET,">");
     } else { /* Don't draw */
@@ -870,4 +870,3 @@ void SetSpecial(char *start, char *end, int32_t hh, int32_t vv)
   }
   free(buffer);
 }
-
