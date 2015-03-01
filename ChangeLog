@@ -1,3 +1,46 @@
+2015-03-01  Jan-흆e Larsson  <jan-ake.larsson@liu.se>
+
+	* RELEASE: Release 1.15
+
+	* color.c, config.h.in, configure.ac, dvi.c, dvipng.h, misc.c,
+	pk.c, set.c, sfd.c, tfm.c, vf.c: Remove references to kpathsea
+	xmalloc, and enable non-GNU malloc
+
+	* dvi.c: Fix long sleep interval in --follow
+
+	* INSTALL, Makefile.in, README, config.h.in, configure.ac, draw.c,
+	dvipng.1, dvipng.c, dvipng.h, dvipng.texi, font.c, fontmap.c,
+	install.texi, miktex.h, misc.c, readme.texi, t1.c: Remove support
+	for the now dead libt1
+
+	* special.c: Use <sys/wait.h>
+
+	* color.c: Fix segfault at missing xcolor.sty
+
+	* set.c: Added check for out of memory in libgd allocate
+
+2012-09-15  Jan-흆e Larsson  <jan-ake.larsson@liu.se>
+
+	* ft.c: Add warning for missing target_light hinting
+
+2012-09-15  Jan-흆e Larsson  <jan-ake.larsson@liu.se>
+
+	* dvipng.c: Use return value of fgets better
+
+2010-12-17  Jan-흆e Larsson  <jan-ake.larsson@liu.se>
+
+	* COPYING.gd: Inclusion of the gd copyright notice
+
+2010-12-14  Jan-흆e Larsson  <jan-ake.larsson@liu.se>
+
+	* RELEASE: Spell correctly
+
+2010-12-06  Jan-흆e Larsson  <jan-ake.larsson@liu.se>
+
+	* special.c: Warn when --norawps hinders output
+	* dvipng.texi: Document usage of a fallback
+	* Makefile.in: Add www directory
+
 2010-10-23  Jan-흆e Larsson  <jan-ake.larsson@liu.se>
 
 	* dvipng.1, RELEASE: Prepare for 1.14
@@ -227,13 +270,13 @@
 
 	* Makefile.in, INSTALL, README, color.c, commands.h, configure.ac,
 	* draw.c, dvi.c, dvipng.1, dvipng.c, dvipng.h, dvipng.texi, enc.c,
-	* font.c, fontmap.c, ft.c, install.texi, macros.texi, miktex.h, 
+	* font.c, fontmap.c, ft.c, install.texi, macros.texi, miktex.h,
 	* misc.c, papersiz.c, pk.c, ppagelist.c, readme.texi, set.c, sfd.c,
 	* special.c, t1.c, test_dvipng.tex, tfm.c, vf.c, COPYING,
 	* COPYING.LESSER: Change to LGPLv3
 
-	* install.texi: 
-	* README: 
+	* install.texi:
+	* README:
 	* dvipng.texi: Add blurb about MediaWiki, and cosmetic changes
 
 2008-01-10  Jan-Ake Larsson  <jalar@mai.liu.se>
@@ -258,20 +301,20 @@
 	* special.c: Simplify PostScript header and multi-special
 	handling
 
-	* color.c: 
+	* color.c:
 	* draw.c:
 	* dvi.c:
-	* dvipng.h: 
-	* font.c: 
-	* ft.c: 
-	* misc.c: 
-	* set.c: 
+	* dvipng.h:
+	* font.c:
+	* ft.c:
+	* misc.c:
+	* set.c:
 	* special.c:
-	* t1.c: Split the flags variable into page_flags, option_flags and 
+	* t1.c: Split the flags variable into page_flags, option_flags and
 	dvi->flags
 
 	* dvi.c:
-	* dvipng.c: dvi->flags resets now when the dvi is reopened 
+	* dvipng.c: dvi->flags resets now when the dvi is reopened
 
 2007-08-06  Jan-Ake Larsson  <jalar@mai.liu.se>
 
@@ -296,7 +339,7 @@
 	* special.c: Rewrite to allow for raw PostScript specials, also
 	use PostScript headers
 
-	* dvipng.h: 
+	* dvipng.h:
 	* dvi.c: Add read-ahead for PostScript specials
 
 	* config.h.in:
@@ -320,8 +363,8 @@
 
 	* Release 1.9
 
-	* INSTALL: 
-	* README: Update for 1.9 
+	* INSTALL:
+	* README: Update for 1.9
 
 	* Makefile.in: Make the test fail if fonts not found
 
@@ -371,7 +414,7 @@
 
 	* ft.c: Adjust debug output
 
-	* configure.ac: Add sfd.o 
+	* configure.ac: Add sfd.o
 
 2006-10-04  Jan-Ake Larsson  <jalar@mai.liu.se>
 
@@ -420,7 +463,7 @@
 
 	* Makefile.in: add www target
 
-	* README: 
+	* README:
 	* readme.texi: Update capabilities info and preview-latex link
 
 2006-03-30  Jan-Ake Larsson  <jalar@mai.liu.se>
@@ -429,25 +472,25 @@
 
 	* RELEASE: Update for 1.8
 
-	* set.c: 
-	* readme.texi: 
-	* install.texi: 
-	* ft.c: 
-	* dvi.c: 
-	* draw.c: 
-	* README: 
+	* set.c:
+	* readme.texi:
+	* install.texi:
+	* ft.c:
+	* dvi.c:
+	* draw.c:
+	* README:
 	* INSTALL: Update copyright
 
 2006-03-29  Jan-Ake Larsson  <jalar@mai.liu.se>
 
-	* dvipng.1: 
+	* dvipng.1:
 	* dvipng.texi: Document new switch, new PostScript inclusion,
 	rearrange and adjust
 
-	* misc.c: 
-	* INSTALL: 
-	* README: 
-	* install.texi: 
+	* misc.c:
+	* INSTALL:
+	* README:
+	* install.texi:
 	* readme.texi: Minimal documentation adjustments
 
 2006-03-27  Jan-Ake Larsson  <jalar@mai.liu.se>
@@ -462,7 +505,7 @@
 2006-02-27  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* special.c: Use gs' pngalpha device, render without clipping,
-	adjust image position 
+	adjust image position
 
 	* set.c: Simplify code, make color cache (page-)persistent
 
@@ -473,10 +516,10 @@
 
 	* dvipng.h: New flags
 
-	* configure.ac: 
+	* configure.ac:
 	* config.h.in: Simplify gd tests
 
-	* configure.ac: 
+	* configure.ac:
 	* aclocal.m4: Check gs devices
 
 2006-02-10  Jan-Ake Larsson  <jalar@mai.liu.se>
@@ -538,13 +581,13 @@
 2005-10-11  Jan-Ake Larsson  <jalar@mai.liu.se>
 
 	* Release 1.7
-	
+
 	* INSTALL: Typographic changes
 
-	* README: 
-	* RELEASE: 
-	* configure.ac: 
-	* dvipng.1: 
+	* README:
+	* RELEASE:
+	* configure.ac:
+	* dvipng.1:
 	* dvipng.texi: Adjust for 1.7
 
 	* install.texi: Insert space
@@ -597,12 +640,12 @@
 
 	* color.c: Don't use strtok, adjust for xcolor
 
-	* special.c: Don't use strtok 
+	* special.c: Don't use strtok
 
 2005-04-25  Jan-Ake Larsson  <jalar@mai.liu.se>
 
-	* config.h.in: 
-	* configure.ac: 
+	* config.h.in:
+	* configure.ac:
 	* set.c: Don't do alpha blending in truecolor mode, write alpha
 	channel to file
 
@@ -624,17 +667,17 @@
 
 	* dvipng.1: Regenerate man page
 
-	* configure.ac: 
-	* dvipng.texi: 
+	* configure.ac:
+	* dvipng.texi:
 	* miktex.h: Update version info
 
-	* configure.ac: 
-	* dvipng.texi: 
-	* README: 
+	* configure.ac:
+	* dvipng.texi:
+	* README:
 	* readme.texi: Update mailing list address
 
-	* configure.ac: 
-	* config.h.in: 
+	* configure.ac:
+	* config.h.in:
 	* special.c: Simplify string search
 
 2005-04-03  Jan-Ake Larsson  <jalar@mai.liu.se>
@@ -650,75 +693,75 @@
 	DVI files
 
 	* ft.c: Sizes are given in big points in FreeType, in TeX points
-	in DVI files 
+	in DVI files
 
-	* dvipng.h: Fix boolean type again 
+	* dvipng.h: Fix boolean type again
 
 2005-02-10  Jan-Ake Larsson  <jalar@mai.liu.se>
 
-	* config.h.in: 
-	* configure.ac: 
-	* dvipng.texi: 
-	* dvipng.h: 
-	* misc.c: 
-	* set.c: Add proper alpha channel 
+	* config.h.in:
+	* configure.ac:
+	* dvipng.texi:
+	* dvipng.h:
+	* misc.c:
+	* set.c: Add proper alpha channel
 
 2005-02-04  Jan-Ake Larsson  <jalar@mai.liu.se>
 
-	* color.c: 
-	* draw.c: 
-	* dvi.c: 
-	* dvipng.c: 
-	* font.c: 
-	* ft.c: 
-	* misc.c: 
-	* papersiz.c: 
-	* pk.c: 
-	* set.c: 
-	* special.c: 
-	* t1.c: 
+	* color.c:
+	* draw.c:
+	* dvi.c:
+	* dvipng.c:
+	* font.c:
+	* ft.c:
+	* misc.c:
+	* papersiz.c:
+	* pk.c:
+	* set.c:
+	* special.c:
+	* t1.c:
 	* tfm.c:
 	* vf.c: Cosmetic changes to warnings and fatals
 
 	* Release 1.5
-	
-	* RELEASE: Prepare for 1.5 
 
-	* INSTALL: 
-	* Makefile.in: 
-	* README: 
-	* color.c: 
-	* commands.h: 
-	* configure.ac: 
-	* draw.c: 
-	* dvi.c: 
-	* dvipng.1: 
-	* dvipng.c: 
-	* dvipng.h: 
-	* dvipng.texi: 
-	* enc.c: 
-	* font.c: 
-	* fontmap.c: 
-	* ft.c: 
-	* install.texi: 
-	* macros.texi: 
-	* miktex.h: 
-	* misc.c: 
-	* papersiz.c: 
-	* pk.c: 
-	* ppagelist.c: 
-	* readme.texi: 
-	* set.c: 
-	* special.c: 
-	* t1.c: 
-	* test_dvipng.tex: 
+	* RELEASE: Prepare for 1.5
+
+	* INSTALL:
+	* Makefile.in:
+	* README:
+	* color.c:
+	* commands.h:
+	* configure.ac:
+	* draw.c:
+	* dvi.c:
+	* dvipng.1:
+	* dvipng.c:
+	* dvipng.h:
+	* dvipng.texi:
+	* enc.c:
+	* font.c:
+	* fontmap.c:
+	* ft.c:
+	* install.texi:
+	* macros.texi:
+	* miktex.h:
+	* misc.c:
+	* papersiz.c:
+	* pk.c:
+	* ppagelist.c:
+	* readme.texi:
+	* set.c:
+	* special.c:
+	* t1.c:
+	* test_dvipng.tex:
 	* tfm.c:
 	* vf.c: Update Copyright, set version 1.5
 
 2005-02-03  Jan-Ake Larsson  <jalar@mai.liu.se>
 
-	* draw.c: 
-	* dvipng.h: 
+	* draw.c:
+	* dvipng.h:
 	* set.c: Fix bug in --picky mode
 
 2005-01-27  Jan-Ake Larsson  <jalar@mai.liu.se>
@@ -737,9 +780,9 @@
 	* Release 1.4
 
 	* RELEASE:
-	* configure.ac: 
+	* configure.ac:
 	* dvipng.1:
-	* dvipng.texi: Set version 1.4 
+	* dvipng.texi: Set version 1.4
 
 	* README: Fix formatting
 
@@ -752,7 +795,7 @@
 	* configure.ac:
 	* dvipng.h: Move int64_t and uint64_t tests entirely to autoconf
 
-	* dvi.c: Fix signedness 
+	* dvi.c: Fix signedness
 
 2004-11-30  Jan-Ake Larsson  <jalar@mai.liu.se>
 
@@ -760,13 +803,13 @@
 
 2004-11-25  Jan-Ake Larsson  <jalar@mai.liu.se>
 
-	* Release 1.3	
-	
+	* Release 1.3
+
 	* Makefile.in, README, dvipng.1, readme.texi: Fix dvigif
 	installation and docs
 
 	* INSTALL:
-	* README: Add license 
+	* README: Add license
 
 	* dvipng.c: Remove duplicate copyright
 
@@ -784,7 +827,7 @@
 	* dvipng.h: Use char* arithmetic, not void*. And enable use of
 	gcc -ansi -pedantic.
 
-	* special.c: Don't use C++ comments. 
+	* special.c: Don't use C++ comments.
 
 	* papersiz.c: Rewrite
 
@@ -813,7 +856,7 @@
 
 2004-11-01  Jan-흆e Larsson  <jalar@mai.liu.se>
 
-	* RELEASE: Update for 1.3 
+	* RELEASE: Update for 1.3
 
 	* dvipng.h: Load alloca.h when available
 
@@ -852,9 +895,9 @@
 2004-10-27  Jan-흆e Larsson  <jalar@mai.liu.se>
 
 	* dvipng.1:
-	* dvipng.texi: Amend docs 
+	* dvipng.texi: Amend docs
 
-	* misc.c: Amend helptext 
+	* misc.c: Amend helptext
 
 2004-10-26  Jan-흆e Larsson  <jalar@mai.liu.se>
 
@@ -862,7 +905,7 @@
 	* misc.c:
 	* dvipng.h: Change background transparency
 
-	* configure.ac: Bump version, add test for libz 
+	* configure.ac: Bump version, add test for libz
 
 2004-10-07  Jan-흆e Larsson  <jalar@mai.liu.se>
 
@@ -875,16 +918,16 @@
 2004-08-18  Jan-흆e Larsson  <jalar@mai.liu.se>
 
 	* Release 1.2
-	
-	* RELEASE: Change for 1.2 
+
+	* RELEASE: Change for 1.2
 
 	* config.h.in: Update
 
-	* dvipng.1: change help text 
+	* dvipng.1: change help text
 
 	* dvipng.texi: update mailing list text. And version.
 
-	* README: 
+	* README:
 	* readme.texi: update info and todo list
 
 	* draw.c, misc.c, dvipng.c, dvipng.h:
@@ -896,7 +939,7 @@
 
 	* special.c: Fix comment
 
-	* set.c: 
+	* set.c:
 	* dvipng.h: new Gamma function
 
 	* configure.ac: libm is needed by new gamma code
@@ -909,27 +952,27 @@
 	* special.c: do not call ghostscript when switch given
 
 	* misc.c: add picky and ghostscript switches
-	
-	* dvipng.h: add picky and ghostscript flags 
+
+	* dvipng.h: add picky and ghostscript flags
 
 2004-08-06  Jan-흆e Larsson  <jalar@mai.liu.se>
 
 	* dvipng.texi: Document --png, --gif, and --picky
 
-	* .cvsignore: Add *.gif 
+	* .cvsignore: Add *.gif
 
-	* Makefile.in: Install 'dvigif' if we have GIF support 
+	* Makefile.in: Install 'dvigif' if we have GIF support
 
-	* configure.ac: Test for gdImageGif and 'ln -s' 
+	* configure.ac: Test for gdImageGif and 'ln -s'
 
-	* config.h.in: GIF support 
+	* config.h.in: GIF support
 
 	* set.c: GIF writing
 
 	* misc.c: basename fixes, --png  and --gif fixes,
-	--no-image-on-warn changes name to --picky 
+	--no-image-on-warn changes name to --picky
 
-	* dvi.c: basename fixes 
+	* dvi.c: basename fixes
 
 	* dvipng.h: Portability fixes, add GIF image flag
 
@@ -939,12 +982,12 @@
 
 2004-07-01  Jan-흆e Larsson  <jalar@mai.liu.se>
 
-	* miktex.mak: New, for MIKTeX 
+	* miktex.mak: New, for MIKTeX
 
 	* dvi.c:
 	* dvipng.c:
 	* dvipng.h:
-	* special.c: Adjust for MIKTeX 
+	* special.c: Adjust for MIKTeX
 
 	* color.c:
 	* enc.c:
@@ -972,89 +1015,89 @@
 
 2004-06-24  Jan-흆e Larsson  <jalar@mai.liu.se>
 
-	* fontmap.c: 
-	* pk.c: 
+	* fontmap.c:
+	* pk.c:
 	* vf.c: More memory fixes
 
 2004-06-21  Jan-흆e Larsson  <jalar@mai.liu.se>
 
 	* config.h.in:
-	* configure.ac: Test for stdbool, munmap and strtol 
+	* configure.ac: Test for stdbool, munmap and strtol
 
-	* test_dvipng.tex: Change color test 
+	* test_dvipng.tex: Change color test
 
-	* dvipng.h: 
-	* misc.c: 
+	* dvipng.h:
+	* misc.c:
 	* ppagelist.c: Fix -r switch
 
-	* dvipng.h: 
-	* font.c: 
-	* misc.c: 
+	* dvipng.h:
+	* font.c:
+	* misc.c:
 	* ppagelist.c:
-	* special.c: 
-	* t1.c: 
+	* special.c:
+	* t1.c:
 	* tfm.c: Use stdbool
 
-	* color.c: 
-	* dvi.c: 
-	* dvipng.c: 
-	* dvipng.h: 
-	* enc.c: 
-	* font.c: 
-	* fontmap.c: 
+	* color.c:
+	* dvi.c:
+	* dvipng.c:
+	* dvipng.h:
+	* enc.c:
+	* font.c:
+	* fontmap.c:
 	* ppagelist.c:
 	* special.c: Fix memory leak(s)
 
-	* color.c: 
-	* draw.c: 
-	* dvi.c: 
-	* dvipng.h: 
-	* misc.c: 
+	* color.c:
+	* draw.c:
+	* dvi.c:
+	* dvipng.h:
+	* misc.c:
 	* set.c:
 	* special.c: Fix color stack
 
-	* draw.c: 
-	* dvipng.h: 
-	* ft.c: 
-	* pk.c: 
+	* draw.c:
+	* dvipng.h:
+	* ft.c:
+	* pk.c:
 	* set.c:
-	* t1.c: 
-	* tfm.c: 
+	* t1.c:
+	* tfm.c:
 	* vf.c: Simplify char structs
 
-	* color.c: 
-	* draw.c: 
-	* dvi.c: 
-	* dvipng.c: 
-	* dvipng.h: 
-	* enc.c: 
-	* font.c: 
-	* fontmap.c: 
-	* ft.c: 
-	* misc.c: 
-	* papersiz.c: 
-	* pk.c: 
+	* color.c:
+	* draw.c:
+	* dvi.c:
+	* dvipng.c:
+	* dvipng.h:
+	* enc.c:
+	* font.c:
+	* fontmap.c:
+	* ft.c:
+	* misc.c:
+	* papersiz.c:
+	* pk.c:
 	* ppagelist.c:
 	* set.c:
-	* special.c: 
-	* t1.c: 
-	* tfm.c: 
-	* vf.c: Add copyright notice 
+	* special.c:
+	* t1.c:
+	* tfm.c:
+	* vf.c: Add copyright notice
 
 2004-05-31  Jan-흆e Larsson  <jalar@mai.liu.se>
 
 	* dvipng.1:
 	* configure.ac:
 	* RELEASE:
-	* INSTALL: Release 1.1 
+	* INSTALL: Release 1.1
 
 2004-05-26  Jan-흆e Larsson  <jalar@mai.liu.se>
 
 	* special.c: Handle source specials
 
-	* test_dvipng.tex: Add failing special and color test 
+	* test_dvipng.tex: Add failing special and color test
 
-	* dvipng.c: Adjust coment about SELFAUTO... 
+	* dvipng.c: Adjust coment about SELFAUTO...
 
 	* dvi.c: Fix possible overflow
 
@@ -1066,30 +1109,30 @@
 
 2004-05-18  Jan-흆e Larsson  <jalar@mai.liu.se>
 
-	* dvipng.texi: Fix build  
+	* dvipng.texi: Fix build
 
 2004-05-14  Jan-흆e Larsson  <jalar@mai.liu.se>
 
-	* config.h.in: Use more tests 
+	* config.h.in: Use more tests
 
-	* dvipng.1: Add documentation 
+	* dvipng.1: Add documentation
 
 	* dvipng.texi: Fix build. Revert to four-argument @node, my
 	makeinfo cannot handle the one-argument form (yet).
 
 2004-05-11  Jan-흆e Larsson  <jalar@mai.liu.se>
 
-	* configure.ac: More tests 
+	* configure.ac: More tests
 
 2004-05-09  Jan-흆e Larsson  <jalar@mai.liu.se>
 
-	* install.texi: T1lib docs 
+	* install.texi: T1lib docs
 
 	* dvipng.1:
-	* dvipng.texi: Add documentation, and spellcheck 
+	* dvipng.texi: Add documentation, and spellcheck
 
 	* special.c:
-	* color.c: Make colors work again. 
+	* color.c: Make colors work again.
 
 2004-05-08  David Kastrup  <dakas@users.sourceforge.net>
 
@@ -1100,7 +1143,7 @@
 	* fontmap.c: Use both kpse_fontmap_format and
 	_dvips_header_
 
-	* enc.c: Use configure test 
+	* enc.c: Use configure test
 
 	* configure.ac: Add test for kpse_enc_format, reorder gd
 	and png tests
@@ -1135,7 +1178,7 @@
 2004-05-02  Jan-흆e Larsson  <jalar@mai.liu.se>
 
 	* Makefile.in:
-	* config.h.in: 
+	* config.h.in:
 	* configure.ac:
 	* draw.c:
 	* dvipng.c:
@@ -1149,13 +1192,13 @@
 
 2004-04-05  Jan-흆e Larsson  <jalar@mai.liu.se>
 
-	* dvipng.1: 
-	* readme.texi: 
+	* dvipng.1:
+	* readme.texi:
 	* dvipng.texi:
-	* Makefile.in: Add man page 
+	* Makefile.in: Add man page
 
 2004-03-27  Jan-흆e Larsson  <jalar@mai.liu.se>
-	
+
 	* dvipng.texi: Fix debug documentations
 
 	* dvipng.c: Dont fail on --mode without --bdpi, output a warning.
@@ -1164,7 +1207,7 @@
 
 	* papersiz.c: Remove compiler warning
 
-	* dvipng.texi: 
+	* dvipng.texi:
 	* misc.c: Change year
 
 2004-03-25  Jan-흆e Larsson  <jalar@mai.liu.se>
@@ -1176,18 +1219,18 @@
 
 	* configure.ac: Change version number
 
-	* README: Checkin updated README 
+	* README: Checkin updated README
 
 	* pk.c:
 	* ft.c: Speed up color cache
 
-	* dvipng.texi: Add info on resolution, change version number 
+	* dvipng.texi: Add info on resolution, change version number
 
 2004-03-24  Jan-흆e Larsson  <jalar@mai.liu.se>
 
-	* special.c: Fix missing 'showpage' and a memory leak 
+	* special.c: Fix missing 'showpage' and a memory leak
 
-	* font.c: Adjust error message 
+	* font.c: Adjust error message
 
 	* dvipng.h:
 	* ft.c:
@@ -1219,7 +1262,7 @@
 	* font.c:
 	* misc.c:
 	* papersiz.c:
-	* special.c: Change the behaviour of the -D switch 
+	* special.c: Change the behaviour of the -D switch
 
 2004-03-08  Jan-흆e Larsson  <jalar@mai.liu.se>
 
