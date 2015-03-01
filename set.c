@@ -18,7 +18,7 @@
   License along with this program. If not, see
   <http://www.gnu.org/licenses/>.
 
-  Copyright (C) 2002-2010 Jan-Åke Larsson
+  Copyright (C) 2002-2015 Jan-Åke Larsson
 
 ************************************************************************/
 
@@ -26,8 +26,8 @@
 #include <math.h>
 
 #ifndef HAVE_GDIMAGECREATETRUECOLOR
-#define gdImageColorAllocateAlpha(i,r,g,b,a) gdImageColorAllocate(i,r,g,b) 
-#define gdImageColorResolveAlpha(i,r,g,b,a)  gdImageColorResolve(i,r,g,b) 
+#define gdImageColorAllocateAlpha(i,r,g,b,a) gdImageColorAllocate(i,r,g,b)
+#define gdImageColorResolveAlpha(i,r,g,b,a)  gdImageColorResolve(i,r,g,b)
 #define gdImageAlpha(i,c)                    0
 #define gdAlphaMax                           127
 #endif
@@ -35,36 +35,38 @@
 #define gdImagePngEx(i,f,z)                  gdImagePng(i,f)
 #endif
 
-/* Persistent color cache. Index is ink thickness, 
+/* Persistent color cache. Index is ink thickness,
    0=no ink, 127=total coverage */
 static int ColorCache[gdAlphaMax+1];
 
 void CreateImage(pixels x_width,pixels y_width)
 {
-  if (page_imagep) 
+  if (page_imagep)
     gdImageDestroy(page_imagep);
   if (x_width <= 0) x_width=1;
   if (y_width <= 0) y_width=1;
 #ifdef HAVE_GDIMAGECREATETRUECOLOR
   /* GIFs are 256-color */
   if ((option_flags & FORCE_TRUECOLOR
-      || page_flags & PAGE_TRUECOLOR) 
+      || page_flags & PAGE_TRUECOLOR)
       && ~option_flags & GIF_OUTPUT
-      && ~option_flags & FORCE_PALETTE) 
+      && ~option_flags & FORCE_PALETTE)
     page_imagep=gdImageCreateTrueColor(x_width,y_width);
   else
 #endif
     page_imagep=gdImageCreate(x_width,y_width);
   /* Set bg color. GIFs cannot handle an alpha channel, resort to
      transparent color index, set in WriteImage */
-  ColorCache[0] 
+  if (!page_imagep)
+    Fatal("cannot allocate GD image for DVI");
+  ColorCache[0]
     = gdImageColorAllocateAlpha(page_imagep,
 				cstack[0].red,
 				cstack[0].green,
 				cstack[0].blue,
-				(option_flags & BG_TRANSPARENT_ALPHA 
+				(option_flags & BG_TRANSPARENT_ALPHA
 				 && ~option_flags & GIF_OUTPUT) ? 127 : 0);
-  ColorCache[gdAlphaMax]=-1; 
+  ColorCache[gdAlphaMax]=-1;
 #ifdef HAVE_GDIMAGECREATETRUECOLOR
   /* Alpha blending in libgd is only performed for truecolor images.
      We need it for palette images also. Turn libgd alpha blending off
@@ -73,9 +75,9 @@ void CreateImage(pixels x_width,pixels y_width)
   gdImageAlphaBlending(page_imagep, 0);
   if (option_flags & BG_TRANSPARENT_ALPHA)
     gdImageSaveAlpha(page_imagep, 1);
-  if (page_imagep->trueColor) 
+  if (page_imagep->trueColor)
     /* Truecolor: there is no background color index, fill image instead. */
-    gdImageFilledRectangle(page_imagep, 0, 0, 
+    gdImageFilledRectangle(page_imagep, 0, 0,
 			   x_width-1, y_width-1, ColorCache[0]);
 #endif
 }
@@ -88,7 +90,7 @@ static void ChangeColor(gdImagePtr imagep,int x1,int y1,
   int x,y;
   for( y=y1; y<=y2; y++) {
     for( x=x1; x<=x2; x++) {
-      if (gdImageGetPixel(imagep, x, y)==color1) 
+      if (gdImageGetPixel(imagep, x, y)==color1)
 	gdImageSetPixel(imagep, x, y, color2);
     }
   }
@@ -111,7 +113,7 @@ void WriteImage(char *pngname, int pagenum)
 
     x_width=gdImageSX(page_imagep);
     y_width=gdImageSY(page_imagep);
-    
+
     /* Set ANOTHER bg color, transparent this time */
     /* No semi-transparency here, given the motivation for this code
        * (box cursor visibility in Emacs) */
@@ -119,13 +121,13 @@ void WriteImage(char *pngname, int pagenum)
       Transparent = gdImageColorAllocate(page_imagep,
 					 bordercolor.red,
 					 bordercolor.green,
-					 bordercolor.blue); 
+					 bordercolor.blue);
     else
       Transparent = gdImageColorAllocate(page_imagep,
 					 gdImageRed(page_imagep,ColorCache[0]),
 					 gdImageGreen(page_imagep,ColorCache[0]),
-					 gdImageBlue(page_imagep,ColorCache[0])); 
-    gdImageColorTransparent(page_imagep,Transparent); 
+					 gdImageBlue(page_imagep,ColorCache[0]));
+    gdImageColorTransparent(page_imagep,Transparent);
     ChangeColor(page_imagep,0,0,x_width-1,borderwidth-1,
 		ColorCache[0],Transparent);
     ChangeColor(page_imagep,0,0,borderwidth-1,y_width-1,
@@ -139,9 +141,9 @@ void WriteImage(char *pngname, int pagenum)
   if ((pos=strchr(pngname,'%')) != NULL) {
     if (strchr(++pos,'%'))
       Fatal("too many %%s in output file name");
-    if (*pos == 'd' 
+    if (*pos == 'd'
 	|| (*pos=='0' && pos[1]>='1' && pos[1]<='9' && pos[2]=='d')) {
-      /* %d -> pagenumber, so add 9 string positions 
+      /* %d -> pagenumber, so add 9 string positions
 	 since pagenumber max +-2^31 or +-2*10^9 */
       freeme = malloc(strlen(pngname)+9);
       sprintf(freeme,pngname,pagenum);
@@ -151,7 +153,7 @@ void WriteImage(char *pngname, int pagenum)
     }
   }
 #ifdef HAVE_GDIMAGEGIF
-  if (option_flags & GIF_OUTPUT && (pos=strrchr(pngname,'.')) != NULL 
+  if (option_flags & GIF_OUTPUT && (pos=strrchr(pngname,'.')) != NULL
       && strcmp(pos,".png")==0) {
     *(pos+1)='g';
     *(pos+2)='i';
@@ -161,7 +163,7 @@ void WriteImage(char *pngname, int pagenum)
   if ((outfp = fopen(pngname,"wb")) == NULL)
       Fatal("cannot open output file %s",pngname);
 #ifdef HAVE_GDIMAGEGIF
-  if (option_flags & GIF_OUTPUT) 
+  if (option_flags & GIF_OUTPUT)
     gdImageGif(page_imagep,outfp);
   else
 #endif
@@ -192,7 +194,7 @@ static int gammatable[]=
 void Gamma(double gamma)
 {
   int i=0;
-  
+
   while (i<=gdAlphaMax) {
     gammatable[i]=gdAlphaMax-
       (int)(pow((gdAlphaMax-i)/((double)gdAlphaMax),gamma)*gdAlphaMax);
@@ -214,7 +216,7 @@ dviunits SetGlyph(struct char_entry *ptr, int32_t hh,int32_t vv)
   /* Initialize persistent color cache. Perhaps this should be in
      color.c? */
   pixelcolor=gdImageColorResolve(page_imagep,
-				 cstack[csp].red, 
+				 cstack[csp].red,
 				 cstack[csp].green,
 				 cstack[csp].blue);
   if (ColorCache[gdAlphaMax]!=pixelcolor) {
@@ -269,7 +271,7 @@ dviunits SetRule(dviunits a, dviunits b, subpixels hh,subpixels vv)
     if ((height>0) && (width>0)) {
       /* This code produces too dark rules. But what the hell. Grey
        * rules look fuzzy. */
-      Color = gdImageColorResolve(page_imagep, 
+      Color = gdImageColorResolve(page_imagep,
 				  cstack[csp].red,
 				  cstack[csp].green,
 				  cstack[csp].blue);
