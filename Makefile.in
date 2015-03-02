@@ -157,7 +157,7 @@ README: readme.texi
 		-I$(srcdir) $(srcdir)/readme.texi --output README
 
 dvipng.1: dvipng.texi readme.texi
-	texi2pod.pl -D man $(srcdir)/dvipng.texi | \
+	~/bin/texi2pod.pl -D man $(srcdir)/dvipng.texi | \
 	sed -es/@//g -es/previewlatex/preview-latex/g -es/{}//g > dvipng.pod
 	pod2man --center="User commands" --release=$(PACKAGE_STRING)\
 		dvipng.pod > dvipng.1
