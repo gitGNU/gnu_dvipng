@@ -40,6 +40,7 @@ exec_prefix = @exec_prefix@
 bindir = @bindir@
 infodir = @infodir@
 mandir = @mandir@
+datarootdir = @datarootdir@
 DESTDIR=
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
@@ -135,7 +136,7 @@ test_dvipng.dvi: test_dvipng.tex
 
 clean:
 	rm -f *.o dvipng *.help *.info* *dvipng.dvi *.aux *.log
-	rm -f *dvipng.ps *.cp *.fn *.ky *~ \#*\# \
+	rm -f *dvipng*.png *.cp *.fn *.ky *~ \#*\# \
 		*.tp *.vr *.pg *.toc *.tp *.bak *.cps *.kys *.tps \
 		*.fns *.vrs *.pgs *.html *.tmp
 
@@ -156,7 +157,7 @@ README: readme.texi
 		-I$(srcdir) $(srcdir)/readme.texi --output README
 
 dvipng.1: dvipng.texi readme.texi
-	./texi2pod.pl -D man $(srcdir)/dvipng.texi | \
+	texi2pod.pl -D man $(srcdir)/dvipng.texi | \
 	sed -es/@//g -es/previewlatex/preview-latex/g -es/{}//g > dvipng.pod
 	pod2man --center="User commands" --release=$(PACKAGE_STRING)\
 		dvipng.pod > dvipng.1
