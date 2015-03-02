@@ -143,6 +143,7 @@ clean:
 distclean: clean
 	rm -f Makefile
 	rm -f config.status config.log config.cache c-auto.h
+	rm -rf autom4te.cache
 
 ####################################### Maintainer targets
 
