@@ -67,7 +67,8 @@ AC_CHECK_LIB([png], [png_read_image],,
              [AC_MSG_ERROR([cannot find/use libpng])])
 AC_CHECK_LIB([gd], [gdImageCreate],,
              [AC_MSG_ERROR([cannot find/use libgd
-This drawing library can be downloaded at http://www.boutell.com/gd])])
+This drawing library can be downloaded at
+https://bitbucket.org/libgd/gd-libgd/downloads])])
 AC_CHECK_LIB([kpathsea], [kpse_set_program_name],,
              AC_MSG_ERROR([cannot find/use libkpathsea]))
 
