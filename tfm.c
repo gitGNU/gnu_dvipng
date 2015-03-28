@@ -56,7 +56,7 @@ bool ReadTFM(struct font_entry * tfontp, char* tfmname)
     position=(unsigned char*)fmmap.data+24+lh*4;
     while(c <= ec) {
       DEBUG_PRINT(DEBUG_TFM,("\n@%ld TFM METRICS:\t",
-			     (long)position - (long)fmmap.data));
+			     (long)((char *)position - fmmap.data)));
       if ((tcharptr=malloc(sizeof(struct char_entry)))==NULL)
         Fatal("cannot allocate memory for TFM char entry");
       tcharptr->data=NULL;

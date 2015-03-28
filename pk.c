@@ -347,7 +347,7 @@ void InitPK(struct font_entry * tfontp)
   position = skip_specials(position);
   while (*position != PK_POST) {
     DEBUG_PRINT(DEBUG_PK,("\n  @%ld PK CHAR:\t%d",
-			  (long)position - (long)tfontp->fmmap.data, *position));
+			  (long)((char *)position - tfontp->fmmap.data), *position));
     if ((tcharptr = malloc(sizeof(struct char_entry))) == NULL)
       Fatal("cannot allocate space for char_entry");
     tcharptr->flag_byte = *position;
