@@ -44,9 +44,9 @@
 struct pscode {
   struct pscode*  next;
   char*           special;  /* complete special */
-  char*           code;     /* PS string, null if a file */
+  const char*     code;     /* PS string, null if a file */
   char*           filename; /* file name, null if a string */
-  char*           postcode; /* post PS string */
+  const char*     postcode; /* post PS string */
   struct filemmap fmmap;    /* file mmap */
 };
 
