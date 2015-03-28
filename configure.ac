@@ -123,7 +123,7 @@ AC_FUNC_MMAP
 # AC_FUNC_REALLOC
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([dup2 memset munmap pow putenv strchr strrchr strtol strstr])
+AC_CHECK_FUNCS([dup2 memset munmap pow putenv strchr strrchr strtol strstr strncasecmp])
 if test "$enable_timing" = "yes"; then
   AC_CHECK_FUNCS([ftime gettimeofday])
 fi

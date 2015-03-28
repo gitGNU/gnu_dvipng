@@ -25,14 +25,21 @@
 #include "dvipng.h"
 #ifdef HAVE_LIBGEN_H
 # include <libgen.h>
-#else
-#define basename xbasename
 #endif
 #include <fcntl.h> /* open/close */
 #ifdef HAVE_MMAP
 #include <sys/mman.h>
 #endif
 #include <sys/stat.h>
+
+#if defined _WIN32 && !defined __CYGWIN__ && !defined __CYGWIN32__
+   /* Use Windows separators on all _WIN32 defining
+      environments, except Cygwin. */
+#  define DIR_SEPARATOR_CHAR    '\\'
+#endif
+#ifndef DIR_SEPARATOR_CHAR
+#  define DIR_SEPARATOR_CHAR    '/'
+#endif /* !DIR_SEPARATOR_CHAR */
 
 static char *programname;
 
@@ -48,23 +55,24 @@ bool DecodeArgs(int argc, char ** argv)
   char *dviname=NULL;        /* Name of dvi file               */
   char *outname=NULL;        /* Name of output file            */
 
+  programname=PACKAGE_NAME;
   if (argv[0]) {
 #ifdef HAVE_GDIMAGEGIF
-    programname=strrchr(argv[0],'/');
+    programname=strrchr(argv[0],DIR_SEPARATOR_CHAR);
     if (programname!=NULL)
       programname++;
     else
       programname=argv[0];
-    if (strncmp(programname,"dvigif",6)==0)
+    if (strncasecmp(programname,"dvigif",6)==0)
       option_flags |= GIF_OUTPUT;
 #endif
     programname=argv[0];
-    Message(BE_NONQUIET,"This is %s",programname);
-    if (strcmp(basename(programname),PACKAGE_NAME)!=0)
-      Message(BE_NONQUIET," (%s)", PACKAGE_NAME);
-    Message(BE_NONQUIET," %s Copyright 2002-2015 Jan-Ake Larsson\n",
-	    PACKAGE_VERSION);
   }
+  Message(BE_NONQUIET,"This is %s",programname);
+  if (option_flags & GIF_OUTPUT)
+    Message(BE_NONQUIET," (%s)", PACKAGE_NAME);
+  Message(BE_NONQUIET," %s Copyright 2002-2015 Jan-Ake Larsson\n",
+          PACKAGE_VERSION);
 
   for (i=1; i<argc; i++) {
     if (*argv[i]=='-') {
@@ -482,12 +490,8 @@ bool DecodeArgs(int argc, char ** argv)
 	}
         break;
       case 'v':    /* verbatim mode */
-	if (strcmp(p, "ersion")==0) {
-	  if (strcmp(basename(programname),PACKAGE_NAME)!=0)
-	    printf("%s (%s) %s\n",basename(programname),
-		   PACKAGE_NAME,PACKAGE_VERSION);
-	  else
-	    puts(PACKAGE_STRING);
+        if (strcmp(p, "ersion")==0) {
+          puts(PACKAGE_STRING);
 #ifdef HAVE_LIBKPATHSEA
 	  puts (KPSEVERSION);
 #endif
