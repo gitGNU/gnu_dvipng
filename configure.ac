@@ -133,6 +133,7 @@ if test "$ac_cv_func_gdImageGif" = "yes"; then
 else
    INSTALL_BIN_TARGET="install-dvipng"
 fi
+AC_CHECK_FUNCS([texlive_gs_init])
 AC_SUBST(INSTALL_BIN_TARGET)
 
 # Documentation-related checks
@@ -213,6 +214,7 @@ AC_MSG_RESULT([
      (dvigif):                              $ac_cv_func_gdImageGif
    FreeType font rendering available:       $ac_have_freetype2
    Support for subfonts (CJK-LaTeX):        $ac_have_freetype2
+   Building within TeX Live:                $ac_cv_func_texlive_gs_init
 ])
 
 AC_CONFIG_HEADER([config.h])
